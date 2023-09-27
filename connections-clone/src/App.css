@@ -13,17 +13,6 @@
   }
 }
 
-.App-header {
-  background-color: white;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
 .App-link {
   color: #61dafb;
 }
@@ -53,6 +42,7 @@
 
 .hamburger-menu {
   font-size: 24px; /* Adjust the size as needed */
+  font-weight: bold;
   margin-right: 15px; /* Add margin for spacing */
   border: none;
   background-color: transparent; /* Remove button background */
@@ -66,6 +56,8 @@
 
 .navbar h1 {
   font-size: 28pt;
+  pointer-events: none;
+  user-select: none;
   margin: 0;
 }
 
@@ -97,10 +89,7 @@
   color: black;
   width: 250px;
   transition: left 0.3s ease-in-out; /* Add a smooth transition */
-  border: 2px solid #555;
-  border-left: none;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
 }
 
 .menu.open {
@@ -139,3 +128,4 @@
   background: none;
   border: none;
 }
+
