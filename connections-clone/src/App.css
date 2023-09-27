@@ -36,3 +36,34 @@
     transform: rotate(360deg);
   }
 }
+
+.navbar {
+  display: flex;
+  justify-content: space-between; /* Distributes space between title and login button */
+  align-items: center;
+  background-color: #333;
+  color: white;
+  padding: 10px;
+}
+
+.navbar h1 {
+  margin: 0;
+  padding-left: 15px;
+}
+
+.login-button {
+  margin-right: 15px; /* Adjust the margin as needed for proper spacing */
+}
+
+.login-button button {
+  background-color: #007bff; /* Customize button styles */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.login-button button:hover {
+  background-color: #0056b3; /* Change color on hover */
+}
