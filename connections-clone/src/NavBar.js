@@ -20,10 +20,8 @@ function NavBar() {
                     ×
                 </button>
                 <ul>
-                    <li><a href="/">Create New Puzzle</a></li>
-                    <li><a href="/">How to Play</a></li>
-                    <li><a href="/">About This Project</a></li>
-                    <li><a href="/">Hi Hannie</a></li>
+                    <li><a href="/">My Portfolio Page</a></li>
+
                 </ul>
             </div>
             <div className="login-button">
