@@ -19,13 +19,13 @@
 
 body {
   overflow: hidden;
+  background-image: linear-gradient(to right, white, #00A68D);
 }
 
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: white;
   color: black;
   padding: 10px;
 }
@@ -51,30 +51,21 @@ body {
 }
 
 .navbar h1 {
-  font-size: 28pt;
-  pointer-events: none;
+  font-size: 24pt;
   user-select: none;
   margin: 0;
+  background: linear-gradient(180deg, #3DCAB5, #333);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-size: 200% 100%;
+  background-position: 100%;
+  transition: background-position 0.2s ease-in-out; /* Adjust the duration as needed */
 }
 
-.login-button {
-  margin-right: 20px;
-  border: 2px solid black;
-  border-radius: 5px;
-}
-
-.login-button button {
-  background-color: #007bff;
-  font-size: 12pt;
-  color: white;
-  border: none;
-  padding: 7px 15px;
-  cursor: pointer;
-  border-radius: 2px;
-}
-
-.login-button button:hover {
-  background-color: #0056b3;
+.navbar h1:hover {
+  background-position: 0;
+  color: transparent;
 }
 
 .menu {
