@@ -39,6 +39,7 @@ body {
   font-size: 24px; /* Adjust the size as needed */
   font-weight: bold;
   margin-right: 15px; /* Add margin for spacing */
+  padding-top: 5px;
   border: none;
   background-color: transparent; /* Remove button background */
   color: black;

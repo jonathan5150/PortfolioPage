@@ -13,7 +13,7 @@ function NavBar() {
                 <button className="hamburger-menu" onClick={toggleMenu}>
                     &#9776;
                 </button>
-                <h1>Connections Clone</h1>
+                <h1>Portfolio / Jonathan Rainey</h1>
             </div>
             <div className={`menu${isMenuOpen ? ' open' : ''}`}>
                 <button className="close-button" onClick={toggleMenu}>
@@ -21,11 +21,9 @@ function NavBar() {
                 </button>
                 <ul>
                     <li><a href="/">My Portfolio Page</a></li>
-
+                    <li><a href="/">Resume</a></li>
+                    <li><a href="/">To Do List</a></li>
                 </ul>
-            </div>
-            <div className="login-button">
-                <button>Login</button>
             </div>
         </nav>
     );
