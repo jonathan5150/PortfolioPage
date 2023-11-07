@@ -24,6 +24,7 @@ function NavBar() {
                     <li><a href="/">Resume</a></li>
                     <li><a href="/">To Do List</a></li>
                 </ul>
+//                PLZ CODE MORE TONIGHT
             </div>
         </nav>
     );
