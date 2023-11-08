@@ -1,12 +1,13 @@
 import React from 'react';
 import './App.css';
 import NavBar from './NavBar'; // Import the NavBar component
-import Game from './Game';
+import NFLProject from './NFLProject';
 
 function App() {
   return (
       <div className="App">
         <NavBar />
+        <NFLProject />
       </div>
   );
 }
