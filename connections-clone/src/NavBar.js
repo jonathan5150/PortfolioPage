@@ -23,8 +23,9 @@ function NavBar() {
                     <li><a href="/">My Portfolio Page</a></li>
                     <li><a href="/">Resume</a></li>
                     <li><a href="/">To Do List</a></li>
+                    <li><a href="/">NFL Stats API</a></li>
                 </ul>
-//                PLZ CODE MORE TONIGHT
+                {/*PLZ CODE MORE TONIGHT*/}
             </div>
         </nav>
     );
