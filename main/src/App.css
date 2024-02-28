@@ -35,6 +35,28 @@ body {
   align-items: center;
 }
 
+.navbar-right {
+  display: flex;
+  align-items: center;
+  padding-right: 50px;
+}
+
+a {
+  color: #3DCAB5;
+}
+
+a:hover {
+  color: red;
+}
+
+a:visited {
+  color: #3DCAB5;
+}
+
+a:active {
+  color: white;
+}
+
 .hamburger-menu {
   font-size: 24px; /* Adjust the size as needed */
   font-weight: bold;
