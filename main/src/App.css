@@ -14,6 +14,7 @@ p {
  padding-left: 20px;
 }
 
+/*
 a {
   color: #3DCAB5;
 }
@@ -29,6 +30,7 @@ a:visited {
 a:active {
   color: white;
 }
+*/
 
 
 /* NAVBAR CSS */
@@ -51,7 +53,7 @@ a:active {
   font-size: 24pt;
   user-select: none;
   margin: 0;
-  background: linear-gradient(180deg, #3DCAB5, #3DCAB5);
+  background: linear-gradient(180deg, black, #3DCAB5);
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
