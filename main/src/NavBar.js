@@ -23,9 +23,7 @@ function NavBar() {
                 <ul>
                     <li><Link to="/home">Home</Link></li>
                     <li><Link to="/resume">Resume</Link></li>
-                    <li><Link to="/project1">Project 1: Tehandon Time Calculator</Link></li>
-                    <li><Link to="/project2">Project 2: Along The Way Roadtripping Web Application</Link></li>
-                    <li><Link to="/project3">Project 3: Sports Stats API</Link></li>
+                    <li><Link to="/projects">Projects</Link></li>
                     <li><Link to="/contact">Contact Info</Link></li>
                 </ul>
             </div>

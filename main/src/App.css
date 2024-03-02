@@ -110,11 +110,12 @@ a:active {
 
 .menu {
   position: absolute;
-  top: 70px; /* Adjust the positioning as needed */
-  left: -330px; /* Initially hide the menu off-screen */
+  margin-left: -10px;
+  top: 80px; /* Adjust the positioning as needed */
+  left: -375px; /* Initially hide the menu off-screen */
   background-color: white;
   color: black;
-  width: 320px;
+  width: 365px;
   transition: left 0.3s ease-in-out; /* Add a smooth transition */
   box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
   border-radius: 5px;
@@ -131,9 +132,9 @@ a:active {
 }
 
 .menu li {
-  padding: 10px;
+  padding: 7px;
   text-align: left;
-  margin-left: 10px;
+  margin-left: 30px;
 }
 
 .menu a {
