@@ -3,7 +3,7 @@
 
 body {
   overflow: hidden;
-  background-image: linear-gradient(to right, white, #00A68D);
+  /* background-image: linear-gradient(to right, white, red); */
 }
 
 .content {
@@ -42,7 +42,7 @@ a:active {
   left: 0;
   width: 100%;
   color: #fff;
-  backgroundColor: black;
+  background-image: linear-gradient(to right, #0077B5, white);
   justify-content: space-between;
   align-items: center;
   padding: 10px 20px;
@@ -53,13 +53,7 @@ a:active {
   font-size: 24pt;
   user-select: none;
   margin: 0;
-  background: linear-gradient(180deg, black, #3DCAB5);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  background-size: 200% 100%;
-  background-position: 100%;
-  transition: background-position 0.2s ease-in-out; /* Adjust the duration as needed */
+  color: black;
 }
 
 .navbar-left {
@@ -73,11 +67,34 @@ a:active {
   padding-right: 50px;
 }
 
+.githubLink {
+    width: 50px;
+    height: 50px;
+    user-select: none;
+    transition: transform 0.3s ease;
+}
+
+.githubLink:hover {
+    transform: scale(1.1);
+}
+
+.linkedInLink {
+    width: 140px;
+    height: 37px;
+    padding-right: 20px;
+    user-select: none;
+    transition: transform 0.3s ease;
+}
+
+.linkedInLink:hover {
+    transform: scale(1.1); /* Scale up the image on hover */
+}
+
 
 /* HAMBURGER MENU CSS */
 
 .hamburger-menu {
-  font-size: 24px; /* Adjust the size as needed */
+  font-size: 28px; /* Adjust the size as needed */
   font-weight: bold;
   margin-right: 15px; /* Add margin for spacing */
   padding-top: 5px;
@@ -94,12 +111,14 @@ a:active {
 .menu {
   position: absolute;
   top: 70px; /* Adjust the positioning as needed */
-  left: -260px; /* Initially hide the menu off-screen */
+  left: -330px; /* Initially hide the menu off-screen */
   background-color: white;
   color: black;
-  width: 250px;
+  width: 320px;
   transition: left 0.3s ease-in-out; /* Add a smooth transition */
   box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+  user-select: none;
 }
 
 .menu.open {

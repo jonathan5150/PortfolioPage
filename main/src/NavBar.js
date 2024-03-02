@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 function NavBar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -20,14 +21,21 @@ function NavBar() {
                     ×
                 </button>
                 <ul>
-                    <li><a href="/">My Portfolio Page</a></li>
-                    <li><a href="/">Resume</a></li>
-                    <li><a href="/">To Do List</a></li>
-                    <li><a href="/">NFL Stats API</a></li>
+                    <li><Link to="/home">Home</Link></li>
+                    <li><Link to="/resume">Resume</Link></li>
+                    <li><Link to="/project1">Project 1: Tehandon Time Calculator</Link></li>
+                    <li><Link to="/project2">Project 2: Along The Way Roadtripping Web Application</Link></li>
+                    <li><Link to="/project3">Project 3: Sports Stats API</Link></li>
+                    <li><Link to="/contact">Contact Info</Link></li>
                 </ul>
             </div>
             <div className="navbar-right">
-                <h1><a href="https://github.com/jonathan5150">Github Profile</a></h1>
+                <a href="https://linkedin.com/in/jonathan-rainey-877a9ba4">
+                    <img src="LinkedIn-Blue-128-┬«@2x.png" alt="LinkedIn text logo" className="linkedInLink" />
+                </a>
+                <a href="https://github.com/jonathan5150">
+                    <img src="github-mark.png" alt="Github logo" className="githubLink" />
+                </a>
             </div>
         </nav>
     );
