@@ -25,7 +25,6 @@ function NavBar() {
                     <li><a href="/">To Do List</a></li>
                     <li><a href="/">NFL Stats API</a></li>
                 </ul>
-                {/*PLZ CODE MORE TONIGHT*/}
             </div>
             <div className="navbar-right">
                 <h1><a href="https://github.com/jonathan5150">Github Profile</a></h1>

@@ -1,7 +1,37 @@
+
+/* GENERAL CSS */
+
 body {
   overflow: hidden;
   background-image: linear-gradient(to right, white, #00A68D);
 }
+
+.content {
+  padding-top: 50px; /* This controls height for the navbar on all pages. */
+}
+
+p {
+ padding-left: 20px;
+}
+
+a {
+  color: #3DCAB5;
+}
+
+a:hover {
+  color: red;
+}
+
+a:visited {
+  color: #3DCAB5;
+}
+
+a:active {
+  color: white;
+}
+
+
+/* NAVBAR CSS */
 
 .navbar {
   display: flex;
@@ -41,21 +71,8 @@ body {
   padding-right: 50px;
 }
 
-a {
-  color: #3DCAB5;
-}
 
-a:hover {
-  color: red;
-}
-
-a:visited {
-  color: #3DCAB5;
-}
-
-a:active {
-  color: white;
-}
+/* HAMBURGER MENU CSS */
 
 .hamburger-menu {
   font-size: 24px; /* Adjust the size as needed */
