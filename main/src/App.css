@@ -4,10 +4,11 @@
 body {
   overflow: hidden;
   /* background-image: linear-gradient(to right, white, red); */
+  background: lightgray;
 }
 
 .content {
-  padding-top: 50px; /* This controls height for the navbar on all pages. */
+  padding-top: 50px;
 }
 
 p {
@@ -41,11 +42,11 @@ a:active {
   top: 0;
   left: 0;
   width: 100%;
-  color: #fff;
-  background-image: linear-gradient(to right, #0077B5, white);
+  background: gray;
+  /*background-image: linear-gradient(to right, #0077B5, white);*/
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 5px 20px;
   zIndex: 1000;
 }
 
@@ -87,43 +88,43 @@ a:active {
 }
 
 .linkedInLink:hover {
-    transform: scale(1.1); /* Scale up the image on hover */
+    transform: scale(1.1);
 }
 
 
 /* HAMBURGER MENU CSS */
 
 .hamburger-menu {
-  font-size: 28px; /* Adjust the size as needed */
+  font-size: 28px;
   font-weight: bold;
-  margin-right: 15px; /* Add margin for spacing */
+  margin-right: 15px;
   padding-top: 5px;
   border: none;
-  background-color: transparent; /* Remove button background */
+  background-color: transparent;
   color: black;
   cursor: pointer;
 }
 
 .hamburger-menu:focus {
-  outline: none; /* Remove focus outline if desired */
+  outline: none;
 }
 
 .menu {
   position: absolute;
   margin-left: -10px;
-  top: 80px; /* Adjust the positioning as needed */
-  left: -375px; /* Initially hide the menu off-screen */
+  top: 80px;
+  left: -375px;
   background-color: white;
   color: black;
   width: 365px;
-  transition: left 0.3s ease-in-out; /* Add a smooth transition */
+  transition: left 0.3s ease-in-out;
   box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
   border-radius: 5px;
   user-select: none;
 }
 
 .menu.open {
-  left: 0; /* Show the menu when 'open' class is applied */
+  left: 0;
 }
 
 .menu ul {
@@ -139,23 +140,43 @@ a:active {
 
 .menu a {
   font-weight: bold;
-  color: black; /* Change the color as desired */
-  text-decoration: none; /* Remove the default underline */
+  color: black;
+  text-decoration: none;
 }
 
 .menu a:hover {
-  color: #0056b3; /* Change the color on hover */
-  text-decoration: underline; /* Add underline on hover */
+  color: #0056b3;
+  text-decoration: underline;
 }
 
 .close-button {
   position: absolute;
-  top: 10px; /* Adjust top position as needed */
-  right: 10px; /* Adjust right position as needed */
-  font-size: 20px; /* Adjust font size as needed */
+  top: 10px;
+  right: 10px;
+  font-size: 20px;
   font-weight: bold;
   cursor: pointer;
   background: none;
   border: none;
 }
+
+.resume-container {
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.resume-wrapper {
+    margin-top: 50px;
+    max-width: 60%;
+}
+
+.resume-image {
+    width: 100%;
+    height: auto;
+    border: 1px solid black;
+    margin-bottom: 80px;
+}
+
 
