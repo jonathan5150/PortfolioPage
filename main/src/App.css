@@ -1,11 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
 
 /* GENERAL CSS */
 
 body {
-  overflow: hidden;
-  /* background-image: linear-gradient(to right, white, red); */
-  background: white;
+  overflow: hidden; /* This can hide overflow, but it also prevents scrolling */
+  margin: 0; /* Reset default body margin */
+  padding: 0; /* Reset default body padding */
+  height: 100vh; /* Ensure the body covers the entire viewport height */
+  background: linear-gradient(45deg, #808080 0%, #FFFFFF 50%, #808080 100%);
+  background-size: 200% 200%; /* Increase the background size to cover the entire viewport */
 }
 
 .content {
@@ -14,6 +19,8 @@ body {
 
 p {
  padding-left: 20px;
+ font-family: 'DM Sans', sans-serif;
+ font-weight: 500;
 }
 
 /*
@@ -52,18 +59,20 @@ a:active {
 }
 
 .navbar h1 {
-  font-family: 'Roboto Condensed', sans-serif;
-  font-weight: 700;
-  font-size: 24pt;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 22pt;
   user-select: none;
   margin: 0;
   color: black;
+{/*  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: #303030;*/}
 }
 
 .navbar-left {
   display: flex;
   align-items: center;
-  margin-top: 3px;
+  margin-bottom: 2px;
 }
 
 .navbar-right {
@@ -126,6 +135,8 @@ a:active {
   background-color: transparent;
   color: black;
   cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
 }
 
 .hamburger-menu:focus {
@@ -162,7 +173,8 @@ a:active {
 }
 
 .menu a {
-  font-weight: bold;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
   color: black;
   text-decoration: none;
 }
