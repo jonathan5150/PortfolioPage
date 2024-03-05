@@ -119,8 +119,8 @@ a:active {
   left: 0;
   width: 100%;
   height: 3px; /* Adjust as needed */
-  background: linear-gradient(to right, #191970, #008080, #663399, #191970);
-  animation: colorShift 7s infinite linear forwards;
+  background: linear-gradient(to right, #3500b0, #008080, #0078e0, #3500b0);
+  animation: colorShift 3s infinite linear forwards;
   border-bottom: 2px solid black;
   border-top: 1px solid #696969;
 }
@@ -128,6 +128,9 @@ a:active {
 @keyframes colorShift {
   0% {
     background-position: 100vw 50%;
+  }
+  99.9% {
+    background-position: -0.1vw 50%; /* Slightly overlap with the last keyframe */
   }
   100% {
     background-position: 0 50%;
