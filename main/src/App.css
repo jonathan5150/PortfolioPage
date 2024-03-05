@@ -61,7 +61,7 @@ a:active {
 .navbar h1 {
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
-  font-size: 22pt;
+  font-size: 20pt;
   user-select: none;
   margin: 0;
   color: black;
@@ -141,19 +141,38 @@ a:active {
 /* HAMBURGER MENU CSS */
 
 .hamburger-menu {
-  font-size: 28px;
-  font-weight: bold;
+  position: relative; /* Positioning context for pseudo-element */
+  font-size: 16px;
   margin-right: 15px;
-  border: none;
-  background-color: transparent;
+  border: black 1.5px solid;
+  border-radius: 3px;
+  background-image: linear-gradient(to right, #FF585D, #FF8D6D, #FFC658); /* Gradient background */
   color: black;
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
   z-index: 1000;
 }
+
+.hamburger-menu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(to right, #FFC658, #FF8D6D, #FF585D); /* Gradient background for hover state */
+  opacity: 0; /* Start with transparent */
+  transition: opacity 0.5s ease-out; /* Smooth transition for opacity change */
+  z-index: -1; /* Behind the main element */
+}
+
 .hamburger-menu:focus {
   outline: none;
+}
+
+.hamburger-menu:hover::before {
+  opacity: 1; /* Show the pseudo-element on hover */
 }
 
 .menu {
@@ -167,7 +186,7 @@ a:active {
   transition: left 0.3s ease-in-out;
   box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
   border-radius: 5px;
-  border: 1px solid black; /* Add this line to create a black outline */
+  border: 1.5px solid black; /* Add this line to create a black outline */
   user-select: none;
 }
 
@@ -191,11 +210,38 @@ a:active {
   font-weight: 500;
   color: black;
   text-decoration: none;
+  border-radius: 4px;
+  padding-left: 6px;
+  padding-right: 6px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  position: relative;
+  z-index: 1; /* Ensure the text appears above the pseudo-element */
+}
+
+.menu a::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: linear-gradient(to right, #FF585D, #FF8D6D, #FFC658);
+  border: 1.5px rgba(0, 0, 0, 0) solid; /* Same as the initial border */
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.5s, border-color 0.5s; /* Transition opacity and border color */
+  z-index: -1; /* Ensure the pseudo-element stays behind the text */
+}
+
+.menu a:hover::before {
+  opacity: 1;
+  border-color: black; /* Change the border color on hover */
 }
 
 .menu a:hover {
-  color: #0056b3;
-  text-decoration: underline;
+  border-color: black; /* Change the border color on hover */
+  border-radius: 4px;
 }
 
 .close-button {
@@ -297,7 +343,7 @@ a:active {
 .goose-image {
   width: 100px; /* Initial width of the image */
   height: auto; /* Maintain aspect ratio */
-  animation: spin 7s linear infinite, resize 14s linear infinite; /* Apply the spin and resize animations */
+  animation: spin 4s linear infinite, resize 4s ease-in-out infinite, color-change 10s infinite; /* Apply the spin, resize, and color-change animations */
 }
 
 @keyframes spin {
@@ -306,5 +352,23 @@ a:active {
   }
   to {
     transform: rotate(360deg); /* Rotate to 360 degrees */
+  }
+}
+
+@keyframes resize {
+  0%, 100% {
+    width: 5px; /* Initial and final width of the image */
+  }
+  50% {
+    width: 100px; /* Resize width to 150px */
+  }
+}
+
+@keyframes color-change {
+  0% {
+    filter: hue-rotate(0deg); /* No color rotation */
+  }
+  100% {
+    filter: hue-rotate(360deg); /* Rotate hue 360 degrees */
   }
 }
