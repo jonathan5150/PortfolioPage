@@ -203,23 +203,28 @@ a:active {
     overflow-y: auto;
 }
 
-.resume-wrapper {
-    margin-top: 50px;
-    max-width: 60%;
-}
-
 .resume-image {
-    width: 100%;
+    width: 100%; /* Use percentage for desktop view */
     height: auto;
     border: 1px solid black;
     margin-bottom: 80px;
 }
 
-
-
+.resume-wrapper {
+    margin-top: 50px;
+    max-width: 60%; /* Keep max-width for desktop view */
+}
 
 @media only screen and (max-width: 768px) {
-  /* Adjustments for smaller screens (e.g., phones) */
+    /* Adjustments for smaller screens (e.g., phones) */
+    .resume-image {
+        width: 100vw; /* Use viewport width for mobile view */
+    }
+
+    .resume-wrapper {
+        width: 100%; /* Adjust width to take full width in mobile view */
+        max-width: none; /* Remove max-width for mobile view */
+    }
 
   .navbar {
     align-items: center;
@@ -272,16 +277,25 @@ a:active {
 }
 
 .goose-image {
-  width: 200px; /* Set the width of the image */
+  width: 100px; /* Initial width of the image */
   height: auto; /* Maintain aspect ratio */
-  animation: spin 7s linear infinite; /* Apply the spin animation */
+  animation: spin 7s linear infinite, resize 14s linear infinite; /* Apply the spin and resize animations */
 }
 
 @keyframes spin {
   from {
-    transform: rotate(360deg); /* Rotate from 0 degrees */
+    transform: rotate(0deg); /* Rotate from 0 degrees */
   }
   to {
-    transform: rotate(0deg); /* Rotate to 360 degrees */
+    transform: rotate(360deg); /* Rotate to 360 degrees */
+  }
+}
+
+@keyframes resize {
+  0%, 100% {
+    width: 50px; /* Start and end with width 100px */
+  }
+  50% {
+    width: 500px; /* At 50% of the animation, change width to 200px */
   }
 }
