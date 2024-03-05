@@ -35,14 +35,14 @@ function NavBar() {
             </div>
             <div className="navbar-center">
             </div>
-            <div className="navbar-right">
+{/*            <div className="navbar-right">
                 <a href="https://linkedin.com/in/jonathan-rainey-877a9ba4">
                     <img src="LinkedIn-Blue-128-┬«@2x.png" alt="LinkedIn text logo" className="linkedInLink" />
                 </a>
                 <a href="https://github.com/jonathan5150">
                     <img src="github-mark.png" alt="Github logo" className="githubLink" />
                 </a>
-            </div>
+            </div>*/}
             <div className="color-blend-line"></div>
 {/*
             <div className="gray-blend-line"></div>
