@@ -137,6 +137,7 @@ a:active {
   cursor: pointer;
   font-family: 'DM Sans', sans-serif;
   font-weight: 500;
+  z-index: 1000;
 }
 
 .hamburger-menu:focus {
@@ -221,9 +222,7 @@ a:active {
   /* Adjustments for smaller screens (e.g., phones) */
 
   .navbar {
-    flex-direction: column;
     align-items: center;
-    padding: 10px;
   }
 
   .navbar-right {
@@ -232,13 +231,19 @@ a:active {
   }
 
   .navbar h1 {
-    font-size: 12pt;
+    font-size: 13pt;
   }
 
-  .githubLink,
+  .githubLink {
+    width: 30px;
+    height: 30px;
+    margin-right: 25px;
+    margin-left: 0px;
+  }
+
   .linkedInLink {
-    width: 20px;
+    width: 68px;
     height: 20px;
-    margin-right: 20px;
+    margin-right: -15px;
   }
 }

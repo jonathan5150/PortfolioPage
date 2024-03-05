@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 function NavBar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const location = useLocation();
+
+    useEffect(() => {
+        // Close the menu when the route changes
+        setIsMenuOpen(false);
+    }, [location]);
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
