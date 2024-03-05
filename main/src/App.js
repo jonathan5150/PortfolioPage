@@ -4,6 +4,7 @@ import './App.css';
 import Home from './Home';
 import NavBar from './NavBar';
 import Resume from './Resume';
+import LastCommitTimer from './LastCommitTimer';
 
 function App() {
   return (
@@ -16,6 +17,9 @@ function App() {
             <Route path="/home" element={<Home />} />
             <Route path="/resume" element={<Resume />} />
           </Routes>
+        </div>
+        <div className ="footer">
+            <LastCommitTimer />
         </div>
       </div>
     </Router>

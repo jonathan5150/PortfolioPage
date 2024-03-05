@@ -247,3 +247,15 @@ a:active {
     margin-right: -15px;
   }
 }
+
+.footer {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8pt;
+  font-weight: 500;
+  position: fixed;
+  bottom: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: -5;
+}
