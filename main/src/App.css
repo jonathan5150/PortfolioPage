@@ -279,9 +279,9 @@ a:active {
 
 @keyframes spin {
   from {
-    transform: rotate(0deg); /* Rotate from 0 degrees */
+    transform: rotate(360deg); /* Rotate from 0 degrees */
   }
   to {
-    transform: rotate(360deg); /* Rotate to 360 degrees */
+    transform: rotate(0deg); /* Rotate to 360 degrees */
   }
 }
