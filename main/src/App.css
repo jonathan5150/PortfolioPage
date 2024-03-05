@@ -259,3 +259,29 @@ a:active {
   justify-content: center;
   z-index: -5;
 }
+
+.Home {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Set the height of the container to the full viewport height */
+}
+
+.goose {
+  text-align: center; /* Center the image horizontally */
+}
+
+.goose-image {
+  width: 200px; /* Set the width of the image */
+  height: auto; /* Maintain aspect ratio */
+  animation: spin 7s linear infinite; /* Apply the spin animation */
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg); /* Rotate from 0 degrees */
+  }
+  to {
+    transform: rotate(360deg); /* Rotate to 360 degrees */
+  }
+}
