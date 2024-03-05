@@ -30,7 +30,7 @@ function NavBar() {
                     <li><Link to="/home">Home</Link></li>
                     <li><Link to="/resume">Resume</Link></li>
                     <li><Link to="/projects">Projects</Link></li>
-                    <li><Link to="/contact">Contact Info</Link></li>
+                    <li><Link to="/contact">Contact</Link></li>
                 </ul>
             </div>
             <div className="navbar-center">

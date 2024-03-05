@@ -188,6 +188,7 @@ a:active {
   border-radius: 5px;
   border: 1.5px solid black; /* Add this line to create a black outline */
   user-select: none;
+  z-index: 10;
 }
 
 .menu.open {
@@ -289,6 +290,9 @@ a:active {
 
   .navbar {
     align-items: center;
+    width: 100vw;
+    height: 7vh;
+    background-size: 100% 100%;
   }
 
   .navbar-right {
@@ -297,23 +301,16 @@ a:active {
   }
 
   .navbar h1 {
-    font-size: 13pt;
-  }
-
-  .githubLink {
-    width: 30px;
-    height: 30px;
-    margin-right: 25px;
-    margin-left: 0px;
-  }
-
-  .linkedInLink {
-    width: 80px;
-    height: 20px;
+    font-size: 15.5pt;
   }
 
   .menu {
-    width: 300px;
+    width: 180px;
+    top: 75px;
+  }
+
+  .hamburger-menu {
+    font-size: 18pt;
   }
 }
 
