@@ -44,7 +44,9 @@ function NavBar() {
                 </a>
             </div>
             <div className="color-blend-line"></div>
+{/*
             <div className="gray-blend-line"></div>
+*/}
         </nav>
     );
 }
