@@ -119,9 +119,19 @@ a:active {
   left: 0;
   width: 100%;
   height: 3px; /* Adjust as needed */
-  background: linear-gradient(to right, #191970, #008080, #663399); /* Change colors as needed */
+  background: linear-gradient(to right, #191970, #008080, #663399, #191970);
+  animation: colorShift 7s infinite linear forwards;
   border-bottom: 2px solid black;
   border-top: 1px solid #696969;
+}
+
+@keyframes colorShift {
+  0% {
+    background-position: 100vw 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
 }
 
 
@@ -218,12 +228,13 @@ a:active {
 @media only screen and (max-width: 768px) {
     /* Adjustments for smaller screens (e.g., phones) */
     .resume-image {
-        width: 100vw; /* Use viewport width for mobile view */
+        width: 95vw; /* Use viewport width for mobile view */
     }
 
     .resume-wrapper {
-        width: 100%; /* Adjust width to take full width in mobile view */
+        width: 95%; /* Adjust width to take full width in mobile view */
         max-width: none; /* Remove max-width for mobile view */
+        margin: 50px auto;
     }
 
   .navbar {
@@ -250,6 +261,10 @@ a:active {
     width: 68px;
     height: 20px;
     margin-right: -15px;
+  }
+
+  .menu {
+    width: 300px;
   }
 }
 
@@ -288,14 +303,5 @@ a:active {
   }
   to {
     transform: rotate(360deg); /* Rotate to 360 degrees */
-  }
-}
-
-@keyframes resize {
-  0%, 100% {
-    width: 50px; /* Start and end with width 100px */
-  }
-  50% {
-    width: 500px; /* At 50% of the animation, change width to 200px */
   }
 }
