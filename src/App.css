@@ -22,26 +22,10 @@ p {
  font-family: 'DM Sans', sans-serif;
  font-weight: 400;
  padding: 0px 20px 0px 20px;
- text-indent: 10px;
+/* text-indent: 10px;*/
 }
 
-/*
-a {
-  color: #3DCAB5;
-}
 
-a:hover {
-  color: red;
-}
-
-a:visited {
-  color: #3DCAB5;
-}
-
-a:active {
-  color: white;
-}
-*/
 
 
 /* NAVBAR CSS */
@@ -356,5 +340,9 @@ a:active {
 }
 
 .contactParagraph {
+  text-align: center;
+}
+
+.homeParagraph {
   text-align: center;
 }
