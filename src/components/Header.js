@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-function NavBar() {
+function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const location = useLocation();
 
@@ -51,4 +51,4 @@ function NavBar() {
     );
 }
 
-export default NavBar;
+export default Header;
