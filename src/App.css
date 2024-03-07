@@ -21,6 +21,8 @@ body {
 p {
  font-family: 'DM Sans', sans-serif;
  font-weight: 400;
+ padding: 0px 20px 0px 20px;
+ text-indent: 10px;
 }
 
 /*
@@ -334,15 +336,25 @@ a:active {
 }
 
 .Home {
-  margin-top: 3em;
+  margin-top: 7em;
   display: flex-top;
   justify-content: center;
   align-items: center;
   height: 100vh; /* Set the height of the container to the full viewport height */
 }
 
-.homeParagraph {
-  padding: 0px 20px 0px 20px;
-  text-indent: 10px;
+.Projects {
+  margin-top: 7em;
 }
 
+.projectsParagraph {
+  text-align: center;
+}
+
+.Contact {
+  margin-top: 7em;
+}
+
+.contactParagraph {
+  text-align: center;
+}
