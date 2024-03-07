@@ -20,7 +20,7 @@ function NavBar() {
                 <button className="hamburger-menu" onClick={toggleMenu}>
                     &#9776;
                 </button>
-                <h1>PORTFOLIO // Jonathan Rainey</h1>
+                <h1 class="header-title">PORTFOLIO // Jonathan Rainey</h1>
             </div>
             <div className={`menu${isMenuOpen ? ' open' : ''}`}>
                 <button className="close-button" onClick={toggleMenu}>
