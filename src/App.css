@@ -333,16 +333,6 @@ a:active {
   height: 100vh; /* Set the height of the container to the full viewport height */
 }
 
-.goose {
-  text-align: center; /* Center the image horizontally */
-}
-
-.goose-image {
-  width: 100px; /* Initial width of the image */
-  height: auto; /* Maintain aspect ratio */
-  animation: spin 4s linear infinite, resize 4s ease-in-out infinite, color-change 10s infinite; /* Apply the spin, resize, and color-change animations */
-}
-
 @keyframes spin {
   from {
     transform: rotate(0deg); /* Rotate from 0 degrees */

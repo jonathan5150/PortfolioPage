@@ -1,3 +1,3 @@
 <component name="DependencyValidationManager">
-  <scope name="ProjectFilesOnly" pattern="(!file:main/src/App.test.js&amp;&amp;!file:main/src/reportWebVitals.js&amp;&amp;!file:main/src/setupTests.js&amp;&amp;!file:main/src/index.js&amp;&amp;!file:main/src/index.css&amp;&amp;!file:main/README.md&amp;&amp;!file:main/package.json&amp;&amp;!file:main/package-lock.json&amp;&amp;!file:main/.gitignore&amp;&amp;!file[PortfolioPage]:main/node_modules/*&amp;&amp;!file[PortfolioPage]:main/node_modules/.bin//*||file[PortfolioPage]:main/node_modules/.bin/*)&amp;&amp;!file[PortfolioPage]:main/node_modules//*" />
+  <scope name="ProjectFilesOnly" pattern="(file[PortfolioPage]:src/pages/*||file[PortfolioPage]:src/components/*||file[PortfolioPage]:src/*||file[PortfolioPage]:src/assets/images/*||file[PortfolioPage]:public/*)&amp;&amp;!file:src/reportWebVitals.js&amp;&amp;!file:src/setupTests.js&amp;&amp;!file:src/App.test.js&amp;&amp;!file:public/manifest.json" />
 </component>

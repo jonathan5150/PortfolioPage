@@ -1,4 +1,5 @@
 import React from 'react';
+import resumeImage from '../assets/images/Rainey, Jonathan - Resume 2024.png'; // Adjust the path as necessary
 
 function Resume() {
     return (
@@ -10,7 +11,7 @@ function Resume() {
             </div>*/}
             <div className="resume-container">
                 <div className="resume-wrapper">
-                    <img src="Rainey, Jonathan - Resume 2024.png" alt="Resume" className="resume-image"/>
+                    <img src={resumeImage} alt="Resume" className="resume-image"/>
                 </div>
             </div>
         </div>

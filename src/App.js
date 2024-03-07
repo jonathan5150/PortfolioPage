@@ -1,16 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
-import Home from './Home';
-import NavBar from './NavBar';
-import Resume from './Resume';
-import LastCommitTimer from './LastCommitTimer';
+import Home from './pages/Home';
+import Header from './components/Header';
+import Resume from './pages/Resume';
+import LastCommitTimer from './components/LastCommitTimer';
 
 function App() {
   return (
     <Router>
       <div className="App">
-        <NavBar />
+        <Header />
         <div className="content">
           <Routes>
             <Route path="/" element={<Home />} />

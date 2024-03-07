@@ -5,9 +5,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d1ac3f54-1015-4b53-8dc8-f5a0caf9b27c" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/main/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/main/src/App.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/main/src/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main/src/NavBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/main/src/NavBar.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/pages/Home.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/public/LinkedIn-Blue-128-┬«@2x.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/images/LinkedIn-Blue-128-┬«@2x.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/public/Rainey, Jonathan - Resume 2024.PDF" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/images/Rainey, Jonathan - Resume 2024.PDF" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/public/Rainey, Jonathan - Resume 2024.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/images/Rainey, Jonathan - Resume 2024.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/public/abstract-shape.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/images/abstract-shape.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/public/github-mark.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/assets/images/github-mark.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/public/goose.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/public/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/public/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/App.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/App.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/Home.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/LastCommitTimer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/LastCommitTimer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/NavBar.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/Header.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/Resume.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/pages/Resume.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/index.css" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/reportWebVitals.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/reportWebVitals.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main/src/setupTests.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/setupTests.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -26,6 +49,9 @@
     </order>
   </component>
   <component name="ProjectId" id="2XbahB5lFfF51jjEHEBuZmZTShp" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -35,13 +61,16 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "last_opened_file_path": "C:/Users/Jonathan/Documents/turkey-test-repo",
-    "settings.editor.selected.configurable": "editor.preferences.folding"
+    "settings.editor.selected.configurable": "project.scopes"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Jonathan\Documents\PortfolioPage\src\pages" />
+      <recent name="C:\Users\Jonathan\Documents\PortfolioPage\src\components" />
+      <recent name="C:\Users\Jonathan\Documents\PortfolioPage" />
+      <recent name="C:\Users\Jonathan\Documents\PortfolioPage\main\src\assets\images" />
       <recent name="C:\Users\Jonathan\Documents\PortfolioPage\main\src" />
-      <recent name="C:\Users\Jonathan\Documents\PortfolioPage\main\src\ReactDefault" />
     </key>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
