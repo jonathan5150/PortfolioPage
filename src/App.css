@@ -332,30 +332,3 @@ a:active {
   align-items: center;
   height: 100vh; /* Set the height of the container to the full viewport height */
 }
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg); /* Rotate from 0 degrees */
-  }
-  to {
-    transform: rotate(360deg); /* Rotate to 360 degrees */
-  }
-}
-
-@keyframes resize {
-  0%, 100% {
-    width: 5px; /* Initial and final width of the image */
-  }
-  50% {
-    width: 100px; /* Resize width to 150px */
-  }
-}
-
-@keyframes color-change {
-  0% {
-    filter: hue-rotate(0deg); /* No color rotation */
-  }
-  100% {
-    filter: hue-rotate(360deg); /* Rotate hue 360 degrees */
-  }
-}
