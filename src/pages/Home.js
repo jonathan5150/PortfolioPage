@@ -1,6 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 function Home() {
+  useEffect(() => {
+    const preloadImage = (url) => {
+      const img = new Image();
+      img.src = url;
+    }
+
+    preloadImage('https://jonathanrainey.dev/static/media/Rainey,%20Jonathan%20-%20Resume%202024.9517b2b495dab2040288.png');
+  }, []);
+
   return (
     <div className="Home">
         <p className="homeParagraph">Welcome to my portfolio! This page exists to showcase my past, current, and future projects.</p>
