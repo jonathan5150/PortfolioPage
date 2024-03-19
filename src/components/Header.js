@@ -17,10 +17,12 @@ function Header() {
     return (
         <nav className={`navbar${isMenuOpen ? ' open' : ''}`}>
             <div className="navbar-left">
+                <h1 className="header-title">PORTFOLIO // Jonathan Rainey</h1>
+            </div>
+            <div className="navbar-right">
                 <button className="hamburger-menu" onClick={toggleMenu}>
                     &#9776;
                 </button>
-                <h1 class="header-title">PORTFOLIO // Jonathan Rainey</h1>
             </div>
             <div className={`menu${isMenuOpen ? ' open' : ''}`}>
                 <button className="close-button" onClick={toggleMenu}>
@@ -33,20 +35,8 @@ function Header() {
                     <li><Link to="/contact">Contact</Link></li>
                 </ul>
             </div>
-            <div className="navbar-center">
-            </div>
-{/*            <div className="navbar-right">
-                <a href="https://linkedin.com/in/jonathan-rainey-877a9ba4">
-                    <img src="LinkedIn-Blue-128-┬«@2x.png" alt="LinkedIn text logo" className="linkedInLink" />
-                </a>
-                <a href="https://github.com/jonathan5150">
-                    <img src="github-mark.png" alt="Github logo" className="githubLink" />
-                </a>
-            </div>*/}
+
             <div className="color-blend-line"></div>
-{/*
-            <div className="gray-blend-line"></div>
-*/}
         </nav>
     );
 }

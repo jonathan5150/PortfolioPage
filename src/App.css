@@ -30,65 +30,38 @@ p {
 
 /* NAVBAR CSS */
 
-
-
 .navbar {
-  display: flex;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-image: linear-gradient(to right, #FF585D, #FF8D6D, #FFC658);
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 20px;
-  zIndex: 1000;
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-image: linear-gradient(to right, #FF585D, #FF8D6D, #FFC658);
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 20px;
+    z-index: 1000; /* Corrected property name */
 }
 
-.navbar h1 {
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 500;
-  font-size: 20pt;
-  user-select: none;
-  margin: 0;
-  color: black;
-{/*  -webkit-text-stroke-width: 1px;
-  -webkit-text-stroke-color: #303030;*/}
+.header-title {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 20pt;
+    user-select: none;
+    margin: 0;
+    color: black;
 }
 
 .navbar-left {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 2px;
 }
 
 .navbar-right {
-  display: flex;
-  align-items: center;
-  padding-right: 50px;
-}
-
-.githubLink {
-    width: 30px;
-    height: 30px;
-    user-select: none;
-    transition: transform 0.3s ease;
-}
-
-.githubLink:hover {
-    transform: scale(1.1);
-}
-
-.linkedInLink {
-    width: 100px;
-    height: 25px;
-    padding-right: 20px;
-    user-select: none;
-    transition: transform 0.3s ease;
-}
-
-.linkedInLink:hover {
-    transform: scale(1.1);
+    display: flex;
+    align-items: center;
+    margin-right: 12px;
 }
 
 .gray-blend-line {
@@ -128,98 +101,98 @@ p {
 /* HAMBURGER MENU CSS */
 
 .hamburger-menu {
-  position: relative; /* Positioning context for pseudo-element */
-  font-size: 16px;
-  margin-right: 15px;
-  border: black 1.5px solid;
-  border-radius: 3px;
-  background-image: linear-gradient(to right, #FF585D, #FF8D6D, #FFC658); /* Gradient background */
-  color: black;
-  cursor: pointer;
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 500;
-  z-index: 1000;
+    position: relative;
+    font-size: 16px;
+    margin-right: 15px; /* Change margin-right to margin-left */
+    border: black 1.5px solid;
+    border-radius: 3px;
+    background-image: linear-gradient(to right, #FF585D, #FF8D6D, #FFC658);
+    color: black;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    z-index: 1000;
 }
 
 .hamburger-menu::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: linear-gradient(to right, #FFC658, #FF8D6D, #FF585D); /* Gradient background for hover state */
-  opacity: 0; /* Start with transparent */
-  transition: opacity 0.5s ease-out; /* Smooth transition for opacity change */
-  z-index: -1; /* Behind the main element */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(to right, #FFC658, #FF8D6D, #FF585D);
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+    z-index: -1;
 }
 
 .hamburger-menu:focus {
-  outline: none;
+    outline: none;
 }
 
 .hamburger-menu:hover::before {
-  opacity: 1; /* Show the pseudo-element on hover */
+    opacity: 1;
 }
 
 .menu {
-  position: absolute;
-  margin-left: -10px;
-  top: 60px;
-  left: -375px;
-  background-color: white;
-  color: black;
-  width: 200px;
-  transition: left 0.3s ease-in-out;
-  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
-  border-radius: 5px;
-  border: 1.5px solid black; /* Add this line to create a black outline */
-  user-select: none;
-  z-index: 10;
+    position: absolute;
+    margin-right: -10px; /* Change margin-left to margin-right */
+    top: 60px;
+    right: -375px; /* Change left to right */
+    background-color: white;
+    color: black;
+    width: 220px;
+    transition: right 0.3s ease-in-out; /* Change left to right */
+    box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    border: 1.5px solid black;
+    user-select: none;
+    z-index: 10;
 }
 
 .menu.open {
-  left: 0;
+    right: 0; /* Change left to right */
 }
 
 .menu ul {
-  list-style-type: none;
-  padding: 0;
+    list-style-type: none;
+    padding: 0;
 }
 
 .menu li {
-  padding: 7px;
-  text-align: left;
-  margin-left: 30px;
+    padding: 7px;
+    text-align: left;
+    margin-left: 30px;
 }
 
 .menu a {
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 500;
-  color: black;
-  text-decoration: none;
-  border-radius: 4px;
-  padding-left: 6px;
-  padding-right: 6px;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  position: relative;
-  z-index: 1; /* Ensure the text appears above the pseudo-element */
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    color: black;
+    text-decoration: none;
+    border-radius: 4px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    position: relative;
+    z-index: 1;
 }
 
 .menu a::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: linear-gradient(to right, #FF585D, #FF8D6D, #FFC658);
-  border: 1.5px rgba(0, 0, 0, 0) solid; /* Same as the initial border */
-  border-radius: 4px;
-  opacity: 0;
-  transition: opacity 0.5s, border-color 0.5s; /* Transition opacity and border color */
-  z-index: -1; /* Ensure the pseudo-element stays behind the text */
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: linear-gradient(to right, #FF585D, #FF8D6D, #FFC658);
+    border: 1.5px rgba(0, 0, 0, 0) solid;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.5s, border-color 0.5s;
+    z-index: -1;
 }
 
 .menu a:hover::before {
