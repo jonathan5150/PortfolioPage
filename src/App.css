@@ -257,16 +257,15 @@ p {
 
   .navbar-right {
     padding: 0;
-    margin-top: 10px;
   }
 
   .navbar h1 {
-    font-size: 14.5pt;
+    font-size: 16pt;
   }
 
   .menu {
     width: 180px;
-    top: 75px;
+    top: 85px;
   }
 
   .hamburger-menu {
