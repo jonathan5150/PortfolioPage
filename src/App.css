@@ -164,6 +164,11 @@ p {
     padding: 7px;
     text-align: left;
     margin-left: 30px;
+    transition: transform 0.2s ease;
+}
+
+.menu li:hover {
+    transform: scale(1.05); /* Scale up by 5% */
 }
 
 .menu a {
@@ -178,37 +183,18 @@ p {
     padding-bottom: 4px;
     position: relative;
     z-index: 1;
-}
-
-.menu a::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: linear-gradient(to right, #FF585D, #FF8D6D, #FFC658);
-    border: 1.5px rgba(0, 0, 0, 0) solid;
-    border-radius: 4px;
-    opacity: 0;
-    transition: opacity 0.5s, border-color 0.5s;
-    z-index: -1;
-}
-
-.menu a:hover::before {
-  opacity: 1;
-  border-color: black; /* Change the border color on hover */
+    transition: transform 0.2s ease; /* Add transition property */
 }
 
 .menu a:hover {
-  border-color: black; /* Change the border color on hover */
-  border-radius: 4px;
+    background-color: #f1f1f1;
+    transform: scale(1.45); /* Increase size by 5% on hover */
 }
 
 .close-button {
   position: absolute;
   top: 10px;
-  right: 10px;
+  left: 140px;
   font-size: 20px;
   font-weight: bold;
   cursor: pointer;
