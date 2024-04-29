@@ -137,12 +137,12 @@ p {
 
 .menu {
     position: absolute;
-    margin-right: -10px; /* Change margin-left to margin-right */
+    margin-right: -15px; /* Change margin-left to margin-right */
     top: 60px;
     right: -375px; /* Change left to right */
     background-color: white;
     color: black;
-    width: 220px;
+    min-width: 280px; /* Change width to min-width */
     transition: right 0.3s ease-in-out; /* Change left to right */
     box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.3);
     border-radius: 5px;
@@ -158,20 +158,30 @@ p {
 .menu ul {
     list-style-type: none;
     padding: 0;
+    margin: 0; /* Add margin to remove default margin */
 }
 
 .menu li {
-    padding: 7px;
+    padding: 6px;
     text-align: left;
-    margin-left: 30px;
+    margin-left: 10px;
     transition: transform 0.2s ease;
+}
+
+.menu li:first-child {
+    margin-top: 7px;
+}
+
+.menu li:last-child {
+    margin-bottom: 7px;
 }
 
 .menu li:hover {
     transform: scale(1.05); /* Scale up by 5% */
 }
 
-.menu a {
+.menu a,
+.menu button {
     font-family: 'DM Sans', sans-serif;
     font-weight: 500;
     color: black;
@@ -183,23 +193,18 @@ p {
     padding-bottom: 4px;
     position: relative;
     z-index: 1;
+    font-size: 16px;
     transition: transform 0.2s ease; /* Add transition property */
 }
 
-.menu a:hover {
-    background-color: #f1f1f1;
-    transform: scale(1.45); /* Increase size by 5% on hover */
+.menu button {
+    background-color: transparent;
+    border: none;
+    outline: none;
 }
 
-.close-button {
-  position: absolute;
-  top: 10px;
-  left: 140px;
-  font-size: 20px;
-  font-weight: bold;
-  cursor: pointer;
-  background: none;
-  border: none;
+.menu a:hover {
+    transform: scale(1.45); /* Increase size by 5% on hover */
 }
 
 .resume-container {
