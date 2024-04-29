@@ -227,6 +227,40 @@ p {
     max-width: 60%; /* Keep max-width for desktop view */
 }
 
+.ScrollableContainer {
+  height: 100vh; /* Set a fixed height for the container */
+  overflow-y: auto; /* Allow vertical overflow */
+}
+
+.AlongTheWay {
+  display: flex;
+  flex-direction: column; /* Stack images vertically */
+  align-items: center; /* Center images horizontally */
+}
+
+.image {
+  margin-top: 30px;
+  max-width: 90%; /* Set maximum width for the images */
+  width: auto; /* Allow images to adjust width proportionally */
+  margin-bottom: 20px; /* Add margin between images */
+}
+
+.bottom-margin {
+  margin-bottom: 100px; /* Adjust margin for the bottom image */
+}
+
+.footer {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8pt;
+  font-weight: 500;
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: -5;
+}
+
 @media only screen and (max-width: 768px) {
     /* Adjustments for smaller screens (e.g., phones) */
     .resume-image {
@@ -268,18 +302,6 @@ p {
     font-size: 13pt;
   }
 
-}
-
-.footer {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 8pt;
-  font-weight: 500;
-  position: fixed;
-  bottom: 10px;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  z-index: -5;
 }
 
 .Home {

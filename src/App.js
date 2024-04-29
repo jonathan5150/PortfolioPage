@@ -26,9 +26,9 @@ function App() {
             <Route path="/contact" element={<Contact />} />
           </Routes>
         </div>
-        <div className ="footer">
-            <LastCommitTimer />
-        </div>
+        <footer className="footer">
+          <LastCommitTimer />
+        </footer>
       </div>
     </Router>
   );
