@@ -8,7 +8,6 @@ import AlongTheWay from './pages/AlongTheWay';
 import SportsDataProject from './pages/SportsDataProject';
 import Contact from './pages/Contact';
 import Header from './components/Header';
-import LastCommitTimer from './components/LastCommitTimer';
 
 function App() {
   return (
@@ -26,9 +25,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
           </Routes>
         </div>
-        <footer className="footer">
-          <LastCommitTimer />
-        </footer>
+
       </div>
     </Router>
   );

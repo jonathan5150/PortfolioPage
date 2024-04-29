@@ -8,10 +8,20 @@ body {
   overflow: hidden; /* This can hide overflow, but it also prevents scrolling */
   margin: 0; /* Reset default body margin */
   padding: 0; /* Reset default body padding */
-  height: 100vh; /* Ensure the body covers the entire viewport height */
-/*  background: linear-gradient(45deg, #808080 0%, #FFFFFF 50%, #808080 100%);
-  background-size: 200% 200%; *//* Increase the background size to cover the entire viewport */
+  min-height: calc(100vh - 170px); /* Ensure the body covers the entire viewport height */
   background: #ededed;
+}
+
+footer {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 8pt;
+  font-weight: 500;
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: -5;
 }
 
 .content {
@@ -22,11 +32,7 @@ p {
  font-family: 'DM Sans', sans-serif;
  font-weight: 400;
  padding: 0px 20px 0px 20px;
-/* text-indent: 10px;*/
 }
-
-
-
 
 /* NAVBAR CSS */
 
@@ -247,18 +253,6 @@ p {
 
 .bottom-margin {
   margin-bottom: 100px; /* Adjust margin for the bottom image */
-}
-
-.footer {
-  font-family: 'DM Sans', sans-serif;
-  font-size: 8pt;
-  font-weight: 500;
-  position: absolute;
-  bottom: 10px;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  z-index: -5;
 }
 
 @media only screen and (max-width: 768px) {
