@@ -32,7 +32,10 @@ p {
  font-family: 'DM Sans', sans-serif;
  font-weight: 400;
  padding: 0px 20px 0px 20px;
+ text-indent: 1em;
+ margin-bottom: 0;
 }
+
 
 /* NAVBAR CSS */
 
@@ -245,10 +248,14 @@ p {
 }
 
 .image {
-  margin-top: 30px;
+  margin-top: 15px;
   max-width: 90%; /* Set maximum width for the images */
   width: auto; /* Allow images to adjust width proportionally */
-  margin-bottom: 20px; /* Add margin between images */
+  margin-bottom: 5px; /* Add margin between images */
+}
+
+.image:first-child {
+  margin-top: 50px;
 }
 
 .bottom-margin {
