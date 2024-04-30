@@ -19,11 +19,18 @@ function AlongTheWay() {
             needed to figure out a way to show ALL of the bakeries along the route. </p>
 
             <img className="image" src={atw1} alt="Along The Way 1" />
-            <p>
-
-            </p>
+            <p>So here's what we came up with! As you can see we managed to solve the problem. I
+            personally coded the majority of the functions on the left side of the page, wrote
+            the code for the searching along route functionality, taught myself how to use the
+            Google Maps API, and also completed nearly all of the layout and CSS design work needed
+            for the page. The image below shows the Directions and Route Data/Gas Calculator part of
+             the application.</p>
 
             <img className="image" src={atw2} alt="Along The Way 1" />
+
+            <p>And finally the image below shows the true goal of the project, listing all of the
+            requested places along the route. </p>
+
             <img className="image bottom-margin" src={atw3} alt="Along The Way 1" />
         </div>
     </div>

@@ -28,13 +28,22 @@ footer {
   padding-top: 50px;
 }
 
-p {
- font-family: 'DM Sans', sans-serif;
- font-weight: 400;
- padding: 0px 20px 0px 20px;
- text-indent: 1em;
- margin-bottom: 0;
+.homeParagraph {
+  text-align: center;
+  font-size: 17pt;
 }
+
+p {
+    font-size: 14pt;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    padding: 0px 30px; /* Adjusted padding */
+    text-indent: 1em;
+    margin: 20px auto 0; /* 20px top margin, center horizontally */
+    max-width: 80%;
+}
+
+
 
 
 /* NAVBAR CSS */
