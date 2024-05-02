@@ -39,12 +39,13 @@ p {
     font-weight: 400;
     padding: 0px 30px; /* Adjusted padding */
     text-indent: 1em;
-    margin: 20px auto 0; /* 20px top margin, center horizontally */
+    margin: 10px auto 0; /* 20px top margin, center horizontally */
     max-width: 80%;
 }
 
-
-
+p:first-child {
+    margin: 90px auto 0;
+}
 
 /* NAVBAR CSS */
 
