@@ -237,13 +237,17 @@ p:first-child {
     width: 100%; /* Use percentage for desktop view */
     height: auto;
     border: 1px solid black;
-    margin-bottom: 80px;
+    margin-bottom: 10px;
     margin-top: 5px;
 }
 
+.resume-image:last-of-type {
+    margin-bottom: 80px;
+}
+
 .resume-wrapper {
-    margin-top: 50px;
-    max-width: 60%; /* Keep max-width for desktop view */
+    margin-top: 30px;
+    max-width: 90%; /* Keep max-width for desktop view */
 }
 
 .ScrollableContainer {
