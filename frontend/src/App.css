@@ -247,7 +247,7 @@ p:first-child {
 
 .resume-wrapper {
     margin-top: 30px;
-    max-width: 60%; /* Keep max-width for desktop view */
+    max-width: 65%; /* Keep max-width for desktop view */
 }
 
 .ScrollableContainer {
