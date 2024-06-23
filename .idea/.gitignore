@@ -2,3 +2,7 @@
 /shelf/
 /workspace.xml
 /scopes/
+/frontend/node_modules/
+../node_modules
+./node_modules
+/node_modules/

@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d1ac3f54-1015-4b53-8dc8-f5a0caf9b27c" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.css" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.css" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,9 +43,9 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Jonathan\Documents\PortfolioPage" />
       <recent name="C:\Users\Jonathan\Documents\PortfolioPage\src\pages" />
       <recent name="C:\Users\Jonathan\Documents\PortfolioPage\src\components" />
-      <recent name="C:\Users\Jonathan\Documents\PortfolioPage" />
       <recent name="C:\Users\Jonathan\Documents\PortfolioPage\main\src\assets\images" />
       <recent name="C:\Users\Jonathan\Documents\PortfolioPage\main\src" />
     </key>
