@@ -346,3 +346,11 @@ p:first-child {
 .homeParagraph {
   text-align: center;
 }
+
+.download-pdf-container {
+  height: 8vh;
+  margin-top: 2px;
+  display: flex;
+  justify-content: center; /* Horizontally centers the button */
+  align-items: center; /* Vertically centers the button if the container has a height */
+}
