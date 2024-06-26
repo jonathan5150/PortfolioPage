@@ -6,7 +6,9 @@ function Resume() {
     return (
         <div>
             <div className="download-pdf-container">
-               <button class="downloadPDF">Download PDF</button>
+               <a href="/Resume 6-16-2024.pdf" download>
+                  <button className="downloadPDF">Download PDF</button>
+               </a>
             </div>
 
             <div className="resume-container">
