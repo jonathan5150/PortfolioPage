@@ -226,29 +226,7 @@ p:first-child {
     transform: scale(1.45); /* Increase size by 5% on hover */
 }
 
-.resume-container {
-    display: flex;
-    justify-content: center;
-    height: 100vh;
-    overflow-y: auto;
-}
 
-.resume-image {
-    width: 100%; /* Use percentage for desktop view */
-    height: auto;
-    border: 1px solid black;
-    margin-bottom: 10px;
-    margin-top: 5px;
-}
-
-.resume-image:last-of-type {
-    margin-bottom: 80px;
-}
-
-.resume-wrapper {
-    margin-top: 30px;
-    max-width: 65%; /* Keep max-width for desktop view */
-}
 
 .ScrollableContainer {
   height: 100vh; /* Set a fixed height for the container */
@@ -347,10 +325,35 @@ p:first-child {
   text-align: center;
 }
 
+.resume-page-container {
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
 .download-pdf-container {
-  height: 8vh;
-  margin-top: 2px;
-  display: flex;
-  justify-content: center; /* Horizontally centers the button */
-  align-items: center; /* Vertically centers the button if the container has a height */
+    text-align: center;
+    margin-top: 20px; /* Adjust margin as needed */
+}
+
+.resume-container {
+    display: flex;
+    justify-content: center;
+    /* Removed height and overflow-y as it's now handled by resume-page-container */
+}
+
+.resume-image {
+    width: 100%;
+    height: auto;
+    border: 1px solid black;
+    margin-bottom: 10px;
+    margin-top: 5px;
+}
+
+.resume-image:last-of-type {
+    margin-bottom: 80px;
+}
+
+.resume-wrapper {
+    margin-top: 30px;
+    max-width: 65%;
 }

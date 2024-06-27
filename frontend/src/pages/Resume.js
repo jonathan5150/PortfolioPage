@@ -4,7 +4,7 @@ import resumeImage2 from '../assets/images/Rainey, Jonathan - Resume 6-16-2024-2
 
 function Resume() {
     return (
-        <div>
+        <div className="resume-page-container">
             <div className="download-pdf-container">
                <a href="/Resume 6-16-2024.pdf" download>
                   <button className="downloadPDF">Download PDF</button>
