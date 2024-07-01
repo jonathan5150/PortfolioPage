@@ -118,6 +118,7 @@ ul {
   height: 3px; /* Adjust as needed */
   background-image: linear-gradient(to right, #0aa169, #3c878c, #266C87, #3c588c, #512cb0, #0aa169);
   animation: colorShift 9s infinite linear forwards;
+  border-top: 1px solid black;
   border-bottom: 2px solid black;
 }
 
