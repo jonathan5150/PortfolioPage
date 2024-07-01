@@ -63,17 +63,35 @@ p:first-child {
     background-image: linear-gradient(to right, #adadad, gray, #303030);
     justify-content: space-between;
     align-items: center;
-    padding: 5px 20px;
+    padding: 8px 20px;
     z-index: 1000; /* Corrected property name */
 }
 
 .header-title {
     font-family: 'DM Sans', sans-serif;
     font-weight: 500;
-    font-size: 22pt;
+    font-size: 26px;
     user-select: none;
     margin: 0;
     color: black;
+}
+
+.header-title-container {
+    position: relative; /* This makes the container a positioned ancestor */
+    height: 24px; /* Adjust the height as needed */
+    width: 160px;
+    margin-left: 6px;
+}
+
+.header-title-name {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    user-select: none;
+    margin: 0;
+    color: black;
+    position: absolute;
+    bottom: 0; /* Sticks the text to the bottom */
 }
 
 .navbar-left {
@@ -85,7 +103,7 @@ p:first-child {
 .navbar-right {
     display: flex;
     align-items: center;
-    margin-right: 12px;
+    margin-right: 15px;
 }
 
 .color-blend-line {
@@ -289,6 +307,10 @@ p:first-child {
   .homeParagraph {
     text-align: justify;
     font-size: 13pt;
+  }
+
+  .download-pdf-container {
+      margin-top: 30px; /* Adjust margin as needed */
   }
 
 }

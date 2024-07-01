@@ -26,7 +26,11 @@ function Header() {
     return (
         <nav className={`navbar${isMenuOpen ? ' open' : ''}`}>
             <div className="navbar-left">
-                <h1 className="header-title">PORTFOLIO // Jonathan Rainey</h1>
+                <h1 className="header-title">PORTFOLIO</h1>
+                <div className="header-title-container">
+                    <h1 className="header-title-name">// Jonathan Rainey</h1>
+                </div>
+
             </div>
             <div className="navbar-right">
                 <button className="hamburger-menu" onClick={toggleMenu}>
