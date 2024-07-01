@@ -291,10 +291,6 @@ p:first-child {
     padding: 0;
   }
 
-  .navbar h1 {
-    font-size: 16pt;
-  }
-
   .menu {
     width: 180px;
     top: 85px;
@@ -313,6 +309,10 @@ p:first-child {
       margin-top: 30px; /* Adjust margin as needed */
   }
 
+  .header-title {
+    font-size: 24px;
+  }
+
   .header-title-container {
       position: relative; /* This makes the container a positioned ancestor */
       height: 24px; /* Adjust the height as needed */
@@ -323,7 +323,7 @@ p:first-child {
   .header-title-name {
       font-family: 'DM Sans', sans-serif;
       font-weight: 500;
-      font-size: 18px;
+      font-size: 17px;
       user-select: none;
       margin: 0;
       color: black;
