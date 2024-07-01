@@ -28,7 +28,7 @@ function Header() {
             <div className="navbar-left">
                 <h1 className="header-title">PORTFOLIO</h1>
                 <div className="header-title-container">
-                    <h1 className="header-title-name">// Jonathan Rainey</h1>
+                    <h1 className="header-title-name">{'// Jonathan Rainey'}</h1>
                 </div>
 
             </div>
