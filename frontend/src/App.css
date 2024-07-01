@@ -8,8 +8,8 @@ body {
   overflow: hidden; /* This can hide overflow, but it also prevents scrolling */
   margin: 0; /* Reset default body margin */
   padding: 0; /* Reset default body padding */
-  min-height: calc(100vh); /* Ensure the body covers the entire viewport height */
-  background-image: linear-gradient(to bottom, #fafafa, #fafafa, #fafafa, #3c588c);
+  height: 100vh; /* Ensure the body covers the entire viewport height */
+  background-image: linear-gradient(to bottom, #fafafa 0, #5c739e 1000px);
 }
 
 footer {
@@ -373,7 +373,7 @@ ul {
 
 .download-pdf-container {
     text-align: center;
-    margin-top: 50px; /* Adjust margin as needed */
+    margin-top: 70px; /* Adjust margin as needed */
 }
 
 .resume-container {
