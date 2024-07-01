@@ -25,7 +25,7 @@ footer {
 }
 
 .content {
-  padding-top: 50px;
+  padding-top: 30px;
 }
 
 .homeParagraph {
@@ -50,6 +50,10 @@ p {
 
 p:first-child {
     margin: 60px auto 0;
+}
+
+ul {
+    margin-left: 80px;
 }
 
 /* NAVBAR CSS */
@@ -115,7 +119,6 @@ p:first-child {
   background-image: linear-gradient(to right, #0aa169, #3c878c, #266C87, #3c588c, #512cb0, #0aa169);
   animation: colorShift 9s infinite linear forwards;
   border-bottom: 2px solid black;
-  border-top: 1px solid black;
 }
 
 @keyframes colorShift {
@@ -258,6 +261,7 @@ p:first-child {
   max-width: 90%; /* Set maximum width for the images */
   width: auto; /* Allow images to adjust width proportionally */
   margin-bottom: 5px; /* Add margin between images */
+  border: 1px solid black;
 }
 
 .image:first-child {
@@ -272,6 +276,10 @@ p:first-child {
     /* Adjustments for smaller screens (e.g., phones) */
     .resume-image {
         width: 95vw; /* Use viewport width for mobile view */
+    }
+
+    ul {
+      margin-left: 30px;
     }
 
     .resume-wrapper {
@@ -364,7 +372,7 @@ p:first-child {
 
 .download-pdf-container {
     text-align: center;
-    margin-top: 40px; /* Adjust margin as needed */
+    margin-top: 50px; /* Adjust margin as needed */
 }
 
 .resume-container {
