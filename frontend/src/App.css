@@ -8,8 +8,8 @@ body {
   overflow: hidden; /* This can hide overflow, but it also prevents scrolling */
   margin: 0; /* Reset default body margin */
   padding: 0; /* Reset default body padding */
-  min-height: calc(100vh - 170px); /* Ensure the body covers the entire viewport height */
-  background: #e8e6e6;
+  min-height: calc(100vh); /* Ensure the body covers the entire viewport height */
+  background-image: linear-gradient(to bottom, #fafafa, #fafafa, #fafafa, #3c588c);
 }
 
 footer {
@@ -64,7 +64,7 @@ ul {
     top: 0;
     left: 0;
     width: 100%;
-    background-image: linear-gradient(to right, #adadad, gray, #303030);
+    background-image: linear-gradient(to right, #0aa169, #3c878c, #266C87, #3c588c, #512cb0, #0aa169);
     justify-content: space-between;
     align-items: center;
     padding: 8px 20px;
