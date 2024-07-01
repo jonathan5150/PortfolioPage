@@ -40,7 +40,7 @@ function Header() {
                     <li><button onClick={toggleNewLinks}><strong>Projects</strong></button></li>
                     {showNewLinks && (
                         <>
-                          <li><Link to="/excelproject">- Excel Project</Link></li>
+                          {/*<li><Link to="/excelproject">- Excel Project</Link></li>*/}
                           <li><Link to="/alongtheway">- Along The Way</Link></li>
                           <li><Link to="/sportsdataproject">- Sports Data Project</Link></li>
                         </>
