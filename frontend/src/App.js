@@ -8,7 +8,6 @@ import AlongTheWay from './pages/AlongTheWay';
 import SportsDataProject from './pages/SportsDataProject';
 import Contact from './pages/Contact';
 import ThisWebsite from './pages/ThisWebsite';
-import ToDo from './pages/ToDo';
 import Header from './components/Header';
 
 function App() {
@@ -25,7 +24,6 @@ function App() {
             <Route path="/alongtheway" element={<AlongTheWay />} />
             <Route path="/thiswebsite" element={<ThisWebsite />} />
             <Route path="/sportsdataproject" element={<SportsDataProject />} />
-            <Route path="/todo" element={<ToDo />} />
             <Route path="/contact" element={<Contact />} />
           </Routes>
         </div>

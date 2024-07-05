@@ -50,7 +50,6 @@ function Header() {
                           <li><Link to="/thiswebsite">- This Website</Link></li>
                         </>
                     )}
-                    <li><Link to="/todo">To Do</Link></li>
                     <li><Link to="/contact">Contact</Link></li>
                 </ul>
             </div>
