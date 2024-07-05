@@ -25,12 +25,14 @@ function Home() {
 
   return (
     <div className="Home">
-        <p className="homeParagraph">Welcome to my portfolio! This page exists to showcase my past, current, and future projects.</p>
-        <p className="homeParagraph">I'm a software developer who lives in the St. Louis, MO area. I
+        <p className="intro-p">Welcome to my portfolio! This page exists to showcase my past,
+        current, and future projects.</p>
+        <p className="intro-p">I'm a software developer who lives in the St. Louis, MO area. I
          have experience with modern JS frameworks such as React and Angular, as well as programming
           languages such as Java and C++. I'm currently focusing on learning React which is what
           this page is being built with. It will always be a work in progress.</p>
-        <p className="homeParagraph">Feel free to contact me with any questions you have, I'm always looking for new opportunities!</p>
+        <p className="intro-p">Feel free to contact me with any questions you have, I'm always
+        looking for new opportunities!</p>
     <footer>
       <LastCommitTimer />
     </footer>

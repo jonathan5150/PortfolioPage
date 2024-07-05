@@ -25,7 +25,8 @@ footer {
 }
 
 .content {
-  padding-top: 30px;
+  margin-top: 56px;
+  height: calc(100vh - 50px);
 }
 
 .homeParagraph {
@@ -34,7 +35,8 @@ footer {
 }
 
 .SportsDataProject {
-  padding: 20px;
+  height: 93.5vh; /* Adjust height as needed */
+  overflow-y: auto;
 }
 
 .sportsDataParagraph {
@@ -50,10 +52,12 @@ footer {
 
 .lineup {
   width: 45%;
+  text-align: center;
 }
 
 .lineup h2 {
   margin-bottom: 10px;
+  text-align: center;
 }
 
 .lineup p {
@@ -67,11 +71,20 @@ p {
     padding: 0px 30px; /* Adjusted padding */
     text-indent: 1em;
     margin: 10px auto 0; /* 20px top margin, center horizontally */
+}
+
+.intro-p {
+    font-size: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    text-indent: 1em;
+    margin: 10px auto 0; /* 20px top margin, center horizontally */
     max-width: 80%;
+    text-align: center;
 }
 
 p:first-child {
-    margin: 60px auto 0;
+    margin: 30px auto 0;
 }
 
 ul {
@@ -83,10 +96,11 @@ ul {
 .navbar {
     display: flex;
     position: fixed;
+    height: 40px;
     top: 0;
     left: 0;
     width: 100%;
-    background-image: linear-gradient(to right, #0aa169, #3c878c, #266C87, #3c588c, #512cb0, #0aa169);
+    background-image: linear-gradient(to right, #0aa169, #3c878c, #266C87, #3c588c, #512cb0);
     justify-content: space-between;
     align-items: center;
     padding: 8px 20px;
@@ -165,7 +179,7 @@ ul {
     margin-right: 15px; /* Change margin-right to margin-left */
     border: black 1.5px solid;
     border-radius: 3px;
-    background-image: linear-gradient(to right, #0aa169, #3c878c, #266C87, #3c588c, #512cb0);
+    background: #6666ff;
     color: black;
     cursor: pointer;
     font-family: 'DM Sans', sans-serif;
@@ -180,7 +194,7 @@ ul {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: linear-gradient(to right, #512cb0, #3c588c, #266C87, #3c878c, #0aa169);
+    background: #99ccff;
     opacity: 0;
     transition: opacity 0.5s ease-out;
     z-index: -1;
@@ -398,29 +412,41 @@ ul {
     margin-top: 70px; /* Adjust margin as needed */
 }
 
-.resume-container {
-    display: flex;
-    justify-content: center;
-    /* Removed height and overflow-y as it's now handled by resume-page-container */
-}
-
 .resume-image {
-    width: 100%;
+    width: 100%; /* Ensure images take full width of their container */
     height: auto;
     border: 1px solid black;
     margin-bottom: 10px;
     margin-top: 5px;
 }
 
-.resume-image:last-of-type {
-    margin-bottom: 80px;
+.resume-wrapper {
+    display: flex; /* Use flexbox to align images side by side */
+    flex-wrap: wrap; /* Allow images to wrap to the next line if needed */
+    justify-content: center; /* Center images horizontally */
+    margin-top: 20px;
 }
 
-.resume-wrapper {
-    margin-top: 20px;
-    max-width: 65%;
+.resume-image-container {
+    flex: 1; /* Each image container takes equal width */
+    margin-left: 15px;
+    margin-right: 15px; /* Adjust spacing between images */
+    margin-bottom: 80px; /* Adjust spacing between rows of images */
 }
 
 .downloadPDF {
     font-size: 16px;
+}
+
+.to-do-container {
+    margin-top: 7em;
+}
+
+.to-do-container ul {
+    margin-top: 3em;
+}
+
+.to-do-container ul li {
+    font-size: 13pt;
+    margin-left: 260px;
 }
