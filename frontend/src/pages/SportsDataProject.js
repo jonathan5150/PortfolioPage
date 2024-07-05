@@ -36,6 +36,15 @@ function SportsDataProject() {
     fetchData();
   }, []); // Empty dependency array means this effect runs once when the component mounts
 
+  const formatTime = (dateTime) => {
+    const date = new Date(dateTime);
+    return date.toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
   return (
     <div className="SportsDataProject">
       <p className="intro-p">
@@ -54,6 +63,7 @@ function SportsDataProject() {
             <div key={date.date}>
               {date.games.map(game => (
                 <div key={game.gamePk}>
+                  <p>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
                   <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
                   <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} vs {game.teams.home.probablePitcher?.fullName}</p>
                 </div>
@@ -68,6 +78,7 @@ function SportsDataProject() {
             <div key={date.date}>
               {date.games.map(game => (
                 <div key={game.gamePk}>
+                  <p>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
                   <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
                   <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} vs {game.teams.home.probablePitcher?.fullName}</p>
                 </div>

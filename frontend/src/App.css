@@ -437,16 +437,3 @@ ul {
 .downloadPDF {
     font-size: 16px;
 }
-
-.to-do-container {
-    margin-top: 7em;
-}
-
-.to-do-container ul {
-    margin-top: 3em;
-}
-
-.to-do-container ul li {
-    font-size: 13pt;
-    margin-left: 260px;
-}
