@@ -33,9 +33,31 @@ footer {
   font-size: 14pt;
 }
 
+.SportsDataProject {
+  padding: 20px;
+}
+
 .sportsDataParagraph {
   text-align: center;
   font-size: 17px;
+  margin-bottom: 20px;
+}
+
+.pitchingLineups {
+  display: flex;
+  justify-content: space-between;
+}
+
+.lineup {
+  width: 45%;
+}
+
+.lineup h2 {
+  margin-bottom: 10px;
+}
+
+.lineup p {
+  margin: 5px 0;
 }
 
 p {
