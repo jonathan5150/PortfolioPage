@@ -26,7 +26,6 @@ footer {
 
 .content {
     margin-top: 57px; /* Adjust margin to the height of your navbar */
-    flex: 1;
     overflow-y: auto; /* Add scrollbars if content exceeds wrapper height */
 }
 
@@ -59,13 +58,13 @@ footer {
 
 .lineup h2 {
   margin-top: 40px;
-  font-size: 18px;
+  font-size: 16px;
   text-align: center;
 }
 
 .lineup h3 {
   margin-top: -10px;
-  font-size: 15px;
+  font-size: 13px;
   margin-bottom: 10px;
   text-align: center;
 }
@@ -367,6 +366,10 @@ ul {
       color: black;
       position: absolute;
       bottom: 0; /* Sticks the text to the bottom */
+  }
+
+  .intro-p {
+    font-size: 15px;
   }
 
 }

@@ -103,9 +103,10 @@ function SportsDataProject() {
           <p>Loading...</p>
         </div>
       ) : (
+
         <div className="pitchingLineups">
           <div className="lineup">
-            <h2>Today's Pitching Lineup</h2>
+            <h2>TODAY</h2>
             {todayGames.length === 0 && <p>No games scheduled for today.</p>}
             {todayGames.map(date => (
               <div key={date.date}>
@@ -122,7 +123,7 @@ function SportsDataProject() {
           </div>
 
           <div className="lineup">
-            <h2>Tomorrow's Pitching Lineup</h2>
+            <h2>TOMORROW</h2>
             {tomorrowGames.length === 0 && <p>No games scheduled for tomorrow.</p>}
             {tomorrowGames.map(date => (
               <div key={date.date}>
