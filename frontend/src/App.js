@@ -5,10 +5,12 @@ import Home from './pages/Home';
 import Resume from './pages/Resume';
 import ExcelProject from './pages/ExcelProject';
 import AlongTheWay from './pages/AlongTheWay';
+import VehicleSearch from './pages/VehicleSearch'
 import SportsDataProject from './pages/SportsDataProject';
 import Contact from './pages/Contact';
 import ThisWebsite from './pages/ThisWebsite';
 import Header from './components/Header';
+
 
 function App() {
   return (
@@ -24,6 +26,7 @@ function App() {
             <Route path="/alongtheway" element={<AlongTheWay />} />
             <Route path="/thiswebsite" element={<ThisWebsite />} />
             <Route path="/sportsdataproject" element={<SportsDataProject />} />
+            <Route path="/vehiclesearch" element={<VehicleSearch />} />
             <Route path="/contact" element={<Contact />} />
           </Routes>
         </div>

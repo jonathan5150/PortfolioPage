@@ -109,7 +109,6 @@ function SportsDataProject() {
             {todayGames.length === 0 && <p>No games scheduled for today.</p>}
             {todayGames.map(date => (
               <div key={date.date}>
-                {/* Add console log for date.date */}
                 <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
                 {date.games.map(game => (
                   <div key={game.gamePk}>
