@@ -107,16 +107,26 @@ footer {
   text-align: center;
   font-size: 20px;
   margin-bottom: 20px;
-  border: 2px solid black;
+  border: 2px solid transparent; /* Ensure border is transparent */
   border-radius: 5px;
-  padding: 5px;
-  background: #335fa6;
-  width: 85%; /* Set width to 80% of the viewport */
-  max-width: 400px; /* Optionally set a maximum width */
+  padding: 10px 20px; /* Adjust padding as needed */
+  background-color: rgba(51, 95, 166, 0.7); /* Transparent blue background */
+  backdrop-filter: blur(8px); /* Apply a blur filter */
+  transition: background-color 0.3s ease, border-color 0.3s ease; /* Smooth transition for background and border color */
+
+  /* Additional styles for better visibility */
+  color: white; /* Text color */
+  width: 85%; /* Set width to 85% of the viewport */
+  max-width: 300px; /* Optionally set a maximum width */
   box-sizing: border-box; /* Ensure padding and border are included in width calculation */
   display: block; /* Make it a block element to take full width */
   margin-left: auto; /* Center the button horizontally */
   margin-right: auto;
+}
+
+.expand-button:hover {
+  background-color: rgba(51, 95, 166, 0.9); /* Lighter transparent blue on hover */
+  border-color: #335fa6; /* Darken border color on hover */
 }
 
 p {
