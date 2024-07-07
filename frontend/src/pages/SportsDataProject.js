@@ -13,6 +13,24 @@ function SportsDataProject() {
     const todayFormatted = formatDate(today);
     const tomorrowFormatted = formatDate(tomorrow);
 
+    const fetchPitcherData = async (pitcherId) => {
+      const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      // Log the data to inspect the structure
+      console.log('Fetched pitcher data:', data);
+
+      const stats = data.people[0]?.stats;
+      if (stats && stats.length > 0) {
+        const currentSeasonStats = stats[0]?.splits;
+        if (currentSeasonStats && currentSeasonStats.length > 0) {
+          return currentSeasonStats[0]?.stat?.era || "N/A";
+        }
+      }
+      return "N/A";
+    };
+
     const fetchData = async () => {
       const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher&startDate=${todayFormatted}&endDate=${tomorrowFormatted}`;
       const response = await fetch(url);
@@ -28,6 +46,29 @@ function SportsDataProject() {
 
       console.log("Filtered Today's Games:", filteredTodayGames);
       console.log("Filtered Tomorrow's Games:", filteredTomorrowGames);
+
+      // Fetch ERA for each probable pitcher
+      for (const gameDay of filteredTodayGames) {
+        for (const game of gameDay.games) {
+          if (game.teams.away.probablePitcher) {
+            game.teams.away.probablePitcher.era = await fetchPitcherData(game.teams.away.probablePitcher.id);
+          }
+          if (game.teams.home.probablePitcher) {
+            game.teams.home.probablePitcher.era = await fetchPitcherData(game.teams.home.probablePitcher.id);
+          }
+        }
+      }
+
+      for (const gameDay of filteredTomorrowGames) {
+        for (const game of gameDay.games) {
+          if (game.teams.away.probablePitcher) {
+            game.teams.away.probablePitcher.era = await fetchPitcherData(game.teams.away.probablePitcher.id);
+          }
+          if (game.teams.home.probablePitcher) {
+            game.teams.home.probablePitcher.era = await fetchPitcherData(game.teams.home.probablePitcher.id);
+          }
+        }
+      }
 
       setTodayGames(filteredTodayGames);
       setTomorrowGames(filteredTomorrowGames);
@@ -65,7 +106,7 @@ function SportsDataProject() {
                 <div key={game.gamePk}>
                   <p>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
                   <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                  <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} vs {game.teams.home.probablePitcher?.fullName}</p>
+                  <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
                 </div>
               ))}
             </div>
@@ -80,7 +121,7 @@ function SportsDataProject() {
                 <div key={game.gamePk}>
                   <p>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
                   <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                  <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} vs {game.teams.home.probablePitcher?.fullName}</p>
+                  <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
                 </div>
               ))}
             </div>
