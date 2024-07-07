@@ -120,8 +120,10 @@ function SportsDataProject() {
                     {date.games.map(game => (
                       <div key={game.gamePk}>
                         <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                        <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                        <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                        <div className="lineupGroup">
+                            <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
+                            <p>{game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -137,8 +139,10 @@ function SportsDataProject() {
                     {date.games.map(game => (
                       <div key={game.gamePk}>
                         <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                        <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                        <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                        <div className="lineupGroup">
+                          <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
+                          <p>{game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                        </div>
                       </div>
                     ))}
                   </div>

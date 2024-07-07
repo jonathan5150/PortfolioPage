@@ -65,9 +65,24 @@ footer {
   width: 100%;
 }
 
+.lineups-container p {
+  font-size: 13px;
+}
+
 .lineup {
   width: 45%;
   text-align: center;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-bottom: 30px;
+}
+
+.lineupGroup {
+  border: 1px solid black;
+  border-radius: 5px;
+  background: #f0f0f0;
 }
 
 .lineup h2 {
