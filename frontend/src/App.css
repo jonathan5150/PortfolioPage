@@ -1,15 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
 
-
 /* GENERAL CSS */
 
+html {
+  overflow-y: auto;
+  height: 100%;
+  background-image: linear-gradient(to bottom, #fafafa 0, #5c739e 100vh); /* Use vh unit for full viewport height */
+  background-repeat: no-repeat; /* Prevent background image from repeating */
+  background-size: auto 100%; /* Ensure background image stretches vertically */
+  background-attachment: fixed; /* Keep the background image fixed */
+}
+
 body {
-  overflow: hidden; /* This can hide overflow, but it also prevents scrolling */
   margin: 0; /* Reset default body margin */
   padding: 0; /* Reset default body padding */
-  height: 100vh; /* Ensure the body covers the entire viewport height */
-  background-image: linear-gradient(to bottom, #fafafa 0, #5c739e 1000px);
+  height: 100%; /* Ensure the body covers the entire viewport height */
 }
 
 footer {
@@ -25,8 +31,7 @@ footer {
 }
 
 .content {
-    margin-top: 57px; /* Adjust margin to the height of your navbar */
-    overflow-y: auto; /* Add scrollbars if content exceeds wrapper height */
+    margin-top: 100px; /* Adjust margin to the height of your navbar */
 }
 
 .homeParagraph {
@@ -34,21 +39,30 @@ footer {
   font-size: 14pt;
 }
 
-.SportsDataProject {
-  height: 93.5vh; /* Adjust height as needed */
-  overflow-y: auto;
+.otherParagraph {
+    font-size: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    text-indent: 1em;
+    margin: 25px auto 0; /* 20px top margin, center horizontally */
+    max-width: 85%;
 }
 
-.sportsDataParagraph {
-  text-align: center;
-  font-size: 17px;
-  margin-bottom: 20px;
+.SportsDataProject {
+  height: 90.5vh; /* Adjust height as needed */
 }
 
 .pitchingLineups {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: center;
   margin-bottom: 100px;
+}
+
+.lineups-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .lineup {
@@ -57,8 +71,8 @@ footer {
 }
 
 .lineup h2 {
-  margin-top: 40px;
-  font-size: 16px;
+  margin-top: 20px;
+  font-size: 18px;
   text-align: center;
 }
 
@@ -73,13 +87,28 @@ footer {
   margin: 5px 0;
 }
 
+.expand-button {
+  cursor: pointer;
+  text-align: center;
+  font-size: 20px;
+  margin-bottom: 20px;
+  border: 2px solid black;
+  border-radius: 5px;
+  padding: 5px;
+  background: #335fa6;
+  width: 85%; /* Set width to 80% of the viewport */
+  max-width: 400px; /* Optionally set a maximum width */
+  box-sizing: border-box; /* Ensure padding and border are included in width calculation */
+  display: block; /* Make it a block element to take full width */
+  margin-left: auto; /* Center the button horizontally */
+  margin-right: auto;
+}
+
 p {
     font-size: 16px;
     font-family: 'DM Sans', sans-serif;
     font-weight: 400;
-    padding: 0px 30px; /* Adjusted padding */
     text-indent: 1em;
-    margin: 10px auto 0; /* 20px top margin, center horizontally */
 }
 
 .intro-p {
@@ -87,13 +116,8 @@ p {
     font-family: 'DM Sans', sans-serif;
     font-weight: 400;
     text-indent: 1em;
-    margin: 10px auto 0; /* 20px top margin, center horizontally */
-    max-width: 80%;
-    text-align: center;
-}
-
-p:first-child {
-    margin: 30px auto 0;
+    margin: 25px auto 0; /* 20px top margin, center horizontally */
+    max-width: 85%;
 }
 
 ul {
@@ -289,6 +313,11 @@ ul {
   align-items: center; /* Center images horizontally */
 }
 
+.AlongTheWay p {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
 .image {
   margin-top: 15px;
   max-width: 90%; /* Set maximum width for the images */
@@ -299,6 +328,10 @@ ul {
 
 .image:first-child {
   margin-top: 50px;
+}
+
+.image:last-child {
+  margin-bottom: 150px;
 }
 
 .bottom-margin {
@@ -369,7 +402,11 @@ ul {
   }
 
   .intro-p {
-    font-size: 15px;
+    font-size: 20px;
+  }
+
+  intro-p:first-child {
+    margin-top: 20px;
   }
 
 }

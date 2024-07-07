@@ -4,6 +4,7 @@ function SportsDataProject() {
   const [todayGames, setTodayGames] = useState([]);
   const [tomorrowGames, setTomorrowGames] = useState([]);
   const [loading, setLoading] = useState(true); // Loading state
+  const [expanded, setExpanded] = useState(false); // State to manage expanded/collapsed state
 
   useEffect(() => {
     const today = new Date();
@@ -84,12 +85,15 @@ function SportsDataProject() {
       minute: '2-digit',
       hour12: true,
     });
+  };
 
+  const toggleExpanded = () => {
+    setExpanded(!expanded);
   };
 
   return (
     <div className="SportsDataProject">
-      <p className="intro-p">
+      <p className="otherParagraph">
         This is where my current project is being built. I have a
         lot of friends interested in sports data and they've mentioned to me how difficult it is to
         find a webpage that has all the statistics they want to see in one place. So I figured I'd try to
@@ -103,41 +107,45 @@ function SportsDataProject() {
           <p>Loading...</p>
         </div>
       ) : (
-
         <div className="pitchingLineups">
-          <div className="lineup">
-            <h2>TODAY</h2>
-            {todayGames.length === 0 && <p>No games scheduled for today.</p>}
-            {todayGames.map(date => (
-              <div key={date.date}>
-                <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
-                {date.games.map(game => (
-                  <div key={game.gamePk}>
-                    <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                    <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                    <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+          <h2 className="expand-button" onClick={toggleExpanded}>PROBABLE PITCHERS</h2>
+          {expanded && (
+            <div className="lineups-container">
+              <div className="lineup">
+                <h2>TODAY</h2>
+                {todayGames.length === 0 && <p>No games scheduled for today.</p>}
+                {todayGames.map(date => (
+                  <div key={date.date}>
+                    <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                    {date.games.map(game => (
+                      <div key={game.gamePk}>
+                        <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                        <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
+                        <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
 
-          <div className="lineup">
-            <h2>TOMORROW</h2>
-            {tomorrowGames.length === 0 && <p>No games scheduled for tomorrow.</p>}
-            {tomorrowGames.map(date => (
-              <div key={date.date}>
-                <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
-                {date.games.map(game => (
-                  <div key={game.gamePk}>
-                    <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                    <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                    <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+              <div className="lineup">
+                <h2>TOMORROW</h2>
+                {tomorrowGames.length === 0 && <p>No games scheduled for tomorrow.</p>}
+                {tomorrowGames.map(date => (
+                  <div key={date.date}>
+                    <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                    {date.games.map(game => (
+                      <div key={game.gamePk}>
+                        <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                        <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
+                        <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
