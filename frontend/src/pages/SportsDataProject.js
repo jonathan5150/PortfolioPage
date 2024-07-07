@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 function SportsDataProject() {
   const [todayGames, setTodayGames] = useState([]);
   const [tomorrowGames, setTomorrowGames] = useState([]);
+  const [loading, setLoading] = useState(true); // Loading state
 
   useEffect(() => {
     const today = new Date();
@@ -17,9 +18,6 @@ function SportsDataProject() {
       const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`;
       const response = await fetch(url);
       const data = await response.json();
-
-      // Log the data to inspect the structure
-      console.log('Fetched pitcher data:', data);
 
       const stats = data.people[0]?.stats;
       if (stats && stats.length > 0) {
@@ -37,15 +35,8 @@ function SportsDataProject() {
       const data = await response.json();
       const games = data.dates;
 
-      console.log('Fetched games:', games);
-      console.log('Formatted Today:', todayFormatted);
-      console.log('Formatted Tomorrow:', tomorrowFormatted);
-
       const filteredTodayGames = games.filter(game => game.date === todayFormatted);
       const filteredTomorrowGames = games.filter(game => game.date === tomorrowFormatted);
-
-      console.log("Filtered Today's Games:", filteredTodayGames);
-      console.log("Filtered Tomorrow's Games:", filteredTomorrowGames);
 
       // Fetch ERA for each probable pitcher
       for (const gameDay of filteredTodayGames) {
@@ -72,6 +63,15 @@ function SportsDataProject() {
 
       setTodayGames(filteredTodayGames);
       setTomorrowGames(filteredTomorrowGames);
+
+      // Ensure loading is displayed for at least 3 seconds
+      const minLoadingTime = 3000;
+      const loadingEndTime = Date.now() + minLoadingTime;
+
+      const delay = Math.max(0, loadingEndTime - Date.now());
+      setTimeout(() => {
+        setLoading(false);
+      }, delay);
     };
 
     fetchData();
@@ -84,6 +84,7 @@ function SportsDataProject() {
       minute: '2-digit',
       hour12: true,
     });
+
   };
 
   return (
@@ -96,38 +97,49 @@ function SportsDataProject() {
         storing that information in a database, and manipulating it.
       </p>
 
-      <div className="pitchingLineups">
-        <div className="lineup">
-          <h2>Today's Pitching Lineup</h2>
-          {todayGames.length === 0 && <p>No games scheduled for today.</p>}
-          {todayGames.map(date => (
-            <div key={date.date}>
-              {date.games.map(game => (
-                <div key={game.gamePk}>
-                  <p>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                  <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                  <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
-                </div>
-              ))}
-            </div>
-          ))}
+      {loading ? (
+        <div className="loading">
+          <img src="/baseball.gif" alt="Loading..." />
+          <p>Loading...</p>
         </div>
-        <div className="lineup">
-          <h2>Tomorrow's Pitching Lineup</h2>
-          {tomorrowGames.length === 0 && <p>No games scheduled for tomorrow.</p>}
-          {tomorrowGames.map(date => (
-            <div key={date.date}>
-              {date.games.map(game => (
-                <div key={game.gamePk}>
-                  <p>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                  <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                  <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
-                </div>
-              ))}
-            </div>
-          ))}
+      ) : (
+        <div className="pitchingLineups">
+          <div className="lineup">
+            <h2>Today's Pitching Lineup</h2>
+            {todayGames.length === 0 && <p>No games scheduled for today.</p>}
+            {todayGames.map(date => (
+              <div key={date.date}>
+                {/* Add console log for date.date */}
+                <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                {date.games.map(game => (
+                  <div key={game.gamePk}>
+                    <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                    <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
+                    <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          <div className="lineup">
+            <h2>Tomorrow's Pitching Lineup</h2>
+            {tomorrowGames.length === 0 && <p>No games scheduled for tomorrow.</p>}
+            {tomorrowGames.map(date => (
+              <div key={date.date}>
+                <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                {date.games.map(game => (
+                  <div key={game.gamePk}>
+                    <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                    <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
+                    <p>Probable Pitcher: {game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
