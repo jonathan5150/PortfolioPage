@@ -4,10 +4,10 @@
 /* GENERAL CSS */
 
 html {
-  overflow-y: auto;
+  overflow-y: auto; /* Allow vertical scrolling */
+  overflow-x: hidden; /* Disable horizontal scrolling */
   min-height: 100vh;
-  height: 100vh; /* Ensure the body covers the entire viewport height */
-  height: 100dvh;
+  height: 100vh; /* Ensure the html covers the entire viewport height */
 }
 
 .bg {
@@ -17,7 +17,6 @@ html {
   height: 100vh;
   width: 100vw;
   position: fixed;
-  /* z-index usage is up to you.. although there is no need of using it because the default stack context will work. */
   z-index: -50;
 }
 
@@ -26,8 +25,8 @@ body {
   padding: 0; /* Reset default body padding */
   min-height: 100vh;
   height: 100vh; /* Ensure the body covers the entire viewport height */
-  height: 100dvh;
 }
+
 
 footer {
   font-family: 'DM Sans', sans-serif;
@@ -68,13 +67,22 @@ footer {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 100px;
 }
 
 .lineups-container {
   display: flex;
   justify-content: space-between;
   width: 100%;
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
 }
 
 .lineups-container p {
@@ -82,6 +90,8 @@ footer {
 }
 
 .lineup {
+  border: 1px solid black;
+  border-radius: 5px;
   width: 45%;
   text-align: center;
   padding-left: 10px;
@@ -89,22 +99,18 @@ footer {
   margin-left: 10px;
   margin-right: 10px;
   margin-bottom: 30px;
+  background: rgba(222, 222, 222, 0.3); /* Adjust the last value (0.8) for the desired opacity */
 }
 
 .lineupGroup {
   border: 1px solid black;
   border-radius: 5px;
-  background: #f0f0f0;
-}
-
-.lineup h2 {
-  margin-top: 20px;
-  font-size: 18px;
-  text-align: center;
+  background: rgba(255, 255, 255, 0.4); /* Adjust the last value (0.9) for the desired opacity */
+  margin-bottom: 10px;
 }
 
 .lineup h3 {
-  margin-top: -10px;
+  margin-top: 10px;
   font-size: 13px;
   margin-bottom: 10px;
   text-align: center;
@@ -115,11 +121,15 @@ footer {
 }
 
 .expand-button {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently supported by most browsers */
   cursor: pointer;
   text-align: center;
   font-size: 20px;
-  margin-bottom: 20px;
-  border: 2px solid transparent; /* Ensure border is transparent */
+  margin-bottom: 40px;
+  border: 2px solid black; /* Ensure border is transparent */
   border-radius: 5px;
   padding: 10px 20px; /* Adjust padding as needed */
   background-color: rgba(51, 95, 166, 0.7); /* Transparent blue background */
@@ -127,7 +137,7 @@ footer {
   transition: background-color 0.3s ease, border-color 0.3s ease; /* Smooth transition for background and border color */
 
   /* Additional styles for better visibility */
-  color: white; /* Text color */
+  color: black; /* Text color */
   width: 85%; /* Set width to 85% of the viewport */
   max-width: 300px; /* Optionally set a maximum width */
   box-sizing: border-box; /* Ensure padding and border are included in width calculation */
@@ -138,7 +148,7 @@ footer {
 
 .expand-button:hover {
   background-color: rgba(51, 95, 166, 0.9); /* Lighter transparent blue on hover */
-  border-color: #335fa6; /* Darken border color on hover */
+  border: 2px solid black; /* Ensure border is transparent */
 }
 
 p {
@@ -462,6 +472,8 @@ ul {
   height: 75vh; /* Set the height of the container to the full viewport height */
 }
 
+
+
 .Projects {
   margin-top: 7em;
 }
@@ -520,10 +532,10 @@ ul {
 
 @keyframes zoomInOut {
   0%, 100% {
-    transform: scale(1);
+    transform: scale(0.8);
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1.3);
   }
 }
 
@@ -536,8 +548,8 @@ ul {
 }
 
 .loading img {
-  width: 75px; /* Adjust the size as needed */
-  height: 75px; /* Adjust the size as needed */
+  width: 50px; /* Adjust the size as needed */
+  height: 50px; /* Adjust the size as needed */
   animation: zoomInOut 1.8s infinite; /* Apply the zoom in/out animation */
 }
 
@@ -551,8 +563,13 @@ ul {
 }
 
 .loading p {
-  margin-top: -6px; /* Space between the image and text */
+  margin-top: 0px; /* Space between the image and text */
   font-size: 14px; /* Adjust the font size as needed */
   color: #000; /* Adjust the text color as needed */
   animation: fadeInOut 1.7s infinite; /* Apply the fade in/out animation */
+}
+
+.arrow-icon {
+  display: inline-block;
+  transition: transform 0.3s ease; /* Ensure smooth transition */
 }

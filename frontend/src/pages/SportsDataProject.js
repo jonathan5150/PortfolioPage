@@ -108,48 +108,53 @@ function SportsDataProject() {
         </div>
       ) : (
         <div className="pitchingLineups">
-          <h2 className="expand-button" onClick={toggleExpanded}>PROBABLE PITCHERS</h2>
-          {expanded && (
-            <div className="lineups-container">
-              <div className="lineup">
-                <h2>TODAY</h2>
-                {todayGames.length === 0 && <p>No games scheduled for today.</p>}
-                {todayGames.map(date => (
-                  <div key={date.date}>
-                    <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
-                    {date.games.map(game => (
-                      <div key={game.gamePk}>
-                        <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                        <div className="lineupGroup">
+          <h2 className="expand-button" onClick={toggleExpanded}>
+            PROBABLE PITCHERS{' '}
+            <span className="arrow-icon" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+              &#x25BC; {/* Down arrow */}
+            </span>
+          </h2>
+          <div className={`lineups-container ${expanded ? 'fade-in' : ''}`}>
+            {expanded && (
+              <>
+                <div className="lineup">
+                  {todayGames.length === 0 && <p>No games scheduled for today.</p>}
+                  {todayGames.map(date => (
+                    <div key={date.date}>
+                      <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                      {date.games.map(game => (
+                        <div key={game.gamePk}>
+                          <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                          <div className="lineupGroup">
                             <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
                             <p>{game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
 
-              <div className="lineup">
-                <h2>TOMORROW</h2>
-                {tomorrowGames.length === 0 && <p>No games scheduled for tomorrow.</p>}
-                {tomorrowGames.map(date => (
-                  <div key={date.date}>
-                    <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
-                    {date.games.map(game => (
-                      <div key={game.gamePk}>
-                        <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                        <div className="lineupGroup">
-                          <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                          <p>{game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                <div className="lineup">
+                  {tomorrowGames.length === 0 && <p>No games scheduled for tomorrow.</p>}
+                  {tomorrowGames.map(date => (
+                    <div key={date.date}>
+                      <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                      {date.games.map(game => (
+                        <div key={game.gamePk}>
+                          <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                          <div className="lineupGroup">
+                            <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
+                            <p>{game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
