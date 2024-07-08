@@ -9,6 +9,7 @@ html {
   background-repeat: no-repeat; /* Prevent background image from repeating */
   background-size: auto 100%; /* Ensure background image stretches vertically */
   background-attachment: fixed; /* Keep the background image fixed */
+  min-height: 100vh;
   height: 100vh; /* Ensure the body covers the entire viewport height */
   height: 100dvh;
 }
@@ -16,6 +17,7 @@ html {
 body {
   margin: 0; /* Reset default body margin */
   padding: 0; /* Reset default body padding */
+  min-height: 100vh;
   height: 100vh; /* Ensure the body covers the entire viewport height */
   height: 100dvh;
 }
