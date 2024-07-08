@@ -14,7 +14,8 @@ html {
 body {
   margin: 0; /* Reset default body margin */
   padding: 0; /* Reset default body padding */
-  height: 100%; /* Ensure the body covers the entire viewport height */
+  height: 100vh; /* Ensure the body covers the entire viewport height */
+  height: 100dvh;
 }
 
 footer {
