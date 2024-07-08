@@ -9,6 +9,8 @@ html {
   background-repeat: no-repeat; /* Prevent background image from repeating */
   background-size: auto 100%; /* Ensure background image stretches vertically */
   background-attachment: fixed; /* Keep the background image fixed */
+  height: 100vh; /* Ensure the body covers the entire viewport height */
+  height: 100dvh;
 }
 
 body {
