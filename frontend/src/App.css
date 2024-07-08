@@ -369,6 +369,12 @@ ul {
 
 @media only screen and (max-width: 768px) {
     /* Adjustments for smaller screens (e.g., phones) */
+
+    html {
+      height: calc(100% + 60px);
+      min-height: calc(100% + 60px);
+    }
+
     .resume-image {
         width: 95vw; /* Use viewport width for mobile view */
     }
