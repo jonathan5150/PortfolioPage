@@ -17,6 +17,7 @@ function App() {
     <Router>
       <div className="App">
         <Header />
+        <div className="bg"></div>
         <div className="content">
           <Routes>
             <Route path="/" element={<Home />} />
