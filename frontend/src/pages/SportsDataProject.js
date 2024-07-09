@@ -137,7 +137,9 @@ function SportsDataProject() {
                   {todayGames.length === 0 && <p>No games scheduled for today.</p>}
                   {todayGames.map(date => (
                     <div key={date.date}>
-                      <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                      <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', {
+                      timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day:
+                      'numeric' })}</h3>
                       {date.games.map(game => (
                         <div key={game.gamePk}>
                           <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
@@ -145,12 +147,6 @@ function SportsDataProject() {
                             <p>
                               <span style={{ fontWeight: 'bold' }}>{game.teams.away.team
                               .name}</span>
-                            </p>
-                            <p className="vs">
-                                @
-                            </p>
-                            <p>
-                             <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
                             </p>
                             <p>
                               {game.teams.away.probablePitcher?.fullName === "?"
@@ -163,7 +159,10 @@ function SportsDataProject() {
                                 )}
                             </p>
                             <p className="vs">
-                                vs.
+                                @
+                            </p>
+                            <p>
+                             <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
                             </p>
                             <p>
                               {game.teams.home.probablePitcher?.fullName === "?"
@@ -186,7 +185,9 @@ function SportsDataProject() {
                   {tomorrowGames.length === 0 && <p>No games scheduled for tomorrow.</p>}
                   {tomorrowGames.map(date => (
                     <div key={date.date}>
-                      <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                      <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', {
+                      timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day:
+                      'numeric' })}</h3>
                       {date.games.map(game => (
                         <div key={game.gamePk}>
                           <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
@@ -194,12 +195,6 @@ function SportsDataProject() {
                             <p>
                               <span style={{ fontWeight: 'bold' }}>{game.teams.away.team
                               .name}</span>
-                            </p>
-                            <p className="vs">
-                                @
-                            </p>
-                            <p>
-                             <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
                             </p>
                             <p>
                               {game.teams.away.probablePitcher?.fullName === "?"
@@ -212,7 +207,10 @@ function SportsDataProject() {
                                 )}
                             </p>
                             <p className="vs">
-                                vs.
+                                @
+                            </p>
+                            <p>
+                             <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
                             </p>
                             <p>
                               {game.teams.home.probablePitcher?.fullName === "?"
