@@ -24,10 +24,12 @@ function SportsDataProject() {
       if (stats && stats.length > 0) {
         const currentSeasonStats = stats[0]?.splits;
         if (currentSeasonStats && currentSeasonStats.length > 0) {
-          return currentSeasonStats[0]?.stat?.era || "N/A";
+          const era = currentSeasonStats[0]?.stat?.era || "N/A";
+          const gamesPlayed = currentSeasonStats[0]?.stat?.gamesPlayed || "N/A";
+          return { era, gamesPlayed };
         }
       }
-      return "N/A";
+      return { era: "N/A", gamesPlayed: "N/A" };
     };
 
     const fetchData = async () => {
@@ -39,14 +41,21 @@ function SportsDataProject() {
       const filteredTodayGames = games.filter(game => game.date === todayFormatted);
       const filteredTomorrowGames = games.filter(game => game.date === tomorrowFormatted);
 
-      // Fetch ERA for each probable pitcher
       for (const gameDay of filteredTodayGames) {
         for (const game of gameDay.games) {
           if (game.teams.away.probablePitcher) {
-            game.teams.away.probablePitcher.era = await fetchPitcherData(game.teams.away.probablePitcher.id);
+            const stats = await fetchPitcherData(game.teams.away.probablePitcher.id);
+            game.teams.away.probablePitcher.era = stats.era;
+            game.teams.away.probablePitcher.gamesPlayed = stats.gamesPlayed;
+          } else {
+            game.teams.away.probablePitcher = { fullName: "?", era: "?", gamesPlayed: "?" };
           }
           if (game.teams.home.probablePitcher) {
-            game.teams.home.probablePitcher.era = await fetchPitcherData(game.teams.home.probablePitcher.id);
+            const stats = await fetchPitcherData(game.teams.home.probablePitcher.id);
+            game.teams.home.probablePitcher.era = stats.era;
+            game.teams.home.probablePitcher.gamesPlayed = stats.gamesPlayed;
+          } else {
+            game.teams.home.probablePitcher = { fullName: "?", era: "?", gamesPlayed: "?" };
           }
         }
       }
@@ -54,10 +63,18 @@ function SportsDataProject() {
       for (const gameDay of filteredTomorrowGames) {
         for (const game of gameDay.games) {
           if (game.teams.away.probablePitcher) {
-            game.teams.away.probablePitcher.era = await fetchPitcherData(game.teams.away.probablePitcher.id);
+            const stats = await fetchPitcherData(game.teams.away.probablePitcher.id);
+            game.teams.away.probablePitcher.era = stats.era;
+            game.teams.away.probablePitcher.gamesPlayed = stats.gamesPlayed;
+          } else {
+            game.teams.away.probablePitcher = { fullName: "?", era: "?", gamesPlayed: "?" };
           }
           if (game.teams.home.probablePitcher) {
-            game.teams.home.probablePitcher.era = await fetchPitcherData(game.teams.home.probablePitcher.id);
+            const stats = await fetchPitcherData(game.teams.home.probablePitcher.id);
+            game.teams.home.probablePitcher.era = stats.era;
+            game.teams.home.probablePitcher.gamesPlayed = stats.gamesPlayed;
+          } else {
+            game.teams.home.probablePitcher = { fullName: "?", era: "?", gamesPlayed: "?" };
           }
         }
       }
@@ -65,7 +82,6 @@ function SportsDataProject() {
       setTodayGames(filteredTodayGames);
       setTomorrowGames(filteredTomorrowGames);
 
-      // Ensure loading is displayed for at least 3 seconds
       const minLoadingTime = 3000;
       const loadingEndTime = Date.now() + minLoadingTime;
 
@@ -126,8 +142,24 @@ function SportsDataProject() {
                         <div key={game.gamePk}>
                           <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
                           <div className="lineupGroup">
-                            <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                            <p>{game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                            <p>
+                              <span style={{ fontWeight: 'bold' }}>{game.teams.away.team
+                              .name}</span> @ <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
+                            </p>
+                            <p>
+                              {game.teams.away.probablePitcher?.fullName === "?"
+                                ? '?'
+                                : `${game.teams.away.probablePitcher?.fullName} (ERA: ${game.teams
+                                .away.probablePitcher?.era}, Games: ${game.teams.away.probablePitcher?.gamesPlayed})`}
+                            </p>
+                            <p className="vs">
+                                vs.
+                            </p>
+                            <p>
+                              {game.teams.home.probablePitcher?.fullName === "?"
+                                ? '?'
+                                : `${game.teams.home.probablePitcher?.fullName} (ERA: ${game.teams.home.probablePitcher?.era}, Games: ${game.teams.home.probablePitcher?.gamesPlayed})`}
+                            </p>
                           </div>
                         </div>
                       ))}
@@ -143,9 +175,25 @@ function SportsDataProject() {
                       {date.games.map(game => (
                         <div key={game.gamePk}>
                           <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                          <div className="lineupGroup">
-                            <p>{game.teams.away.team.name} at {game.teams.home.team.name}</p>
-                            <p>{game.teams.away.probablePitcher?.fullName} (ERA: {game.teams.away.probablePitcher?.era}) vs {game.teams.home.probablePitcher?.fullName} (ERA: {game.teams.home.probablePitcher?.era})</p>
+                            <div className="lineupGroup">
+                            <p>
+                              <span style={{ fontWeight: 'bold' }}>{game.teams.away.team
+                              .name}</span> @ <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
+                            </p>
+                            <p>
+                              {game.teams.away.probablePitcher?.fullName === "?"
+                                ? '?'
+                                : `${game.teams.away.probablePitcher?.fullName} (ERA: ${game.teams
+                                .away.probablePitcher?.era}, Games: ${game.teams.away.probablePitcher?.gamesPlayed})`}
+                            </p>
+                            <p className="vs">
+                                vs.
+                            </p>
+                            <p>
+                              {game.teams.home.probablePitcher?.fullName === "?"
+                                ? '?'
+                                : `${game.teams.home.probablePitcher?.fullName} (ERA: ${game.teams.home.probablePitcher?.era}, Games: ${game.teams.home.probablePitcher?.gamesPlayed})`}
+                            </p>
                           </div>
                         </div>
                       ))}

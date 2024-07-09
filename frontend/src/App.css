@@ -89,6 +89,10 @@ footer {
   font-size: 13px;
 }
 
+.lineups-container .vs {
+  font-size: 10px;
+}
+
 .lineup {
   border: 1px solid black;
   border-radius: 5px;
