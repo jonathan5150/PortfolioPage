@@ -144,21 +144,36 @@ function SportsDataProject() {
                           <div className="lineupGroup">
                             <p>
                               <span style={{ fontWeight: 'bold' }}>{game.teams.away.team
-                              .name}</span> @ <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
+                              .name}</span>
+                            </p>
+                            <p className="vs">
+                                @
+                            </p>
+                            <p>
+                             <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
                             </p>
                             <p>
                               {game.teams.away.probablePitcher?.fullName === "?"
-                                ? '?'
-                                : `${game.teams.away.probablePitcher?.fullName} (ERA: ${game.teams
-                                .away.probablePitcher?.era}, Games: ${game.teams.away.probablePitcher?.gamesPlayed})`}
+                                ? 'TBD'
+                                : (
+                                  <>
+                                    {game.teams.away.probablePitcher?.fullName} <br />
+                                    (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
+                                  </>
+                                )}
                             </p>
                             <p className="vs">
                                 vs.
                             </p>
                             <p>
                               {game.teams.home.probablePitcher?.fullName === "?"
-                                ? '?'
-                                : `${game.teams.home.probablePitcher?.fullName} (ERA: ${game.teams.home.probablePitcher?.era}, Games: ${game.teams.home.probablePitcher?.gamesPlayed})`}
+                                ? 'TBD'
+                                : (
+                                  <>
+                                    {game.teams.home.probablePitcher?.fullName} <br />
+                                    (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
+                                  </>
+                                )}
                             </p>
                           </div>
                         </div>
@@ -178,21 +193,36 @@ function SportsDataProject() {
                             <div className="lineupGroup">
                             <p>
                               <span style={{ fontWeight: 'bold' }}>{game.teams.away.team
-                              .name}</span> @ <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
+                              .name}</span>
+                            </p>
+                            <p className="vs">
+                                @
+                            </p>
+                            <p>
+                             <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
                             </p>
                             <p>
                               {game.teams.away.probablePitcher?.fullName === "?"
-                                ? '?'
-                                : `${game.teams.away.probablePitcher?.fullName} (ERA: ${game.teams
-                                .away.probablePitcher?.era}, Games: ${game.teams.away.probablePitcher?.gamesPlayed})`}
+                                ? 'TBD'
+                                : (
+                                  <>
+                                    {game.teams.away.probablePitcher?.fullName} <br />
+                                    (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
+                                  </>
+                                )}
                             </p>
                             <p className="vs">
                                 vs.
                             </p>
                             <p>
                               {game.teams.home.probablePitcher?.fullName === "?"
-                                ? '?'
-                                : `${game.teams.home.probablePitcher?.fullName} (ERA: ${game.teams.home.probablePitcher?.era}, Games: ${game.teams.home.probablePitcher?.gamesPlayed})`}
+                                ? 'TBD'
+                                : (
+                                  <>
+                                    {game.teams.home.probablePitcher?.fullName} <br />
+                                    (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
+                                  </>
+                                )}
                             </p>
                           </div>
                         </div>
