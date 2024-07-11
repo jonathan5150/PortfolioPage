@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 function SportsDataProject() {
   const [todayGames, setTodayGames] = useState([]);
@@ -123,115 +124,123 @@ function SportsDataProject() {
           <p>Loading...</p>
         </div>
       ) : (
-        <div className="pitchingLineups">
-          <h2 className="expand-button" onClick={toggleExpanded}>
-            PROBABLE PITCHERS{' '}
-            <span className="arrow-icon" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-              &#x25BC; {/* Down arrow */}
-            </span>
-          </h2>
-          <div className={`lineups-container ${expanded ? 'fade-in' : ''}`}>
-            {expanded && (
-              <>
-                <div className="lineup">
-                  {todayGames.length === 0 && <p>No games scheduled for today.</p>}
-                  {todayGames.map(date => (
-                    <div key={date.date}>
-                      <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', {
-                      timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day:
-                      'numeric' })}</h3>
-                      {date.games.map(game => (
-                        <div key={game.gamePk}>
-                          <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                          <div className="lineupGroup">
-                            <p>
-                              <span style={{ fontWeight: 'bold' }}>{game.teams.away.team
-                              .name}</span>
-                            </p>
-                            <p>
-                              {game.teams.away.probablePitcher?.fullName === "?"
-                                ? 'TBD'
-                                : (
-                                  <>
-                                    {game.teams.away.probablePitcher?.fullName} <br />
-                                    (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
-                                  </>
-                                )}
-                            </p>
-                            <p className="vs">
-                                @
-                            </p>
-                            <p>
-                             <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
-                            </p>
-                            <p>
-                              {game.teams.home.probablePitcher?.fullName === "?"
-                                ? 'TBD'
-                                : (
-                                  <>
-                                    {game.teams.home.probablePitcher?.fullName} <br />
-                                    (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
-                                  </>
-                                )}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="lineup">
-                  {tomorrowGames.length === 0 && <p>No games scheduled for tomorrow.</p>}
-                  {tomorrowGames.map(date => (
-                    <div key={date.date}>
-                      <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', {
-                      timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day:
-                      'numeric' })}</h3>
-                      {date.games.map(game => (
-                        <div key={game.gamePk}>
-                          <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                            <div className="lineupGroup">
-                            <p>
-                              <span style={{ fontWeight: 'bold' }}>{game.teams.away.team
-                              .name}</span>
-                            </p>
-                            <p>
-                              {game.teams.away.probablePitcher?.fullName === "?"
-                                ? 'TBD'
-                                : (
-                                  <>
-                                    {game.teams.away.probablePitcher?.fullName} <br />
-                                    (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
-                                  </>
-                                )}
-                            </p>
-                            <p className="vs">
-                                @
-                            </p>
-                            <p>
-                             <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
-                            </p>
-                            <p>
-                              {game.teams.home.probablePitcher?.fullName === "?"
-                                ? 'TBD'
-                                : (
-                                  <>
-                                    {game.teams.home.probablePitcher?.fullName} <br />
-                                    (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
-                                  </>
-                                )}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
+        <>
+          <div className="MLBLink">
+            <Link to="/mlb-data-project">
+              <button className="mlbLinkButton">
+                LINK TO MLB DATA PROJECT
+              </button>
+            </Link>
           </div>
-        </div>
+
+          <div className="pitchingLineups">
+            <h2 className="expand-button" onClick={toggleExpanded}>
+              PROBABLE PITCHERS{' '}
+              <span className="arrow-icon" style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+                &#x25BC; {/* Down arrow */}
+              </span>
+            </h2>
+            <div className={`lineups-container ${expanded ? 'fade-in' : ''}`}>
+              {expanded && (
+                <>
+                  <div className="lineup">
+                    {todayGames.length === 0 && <p>No games scheduled for today.</p>}
+                    {todayGames.map(date => (
+                      <div key={date.date}>
+                        <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', {
+                        timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day:
+                        'numeric' })}</h3>
+                        {date.games.map(game => (
+                          <div key={game.gamePk}>
+                            <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                            <div className="lineupGroup">
+                              <p>
+                                <span style={{ fontWeight: 'bold' }}>{game.teams.away.team.name}</span>
+                              </p>
+                              <p>
+                                {game.teams.away.probablePitcher?.fullName === "?"
+                                  ? 'TBD'
+                                  : (
+                                    <>
+                                      {game.teams.away.probablePitcher?.fullName} <br />
+                                      (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
+                                    </>
+                                  )}
+                              </p>
+                              <p className="vs">
+                                  @
+                              </p>
+                              <p>
+                                <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
+                              </p>
+                              <p>
+                                {game.teams.home.probablePitcher?.fullName === "?"
+                                  ? 'TBD'
+                                  : (
+                                    <>
+                                      {game.teams.home.probablePitcher?.fullName} <br />
+                                      (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
+                                    </>
+                                  )}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="lineup">
+                    {tomorrowGames.length === 0 && <p>No games scheduled for tomorrow.</p>}
+                    {tomorrowGames.map(date => (
+                      <div key={date.date}>
+                        <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', {
+                        timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day:
+                        'numeric' })}</h3>
+                        {date.games.map(game => (
+                          <div key={game.gamePk}>
+                            <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                              <div className="lineupGroup">
+                              <p>
+                                <span style={{ fontWeight: 'bold' }}>{game.teams.away.team.name}</span>
+                              </p>
+                              <p>
+                                {game.teams.away.probablePitcher?.fullName === "?"
+                                  ? 'TBD'
+                                  : (
+                                    <>
+                                      {game.teams.away.probablePitcher?.fullName} <br />
+                                      (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
+                                    </>
+                                  )}
+                              </p>
+                              <p className="vs">
+                                  @
+                              </p>
+                              <p>
+                                <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
+                              </p>
+                              <p>
+                                {game.teams.home.probablePitcher?.fullName === "?"
+                                  ? 'TBD'
+                                  : (
+                                    <>
+                                      {game.teams.home.probablePitcher?.fullName} <br />
+                                      (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
+                                    </>
+                                  )}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

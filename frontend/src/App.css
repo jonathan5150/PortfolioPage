@@ -129,12 +129,14 @@ footer {
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
+  text-decoration: none;
   user-select: none; /* Non-prefixed version, currently supported by most browsers */
   cursor: pointer;
   text-align: center;
   font-size: 20px;
   font-weight: normal;
   margin-bottom: 40px;
+  margin-top: 40px;
   border: 2px solid black; /* Ensure border is transparent */
   border-radius: 5px;
   padding: 10px 20px; /* Adjust padding as needed */
@@ -581,4 +583,51 @@ ul {
 .arrow-icon {
   display: inline-block;
   transition: transform 0.3s ease; /* Ensure smooth transition */
+}
+
+.mlbLinkButton {
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  text-decoration: none;
+  user-select: none; /* Non-prefixed version, currently supported by most browsers */
+  cursor: pointer;
+  text-align: center;
+  font-size: 18px;
+  font-weight: normal;
+  margin-bottom: 40px;
+  margin-top: 40px;
+  border: 2px solid black; /* Ensure border is transparent */
+  border-radius: 5px;
+  padding: 10px 20px; /* Adjust padding as needed */
+  background-color: rgba(51, 95, 166, 0.7); /* Transparent blue background */
+  backdrop-filter: blur(8px); /* Apply a blur filter */
+  transition: background-color 0.3s ease, border-color 0.3s ease; /* Smooth transition for background and border color */
+
+  /* Additional styles for better visibility */
+  color: black; /* Text color */
+  width: 85%; /* Set width to 85% of the viewport */
+  max-width: 300px; /* Optionally set a maximum width */
+  box-sizing: border-box; /* Ensure padding and border are included in width calculation */
+  display: block; /* Make it a block element to take full width */
+  margin-left: auto; /* Center the button horizontally */
+  margin-right: auto;
+}
+
+.mlbLinkButton:hover {
+  background-color: rgba(51, 95, 166, 0.9); /* Lighter transparent blue on hover */
+  border: 2px solid black; /* Ensure border is transparent */
+}
+
+a:link {
+  text-decoration: none;
+}
+a:visited {
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: none;
+}
+a:active {
+  text-decoration: none;
 }
