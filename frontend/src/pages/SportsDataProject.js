@@ -126,7 +126,7 @@ function SportsDataProject() {
       ) : (
         <>
           <div className="MLBLink">
-            <Link to="/mlb-data-project">
+            <Link to="/MLBData">
               <button className="mlbLinkButton">
                 LINK TO MLB DATA PROJECT
               </button>

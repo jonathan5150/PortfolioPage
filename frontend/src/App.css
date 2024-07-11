@@ -3,12 +3,32 @@
 
 /* GENERAL CSS */
 
-html {
-  overflow-y: auto; /* Allow vertical scrolling */
-  overflow-x: hidden; /* Disable horizontal scrolling */
+html, body {
+  margin: 0;
+  padding: 0;
   min-height: 100vh;
-  height: 100vh; /* Ensure the html covers the entire viewport height */
+  height: 100vh;
+  overflow-x: hidden;
 }
+
+/*old body:
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  height: 100vh;
+}
+
+old html:
+
+html {
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 100vh;
+  height: 100vh;
+}
+*/
 
 .bg {
   background: linear-gradient(to bottom, #fafafa 0, #5c739e 100vh); /* Use vh unit for full viewport height */
@@ -20,12 +40,6 @@ html {
   z-index: -50;
 }
 
-body {
-  margin: 0; /* Reset default body margin */
-  padding: 0; /* Reset default body padding */
-  min-height: 100vh;
-  height: 100vh; /* Ensure the body covers the entire viewport height */
-}
 
 
 footer {
@@ -42,7 +56,7 @@ footer {
 
 .content {
     position: absolute;
-    margin-top: 100px; /* Adjust margin to the height of your navbar */
+    margin-top: 60px; /* Adjust margin to the height of your navbar */
 }
 
 .homeParagraph {
@@ -630,4 +644,17 @@ a:hover {
 }
 a:active {
   text-decoration: none;
+}
+
+.reet {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%; /* Ensure the container spans the full width */
+}
+
+.reet p {
+  text-align: center;
+  margin: 0;
 }

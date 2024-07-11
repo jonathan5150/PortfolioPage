@@ -2,7 +2,8 @@ import React from 'react';
 
 function MLBData() {
   return (
-    <div className="Contact">
+    <div className="reet">
+      <p>Reet</p>
     </div>
   );
 }
