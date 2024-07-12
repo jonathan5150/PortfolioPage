@@ -38,11 +38,13 @@ function Main() {
           <Route path="/alongtheway" element={<AlongTheWay />} />
           <Route path="/thiswebsite" element={<ThisWebsite />} />
           <Route path="/sportsdataproject" element={<SportsDataProject />} />
-          <Route path="/mlbdata" element={<MLBData />} />
           <Route path="/vehiclesearch" element={<VehicleSearch />} />
           <Route path="/contact" element={<Contact />} />
         </Routes>
       </div>
+        <Routes>
+            <Route path="/mlbdata" element={<MLBData />} />
+        </Routes>
     </div>
   );
 }
