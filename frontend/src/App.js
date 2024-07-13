@@ -9,7 +9,7 @@ import VehicleSearch from './pages/VehicleSearch';
 import SportsDataProject from './pages/SportsDataProject';
 import Contact from './pages/Contact';
 import ThisWebsite from './pages/ThisWebsite';
-import MLBData from './pages/MLBData';
+import MLBData from './pages/MLBData/MLBData';
 import Header from './components/Header';
 
 

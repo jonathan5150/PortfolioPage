@@ -646,15 +646,3 @@ a:active {
   text-decoration: none;
 }
 
-.reet {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  width: 100%; /* Ensure the container spans the full width */
-}
-
-.reet p {
-  text-align: center;
-  margin: 0;
-}
