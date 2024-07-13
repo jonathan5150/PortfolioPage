@@ -31,7 +31,7 @@ html {
 */
 
 .bg {
-  background: linear-gradient(to bottom, #fafafa 0, #5c739e 100vh); /* Use vh unit for full viewport height */
+  background-color: #f0f8ff;
   background-repeat: no-repeat;
   background-position: center;
   height: 100vh;
