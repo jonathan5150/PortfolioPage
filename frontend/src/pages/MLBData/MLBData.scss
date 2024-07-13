@@ -1,12 +1,66 @@
-
-
 .mlb-data-container {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
   height: 100%;
   width: 100%;
   text-align: center;
-  background-color: #f0f8ff; // You can change this to any color you like
-  padding: 20px;
+  background-color: #f0f8ff; /* You can change this to any color you like */
+}
+
+.pitchingLineups {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.lineups-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.lineups-container p {
+  font-size: 13px;
+}
+
+.lineups-container .vs {
+  font-size: 10px;
+}
+
+.lineup {
+  border: 1px solid black;
+  border-radius: 5px;
+  width: 90%;
+  text-align: center;
+  padding: 10px;
+  margin-bottom: 30px;
+  background: rgba(222, 222, 222, 0.3);
+}
+
+.lineupGroup {
+  width: 100%;
+  min-height: 130px;
+  border: 1px solid black;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.4);
+  margin-bottom: 10px;
+}
+
+.lineup h3 {
+  margin-top: 10px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.lineup p {
+  margin: 5px 0;
+}
+
+.pitchingColumn {
+  min-width: 80%;
 }
