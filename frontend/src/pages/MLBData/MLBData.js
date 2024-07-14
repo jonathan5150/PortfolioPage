@@ -140,19 +140,32 @@ function MLBData() {
       <div
         className={`fade-in-background ${!loading ? 'loaded' : ''}`}
         style={{
-          backgroundColor: loading ? '#dbdbdb' : 'transparent', // Set a background color during loading
-          backgroundImage: loading ? 'none' : `url(${process.env.PUBLIC_URL + '/bg4.jpg'})`,
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed', // Fix the background image
-          position: 'absolute', // Make sure it covers the entire container
+          position: 'fixed',
           top: 0,
           left: 0,
           width: '100%',
-          height: '100lvh',
+          height: '100vh',
+          zIndex: -1,
+          transform: 'scale(1.0)',
         }}
-      />
+      >
+        <div
+          style={{
+            content: '""',
+            display: 'block',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            backgroundColor: loading ? '#dbdbdb' : 'transparent',
+            backgroundImage: loading ? 'none' : `url(${process.env.PUBLIC_URL + '/bg4.jpg'})`,
+            backgroundPosition: 'center',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+          }}
+        />
+      </div>
       {loading ? (
         <div className="loading">
           <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
