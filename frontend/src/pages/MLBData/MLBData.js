@@ -126,7 +126,7 @@ function MLBData() {
 
     const initializeData = async () => {
       await Promise.all([fetchTeamLogos(), fetchMlbTeams(), fetchTeamRecords(), fetchData()]);
-      await delay(5000); // Add a 5-second delay
+      await delay(4000); // Add a 4-second delay
       setLoading(false); // Set loading to false after data fetching and delay
     };
 
@@ -163,14 +163,30 @@ function MLBData() {
 
   return (
     <div className="mlb-data-container">
+      <div
+        className={`fade-in-background ${!loading ? 'loaded' : ''}`}
+        style={{
+          backgroundColor: loading ? '#dbdbdb' : 'transparent', // Set a background color during loading
+          backgroundImage: loading ? 'none' : `url(${process.env.PUBLIC_URL + '/bg4.jpg'})`,
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'center',
+          backgroundAttachment: 'fixed', // Fix the background image
+          position: 'absolute', // Make sure it covers the entire container
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+        }}
+      />
       {loading ? (
         <div className="loading">
-          <img src="/baseball.gif" alt="Loading..." />
-          <p>Loading...</p>
+          <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
+          <p>loading...</p>
         </div>
       ) : (
-        <div className="pitchingLineups">
-          <div className={`lineups-container`}>
+        <div className={`pitchingLineups fade-in`}>
+          <div className="lineups-container">
             {todayGames.length === 0 ? (
               <p>No games scheduled for today.</p>
             ) : (
@@ -182,9 +198,7 @@ function MLBData() {
                   })}</h3>
                   {date.games.map(game => (
                     <div className="game-container" key={game.gamePk}>
-                      <p className="gameTime">{game.gameDate ?
-                      formatTime(game
-                      .gameDate) : 'Time not available'}</p>
+                      <p className="gameTime">{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
                       <div className="lineupGroup">
                         <div className="column1">
                           <div className="row1">

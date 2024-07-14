@@ -9,6 +9,7 @@ html, body {
   min-height: 100vh;
   height: 100vh;
   overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 /*old body:
@@ -31,7 +32,6 @@ html {
 */
 
 .bg {
-  background-color: #f0f8ff;
   background-repeat: no-repeat;
   background-position: center;
   height: 100vh;

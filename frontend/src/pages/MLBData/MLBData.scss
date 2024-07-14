@@ -1,17 +1,15 @@
 .mlb-data-container {
   display: flex;
-  justify-content: center;
   align-items: center;
   flex-direction: column;
-  min-height: 100vh;
   width: 100%;
+  height: 100vh;
   text-align: center;
-  background-color: #f0f8ff;
 }
 
 .game-container {
-  border: 1px solid black;
-  border-radius: 5px;
+  border: 1.5px solid black;
+  border-radius: 6px;
   margin-bottom: 10px;
 }
 
@@ -27,6 +25,7 @@
   flex-direction: column; /* Change to column layout */
   align-items: center; /* Center items horizontally */
   width: 100%;
+  margin-bottom: 0px;
 }
 
 .lineups-container p {
@@ -42,33 +41,38 @@
   text-align: center;
   padding: 5px;
   margin-bottom: 30px;
-  background: rgba(222, 222, 222, 0.3); /* Adjust the last value (0.8) for the desired opacity */
 }
 
 .lineupGroup {
   display: flex;
   justify-content: center; /* Ensure space between columns */
-  width: 97%; /* Ensure the lineup group takes the full width of the lineup */
   min-height: 130px;
   border: 1px solid black;
   border-radius: 5px;
-  background: rgba(242, 242, 242, 0.5); /* Adjust the last value (0.5) for the desired opacity */
+  background: rgba(242, 242, 242, 0.95); /* Adjust the last value (0.5) for the desired opacity */
   padding: 5px; /* Add padding for better spacing */
   border-top-right-radius: 0;
   border-top-left-radius: 0;
 }
 
 h2 {
-  font-size: 35px;
+  font-size: 30px;
   margin-top: 25px;
   margin-bottom: 0px;
+  border: 2px solid black;
+  border-radius: 5px;
+  background: rgba(242, 242, 242, 0.8);
 }
 
 h3 {
   font-size: 25px;
   margin-top: 10px;
   margin-bottom: 10px;
+  padding-bottom: 3px;
   text-align: center;
+  border: 2px solid black;
+  border-radius: 5px;
+  background: rgba(242, 242, 242, 0.8);
 }
 
 .column1, .column2, .column3 {
@@ -142,22 +146,21 @@ h3 {
 }
 
 .gameTime {
-  margin-top: 0px;
-  margin-bottom: 5px;
+  margin: 0px;
   font-weight: bold;
   border: 1px solid black;
   border-radius: 5px;
-  background: rgba(242, 242, 242, 0.5); /* Adjust the last value (0.5) for the desired opacity */
-  border-top-right-radius: 0;
-  border-top-left-radius: 0;
+  background: rgba(242, 242, 242, 0.8); /* Adjust the last value (0.5) for the desired opacity */
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 @keyframes zoomInOut {
   0%, 100% {
-    transform: scale(0.8);
+    transform: scale(1.2);
   }
   50% {
-    transform: scale(1.3);
+    transform: scale(0.5);
   }
 }
 
@@ -166,13 +169,18 @@ h3 {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 35vh; /* Adjust height as needed */
+  height: 100%; /* Adjust height as needed */
+  width: 100%;
+  font-variant: small-caps;
+  z-index: 10; /* Ensure it is on top of other elements */
+  position: relative;
+  background-color: #dbdbdb;
 }
 
 .loading img {
-  width: 50px; /* Adjust the size as needed */
-  height: 50px; /* Adjust the size as needed */
-  animation: zoomInOut 1.8s infinite; /* Apply the zoom in/out animation */
+  width: 80px; /* Adjust the size as needed */
+  height: 80px; /* Adjust the size as needed */
+  animation: zoomInOut 1.9s infinite; /* Apply the zoom in/out animation */
 }
 
 @keyframes fadeInOut {
@@ -186,9 +194,34 @@ h3 {
 
 .loading p {
   margin-top: 0px; /* Space between the image and text */
-  font-size: 14px; /* Adjust the font size as needed */
+  font-size: 25px; /* Adjust the font size as needed */
   color: #000; /* Adjust the text color as needed */
-  animation: fadeInOut 1.7s infinite; /* Apply the fade in/out animation */
+  animation: fadeInOut 1.9s infinite; /* Apply the fade in/out animation */
+  margin-top: -10px;
+  margin-left: 7px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in forwards; /* Adjust the duration as needed */
+}
+
+.fade-in-background {
+  opacity: 0;
+  transition: opacity 0.5s ease-in; /* Adjust the duration as needed */
+  z-index: -1;
+}
+
+.fade-in-background.loaded {
+  opacity: 1;
 }
 
 @media only screen and (max-width: 768px) {
