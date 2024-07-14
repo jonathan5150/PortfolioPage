@@ -144,6 +144,7 @@ function MLBData() {
             ) : (
               todayGames.map(date => (
                 <div className="pitchingColumn" key={date.date}>
+                  <h2>MLB Data Project</h2>
                   <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', {
                     timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day:
                     'numeric'
