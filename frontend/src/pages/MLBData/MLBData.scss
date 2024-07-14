@@ -6,7 +6,7 @@
   height: 100%;
   width: 100%;
   text-align: center;
-  background-color: #f0f8ff; /* You can change this to any color you like */
+  background-color: white; /* You can change this to any color you like */
 }
 
 .pitchingLineups {
@@ -28,7 +28,7 @@
 }
 
 .column2 p, .column2 span, .column2 div {
-  font-size: 18px; /* Change this value to your desired font size */
+  font-size: 17px; /* Change this value to your desired font size */
 }
 
 .lineup {
@@ -46,7 +46,7 @@
   min-height: 130px;
   border: 1px solid black;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.4); /* Adjust the last value (0.9) for the desired opacity */
+  background: rgba(242, 242, 242, 0.5); /* Adjust the last value (0.5) for the desired opacity */
   margin-bottom: 10px;
   padding: 5px; /* Add padding for better spacing */
 }
@@ -95,6 +95,7 @@ h3 {
 .pitchingColumn {
   min-width: 80%;
   max-width: 90%;
+  margin-bottom: 50px;
 }
 
 .column1 img {
@@ -105,7 +106,6 @@ h3 {
   border: 1px solid black;
   border-radius: 7px;
   padding: 3px;
-  background: #f2f2f2;
 }
 
 .pitcher-info-top {
@@ -134,6 +134,13 @@ h3 {
   font-size: 12px;
 }
 
+.gameTime {
+  font-weight: bold;
+  border: 1px solid black;
+  border-radius: 5px;
+  background: rgba(242, 242, 242, 0.5); /* Adjust the last value (0.5) for the desired opacity */
+}
+
 @media only screen and (max-width: 768px) {
   .column1 {
     width: 25%; /* Take 25% of the width */
@@ -143,6 +150,10 @@ h3 {
   .column2 {
     width: 75%; /* Take 75% of the width */
   }
+
+.column2 .pitcher-details {
+  font-size: 16px; /* Adjust the font size */
+}
 
   .column3 {
     display: none; /* Hide column3 on mobile devices */

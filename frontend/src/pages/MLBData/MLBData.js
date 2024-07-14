@@ -32,6 +32,7 @@ function MLBData() {
   const [loading, setLoading] = useState(true); // Loading state
   const [teamLogos, setTeamLogos] = useState({});
   const [mlbTeams, setMlbTeams] = useState([]);
+  const [teamRecords, setTeamRecords] = useState({});
 
   useEffect(() => {
     const today = new Date();
@@ -55,6 +56,23 @@ function MLBData() {
       const response = await fetch('https://statsapi.mlb.com/api/v1/teams?sportId=1');
       const data = await response.json();
       setMlbTeams(data.teams);
+    };
+
+    const fetchTeamRecords = async () => {
+      const response = await fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104'); // Fetch records for both leagues
+      const data = await response.json();
+      const records = {};
+
+      data.records.forEach(league => {
+        league.teamRecords.forEach(teamRecord => {
+          const teamId = teamRecord.team.id;
+          const wins = teamRecord.wins;
+          const losses = teamRecord.losses;
+          records[teamId] = `${wins}-${losses}`;
+        });
+      });
+
+      setTeamRecords(records);
     };
 
     const fetchPitcherData = async (pitcherId) => {
@@ -107,6 +125,7 @@ function MLBData() {
 
     fetchTeamLogos();
     fetchMlbTeams();
+    fetchTeamRecords();
     fetchData();
   }, []); // Empty dependency array means this effect runs once when the component mounts
 
@@ -129,6 +148,15 @@ function MLBData() {
     return '';
   };
 
+  const getTeamRecord = (mlbTeamName) => {
+    for (const mlbTeam of mlbTeams) {
+      if (mlbTeam.name === mlbTeamName) {
+        return teamRecords[mlbTeam.id] || '0-0';
+      }
+    }
+    return '0-0';
+  };
+
   return (
     <div className="mlb-data-container">
       {loading ? (
@@ -144,14 +172,15 @@ function MLBData() {
             ) : (
               todayGames.map(date => (
                 <div className="pitchingColumn" key={date.date}>
-                  <h2>MLB Data Project</h2>
+                  <h2>MLB DATA PROJECT</h2>
                   <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', {
-                    timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day:
-                    'numeric'
+                    timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day: 'numeric'
                   })}</h3>
                   {date.games.map(game => (
                     <div key={game.gamePk}>
-                      <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                      <p className="gameTime">{game.gameDate ?
+                      formatTime(game
+                      .gameDate) : 'Time not available'}</p>
                       <div className="lineupGroup">
                         <div className="column1">
                           <div className="row1">
@@ -163,24 +192,28 @@ function MLBData() {
                         </div>
                         <div className="column2">
                           <div className="pitcher-info-top">
-                            <span style={{ fontWeight: 'bold' }}>{game.teams.away.team.name}</span>
+                            <span style={{ fontWeight: 'bold' }}>
+                              {game.teams.away.team.name} ({getTeamRecord(game.teams.away.team.name)})
+                            </span>
                             <div className="pitcher-details">
                               {game.teams.away.probablePitcher?.fullName === "?" ? 'TBD' : (
                                 <>
                                   {game.teams.away.probablePitcher?.fullName} <br />
-                                  (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
+                                  ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed}
                                 </>
                               )}
                             </div>
                           </div>
                           <p className="vs">@</p>
                           <div className="pitcher-info-bottom">
-                            <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
+                            <span style={{ fontWeight: 'bold' }}>
+                              {game.teams.home.team.name} ({getTeamRecord(game.teams.home.team.name)})
+                            </span>
                             <div className="pitcher-details">
                               {game.teams.home.probablePitcher?.fullName === "?" ? 'TBD' : (
                                 <>
                                   {game.teams.home.probablePitcher?.fullName} <br />
-                                  (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
+                                  ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed}
                                 </>
                               )}
                             </div>
