@@ -9,18 +9,18 @@ function MLBData() {
   const [teamLogos, setTeamLogos] = useState({});
   const [mlbTeams, setMlbTeams] = useState([]);
   const [teamRecords, setTeamRecords] = useState({});
-  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
 
   useEffect(() => {
-    const handleResize = () => {
-      setViewportHeight(window.innerHeight);
+    const updateViewportHeight = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
     };
 
-    window.addEventListener('resize', handleResize);
-    handleResize();
+    window.addEventListener('resize', updateViewportHeight);
+    updateViewportHeight();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', updateViewportHeight);
     };
   }, []);
 
@@ -150,7 +150,7 @@ function MLBData() {
   };
 
   return (
-    <div className="mlb-data-container" style={{ height: viewportHeight }}>
+    <div className="mlb-data-container">
       <div
         className={`fade-in-background ${!loading ? 'loaded' : ''}`}
         style={{
