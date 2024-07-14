@@ -1,35 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import './MLBData.scss';
 
-const useWindowSize = () => {
-  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
-
-  const handleSize = () => {
-    setWindowSize({
-      width: window.innerWidth,
-      height: window.innerHeight
-    });
-  };
-
-  useEffect(() => {
-    handleSize();
-
-    const handleResize = () => {
-      handleSize();
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  return windowSize;
-};
-
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 function MLBData() {
-  useWindowSize(); // Call the hook without using its returned value
   const [todayGames, setTodayGames] = useState([]);
   const [loading, setLoading] = useState(true); // Loading state
   const [teamLogos, setTeamLogos] = useState({});
