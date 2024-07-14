@@ -27,6 +27,10 @@
   font-size: 20px;
 }
 
+.column2 p, .column2 span, .column2 div {
+  font-size: 18px; /* Change this value to your desired font size */
+}
+
 .lineup {
   width: 90%; /* Adjust width to take most of the container's width */
   text-align: center;
@@ -38,13 +42,13 @@
 .lineupGroup {
   display: flex;
   justify-content: center; /* Ensure space between columns */
-  width: 100%; /* Ensure the lineup group takes the full width of the lineup */
+  width: 97%; /* Ensure the lineup group takes the full width of the lineup */
   min-height: 130px;
   border: 1px solid black;
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.4); /* Adjust the last value (0.9) for the desired opacity */
   margin-bottom: 10px;
-  padding: 0px; /* Add padding for better spacing */
+  padding: 5px; /* Add padding for better spacing */
 }
 
 h2 {
@@ -79,6 +83,9 @@ h3 {
 
 .column2 {
   width: 20%; /* Take 20% of the width */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .column3 {
@@ -94,17 +101,43 @@ h3 {
   max-width: 90%;
   max-height: 90%;
   object-fit: contain; /* Ensures the image scales down to fit within its container */
-  margin-right: 20px;
+  margin-right: 15px;
   border: 1px solid black;
   border-radius: 7px;
-  padding: 5px;
+  padding: 3px;
   background: #f2f2f2;
+}
+
+.pitcher-info-top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+  margin-bottom: auto;
+  min-height: 72px;
+}
+
+.pitcher-info-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+  margin-bottom: auto;
+  min-height: 72px;
+}
+
+.pitcher-details {
+  text-align: center;
+}
+
+.vs p {
+  font-size: 12px;
 }
 
 @media only screen and (max-width: 768px) {
   .column1 {
     width: 25%; /* Take 25% of the width */
-    padding-left: 20px;
+    padding: 5px;
   }
 
   .column2 {
@@ -117,5 +150,11 @@ h3 {
 
   .column1 img {
     margin-right: 0px;
+    margin-top: 5px;
+  }
+
+  p.vs {
+    font-size: 12px;
+    margin: 0;
   }
 }

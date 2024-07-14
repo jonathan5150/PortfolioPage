@@ -162,28 +162,29 @@ function MLBData() {
                           </div>
                         </div>
                         <div className="column2">
-                          <p>
+                          <div className="pitcher-info-top">
                             <span style={{ fontWeight: 'bold' }}>{game.teams.away.team.name}</span>
-                          </p>
-                          <p>
-                            {game.teams.away.probablePitcher?.fullName === "?" ? 'TBD' : (
-                              <>
-                                {game.teams.away.probablePitcher?.fullName} <br />
-                                (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
-                              </>
-                            )}
-                          </p>
-                          <p>
+                            <div className="pitcher-details">
+                              {game.teams.away.probablePitcher?.fullName === "?" ? 'TBD' : (
+                                <>
+                                  {game.teams.away.probablePitcher?.fullName} <br />
+                                  (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <p className="vs">@</p>
+                          <div className="pitcher-info-bottom">
                             <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
-                          </p>
-                          <p>
-                            {game.teams.home.probablePitcher?.fullName === "?" ? 'TBD' : (
-                              <>
-                                {game.teams.home.probablePitcher?.fullName} <br />
-                                (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
-                              </>
-                            )}
-                          </p>
+                            <div className="pitcher-details">
+                              {game.teams.home.probablePitcher?.fullName === "?" ? 'TBD' : (
+                                <>
+                                  {game.teams.home.probablePitcher?.fullName} <br />
+                                  (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
                         <div className="column3"></div>
                       </div>
