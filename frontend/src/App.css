@@ -33,7 +33,7 @@ html {
 .bg {
   background-repeat: no-repeat;
   background-position: center;
-  height: 100vh;
+  height: 100lvh;
   width: 100vw;
   position: fixed;
   z-index: -50;
@@ -74,7 +74,7 @@ footer {
 }
 
 .SportsDataProject {
-  height: 100vh; /* Adjust height as needed */
+  height: 100lvh; /* Adjust height as needed */
 }
 
 p {
@@ -275,7 +275,7 @@ ul {
 
 
 .ScrollableContainer {
-  height: 100vh; /* Set a fixed height for the container */
+  height: 100lvh; /* Set a fixed height for the container */
   overflow-y: auto; /* Allow vertical overflow */
 }
 
@@ -330,7 +330,7 @@ ul {
   .navbar {
     align-items: center;
     width: 100vw;
-    height: 7vh;
+    height: 7lvh;
     background-size: 100% 100%;
   }
 
