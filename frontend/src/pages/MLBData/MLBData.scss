@@ -13,54 +13,79 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 100%;
+  width: 100%; /* Ensure it takes the full width */
 }
 
 .lineups-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: column; /* Change to column layout */
+  align-items: center; /* Center items horizontally */
   width: 100%;
 }
 
 .lineups-container p {
-  font-size: 13px;
-}
-
-.lineups-container .vs {
-  font-size: 10px;
+  font-size: 20px;
 }
 
 .lineup {
-  border: 1px solid black;
-  border-radius: 5px;
-  width: 90%;
+  width: 90%; /* Adjust width to take most of the container's width */
   text-align: center;
-  padding: 10px;
+  padding: 5px;
   margin-bottom: 30px;
-  background: rgba(222, 222, 222, 0.3);
+  background: rgba(222, 222, 222, 0.3); /* Adjust the last value (0.8) for the desired opacity */
 }
 
 .lineupGroup {
-  width: 100%;
+  display: flex;
+  justify-content: center; /* Ensure space between columns */
+  width: 100%; /* Ensure the lineup group takes the full width of the lineup */
   min-height: 130px;
   border: 1px solid black;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.4); /* Adjust the last value (0.9) for the desired opacity */
   margin-bottom: 10px;
+  padding: 0px; /* Add padding for better spacing */
 }
 
 .lineup h3 {
   margin-top: 10px;
-  font-size: 13px;
+  font-size: 15px;
   margin-bottom: 10px;
   text-align: center;
 }
 
-.lineup p {
-  margin: 5px 0;
+.column1, .column2, .column3 {
+  display: flex;
+  flex-direction: column; /* Stack items vertically */
+}
+
+.column1 {
+  width: 10%; /* Take 10% of the width */
+}
+
+.column1 .row1, .column1 .row2 {
+  flex: 1; /* Divide the space equally between row1 and row2 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+}
+
+.column2 {
+  width: 20%; /* Take 20% of the width */
+}
+
+.column3 {
+  width: 60%; /* Take 60% of the width */
 }
 
 .pitchingColumn {
   min-width: 80%;
+  max-width: 90%;
+}
+
+.column1 img {
+  max-width: 90%;
+  max-height: 90%;
+  object-fit: contain; /* Ensures the image scales down to fit within its container */
 }

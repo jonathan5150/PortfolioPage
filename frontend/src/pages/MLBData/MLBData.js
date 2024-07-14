@@ -30,12 +30,32 @@ function MLBData() {
   useWindowSize(); // Call the hook without using its returned value
   const [todayGames, setTodayGames] = useState([]);
   const [loading, setLoading] = useState(true); // Loading state
+  const [teamLogos, setTeamLogos] = useState({});
+  const [mlbTeams, setMlbTeams] = useState([]);
 
   useEffect(() => {
     const today = new Date();
 
     const formatDate = (date) => date.toISOString().split('T')[0];
     const todayFormatted = formatDate(today);
+
+    const fetchTeamLogos = async () => {
+      const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams');
+      const data = await response.json();
+      const logos = {};
+
+      data.sports[0].leagues[0].teams.forEach(team => {
+        logos[team.team.displayName] = team.team.logos[0].href;
+      });
+
+      setTeamLogos(logos);
+    };
+
+    const fetchMlbTeams = async () => {
+      const response = await fetch('https://statsapi.mlb.com/api/v1/teams?sportId=1');
+      const data = await response.json();
+      setMlbTeams(data.teams);
+    };
 
     const fetchPitcherData = async (pitcherId) => {
       const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`;
@@ -85,6 +105,8 @@ function MLBData() {
       setLoading(false); // Set loading to false when data fetching is done
     };
 
+    fetchTeamLogos();
+    fetchMlbTeams();
     fetchData();
   }, []); // Empty dependency array means this effect runs once when the component mounts
 
@@ -95,6 +117,16 @@ function MLBData() {
       minute: '2-digit',
       hour12: true,
     });
+  };
+
+  const getTeamLogo = (mlbTeamName) => {
+    for (const mlbTeam of mlbTeams) {
+      if (mlbTeam.name === mlbTeamName) {
+        return teamLogos[mlbTeam.name] || '';
+      }
+    }
+    console.error(`Logo not found for team: ${mlbTeamName}`);
+    return '';
   };
 
   return (
@@ -120,29 +152,39 @@ function MLBData() {
                     <div key={game.gamePk}>
                       <p style={{ fontWeight: 'bold' }}>{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
                       <div className="lineupGroup">
-                        <p>
-                          <span style={{ fontWeight: 'bold' }}>{game.teams.away.team.name}</span>
-                        </p>
-                        <p>
-                          {game.teams.away.probablePitcher?.fullName === "?" ? 'TBD' : (
-                            <>
-                              {game.teams.away.probablePitcher?.fullName} <br />
-                              (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
-                            </>
-                          )}
-                        </p>
-                        <p className="vs">@</p>
-                        <p>
-                          <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
-                        </p>
-                        <p>
-                          {game.teams.home.probablePitcher?.fullName === "?" ? 'TBD' : (
-                            <>
-                              {game.teams.home.probablePitcher?.fullName} <br />
-                              (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
-                            </>
-                          )}
-                        </p>
+                        <div className="column1">
+                          <div className="row1">
+                            <img src={getTeamLogo(game.teams.away.team.name)} alt={`${game.teams.away.team.name} logo`} />
+                          </div>
+                          <div className="row2">
+                            <img src={getTeamLogo(game.teams.home.team.name)} alt={`${game.teams.home.team.name} logo`} />
+                          </div>
+                        </div>
+                        <div className="column2">
+                          <p>
+                            <span style={{ fontWeight: 'bold' }}>{game.teams.away.team.name}</span>
+                          </p>
+                          <p>
+                            {game.teams.away.probablePitcher?.fullName === "?" ? 'TBD' : (
+                              <>
+                                {game.teams.away.probablePitcher?.fullName} <br />
+                                (ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed})
+                              </>
+                            )}
+                          </p>
+                          <p>
+                            <span style={{ fontWeight: 'bold' }}>{game.teams.home.team.name}</span>
+                          </p>
+                          <p>
+                            {game.teams.home.probablePitcher?.fullName === "?" ? 'TBD' : (
+                              <>
+                                {game.teams.home.probablePitcher?.fullName} <br />
+                                (ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed})
+                              </>
+                            )}
+                          </p>
+                        </div>
+                        <div className="column3"></div>
                       </div>
                     </div>
                   ))}
