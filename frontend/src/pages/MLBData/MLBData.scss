@@ -3,10 +3,16 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
-  height: 100%;
+  min-height: 100vh;
   width: 100%;
   text-align: center;
-  background-color: white; /* You can change this to any color you like */
+  background-color: #f0f8ff;
+}
+
+.game-container {
+  border: 1px solid black;
+  border-radius: 5px;
+  margin-bottom: 10px;
 }
 
 .pitchingLineups {
@@ -47,8 +53,9 @@
   border: 1px solid black;
   border-radius: 5px;
   background: rgba(242, 242, 242, 0.5); /* Adjust the last value (0.5) for the desired opacity */
-  margin-bottom: 10px;
   padding: 5px; /* Add padding for better spacing */
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
 }
 
 h2 {
@@ -135,10 +142,53 @@ h3 {
 }
 
 .gameTime {
+  margin-top: 0px;
+  margin-bottom: 5px;
   font-weight: bold;
   border: 1px solid black;
   border-radius: 5px;
   background: rgba(242, 242, 242, 0.5); /* Adjust the last value (0.5) for the desired opacity */
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+}
+
+@keyframes zoomInOut {
+  0%, 100% {
+    transform: scale(0.8);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 35vh; /* Adjust height as needed */
+}
+
+.loading img {
+  width: 50px; /* Adjust the size as needed */
+  height: 50px; /* Adjust the size as needed */
+  animation: zoomInOut 1.8s infinite; /* Apply the zoom in/out animation */
+}
+
+@keyframes fadeInOut {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.loading p {
+  margin-top: 0px; /* Space between the image and text */
+  font-size: 14px; /* Adjust the font size as needed */
+  color: #000; /* Adjust the text color as needed */
+  animation: fadeInOut 1.7s infinite; /* Apply the fade in/out animation */
 }
 
 @media only screen and (max-width: 768px) {

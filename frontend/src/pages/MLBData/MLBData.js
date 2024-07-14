@@ -26,6 +26,8 @@ const useWindowSize = () => {
   return windowSize;
 };
 
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 function MLBData() {
   useWindowSize(); // Call the hook without using its returned value
   const [todayGames, setTodayGames] = useState([]);
@@ -120,13 +122,15 @@ function MLBData() {
       }
 
       setTodayGames(filteredTodayGames);
-      setLoading(false); // Set loading to false when data fetching is done
     };
 
-    fetchTeamLogos();
-    fetchMlbTeams();
-    fetchTeamRecords();
-    fetchData();
+    const initializeData = async () => {
+      await Promise.all([fetchTeamLogos(), fetchMlbTeams(), fetchTeamRecords(), fetchData()]);
+      await delay(5000); // Add a 5-second delay
+      setLoading(false); // Set loading to false after data fetching and delay
+    };
+
+    initializeData();
   }, []); // Empty dependency array means this effect runs once when the component mounts
 
   const formatTime = (dateTime) => {
@@ -177,7 +181,7 @@ function MLBData() {
                     timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day: 'numeric'
                   })}</h3>
                   {date.games.map(game => (
-                    <div key={game.gamePk}>
+                    <div className="game-container" key={game.gamePk}>
                       <p className="gameTime">{game.gameDate ?
                       formatTime(game
                       .gameDate) : 'Time not available'}</p>

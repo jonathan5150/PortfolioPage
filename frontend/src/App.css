@@ -461,45 +461,6 @@ ul {
     font-size: 16px;
 }
 
-@keyframes zoomInOut {
-  0%, 100% {
-    transform: scale(0.8);
-  }
-  50% {
-    transform: scale(1.3);
-  }
-}
-
-.loading {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 35vh; /* Adjust height as needed */
-}
-
-.loading img {
-  width: 50px; /* Adjust the size as needed */
-  height: 50px; /* Adjust the size as needed */
-  animation: zoomInOut 1.8s infinite; /* Apply the zoom in/out animation */
-}
-
-@keyframes fadeInOut {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-.loading p {
-  margin-top: 0px; /* Space between the image and text */
-  font-size: 14px; /* Adjust the font size as needed */
-  color: #000; /* Adjust the text color as needed */
-  animation: fadeInOut 1.7s infinite; /* Apply the fade in/out animation */
-}
-
 .arrow-icon {
   display: inline-block;
   transition: transform 0.3s ease; /* Ensure smooth transition */
