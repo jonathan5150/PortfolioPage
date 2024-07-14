@@ -6,9 +6,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  position : fixed;
-  min-height: 100vh;
-  height: 100vh;
+  height: 100lvh;
   overflow-x: hidden;
   scroll-behavior: smooth;
 }
@@ -77,8 +75,6 @@ footer {
 .SportsDataProject {
   height: 100vh; /* Adjust height as needed */
 }
-
-
 
 p {
     font-size: 16px;
@@ -315,11 +311,6 @@ ul {
 
 @media only screen and (max-width: 768px) {
     /* Adjustments for smaller screens (e.g., phones) */
-
-    html {
-      height: calc(100% + 60px);
-      min-height: calc(100% + 60px);
-    }
 
     .resume-image {
         width: 95vw; /* Use viewport width for mobile view */
