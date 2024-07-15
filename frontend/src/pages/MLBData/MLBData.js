@@ -25,7 +25,8 @@ function MLBData() {
   }, []);
 
   useEffect(() => {
-    const today = new Date();
+    //const today = new Date();
+    const today = new Date('2024-07-15');
 
     const formatDate = (date) => {
       const tzOffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
@@ -117,7 +118,7 @@ function MLBData() {
 
     const initializeData = async () => {
       await Promise.all([fetchTeamLogos(), fetchMlbTeams(), fetchTeamRecords(), fetchData()]);
-      await delay(4000); // Add a 4-second delay
+      await delay(2000); // Add a 4-second delay
       setLoading(false); // Set loading to false after data fetching and delay
     };
 
