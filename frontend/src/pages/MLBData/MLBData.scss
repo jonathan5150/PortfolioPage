@@ -30,6 +30,17 @@
   margin-bottom: 0px;
 }
 
+.game-data {
+  background: rgba(242, 242, 242, 0.8);
+  display: flex;
+  border: 1px solid black;
+  border-radius: 5px;
+  border-top-right-radius: 0;
+  border-top-left-radius: 0;
+  align-items: center;
+  flex-direction: column;
+}
+
 .lineups-container p {
   font-size: 20px;
 }
@@ -50,11 +61,8 @@
   justify-content: center; /* Ensure space between columns */
   min-height: 130px;
   border: 1px solid black;
-  border-radius: 5px;
   background: rgba(242, 242, 242, 0.95); /* Adjust the last value (0.5) for the desired opacity */
   padding: 5px; /* Add padding for better spacing */
-  border-top-right-radius: 0;
-  border-top-left-radius: 0;
 }
 
 h2 {
@@ -67,7 +75,7 @@ h2 {
 }
 
 h3 {
-  font-size: 25px;
+  font-size: 20px;
   margin-top: 10px;
   margin-bottom: 10px;
   padding-bottom: 3px;
@@ -150,7 +158,6 @@ h3 {
 
 .gameTime {
   margin: 0px;
-  font-weight: bold;
   border: 1px solid black;
   border-radius: 5px;
   background: rgba(242, 242, 242, 0.8); /* Adjust the last value (0.5) for the desired opacity */

@@ -244,6 +244,10 @@ function MLBData() {
                         </div>
                         <div className="column3"></div>
                       </div>
+                      {/* New div added at the bottom of each game-container */}
+                      <div className="game-data">
+                        <p>DATA</p>
+                      </div>
                     </div>
                   ))}
                 </div>
