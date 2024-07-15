@@ -27,7 +27,10 @@ function MLBData() {
   useEffect(() => {
     const today = new Date();
 
-    const formatDate = (date) => date.toISOString().split('T')[0];
+    const formatDate = (date) => {
+      const tzOffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
+      return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
+    };
     const todayFormatted = formatDate(today);
 
     const fetchTeamLogos = async () => {
@@ -35,7 +38,7 @@ function MLBData() {
       const data = await response.json();
       const logos = {};
 
-      data.sports[0].leagues[0].teams.forEach(team => {
+      data.sports[0].leagues[0].teams.forEach((team) => {
         logos[team.team.displayName] = team.team.logos[0].href;
       });
 
@@ -53,8 +56,8 @@ function MLBData() {
       const data = await response.json();
       const records = {};
 
-      data.records.forEach(league => {
-        league.teamRecords.forEach(teamRecord => {
+      data.records.forEach((league) => {
+        league.teamRecords.forEach((teamRecord) => {
           const teamId = teamRecord.team.id;
           const wins = teamRecord.wins;
           const losses = teamRecord.losses;
@@ -74,12 +77,12 @@ function MLBData() {
       if (stats && stats.length > 0) {
         const currentSeasonStats = stats[0]?.splits;
         if (currentSeasonStats && currentSeasonStats.length > 0) {
-          const era = currentSeasonStats[0]?.stat?.era || "N/A";
-          const gamesPlayed = currentSeasonStats[0]?.stat?.gamesPlayed || "N/A";
+          const era = currentSeasonStats[0]?.stat?.era || 'N/A';
+          const gamesPlayed = currentSeasonStats[0]?.stat?.gamesPlayed || 'N/A';
           return { era, gamesPlayed };
         }
       }
-      return { era: "N/A", gamesPlayed: "N/A" };
+      return { era: 'N/A', gamesPlayed: 'N/A' };
     };
 
     const fetchData = async () => {
@@ -88,7 +91,7 @@ function MLBData() {
       const data = await response.json();
       const games = data.dates;
 
-      const filteredTodayGames = games.filter(game => game.date === todayFormatted);
+      const filteredTodayGames = games.filter((game) => game.date === todayFormatted);
 
       for (const gameDay of filteredTodayGames) {
         for (const game of gameDay.games) {
@@ -97,14 +100,14 @@ function MLBData() {
             game.teams.away.probablePitcher.era = stats.era;
             game.teams.away.probablePitcher.gamesPlayed = stats.gamesPlayed;
           } else {
-            game.teams.away.probablePitcher = { fullName: "?", era: "?", gamesPlayed: "?" };
+            game.teams.away.probablePitcher = { fullName: '?', era: '?', gamesPlayed: '?' };
           }
           if (game.teams.home.probablePitcher) {
             const stats = await fetchPitcherData(game.teams.home.probablePitcher.id);
             game.teams.home.probablePitcher.era = stats.era;
             game.teams.home.probablePitcher.gamesPlayed = stats.gamesPlayed;
           } else {
-            game.teams.home.probablePitcher = { fullName: "?", era: "?", gamesPlayed: "?" };
+            game.teams.home.probablePitcher = { fullName: '?', era: '?', gamesPlayed: '?' };
           }
         }
       }
@@ -192,13 +195,13 @@ function MLBData() {
             {todayGames.length === 0 ? (
               <p>No games scheduled for today.</p>
             ) : (
-              todayGames.map(date => (
+              todayGames.map((date) => (
                 <div className="pitchingColumn" key={date.date}>
                   <h2>MLB DATA PROJECT</h2>
                   <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', {
-                    timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day: 'numeric'
+                    timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day: 'numeric',
                   })}</h3>
-                  {date.games.map(game => (
+                  {date.games.map((game) => (
                     <div className="game-container" key={game.gamePk}>
                       <p className="gameTime">{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
                       <div className="lineupGroup">
@@ -216,7 +219,7 @@ function MLBData() {
                               {game.teams.away.team.name} ({getTeamRecord(game.teams.away.team.name)})
                             </span>
                             <div className="pitcher-details">
-                              {game.teams.away.probablePitcher?.fullName === "?" ? 'TBD' : (
+                              {game.teams.away.probablePitcher?.fullName === '?' ? 'TBD' : (
                                 <>
                                   {game.teams.away.probablePitcher?.fullName} <br />
                                   ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed}
@@ -230,7 +233,7 @@ function MLBData() {
                               {game.teams.home.team.name} ({getTeamRecord(game.teams.home.team.name)})
                             </span>
                             <div className="pitcher-details">
-                              {game.teams.home.probablePitcher?.fullName === "?" ? 'TBD' : (
+                              {game.teams.home.probablePitcher?.fullName === '?' ? 'TBD' : (
                                 <>
                                   {game.teams.home.probablePitcher?.fullName} <br />
                                   ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed}
