@@ -152,6 +152,15 @@ function MLBData() {
     return '0-0';
   };
 
+  const getTeamAbbreviation = (teamId) => {
+    const team = mlbTeams.find((team) => team.id === teamId);
+    return team ? team.abbreviation : '';
+  };
+
+  const getTeamScore = (team) => {
+    return team.score !== undefined ? team.score : 0;
+  };
+
   return (
     <div className="mlb-data-container">
       <div
@@ -244,9 +253,19 @@ function MLBData() {
                         </div>
                         <div className="column3"></div>
                       </div>
-                      {/* New div added at the bottom of each game-container */}
                       <div className="game-data">
-                        <p>DATA</p>
+                        <p className="game-data-title">BOX SCORE</p>
+                        <div className="scoreboard">
+                          <div className="scoreboard-row">
+                            <div className="scoreboard-cell team-abbr top-left">{getTeamAbbreviation(game.teams.away.team.id)}</div>
+                            <div className="scoreboard-cell team-score top-right">{getTeamScore(game
+                            .teams.away)}</div>
+                          </div>
+                          <div className="scoreboard-row">
+                            <div className="scoreboard-cell team-abbr bottom-left">{getTeamAbbreviation(game.teams.home.team.id)}</div>
+                            <div className="scoreboard-cell team-score bottom-right">{getTeamScore(game.teams.home)}</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}

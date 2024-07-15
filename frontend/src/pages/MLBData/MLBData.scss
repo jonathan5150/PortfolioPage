@@ -15,6 +15,56 @@
   margin-bottom: 10px;
 }
 
+.scoreboard {
+  display: flex;
+  flex-direction: column;
+  width: 120px;
+  height: 60px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #000;
+  border-radius: 5px;
+}
+
+.scoreboard-row {
+  display: flex;
+  width: 100%;
+  height: 50%;
+}
+
+.scoreboard-cell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.team-abbr {
+  font-weight: bold;
+}
+
+.top-left {
+  border: 1px solid #000;
+  border-top-left-radius: 5px;
+}
+
+.top-right {
+  border: 1px solid #000;
+  border-top-right-radius: 5px;
+  background: rgba(242, 242, 242, 0.95); /* Adjust the last value (0.5) for the desired opacity */
+}
+
+.bottom-left {
+  border: 1px solid #000;
+  border-bottom-left-radius: 5px;
+}
+
+.bottom-right {
+  border: 1px solid #000;
+  border-bottom-right-radius: 5px;
+  background: rgba(242, 242, 242, 0.95); /* Adjust the last value (0.5) for the desired opacity */
+}
+
 .pitchingLineups {
   display: flex;
   flex-direction: column;
@@ -39,7 +89,14 @@
   border-top-right-radius: 0;
   border-top-left-radius: 0;
   align-items: center;
+  justify-content: center;
   flex-direction: column;
+}
+
+.game-data-title {
+  font-size: 15px!important;
+  margin-top: 10px;
+  margin-bottom: 0px;
 }
 
 .lineups-container p {
@@ -70,7 +127,7 @@ h2 {
   font-size: 30px;
   margin-top: 25px;
   margin-bottom: 0px;
-  border: 2px solid black;
+  border: 1px solid black;
   border-radius: 5px;
   background: rgba(242, 242, 242, 0.75);
 }
@@ -81,7 +138,7 @@ h3 {
   margin-bottom: 10px;
   padding-bottom: 3px;
   text-align: center;
-  border: 2px solid black;
+  border: 1px solid black;
   border-radius: 5px;
   background: rgba(242, 242, 242, 0.75);
 }
