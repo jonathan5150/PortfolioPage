@@ -46,6 +46,7 @@
 .top-left {
   border: 1px solid #000;
   border-top-left-radius: 5px;
+  background: rgba(210, 210, 210, 0.95);
 }
 
 .top-right {
@@ -57,6 +58,7 @@
 .bottom-left {
   border: 1px solid #000;
   border-bottom-left-radius: 5px;
+  background: rgba(210, 210, 210, 0.95); /* Adjust the last value (0.5) for the desired opacity */
 }
 
 .bottom-right {
@@ -81,8 +83,7 @@
 }
 
 .game-data {
-  background: rgba(242, 242, 242, 0.75);
-  backdrop-filter: blur(50px); /* Blur effect */
+  background: rgba(242, 242, 242, 0.85);
   display: flex;
   border: 1px solid black;
   border-radius: 5px;
@@ -160,6 +161,11 @@ h3 {
   padding: 0px;
 }
 
+.row2 {
+  margin-top: 12px;
+  margin-bottom: 5px;
+}
+
 .column2 {
   width: 20%; /* Take 20% of the width */
   display: flex;
@@ -193,7 +199,7 @@ h3 {
   flex-direction: column;
   align-items: center;
   margin-top: auto;
-  margin-bottom: auto;
+  margin-bottom: 5px;
   min-height: 72px;
 }
 
@@ -201,7 +207,7 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: auto;
+  margin-top: 25px;
   margin-bottom: auto;
   min-height: 72px;
 }
@@ -218,7 +224,7 @@ h3 {
   margin: 0px;
   border: 1px solid black;
   border-radius: 5px;
-  background: rgba(242, 242, 242, 0.75); /* Adjust the last value (0.5) for the desired opacity */
+  background: rgba(242, 242, 242, 0.85); /* Adjust the last value (0.5) for the desired opacity */
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
 }
@@ -317,6 +323,7 @@ h3 {
 
   p.vs {
     font-size: 12px;
-    margin: 0;
+    margin: 0px;
+    margin-bottom: -13px;
   }
 }
