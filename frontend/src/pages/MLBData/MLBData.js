@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import './MLBData.scss';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -6,11 +6,22 @@ import { format } from 'date-fns';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen }, ref) => (
-  <button className="custom-datepicker-input" onClick={onClick} ref={ref}>
-    {value} <span className={`arrow ${isCalendarOpen ? 'open' : 'closed'}`}>▼</span>
-  </button>
-));
+const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCalendarOpen }, ref) => {
+  console.log("isCalendarOpen:", isCalendarOpen);
+
+  return (
+    <button className="custom-datepicker-input" onClick={() => {
+      console.log("CustomInput button clicked");
+      onClick();
+      if (!isCalendarOpen) {
+        console.log("hi");
+        setIsCalendarOpen(false);
+      }
+    }} ref={ref}>
+      {value} <span className={`arrow ${isCalendarOpen ? 'open' : 'closed'}`}>▼</span>
+    </button>
+  );
+});
 
 function MLBData() {
   const [todayGames, setTodayGames] = useState([]);
@@ -20,15 +31,6 @@ function MLBData() {
   const [teamRecords, setTeamRecords] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const datePickerRef = useRef(null);
-
-  const toggleCalendar = () => {
-    setIsCalendarOpen(prevState => {
-      const newState = !prevState;
-      datePickerRef.current.setOpen(newState);
-      return newState;
-    });
-  };
 
   useEffect(() => {
     const updateViewportHeight = () => {
@@ -134,7 +136,7 @@ function MLBData() {
 
     const initializeData = async () => {
       await Promise.all([fetchTeamLogos(), fetchMlbTeams(), fetchTeamRecords(), fetchData()]);
-      await delay(2000);
+      await delay(3000);
       setLoading(false);
     };
 
@@ -219,14 +221,11 @@ function MLBData() {
             setLoading(true);
             setIsCalendarOpen(false);
           }}
-          dateFormat="M-dd-yyyy"
-          showPopperArrow={false}
-          preventOpenOnFocus={true}
-          customInput={<CustomInput onClick={toggleCalendar} isCalendarOpen={isCalendarOpen} />}
+          dateFormat="M/dd/yyyy"
+          customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} />}
           onCalendarOpen={() => setIsCalendarOpen(true)}
           onCalendarClose={() => setIsCalendarOpen(false)}
-          ref={datePickerRef}
-          open={isCalendarOpen}
+          preventOpenOnFocus
         />
       </div>
       {loading ? (
