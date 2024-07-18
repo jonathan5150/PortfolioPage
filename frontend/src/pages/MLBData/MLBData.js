@@ -26,7 +26,7 @@ function MLBData() {
 
   useEffect(() => {
     //const today = new Date();
-    const today = new Date('2024-07-15');
+    const today = new Date('2024-07-20');
 
     const formatDate = (date) => {
       const tzOffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
