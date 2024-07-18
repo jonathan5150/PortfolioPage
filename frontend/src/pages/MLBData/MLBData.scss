@@ -105,7 +105,7 @@
 }
 
 .column2 p, .column2 span, .column2 div {
-  font-size: 17px; /* Change this value to your desired font size */
+  font-size: 16px; /* Change this value to your desired font size */
 }
 
 .lineup {
@@ -124,6 +124,32 @@
   padding: 5px; /* Add padding for better spacing */
 }
 
+.custom-datepicker-input {
+  margin: 10px 0px;
+  border: 1px solid black;
+  border-radius: 5px;
+  background: rgba(242, 242, 242, 0.75);
+  cursor: pointer;
+  font-size: 1em;
+  padding: 0.5em;
+  color: inherit; /* Ensures the text color matches the surrounding text */
+  user-select: none;
+}
+
+.custom-datepicker-input .arrow {
+  margin-left: 0.5em;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+.custom-datepicker-input .arrow.open {
+  transform: rotate(180deg);
+}
+
+.custom-datepicker-input .arrow.closed {
+  transform: rotate(0deg);
+}
+
 h2 {
   font-size: 30px;
   margin-top: 25px;
@@ -131,6 +157,7 @@ h2 {
   border: 1px solid black;
   border-radius: 5px;
   background: rgba(242, 242, 242, 0.75);
+  padding: 5px 15px;
 }
 
 h3 {
@@ -251,10 +278,31 @@ h3 {
   background-color: #dbdbdb;
 }
 
+.loading-background {
+  background-color: #dbdbdb;
+}
+
 .loading img {
   width: 80px; /* Adjust the size as needed */
   height: 80px; /* Adjust the size as needed */
   animation: zoomInOut 1.9s infinite; /* Apply the zoom in/out animation */
+}
+
+.mlbDataNavbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.noGames {
+  font-size: 20px;
+  margin-bottom: 0px;
+  border: 1px solid black;
+  border-radius: 5px;
+  background: rgba(242, 242, 242, 0.75);
+  padding: 5px 15px;
 }
 
 @keyframes fadeInOut {

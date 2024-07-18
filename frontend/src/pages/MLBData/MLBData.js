@@ -1,14 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import './MLBData.scss';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { format } from 'date-fns';
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen }, ref) => (
+  <button className="custom-datepicker-input" onClick={onClick} ref={ref}>
+    {value} <span className={`arrow ${isCalendarOpen ? 'open' : 'closed'}`}>▼</span>
+  </button>
+));
+
 function MLBData() {
   const [todayGames, setTodayGames] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loading, setLoading] = useState(true);
   const [teamLogos, setTeamLogos] = useState({});
   const [mlbTeams, setMlbTeams] = useState([]);
   const [teamRecords, setTeamRecords] = useState({});
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const datePickerRef = useRef(null);
+
+  const toggleCalendar = () => {
+    setIsCalendarOpen(prevState => {
+      const newState = !prevState;
+      datePickerRef.current.setOpen(newState);
+      return newState;
+    });
+  };
 
   useEffect(() => {
     const updateViewportHeight = () => {
@@ -25,14 +45,10 @@ function MLBData() {
   }, []);
 
   useEffect(() => {
-    //const today = new Date();
-    const today = new Date('2024-07-20');
-
     const formatDate = (date) => {
-      const tzOffset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
-      return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
+      return format(date, 'yyyy-MM-dd');
     };
-    const todayFormatted = formatDate(today);
+    const todayFormatted = formatDate(selectedDate);
 
     const fetchTeamLogos = async () => {
       const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams');
@@ -53,7 +69,7 @@ function MLBData() {
     };
 
     const fetchTeamRecords = async () => {
-      const response = await fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104'); // Fetch records for both leagues
+      const response = await fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104');
       const data = await response.json();
       const records = {};
 
@@ -118,12 +134,12 @@ function MLBData() {
 
     const initializeData = async () => {
       await Promise.all([fetchTeamLogos(), fetchMlbTeams(), fetchTeamRecords(), fetchData()]);
-      await delay(2000); // Add a 4-second delay
-      setLoading(false); // Set loading to false after data fetching and delay
+      await delay(2000);
+      setLoading(false);
     };
 
     initializeData();
-  }, []); // Empty dependency array means this effect runs once when the component mounts
+  }, [selectedDate]);
 
   const formatTime = (dateTime) => {
     const date = new Date(dateTime);
@@ -163,7 +179,7 @@ function MLBData() {
   };
 
   return (
-    <div className="mlb-data-container">
+    <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
       <div
         className={`fade-in-background ${!loading ? 'loaded' : ''}`}
         style={{
@@ -194,6 +210,25 @@ function MLBData() {
           }}
         />
       </div>
+      <div className="mlbDataNavbar">
+        <h2>MLB DATA PROJECT</h2>
+        <DatePicker
+          selected={selectedDate}
+          onChange={(date) => {
+            setSelectedDate(date);
+            setLoading(true);
+            setIsCalendarOpen(false);
+          }}
+          dateFormat="M-dd-yyyy"
+          showPopperArrow={false}
+          preventOpenOnFocus={true}
+          customInput={<CustomInput onClick={toggleCalendar} isCalendarOpen={isCalendarOpen} />}
+          onCalendarOpen={() => setIsCalendarOpen(true)}
+          onCalendarClose={() => setIsCalendarOpen(false)}
+          ref={datePickerRef}
+          open={isCalendarOpen}
+        />
+      </div>
       {loading ? (
         <div className="loading">
           <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
@@ -203,14 +238,10 @@ function MLBData() {
         <div className={`pitchingLineups fade-in`}>
           <div className="lineups-container">
             {todayGames.length === 0 ? (
-              <p>No games scheduled for today.</p>
+              <p className="noGames">No games scheduled for this date.</p>
             ) : (
               todayGames.map((date) => (
                 <div className="pitchingColumn" key={date.date}>
-                  <h2>MLB DATA PROJECT</h2>
-                  <h3>{new Date(date.date + 'T00:00:00Z').toLocaleDateString('en-US', {
-                    timeZone: 'UTC', weekday: 'short', year: 'numeric', month: 'long', day: 'numeric',
-                  })}</h3>
                   {date.games.map((game) => (
                     <div className="game-container" key={game.gamePk}>
                       <p className="gameTime">{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
@@ -229,9 +260,9 @@ function MLBData() {
                               {game.teams.away.team.name} ({getTeamRecord(game.teams.away.team.name)})
                             </span>
                             <div className="pitcher-details">
-                              {game.teams.away.probablePitcher?.fullName === '?' ? 'TBD' : (
+                              {game.teams.away.probablePitcher?.fullName === '?' ? 'P: TBD' : (
                                 <>
-                                  {game.teams.away.probablePitcher?.fullName} <br />
+                                  P: {game.teams.away.probablePitcher?.fullName} <br />
                                   ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed}
                                 </>
                               )}
@@ -243,9 +274,9 @@ function MLBData() {
                               {game.teams.home.team.name} ({getTeamRecord(game.teams.home.team.name)})
                             </span>
                             <div className="pitcher-details">
-                              {game.teams.home.probablePitcher?.fullName === '?' ? 'TBD' : (
+                              {game.teams.home.probablePitcher?.fullName === '?' ? 'P: TBD' : (
                                 <>
-                                  {game.teams.home.probablePitcher?.fullName} <br />
+                                  P: {game.teams.home.probablePitcher?.fullName} <br />
                                   ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed}
                                 </>
                               )}
@@ -259,8 +290,7 @@ function MLBData() {
                         <div className="scoreboard">
                           <div className="scoreboard-row">
                             <div className="scoreboard-cell team-abbr top-left">{getTeamAbbreviation(game.teams.away.team.id)}</div>
-                            <div className="scoreboard-cell team-score top-right">{getTeamScore(game
-                            .teams.away)}</div>
+                            <div className="scoreboard-cell team-score top-right">{getTeamScore(game.teams.away)}</div>
                           </div>
                           <div className="scoreboard-row">
                             <div className="scoreboard-cell team-abbr bottom-left">{getTeamAbbreviation(game.teams.home.team.id)}</div>
