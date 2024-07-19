@@ -4,8 +4,6 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
 
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
 const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCalendarOpen }, ref) => {
   console.log("isCalendarOpen:", isCalendarOpen);
 
@@ -136,7 +134,6 @@ function MLBData() {
 
     const initializeData = async () => {
       await Promise.all([fetchTeamLogos(), fetchMlbTeams(), fetchTeamRecords(), fetchData()]);
-      await delay(3000);
       setLoading(false);
     };
 
