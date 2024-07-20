@@ -5,14 +5,10 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { format } from 'date-fns';
 
 const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCalendarOpen }, ref) => {
-  console.log("isCalendarOpen:", isCalendarOpen);
-
   return (
     <button className="custom-datepicker-input" onClick={() => {
-      console.log("CustomInput button clicked");
       onClick();
       if (!isCalendarOpen) {
-        console.log("hi");
         setIsCalendarOpen(false);
       }
     }} ref={ref}>
@@ -128,6 +124,11 @@ function MLBData() {
           }
         }
       }
+
+      // Sort the games by time
+      filteredTodayGames.forEach((gameDay) => {
+        gameDay.games.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
+      });
 
       setTodayGames(filteredTodayGames);
     };
