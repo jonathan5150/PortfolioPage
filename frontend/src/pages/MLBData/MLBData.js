@@ -108,6 +108,11 @@ function MLBData() {
 
       for (const gameDay of filteredTodayGames) {
         for (const game of gameDay.games) {
+          const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
+          const gameResponse = await fetch(liveGameUrl);
+          const gameData = await gameResponse.json();
+          game.liveData = gameData.liveData;
+
           if (game.teams.away.probablePitcher) {
             const stats = await fetchPitcherData(game.teams.away.probablePitcher.id);
             game.teams.away.probablePitcher.era = stats.era;
@@ -283,15 +288,34 @@ function MLBData() {
                         <div className="column3"></div>
                       </div>
                       <div className="game-data">
-                        <p className="game-data-title">BOX SCORE</p>
+                        <p className="game-data-title">SCOREBOARD</p>
                         <div className="scoreboard">
                           <div className="scoreboard-row">
-                            <div className="scoreboard-cell team-abbr top-left">{getTeamAbbreviation(game.teams.away.team.id)}</div>
-                            <div className="scoreboard-cell team-score top-right">{getTeamScore(game.teams.away)}</div>
+                            <div className="scoreboard-cell team-abbr"></div>
+                            {[...Array(9)].map((_, inning) => (
+                              <div key={inning} className="scoreboard-cell inning">{inning + 1}</div>
+                            ))}
+                            <div className="scoreboard-cell runs">R</div>
+                            <div className="scoreboard-cell hits">H</div>
+                            <div className="scoreboard-cell errors">E</div>
                           </div>
                           <div className="scoreboard-row">
-                            <div className="scoreboard-cell team-abbr bottom-left">{getTeamAbbreviation(game.teams.home.team.id)}</div>
-                            <div className="scoreboard-cell team-score bottom-right">{getTeamScore(game.teams.home)}</div>
+                            <div className="scoreboard-cell team-abbr">{getTeamAbbreviation(game.teams.away.team.id)}</div>
+                            {[...Array(9)].map((_, inning) => (
+                              <div key={inning} className="scoreboard-cell inning">{game.liveData.linescore?.innings[inning]?.away?.runs || '0'}</div>
+                            ))}
+                            <div className="scoreboard-cell runs" style={{ fontWeight: 'bold' }}>{getTeamScore(game.teams.away)}</div>
+                            <div className="scoreboard-cell hits">{game.liveData.boxscore.teams.away.teamStats?.batting?.hits || 0}</div>
+                            <div className="scoreboard-cell errors">{game.liveData.boxscore.teams.away.teamStats?.fielding?.errors || 0}</div>
+                          </div>
+                          <div className="scoreboard-row">
+                            <div className="scoreboard-cell team-abbr">{getTeamAbbreviation(game.teams.home.team.id)}</div>
+                            {[...Array(9)].map((_, inning) => (
+                              <div key={inning} className="scoreboard-cell inning">{game.liveData.linescore?.innings[inning]?.home?.runs || '0'}</div>
+                            ))}
+                            <div className="scoreboard-cell runs" style={{ fontWeight: 'bold' }}>{getTeamScore(game.teams.home)}</div>
+                            <div className="scoreboard-cell hits">{game.liveData.boxscore.teams.home.teamStats?.batting?.hits || 0}</div>
+                            <div className="scoreboard-cell errors">{game.liveData.boxscore.teams.home.teamStats?.fielding?.errors || 0}</div>
                           </div>
                         </div>
                       </div>
