@@ -292,8 +292,11 @@ function MLBData() {
                         <div className="scoreboard">
                           <div className="scoreboard-row">
                             <div className="scoreboard-cell team-abbr"></div>
-                            {game.liveData.linescore?.innings.map((_, inning) => (
+                            {[...Array(9)].map((_, inning) => (
                               <div key={inning} className="scoreboard-cell inning">{inning + 1}</div>
+                            ))}
+                            {game.liveData.linescore?.innings.slice(9).map((_, extraInning) => (
+                              <div key={extraInning + 9} className="scoreboard-cell inning">{extraInning + 10}</div>
                             ))}
                             <div className="scoreboard-cell runs">R</div>
                             <div className="scoreboard-cell hits">H</div>
@@ -301,9 +304,17 @@ function MLBData() {
                           </div>
                           <div className="scoreboard-row">
                             <div className="scoreboard-cell team-abbr">{getTeamAbbreviation(game.teams.away.team.id)}</div>
-                            {game.liveData.linescore?.innings.map((inningData, inning) => (
-                              <div key={inning} className="scoreboard-cell inning">
-                                {inningData.away?.runs !== undefined ? inningData.away.runs : '0'}
+                            {[...Array(9)].map((_, inning) => {
+                              const inningData = game.liveData.linescore?.innings[inning];
+                              return (
+                                <div key={inning} className="scoreboard-cell inning">
+                                  {inningData ? (inningData.away?.runs !== undefined ? inningData.away.runs : '-') : '-'}
+                                </div>
+                              );
+                            })}
+                            {game.liveData.linescore?.innings.slice(9).map((inningData, extraInning) => (
+                              <div key={extraInning + 9} className="scoreboard-cell inning">
+                                {inningData.away?.runs !== undefined ? inningData.away.runs : '-'}
                               </div>
                             ))}
                             <div className="scoreboard-cell runs" style={{ fontWeight: 'bold' }}>{getTeamScore(game.teams.away)}</div>
@@ -312,9 +323,17 @@ function MLBData() {
                           </div>
                           <div className="scoreboard-row">
                             <div className="scoreboard-cell team-abbr">{getTeamAbbreviation(game.teams.home.team.id)}</div>
-                            {game.liveData.linescore?.innings.map((inningData, inning) => (
-                              <div key={inning} className="scoreboard-cell inning">
-                                {inningData.home?.runs !== undefined ? inningData.home.runs : '0'}
+                            {[...Array(9)].map((_, inning) => {
+                              const inningData = game.liveData.linescore?.innings[inning];
+                              return (
+                                <div key={inning} className="scoreboard-cell inning">
+                                  {inningData ? (inningData.home?.runs !== undefined ? inningData.home.runs : '-') : '-'}
+                                </div>
+                              );
+                            })}
+                            {game.liveData.linescore?.innings.slice(9).map((inningData, extraInning) => (
+                              <div key={extraInning + 9} className="scoreboard-cell inning">
+                                {inningData.home?.runs !== undefined ? inningData.home.runs : '-'}
                               </div>
                             ))}
                             <div className="scoreboard-cell runs" style={{ fontWeight: 'bold' }}>{getTeamScore(game.teams.home)}</div>
