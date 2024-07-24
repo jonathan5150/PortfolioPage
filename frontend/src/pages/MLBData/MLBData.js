@@ -289,7 +289,7 @@ function MLBData() {
                       </div>
                       <div className="game-data">
 
-                        <div className="scoreboard">
+                        <div className="scoreboard game-data-container">
                         <p className="game-data-title">SCOREBOARD</p>
                           <div className="scoreboard-row">
                             <div className="scoreboard-cell team-abbr"></div>
@@ -342,7 +342,9 @@ function MLBData() {
                             <div className="scoreboard-cell errors">{game.liveData.boxscore.teams.home.teamStats?.fielding?.errors || 0}</div>
                           </div>
                         </div>
-
+                        {/*<div className="last10 game-data-container">
+                          <p className="game-data-title">LAST 10 GAMES</p>
+                        </div>*/}
                       </div>
                     </div>
                   ))}

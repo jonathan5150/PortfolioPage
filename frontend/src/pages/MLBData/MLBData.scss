@@ -15,16 +15,20 @@
   margin-bottom: 10px;
 }
 
-.scoreboard {
+.game-data-container {
   border: 2px solid #000;
   border-radius: 5px;
   display: flex;
   flex-direction: column;
   width: 90%;
   padding: 5px;
-  margin-top: 10px;
-  margin-bottom: 20px;
+  margin-top: 5px;
+  margin-bottom: 5px;
   background: rgba(242, 242, 242, 0.5);
+}
+
+.game-data-container:first-child {
+  margin-top: 10px;
 }
 
 .scoreboard-row {
