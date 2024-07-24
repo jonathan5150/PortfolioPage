@@ -288,8 +288,9 @@ function MLBData() {
                         <div className="column3"></div>
                       </div>
                       <div className="game-data">
-                        <p className="game-data-title">SCOREBOARD</p>
+
                         <div className="scoreboard">
+                        <p className="game-data-title">SCOREBOARD</p>
                           <div className="scoreboard-row">
                             <div className="scoreboard-cell team-abbr"></div>
                             {[...Array(9)].map((_, inning) => (
@@ -341,6 +342,7 @@ function MLBData() {
                             <div className="scoreboard-cell errors">{game.liveData.boxscore.teams.home.teamStats?.fielding?.errors || 0}</div>
                           </div>
                         </div>
+
                       </div>
                     </div>
                   ))}

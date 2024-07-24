@@ -24,11 +24,13 @@
   padding: 5px;
   margin-top: 10px;
   margin-bottom: 20px;
+  background: rgba(242, 242, 242, 0.5);
 }
 
 .scoreboard-row {
   display: flex;
   width: 100%;
+  background: rgba(242, 242, 242, 0.8);
 }
 
 .scoreboard-cell {
@@ -37,16 +39,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 22px; /* Ensure all cells have the same height */
+  height: 21px; /* Ensure all cells have the same height */
 }
 
 .scoreboard-cell.inning, .scoreboard-cell.runs, .scoreboard-cell.hits, .scoreboard-cell.errors {
   flex: 1; /* Ensures that these cells also have the same flex value */
+  font-size: 10.5pt;
 }
 
 /* Optional: if you want to control the width of specific columns */
 .scoreboard-cell.team-abbr {
   flex: 2; /* Adjust as needed */
+  font-size: 10.5pt;
 }
 
 .team-abbr {
@@ -82,8 +86,8 @@
 
 .game-data-title {
   font-size: 15px!important;
-  margin-top: 10px;
-  margin-bottom: 0px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .lineups-container p {
