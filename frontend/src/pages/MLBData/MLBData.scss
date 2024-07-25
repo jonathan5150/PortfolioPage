@@ -273,12 +273,10 @@ h3 {
   z-index: 10; /* Ensure it is on top of other elements */
   position: relative;
   background-color: rgba(41, 41, 41, 1);
-  transition: background-color 1s ease-out;
 }
 
 .loading-background {
   background-color: rgba(41, 41, 41, 1);
-  transition: background-color 1s ease-out;
 }
 
 .loading img {
