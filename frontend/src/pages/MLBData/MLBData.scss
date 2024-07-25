@@ -11,14 +11,14 @@
 }
 
 .game-container {
-  background-color: rgba(41, 41, 41, 0.9);
+  background-color: rgba(41, 41, 41, 0.94);
   border: 1.5px solid #555555;
   border-radius: 6px;
   margin-bottom: 10px;
 }
 
 .game-data-container {
-  background-color: rgba(100, 100, 100, 0.5);
+  background-color: rgba(70, 70, 70, 0.8);
   border: 2px solid #555555;
   border-radius: 5px;
   display: flex;
@@ -38,6 +38,10 @@
   width: 100%;
 }
 
+.scoreboard-row:first-child {
+  font-size: 3pt !important;
+}
+
 .scoreboard-cell {
   flex: 1;
   display: flex;
@@ -48,13 +52,13 @@
 
 .scoreboard-cell.inning, .scoreboard-cell.runs, .scoreboard-cell.hits, .scoreboard-cell.errors {
   flex: 1; /* Ensures that these cells also have the same flex value */
-  font-size: 10.5pt;
+  font-size: 10pt;
 }
 
 /* Optional: if you want to control the width of specific columns */
 .scoreboard-cell.team-abbr {
   flex: 2; /* Adjust as needed */
-  font-size: 10.5pt;
+  font-size: 10pt;
 }
 
 .team-abbr {
@@ -118,9 +122,9 @@
 
 .custom-datepicker-input {
   margin: 10px 0px;
-  border: 1px solid #555555;
+  border: 1.5px solid #555555;
   border-radius: 5px;
-  background-color: rgba(41, 41, 41, 0.9);
+  background-color: rgba(70, 70, 70, 0.8);
   cursor: pointer;
   font-size: 1em;
   padding: 0.5em;
@@ -146,9 +150,9 @@ h2 {
   font-size: 30px;
   margin-top: 25px;
   margin-bottom: 0px;
-  border: 1px solid #555555;
+  border: 1.5px solid #555555;
   border-radius: 5px;
-  background-color: rgba(41, 41, 41, 0.9);
+  background-color: rgba(70, 70, 70, 0.8);
   padding: 5px 15px;
 }
 
@@ -158,7 +162,7 @@ h3 {
   margin-bottom: 10px;
   padding-bottom: 3px;
   text-align: center;
-  border: 1px solid #555555;
+  background-color: rgba(70, 70, 70, 0.8);
   border-radius: 5px;
 }
 
@@ -207,9 +211,11 @@ h3 {
   max-height: 90%;
   object-fit: contain; /* Ensures the image scales down to fit within its container */
   margin-right: 15px;
-  border: 1px solid #555555;
+  border: 1.5px solid #555555;
+  background-color: rgba(70, 70, 70, 0.8);
   border-radius: 7px;
   padding: 3px;
+  opacity: .85;
 }
 
 .pitcher-info-top {
@@ -239,7 +245,7 @@ h3 {
 }
 
 .gameTime {
-  background-color: rgba(100, 100, 100, 0.5);
+  background-color: rgba(70, 70, 70, 0.8);
   margin: 0px;
   border: 1px solid #555555;
   border-radius: 5px;
@@ -266,11 +272,11 @@ h3 {
   font-variant: small-caps;
   z-index: 10; /* Ensure it is on top of other elements */
   position: relative;
-  background-color: #dbdbdb;
+  background-color: rgb(70, 70, 70);
 }
 
 .loading-background {
-  background-color: #dbdbdb;
+  background-color: rgb(70, 70, 70);
 }
 
 .loading img {
@@ -308,7 +314,7 @@ h3 {
 .loading p {
   margin-top: 0px; /* Space between the image and text */
   font-size: 25px; /* Adjust the font size as needed */
-  color: #000; /* Adjust the text color as needed */
+  color: white; /* Adjust the text color as needed */
   animation: fadeInOut 1.9s infinite; /* Apply the fade in/out animation */
   margin-top: -10px;
   margin-left: 7px;
