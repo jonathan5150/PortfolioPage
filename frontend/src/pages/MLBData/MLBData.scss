@@ -135,7 +135,7 @@
 .custom-datepicker-input .arrow {
   margin-left: 0.5em;
   display: inline-block;
-  transition: transform 0.3s ease;
+  transition: transform 0.5s ease;
 }
 
 .custom-datepicker-input .arrow.open {
@@ -272,11 +272,16 @@ h3 {
   font-variant: small-caps;
   z-index: 10; /* Ensure it is on top of other elements */
   position: relative;
-  background-color: rgb(70, 70, 70);
+  background-color: rgba(41, 41, 41, 1);
 }
 
 .loading-background {
-  background-color: rgb(70, 70, 70);
+  background-color: rgba(41, 41, 41, 1);
+  transition: background-color 1s ease-in-out;
+}
+
+.mlb-data-container:not(.loading-background) {
+  background-color: transparent; /* Transparent when loaded */
 }
 
 .loading img {
@@ -296,9 +301,9 @@ h3 {
 .noGames {
   font-size: 20px;
   margin-bottom: 0px;
-  border: 1px solid #555555;
+  border: 1.5px solid #555555;
   border-radius: 5px;
-  background: rgba(242, 242, 242, 0.75);
+  background-color: rgba(70, 70, 70, 0.8);
   padding: 5px 15px;
 }
 
@@ -330,12 +335,13 @@ h3 {
 }
 
 .fade-in {
-  animation: fadeIn 0.5s ease-in forwards; /* Adjust the duration as needed */
+  animation: fadeIn 1s ease-in forwards; /* Adjust the duration as needed */
 }
 
 .fade-in-background {
+  background-color: rgba(41, 41, 41, 1);
   opacity: 0;
-  transition: opacity 0.5s ease-in; /* Adjust the duration as needed */
+  transition: opacity 3s ease-in-out;
   z-index: -1;
 }
 

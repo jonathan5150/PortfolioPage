@@ -186,7 +186,6 @@ function MLBData() {
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
       <div
-        className={`fade-in-background ${!loading ? 'loaded' : ''}`}
         style={{
           position: 'fixed',
           top: 0,
@@ -196,25 +195,12 @@ function MLBData() {
           zIndex: -1,
           overflowY: 'hidden',
           transform: 'scale(1.0)',
+          backgroundImage: `url(${process.env.PUBLIC_URL + '/bg4.jpg'})`,
+          backgroundPosition: 'center',
+          backgroundSize: 'cover',
+          backgroundRepeat: 'no-repeat',
         }}
-      >
-        <div
-          style={{
-            content: '""',
-            display: 'block',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: loading ? '#dbdbdb' : 'transparent',
-            backgroundImage: loading ? 'none' : `url(${process.env.PUBLIC_URL + '/bg4.jpg'})`,
-            backgroundPosition: 'center',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-          }}
-        />
-      </div>
+      />
       <div className="mlbDataNavbar">
         <h2>MLB DATA PROJECT</h2>
         <DatePicker
@@ -288,9 +274,8 @@ function MLBData() {
                         <div className="column3"></div>
                       </div>
                       <div className="game-data">
-
                         <div className="scoreboard game-data-container">
-                        <p className="game-data-title">SCOREBOARD</p>
+                          <p className="game-data-title">SCOREBOARD</p>
                           <div className="scoreboard-row">
                             <div className="scoreboard-cell team-abbr"></div>
                             {[...Array(9)].map((_, inning) => (
@@ -342,9 +327,6 @@ function MLBData() {
                             <div className="scoreboard-cell errors">{game.liveData.boxscore.teams.home.teamStats?.fielding?.errors || 0}</div>
                           </div>
                         </div>
-                        {/*<div className="last10 game-data-container">
-                          <p className="game-data-title">LAST 10 GAMES</p>
-                        </div>*/}
                       </div>
                     </div>
                   ))}
