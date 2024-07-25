@@ -273,15 +273,12 @@ h3 {
   z-index: 10; /* Ensure it is on top of other elements */
   position: relative;
   background-color: rgba(41, 41, 41, 1);
+  transition: background-color 1s ease-out;
 }
 
 .loading-background {
   background-color: rgba(41, 41, 41, 1);
-  transition: background-color 1s ease-in-out;
-}
-
-.mlb-data-container:not(.loading-background) {
-  background-color: transparent; /* Transparent when loaded */
+  transition: background-color 1s ease-out;
 }
 
 .loading img {
@@ -341,7 +338,7 @@ h3 {
 .fade-in-background {
   background-color: rgba(41, 41, 41, 1);
   opacity: 0;
-  transition: opacity 3s ease-in-out;
+  transition: opacity 1s ease-in;
   z-index: -1;
 }
 
