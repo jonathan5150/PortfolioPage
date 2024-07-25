@@ -7,24 +7,26 @@
   text-align: center;
   overflow-y: auto;
   position: relative;
+  color: white;
 }
 
 .game-container {
-  border: 1.5px solid black;
+  background-color: rgba(41, 41, 41, 0.9);
+  border: 1.5px solid #555555;
   border-radius: 6px;
   margin-bottom: 10px;
 }
 
 .game-data-container {
-  border: 2px solid #000;
+  background-color: rgba(100, 100, 100, 0.5);
+  border: 2px solid #555555;
   border-radius: 5px;
   display: flex;
   flex-direction: column;
   width: 90%;
   padding: 5px;
   margin-top: 5px;
-  margin-bottom: 5px;
-  background: rgba(242, 242, 242, 0.5);
+  margin-bottom: 10px;
 }
 
 .game-data-container:first-child {
@@ -34,11 +36,9 @@
 .scoreboard-row {
   display: flex;
   width: 100%;
-  background: rgba(242, 242, 242, 0.8);
 }
 
 .scoreboard-cell {
-  border: 1px solid #000;
   flex: 1;
   display: flex;
   align-items: center;
@@ -77,9 +77,8 @@
 }
 
 .game-data {
-  background: rgba(242, 242, 242, 0.85);
   display: flex;
-  border: 1px solid black;
+  border: 1px solid #555555;
   border-radius: 5px;
   border-top-right-radius: 0;
   border-top-left-radius: 0;
@@ -113,16 +112,15 @@
   display: flex;
   justify-content: center; /* Ensure space between columns */
   min-height: 130px;
-  border: 1px solid black;
-  background: rgba(242, 242, 242, 0.95); /* Adjust the last value (0.5) for the desired opacity */
+  border: 1px solid #555555;
   padding: 5px; /* Add padding for better spacing */
 }
 
 .custom-datepicker-input {
   margin: 10px 0px;
-  border: 1px solid black;
+  border: 1px solid #555555;
   border-radius: 5px;
-  background: rgba(242, 242, 242, 0.75);
+  background-color: rgba(41, 41, 41, 0.9);
   cursor: pointer;
   font-size: 1em;
   padding: 0.5em;
@@ -148,9 +146,9 @@ h2 {
   font-size: 30px;
   margin-top: 25px;
   margin-bottom: 0px;
-  border: 1px solid black;
+  border: 1px solid #555555;
   border-radius: 5px;
-  background: rgba(242, 242, 242, 0.75);
+  background-color: rgba(41, 41, 41, 0.9);
   padding: 5px 15px;
 }
 
@@ -160,9 +158,8 @@ h3 {
   margin-bottom: 10px;
   padding-bottom: 3px;
   text-align: center;
-  border: 1px solid black;
+  border: 1px solid #555555;
   border-radius: 5px;
-  background: rgba(242, 242, 242, 0.75);
 }
 
 .column1, .column2, .column3 {
@@ -210,7 +207,7 @@ h3 {
   max-height: 90%;
   object-fit: contain; /* Ensures the image scales down to fit within its container */
   margin-right: 15px;
-  border: 1px solid black;
+  border: 1px solid #555555;
   border-radius: 7px;
   padding: 3px;
 }
@@ -242,10 +239,10 @@ h3 {
 }
 
 .gameTime {
+  background-color: rgba(100, 100, 100, 0.5);
   margin: 0px;
-  border: 1px solid black;
+  border: 1px solid #555555;
   border-radius: 5px;
-  background: rgba(242, 242, 242, 0.85); /* Adjust the last value (0.5) for the desired opacity */
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
 }
@@ -293,7 +290,7 @@ h3 {
 .noGames {
   font-size: 20px;
   margin-bottom: 0px;
-  border: 1px solid black;
+  border: 1px solid #555555;
   border-radius: 5px;
   background: rgba(242, 242, 242, 0.75);
   padding: 5px 15px;
