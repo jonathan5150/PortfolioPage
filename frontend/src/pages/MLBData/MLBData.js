@@ -203,6 +203,7 @@ function MLBData() {
       />
       <div className="mlbDataNavbar">
         <h2>MLB DATA PROJECT</h2>
+        <div className="custom-datepicker-input">
         <DatePicker
           selected={selectedDate}
           onChange={(date) => {
@@ -216,6 +217,7 @@ function MLBData() {
           onCalendarClose={() => setIsCalendarOpen(false)}
           preventOpenOnFocus
         />
+        </div>
       </div>
       {loading ? (
         <div className="loading">

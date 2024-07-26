@@ -15,6 +15,12 @@
   border: 1.5px solid #555555;
   border-radius: 6px;
   margin-bottom: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+}
+
+.game-container:first-child {
+  margin-top: 10px;
 }
 
 .game-data-container {
@@ -102,7 +108,7 @@
 }
 
 .column2 p, .column2 span, .column2 div {
-  font-size: 16px; /* Change this value to your desired font size */
+  font-size: 15px; /* Change this value to your desired font size */
 }
 
 .lineup {
@@ -121,13 +127,12 @@
 }
 
 .custom-datepicker-input {
-  margin: 10px 0px;
-  border: 1.5px solid #555555;
   border-radius: 5px;
-  background-color: rgba(70, 70, 70, 0.8);
+  background-color: rgba(70, 70, 70, 0.95);
   cursor: pointer;
   font-size: 1em;
-  padding: 0.5em;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
   color: inherit; /* Ensures the text color matches the surrounding text */
   user-select: none;
 }
@@ -146,10 +151,32 @@
   transform: rotate(0deg);
 }
 
+.custom-datepicker-input .react-datepicker {
+  background-color: rgba(70, 70, 70, 0.97);
+}
+
+.custom-datepicker-input .react-datepicker__header {
+  background-color: rgba(70, 70, 70, 0.97);
+}
+
+.custom-datepicker-input .react-datepicker__current-month,
+.custom-datepicker-input .react-datepicker__day,
+.custom-datepicker-input .react-datepicker__day-name,
+.custom-datepicker-input .react-datepicker-time__header {
+  color: white;
+}
+
+.custom-datepicker-input .react-datepicker__navigation--previous,
+.custom-datepicker-input .react-datepicker__navigation--next {
+  border-color: white;
+}
+
 h2 {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
   font-size: 30px;
   margin-top: 25px;
-  margin-bottom: 0px;
+  margin-bottom: 10px;
   border: 1.5px solid #555555;
   border-radius: 5px;
   background-color: rgba(70, 70, 70, 0.8);
@@ -355,7 +382,7 @@ h3 {
   }
 
 .column2 .pitcher-details {
-  font-size: 16px; /* Adjust the font size */
+  font-size: 14px; /* Adjust the font size */
 }
 
   .column3 {
