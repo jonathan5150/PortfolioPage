@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './MLBData.scss';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { format } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import Scoreboard from '../../components/MLBData/Scoreboard';
 
 const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCalendarOpen }, ref) => {
@@ -17,6 +17,26 @@ const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCal
     </button>
   );
 });
+
+// eslint-disable-next-line
+{/*const LastFiveGames = ({ games }) => {
+  return (
+    <div className="last-five">
+      {games.map((game, index) => (
+        <div key={index} className="last-five-column">
+          <div className="last-five-row">{format(new Date(game.gameDate), 'MM/dd/yyyy')}</div>
+          <div className="last-five-row">
+            {game.teams.away.team.abbreviation} {game.teams.away.score}
+          </div>
+          <div className="last-five-row">
+            {game.teams.home.team.abbreviation} {game.teams.home.score}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+*/}
 
 function MLBData() {
   const [todayGames, setTodayGames] = useState([]);
@@ -46,6 +66,8 @@ function MLBData() {
       return format(date, 'yyyy-MM-dd');
     };
     const todayFormatted = formatDate(selectedDate);
+    const thirtyDaysAgo = formatDate(subDays(new Date(), 30));
+    const yesterday = formatDate(subDays(new Date(), 1));
 
     const fetchTeamLogos = async () => {
       const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams');
@@ -99,6 +121,15 @@ function MLBData() {
       return { era: 'N/A', gamesPlayed: 'N/A' };
     };
 
+    const fetchLastFiveGames = async (teamId) => {
+      const url = `https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${thirtyDaysAgo}&endDate=${yesterday}&teamId=${teamId}`;
+      const response = await fetch(url);
+      const data = await response.json();
+      const games = data.dates.flatMap(date => date.games);
+
+      return games.slice(-5).reverse(); // get the last 5 games in chronological order
+    };
+
     const fetchData = async () => {
       const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher&startDate=${todayFormatted}&endDate=${todayFormatted}`;
       const response = await fetch(url);
@@ -128,6 +159,10 @@ function MLBData() {
           } else {
             game.teams.home.probablePitcher = { fullName: '?', era: '?', gamesPlayed: '?' };
           }
+
+          // Fetch last 5 games for both home and away teams
+          game.lastFiveAwayGames = await fetchLastFiveGames(game.teams.away.team.id);
+          game.lastFiveHomeGames = await fetchLastFiveGames(game.teams.home.team.id);
         }
       }
 
@@ -205,19 +240,19 @@ function MLBData() {
       <div className="mlbDataNavbar">
         <h2>MLB DATA PROJECT</h2>
         <div className="custom-datepicker-input">
-        <DatePicker
-          selected={selectedDate}
-          onChange={(date) => {
-            setSelectedDate(date);
-            setLoading(true);
-            setIsCalendarOpen(false);
-          }}
-          dateFormat="M/dd/yyyy"
-          customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} />}
-          onCalendarOpen={() => setIsCalendarOpen(true)}
-          onCalendarClose={() => setIsCalendarOpen(false)}
-          preventOpenOnFocus
-        />
+          <DatePicker
+            selected={selectedDate}
+            onChange={(date) => {
+              setSelectedDate(date);
+              setLoading(true);
+              setIsCalendarOpen(false);
+            }}
+            dateFormat="M/dd/yyyy"
+            customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} />}
+            onCalendarOpen={() => setIsCalendarOpen(true)}
+            onCalendarClose={() => setIsCalendarOpen(false)}
+            preventOpenOnFocus
+          />
         </div>
       </div>
       {loading ? (
@@ -278,9 +313,13 @@ function MLBData() {
                       </div>
                       <div className="game-data">
                         <Scoreboard game={game} getTeamAbbreviation={getTeamAbbreviation} getTeamScore={getTeamScore} />
-                        <div className="game-data-container">
-                          <p className="game-data-title">LAST 10</p>
-                        </div>
+                        {/*<div className="last-five game-data-container">
+                          <p className="game-data-title">LAST 5</p>
+                          <div className="last-five-wrapper">
+                            <LastFiveGames games={game.lastFiveAwayGames} />
+                            <LastFiveGames games={game.lastFiveHomeGames} />
+                          </div>
+                        </div>*/}
                       </div>
                     </div>
                   ))}
