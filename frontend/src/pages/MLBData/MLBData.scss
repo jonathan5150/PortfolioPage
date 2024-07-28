@@ -411,8 +411,23 @@ h3 {
   }
 }
 
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 .fade-in {
   animation: fadeIn 1s ease-in forwards; /* Adjust the duration as needed */
+}
+
+.fade-out {
+  animation: fadeOut 1s ease-out;
+  opacity: 0; /* Ensure the element becomes transparent at the end of the animation */
+  transition: opacity 1s ease-out;
 }
 
 .fade-in-background {
@@ -434,7 +449,7 @@ h3 {
 }
 
 .teams-menu {
-  font-size: 14px;
+  font-size: 18px;
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
   position: absolute;
@@ -442,18 +457,41 @@ h3 {
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(70, 70, 70, 0.95);
-  padding: 5px;
-  border: 1px solid #555;
+  padding: 10px;
+  border: 2px solid #555;
   border-radius: 5px;
   z-index: 1000;
-  width: 200px;
+  width: 250px; /* Adjusted width to accommodate buttons */
+}
+
+.menu-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.select-button, .close-button {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  background-color: transparent;
+  border: 2px solid #555;
+  border-radius: 3px;
+  color: white;
+  cursor: pointer;
+  font-size: 1em;
+  padding: 5px 10px;
+}
+
+.close-button {
+  margin-left: auto;
 }
 
 .teams-menu ul {
   list-style-type: none;
   padding: 0;
   margin: 0;
-  max-height: 200px;
+  max-height: 250px;
   overflow-y: auto;
 }
 
@@ -469,18 +507,6 @@ h3 {
 
 .teams-menu input[type="checkbox"] {
   margin-right: 10px;
-}
-
-.close-button {
-  font-family: 'DM Sans', sans-serif;
-  font-weight: 300;
-  background-color: transparent;
-  border: none;
-  color: white;
-  cursor: pointer;
-  font-size: 1em;
-  margin-bottom: 10px;
-  float: right;
 }
 
 

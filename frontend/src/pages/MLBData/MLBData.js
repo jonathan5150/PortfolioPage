@@ -27,10 +27,14 @@ const TeamsButton = ({ onClick, isOpen }) => {
   );
 };
 
-const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onClose }) => {
+const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onSelectAll, onDeselectAll, onClose }) => {
   return (
     <div className="teams-menu">
-      <button className="close-button" onClick={onClose}>CLOSE</button>
+      <div className="menu-buttons">
+        <button className="select-button" onClick={onSelectAll}>ALL</button>
+        <button className="select-button" onClick={onDeselectAll}>NONE</button>
+        <button className="close-button" onClick={onClose}>CLOSE</button>
+      </div>
       <ul>
         {teams.map((team) => (
           <li key={team.id}>
@@ -88,6 +92,7 @@ function MLBData() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isTeamsMenuOpen, setIsTeamsMenuOpen] = useState(false);
   const [selectedTeams, setSelectedTeams] = useState([]);
+  const [visibleGames, setVisibleGames] = useState([]);
 
   useEffect(() => {
     const updateViewportHeight = () => {
@@ -218,6 +223,11 @@ function MLBData() {
         }));
 
         setTodayGames(games);
+        setVisibleGames(games.flatMap(date =>
+          date.games.filter(game =>
+            selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id)
+          )
+        ));
       } catch (error) {
         console.error('Error fetching game data:', error);
       }
@@ -231,7 +241,16 @@ function MLBData() {
     };
 
     initializeData();
+// eslint-disable-next-line
   }, [selectedDate]);
+
+  useEffect(() => {
+    setVisibleGames(todayGames.flatMap(date =>
+      date.games.filter(game =>
+        selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id)
+      )
+    ));
+  }, [selectedTeams, todayGames]);
 
   const formatTime = (dateTime) => {
     const date = new Date(dateTime);
@@ -242,9 +261,8 @@ function MLBData() {
     return teamLogos[mlbTeamName] || '';
   };
 
-  const getTeamRecord = (mlbTeamName) => {
-    const team = mlbTeams.find((team) => team.name === mlbTeamName);
-    return team ? teamRecords[team.id] : '0-0';
+  const getTeamRecord = (teamId) => {
+    return teamRecords[teamId] || '0-0';
   };
 
   const getTeamAbbreviation = (teamId) => {
@@ -267,11 +285,16 @@ function MLBData() {
     });
   };
 
-  const filteredGames = todayGames.flatMap(date =>
-    date.games.filter(game =>
-      selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id)
-    )
-  );
+  const handleSelectAll = () => {
+    const allTeamIds = mlbTeams.map(team => team.id);
+    setSelectedTeams(allTeamIds);
+    Cookies.set('selectedTeams', JSON.stringify(allTeamIds), { expires: 7 });
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedTeams([]);
+    Cookies.set('selectedTeams', JSON.stringify([]), { expires: 7 });
+  };
 
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
@@ -300,6 +323,8 @@ function MLBData() {
               teams={mlbTeams}
               selectedTeams={selectedTeams}
               onTeamChange={handleTeamChange}
+              onSelectAll={handleSelectAll}
+              onDeselectAll={handleDeselectAll}
               onClose={() => setIsTeamsMenuOpen(false)}
             />
           )}
@@ -328,11 +353,11 @@ function MLBData() {
       ) : (
         <div className={`pitchingLineups fade-in`}>
           <div className="lineups-container">
-            {filteredGames.length === 0 ? (
+            {visibleGames.length === 0 ? (
               <p className="noGames">No games scheduled for this date.</p>
             ) : (
-              filteredGames.map((game) => (
-                <div className="game-container" key={game.gamePk}>
+              visibleGames.map((game) => (
+                <div className={`game-container ${selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id) ? 'fade-in' : 'fade-out'}`} key={game.gamePk}>
                   <p className="gameTime">{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
                   <div className="lineupGroup">
                     <div className="column1">
@@ -346,7 +371,7 @@ function MLBData() {
                     <div className="column2">
                       <div className="pitcher-info-top">
                         <span style={{ fontWeight: 'bold' }}>
-                          {game.teams.away.team.name} ({getTeamRecord(game.teams.away.team.name)})
+                          {game.teams.away.team.name} ({getTeamRecord(game.teams.away.team.id)})
                         </span>
                         <div className="pitcher-details">
                           {game.teams.away.probablePitcher?.fullName === '?' ? 'P: TBD' : (
@@ -360,7 +385,7 @@ function MLBData() {
                       <p className="vs">@</p>
                       <div className="pitcher-info-bottom">
                         <span style={{ fontWeight: 'bold' }}>
-                          {game.teams.home.team.name} ({getTeamRecord(game.teams.home.team.name)})
+                          {game.teams.home.team.name} ({getTeamRecord(game.teams.home.team.id)})
                         </span>
                         <div className="pitcher-details">
                           {game.teams.home.probablePitcher?.fullName === '?' ? 'P: TBD' : (
