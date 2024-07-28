@@ -4,6 +4,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { format, subDays } from 'date-fns';
 import Scoreboard from '../../components/MLBData/Scoreboard';
+import Cookies from 'js-cookie';
 
 const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCalendarOpen }, ref) => {
   return (
@@ -17,6 +18,36 @@ const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCal
     </button>
   );
 });
+
+const TeamsButton = ({ onClick, isOpen }) => {
+  return (
+    <button className="custom-datepicker-input" onClick={onClick}>
+      TEAMS <span className={`arrow ${isOpen ? 'open' : 'closed'}`}>▼</span>
+    </button>
+  );
+};
+
+const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onClose }) => {
+  return (
+    <div className="teams-menu">
+      <button className="close-button" onClick={onClose}>CLOSE</button>
+      <ul>
+        {teams.map((team) => (
+          <li key={team.id}>
+            <label>
+              <input
+                type="checkbox"
+                checked={selectedTeams.includes(team.id)}
+                onChange={() => onTeamChange(team.id)}
+              />
+              {team.abbreviation} {team.name}
+            </label>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
 
 const LastFiveGames = ({ games, teamId }) => {
   return (
@@ -55,6 +86,8 @@ function MLBData() {
   const [teamRecords, setTeamRecords] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isTeamsMenuOpen, setIsTeamsMenuOpen] = useState(false);
+  const [selectedTeams, setSelectedTeams] = useState([]);
 
   useEffect(() => {
     const updateViewportHeight = () => {
@@ -93,6 +126,12 @@ function MLBData() {
           logos[team.team.displayName] = team.team.logos[0].href;
         });
 
+        const teams = mlbTeamsData.teams.map(team => ({
+          id: team.id,
+          name: team.teamName === 'D-backs' ? 'Diamondbacks' : team.teamName,  // Correcting the name
+          abbreviation: team.abbreviation
+        })).sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
+
         const records = {};
         teamRecordsData.records.forEach((league) => {
           league.teamRecords.forEach((teamRecord) => {
@@ -102,8 +141,16 @@ function MLBData() {
         });
 
         setTeamLogos(logos);
-        setMlbTeams(mlbTeamsData.teams);
+        setMlbTeams(teams);
         setTeamRecords(records);
+
+        // Load selected teams from cookies
+        const savedSelectedTeams = Cookies.get('selectedTeams');
+        if (savedSelectedTeams) {
+          setSelectedTeams(JSON.parse(savedSelectedTeams));
+        } else {
+          setSelectedTeams(teams.map(team => team.id)); // Select all teams by default
+        }
       } catch (error) {
         console.error('Error fetching initial data:', error);
       }
@@ -209,6 +256,23 @@ function MLBData() {
     return team.score !== undefined ? team.score : 0;
   };
 
+  const handleTeamChange = (teamId) => {
+    setSelectedTeams((prevSelectedTeams) => {
+      const updatedSelectedTeams = prevSelectedTeams.includes(teamId)
+        ? prevSelectedTeams.filter((id) => id !== teamId)
+        : [...prevSelectedTeams, teamId];
+
+      Cookies.set('selectedTeams', JSON.stringify(updatedSelectedTeams), { expires: 7 });
+      return updatedSelectedTeams;
+    });
+  };
+
+  const filteredGames = todayGames.flatMap(date =>
+    date.games.filter(game =>
+      selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id)
+    )
+  );
+
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
       <div
@@ -229,7 +293,16 @@ function MLBData() {
       />
       <div className="mlbDataNavbar">
         <h2>MLB DATA PROJECT</h2>
-        <div className="custom-datepicker-input">
+        <div className="controls">
+          <TeamsButton onClick={() => setIsTeamsMenuOpen(!isTeamsMenuOpen)} isOpen={isTeamsMenuOpen} />
+          {isTeamsMenuOpen && (
+            <TeamsMenu
+              teams={mlbTeams}
+              selectedTeams={selectedTeams}
+              onTeamChange={handleTeamChange}
+              onClose={() => setIsTeamsMenuOpen(false)}
+            />
+          )}
           <DatePicker
             selected={selectedDate}
             onChange={(date) => {
@@ -253,66 +326,62 @@ function MLBData() {
       ) : (
         <div className={`pitchingLineups fade-in`}>
           <div className="lineups-container">
-            {todayGames.length === 0 ? (
+            {filteredGames.length === 0 ? (
               <p className="noGames">No games scheduled for this date.</p>
             ) : (
-              todayGames.map((date) => (
-                <div className="pitchingColumn" key={date.date}>
-                  {date.games.map((game) => (
-                    <div className="game-container" key={game.gamePk}>
-                      <p className="gameTime">{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                      <div className="lineupGroup">
-                        <div className="column1">
-                          <div className="row1">
-                            <img src={getTeamLogo(game.teams.away.team.name)} alt={`${game.teams.away.team.name} logo`} />
-                          </div>
-                          <div className="row2">
-                            <img src={getTeamLogo(game.teams.home.team.name)} alt={`${game.teams.home.team.name} logo`} />
-                          </div>
-                        </div>
-                        <div className="column2">
-                          <div className="pitcher-info-top">
-                            <span style={{ fontWeight: 'bold' }}>
-                              {game.teams.away.team.name} ({getTeamRecord(game.teams.away.team.name)})
-                            </span>
-                            <div className="pitcher-details">
-                              {game.teams.away.probablePitcher?.fullName === '?' ? 'P: TBD' : (
-                                <>
-                                  P: {game.teams.away.probablePitcher?.fullName} <br />
-                                  ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <p className="vs">@</p>
-                          <div className="pitcher-info-bottom">
-                            <span style={{ fontWeight: 'bold' }}>
-                              {game.teams.home.team.name} ({getTeamRecord(game.teams.home.team.name)})
-                            </span>
-                            <div className="pitcher-details">
-                              {game.teams.home.probablePitcher?.fullName === '?' ? 'P: TBD' : (
-                                <>
-                                  P: {game.teams.home.probablePitcher?.fullName} <br />
-                                  ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="column3"></div>
+              filteredGames.map((game) => (
+                <div className="game-container" key={game.gamePk}>
+                  <p className="gameTime">{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                  <div className="lineupGroup">
+                    <div className="column1">
+                      <div className="row1">
+                        <img src={getTeamLogo(game.teams.away.team.name)} alt={`${game.teams.away.team.name} logo`} />
                       </div>
-                      <div className="game-data">
-                        <Scoreboard game={game} getTeamAbbreviation={getTeamAbbreviation} getTeamScore={getTeamScore} />
-                        <div className="last-five game-data-container">
-                          <p className="game-data-title">LAST 5</p>
-                          <div className="last-five-wrapper">
-                            <LastFiveGames games={game.teams.away.lastFiveGames} teamId={game.teams.away.team.id} />
-                            <LastFiveGames games={game.teams.home.lastFiveGames} teamId={game.teams.home.team.id} />
-                          </div>
+                      <div className="row2">
+                        <img src={getTeamLogo(game.teams.home.team.name)} alt={`${game.teams.home.team.name} logo`} />
+                      </div>
+                    </div>
+                    <div className="column2">
+                      <div className="pitcher-info-top">
+                        <span style={{ fontWeight: 'bold' }}>
+                          {game.teams.away.team.name} ({getTeamRecord(game.teams.away.team.name)})
+                        </span>
+                        <div className="pitcher-details">
+                          {game.teams.away.probablePitcher?.fullName === '?' ? 'P: TBD' : (
+                            <>
+                              P: {game.teams.away.probablePitcher?.fullName} <br />
+                              ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <p className="vs">@</p>
+                      <div className="pitcher-info-bottom">
+                        <span style={{ fontWeight: 'bold' }}>
+                          {game.teams.home.team.name} ({getTeamRecord(game.teams.home.team.name)})
+                        </span>
+                        <div className="pitcher-details">
+                          {game.teams.home.probablePitcher?.fullName === '?' ? 'P: TBD' : (
+                            <>
+                              P: {game.teams.home.probablePitcher?.fullName} <br />
+                              ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed}
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
-                  ))}
+                    <div className="column3"></div>
+                  </div>
+                  <div className="game-data">
+                    <Scoreboard game={game} getTeamAbbreviation={getTeamAbbreviation} getTeamScore={getTeamScore} />
+                    <div className="last-five game-data-container">
+                      <p className="game-data-title">LAST 5</p>
+                      <div className="last-five-wrapper">
+                        <LastFiveGames games={game.teams.away.lastFiveGames} teamId={game.teams.away.team.id} />
+                        <LastFiveGames games={game.teams.home.lastFiveGames} teamId={game.teams.home.team.id} />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))
             )}
