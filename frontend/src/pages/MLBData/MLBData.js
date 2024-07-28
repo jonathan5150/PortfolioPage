@@ -18,25 +18,27 @@ const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCal
   );
 });
 
-// eslint-disable-next-line
-{/*const LastFiveGames = ({ games }) => {
+const LastFiveGames = ({ games }) => {
   return (
     <div className="last-five">
       {games.map((game, index) => (
         <div key={index} className="last-five-column">
-          <div className="last-five-row">{format(new Date(game.gameDate), 'MM/dd/yyyy')}</div>
-          <div className="last-five-row">
-            {game.teams.away.team.abbreviation} {game.teams.away.score}
-          </div>
-          <div className="last-five-row">
-            {game.teams.home.team.abbreviation} {game.teams.home.score}
-          </div>
+          <div className="last-five-row date">{format(new Date(game.gameDate), 'M/d')}</div>
+            <div className="team-and-score-group">
+              <div className="last-five-row">
+                <div className="team-cell">{game.teams.away.team.abbreviation}</div>
+                <div className="score-cell">{game.teams.away.score}</div>
+              </div>
+              <div className="last-five-row">
+                <div className="team-cell">{game.teams.home.team.abbreviation}</div>
+                <div className="score-cell">{game.teams.home.score}</div>
+              </div>
+            </div>
         </div>
       ))}
     </div>
   );
 };
-*/}
 
 function MLBData() {
   const [todayGames, setTodayGames] = useState([]);
@@ -127,7 +129,7 @@ function MLBData() {
       const data = await response.json();
       const games = data.dates.flatMap(date => date.games);
 
-      return games.slice(-5).reverse(); // get the last 5 games in chronological order
+      return games.slice(-5); // get the last 5 games in chronological order
     };
 
     const fetchData = async () => {
@@ -313,13 +315,13 @@ function MLBData() {
                       </div>
                       <div className="game-data">
                         <Scoreboard game={game} getTeamAbbreviation={getTeamAbbreviation} getTeamScore={getTeamScore} />
-                        {/*<div className="last-five game-data-container">
+                        <div className="last-five game-data-container">
                           <p className="game-data-title">LAST 5</p>
                           <div className="last-five-wrapper">
                             <LastFiveGames games={game.lastFiveAwayGames} />
                             <LastFiveGames games={game.lastFiveHomeGames} />
                           </div>
-                        </div>*/}
+                        </div>
                       </div>
                     </div>
                   ))}
