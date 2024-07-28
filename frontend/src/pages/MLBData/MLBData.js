@@ -303,19 +303,21 @@ function MLBData() {
               onClose={() => setIsTeamsMenuOpen(false)}
             />
           )}
-          <DatePicker
-            selected={selectedDate}
-            onChange={(date) => {
-              setSelectedDate(date);
-              setLoading(true);
-              setIsCalendarOpen(false);
-            }}
-            dateFormat="M/dd/yyyy"
-            customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} />}
-            onCalendarOpen={() => setIsCalendarOpen(true)}
-            onCalendarClose={() => setIsCalendarOpen(false)}
-            preventOpenOnFocus
-          />
+          <div className="custom-datepicker-input">
+            <DatePicker
+                selected={selectedDate}
+                onChange={(date) => {
+                setSelectedDate(date);
+                setLoading(true);
+                setIsCalendarOpen(false);
+                }}
+                dateFormat="M/dd/yyyy"
+                customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} />}
+                onCalendarOpen={() => setIsCalendarOpen(true)}
+                onCalendarClose={() => setIsCalendarOpen(false)}
+                preventOpenOnFocus
+            />
+          </div>
         </div>
       </div>
       {loading ? (
