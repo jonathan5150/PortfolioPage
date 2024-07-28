@@ -116,11 +116,11 @@ function MLBData() {
           return stats ? { era: stats.era, gamesPlayed: stats.gamesPlayed } : { era: 'N/A', gamesPlayed: 'N/A' };
         };
 
-        const fetchLastFiveGames = async (teamId) => {
+        const fetchLastTenGames = async (teamId) => {
           const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${thirtyDaysAgo}&endDate=${yesterday}&teamId=${teamId}`);
           const data = await response.json();
           const games = data.dates?.flatMap(date => date.games) || [];
-          return games.slice(-5);
+          return games.filter(game => game.teams.away.score !== undefined && game.teams.home.score !== undefined).slice(-10);
         };
 
         const games = await Promise.all((data.dates || []).map(async (gameDay) => {
@@ -133,6 +133,9 @@ function MLBData() {
               const awayPitcherStats = await fetchPitcherData(game.teams.away.probablePitcher?.id);
               const homePitcherStats = await fetchPitcherData(game.teams.home.probablePitcher?.id);
 
+              const awayLastFiveGames = (await fetchLastTenGames(game.teams.away.team.id)).slice(-5);
+              const homeLastFiveGames = (await fetchLastTenGames(game.teams.home.team.id)).slice(-5);
+
               return {
                 ...game,
                 liveData: gameData.liveData,
@@ -144,7 +147,7 @@ function MLBData() {
                       ...game.teams.away.probablePitcher,
                       ...awayPitcherStats
                     },
-                    lastFiveGames: await fetchLastFiveGames(game.teams.away.team.id)
+                    lastFiveGames: awayLastFiveGames
                   },
                   home: {
                     ...game.teams.home,
@@ -152,7 +155,7 @@ function MLBData() {
                       ...game.teams.home.probablePitcher,
                       ...homePitcherStats
                     },
-                    lastFiveGames: await fetchLastFiveGames(game.teams.home.team.id)
+                    lastFiveGames: homeLastFiveGames
                   }
                 }
               };
