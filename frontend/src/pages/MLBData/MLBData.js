@@ -64,120 +64,112 @@ function MLBData() {
   }, []);
 
   useEffect(() => {
-    const formatDate = (date) => {
-      return format(date, 'yyyy-MM-dd');
-    };
+    const formatDate = (date) => format(date, 'yyyy-MM-dd');
     const todayFormatted = formatDate(selectedDate);
     const thirtyDaysAgo = formatDate(subDays(new Date(), 30));
     const yesterday = formatDate(subDays(new Date(), 1));
 
-    const fetchTeamLogos = async () => {
-      const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams');
-      const data = await response.json();
-      const logos = {};
+    const fetchInitialData = async () => {
+      try {
+        const [teamLogosRes, mlbTeamsRes, teamRecordsRes] = await Promise.all([
+          fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams'),
+          fetch('https://statsapi.mlb.com/api/v1/teams?sportId=1'),
+          fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104')
+        ]);
 
-      data.sports[0].leagues[0].teams.forEach((team) => {
-        logos[team.team.displayName] = team.team.logos[0].href;
-      });
+        const teamLogosData = await teamLogosRes.json();
+        const mlbTeamsData = await mlbTeamsRes.json();
+        const teamRecordsData = await teamRecordsRes.json();
 
-      setTeamLogos(logos);
-    };
-
-    const fetchMlbTeams = async () => {
-      const response = await fetch('https://statsapi.mlb.com/api/v1/teams?sportId=1');
-      const data = await response.json();
-      setMlbTeams(data.teams);
-    };
-
-    const fetchTeamRecords = async () => {
-      const response = await fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104');
-      const data = await response.json();
-      const records = {};
-
-      data.records.forEach((league) => {
-        league.teamRecords.forEach((teamRecord) => {
-          const teamId = teamRecord.team.id;
-          const wins = teamRecord.wins;
-          const losses = teamRecord.losses;
-          records[teamId] = `${wins}-${losses}`;
+        const logos = {};
+        teamLogosData.sports[0].leagues[0].teams.forEach((team) => {
+          logos[team.team.displayName] = team.team.logos[0].href;
         });
-      });
 
-      setTeamRecords(records);
-    };
+        const records = {};
+        teamRecordsData.records.forEach((league) => {
+          league.teamRecords.forEach((teamRecord) => {
+            const teamId = teamRecord.team.id;
+            records[teamId] = `${teamRecord.wins}-${teamRecord.losses}`;
+          });
+        });
 
-    const fetchPitcherData = async (pitcherId) => {
-      const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`;
-      const response = await fetch(url);
-      const data = await response.json();
-
-      const stats = data.people[0]?.stats;
-      if (stats && stats.length > 0) {
-        const currentSeasonStats = stats[0]?.splits;
-        if (currentSeasonStats && currentSeasonStats.length > 0) {
-          const era = currentSeasonStats[0]?.stat?.era || 'N/A';
-          const gamesPlayed = currentSeasonStats[0]?.stat?.gamesPlayed || 'N/A';
-          return { era, gamesPlayed };
-        }
+        setTeamLogos(logos);
+        setMlbTeams(mlbTeamsData.teams);
+        setTeamRecords(records);
+      } catch (error) {
+        console.error('Error fetching initial data:', error);
       }
-      return { era: 'N/A', gamesPlayed: 'N/A' };
     };
 
-    const fetchLastFiveGames = async (teamId) => {
-      const url = `https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${thirtyDaysAgo}&endDate=${yesterday}&teamId=${teamId}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      const games = data.dates.flatMap(date => date.games);
+    const fetchGameData = async () => {
+      try {
+        const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher&startDate=${todayFormatted}&endDate=${todayFormatted}`;
+        const response = await fetch(url);
+        const data = await response.json();
 
-      return games.slice(-5); // get the last 5 games in chronological order
-    };
+        const fetchPitcherData = async (pitcherId) => {
+          if (!pitcherId) return { era: 'N/A', gamesPlayed: 'N/A' };
+          const response = await fetch(`https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`);
+          const data = await response.json();
+          const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
+          return stats ? { era: stats.era, gamesPlayed: stats.gamesPlayed } : { era: 'N/A', gamesPlayed: 'N/A' };
+        };
 
-    const fetchData = async () => {
-      const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher&startDate=${todayFormatted}&endDate=${todayFormatted}`;
-      const response = await fetch(url);
-      const data = await response.json();
-      const games = data.dates;
+        const fetchLastFiveGames = async (teamId) => {
+          const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${thirtyDaysAgo}&endDate=${yesterday}&teamId=${teamId}`);
+          const data = await response.json();
+          const games = data.dates?.flatMap(date => date.games) || [];
+          return games.slice(-5);
+        };
 
-      const filteredTodayGames = games.filter((game) => game.date === todayFormatted);
+        const games = await Promise.all((data.dates || []).map(async (gameDay) => {
+          return {
+            ...gameDay,
+            games: await Promise.all(gameDay.games.map(async (game) => {
+              const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
+              const gameData = await fetch(liveGameUrl).then(res => res.json());
 
-      for (const gameDay of filteredTodayGames) {
-        for (const game of gameDay.games) {
-          const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
-          const gameResponse = await fetch(liveGameUrl);
-          const gameData = await gameResponse.json();
-          game.liveData = gameData.liveData;
+              const awayPitcherStats = await fetchPitcherData(game.teams.away.probablePitcher?.id);
+              const homePitcherStats = await fetchPitcherData(game.teams.home.probablePitcher?.id);
 
-          if (game.teams.away.probablePitcher) {
-            const stats = await fetchPitcherData(game.teams.away.probablePitcher.id);
-            game.teams.away.probablePitcher.era = stats.era;
-            game.teams.away.probablePitcher.gamesPlayed = stats.gamesPlayed;
-          } else {
-            game.teams.away.probablePitcher = { fullName: '?', era: '?', gamesPlayed: '?' };
-          }
-          if (game.teams.home.probablePitcher) {
-            const stats = await fetchPitcherData(game.teams.home.probablePitcher.id);
-            game.teams.home.probablePitcher.era = stats.era;
-            game.teams.home.probablePitcher.gamesPlayed = stats.gamesPlayed;
-          } else {
-            game.teams.home.probablePitcher = { fullName: '?', era: '?', gamesPlayed: '?' };
-          }
+              return {
+                ...game,
+                liveData: gameData.liveData,
+                teams: {
+                  ...game.teams,
+                  away: {
+                    ...game.teams.away,
+                    probablePitcher: {
+                      ...game.teams.away.probablePitcher,
+                      ...awayPitcherStats
+                    },
+                    lastFiveGames: await fetchLastFiveGames(game.teams.away.team.id)
+                  },
+                  home: {
+                    ...game.teams.home,
+                    probablePitcher: {
+                      ...game.teams.home.probablePitcher,
+                      ...homePitcherStats
+                    },
+                    lastFiveGames: await fetchLastFiveGames(game.teams.home.team.id)
+                  }
+                }
+              };
+            }))
+          };
+        }));
 
-          // Fetch last 5 games for both home and away teams
-          game.lastFiveAwayGames = await fetchLastFiveGames(game.teams.away.team.id);
-          game.lastFiveHomeGames = await fetchLastFiveGames(game.teams.home.team.id);
-        }
+        setTodayGames(games);
+      } catch (error) {
+        console.error('Error fetching game data:', error);
       }
-
-      // Sort the games by time
-      filteredTodayGames.forEach((gameDay) => {
-        gameDay.games.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
-      });
-
-      setTodayGames(filteredTodayGames);
     };
 
     const initializeData = async () => {
-      await Promise.all([fetchTeamLogos(), fetchMlbTeams(), fetchTeamRecords(), fetchData()]);
+      setLoading(true);
+      await fetchInitialData();
+      await fetchGameData();
       setLoading(false);
     };
 
@@ -186,30 +178,16 @@ function MLBData() {
 
   const formatTime = (dateTime) => {
     const date = new Date(dateTime);
-    return date.toLocaleTimeString([], {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
   const getTeamLogo = (mlbTeamName) => {
-    for (const mlbTeam of mlbTeams) {
-      if (mlbTeam.name === mlbTeamName) {
-        return teamLogos[mlbTeam.name] || '';
-      }
-    }
-    console.error(`Logo not found for team: ${mlbTeamName}`);
-    return '';
+    return teamLogos[mlbTeamName] || '';
   };
 
   const getTeamRecord = (mlbTeamName) => {
-    for (const mlbTeam of mlbTeams) {
-      if (mlbTeam.name === mlbTeamName) {
-        return teamRecords[mlbTeam.id] || '0-0';
-      }
-    }
-    return '0-0';
+    const team = mlbTeams.find((team) => team.name === mlbTeamName);
+    return team ? teamRecords[team.id] : '0-0';
   };
 
   const getTeamAbbreviation = (teamId) => {
@@ -318,8 +296,8 @@ function MLBData() {
                         <div className="last-five game-data-container">
                           <p className="game-data-title">LAST 5</p>
                           <div className="last-five-wrapper">
-                            <LastFiveGames games={game.lastFiveAwayGames} />
-                            <LastFiveGames games={game.lastFiveHomeGames} />
+                            <LastFiveGames games={game.teams.away.lastFiveGames} />
+                            <LastFiveGames games={game.teams.home.lastFiveGames} />
                           </div>
                         </div>
                       </div>
