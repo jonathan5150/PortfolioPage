@@ -25,7 +25,7 @@ const LastFiveGames = ({ games, teamId }) => {
         const awayScore = game.teams.away.score;
         const homeScore = game.teams.home.score;
         const isWinner = (game.teams.away.team.id === teamId && awayScore > homeScore) || (game.teams.home.team.id === teamId && homeScore > awayScore);
-        const backgroundColor = isWinner ? 'rgba(0, 255, 0, 0.2)' : 'rgba(255, 0, 0, 0.2)';
+        const backgroundColor = isWinner ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
 
         return (
           <div key={index} className="last-five-column">
