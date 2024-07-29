@@ -100,12 +100,14 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
+  text-align: center; /* Ensure text is centered */
 }
 
 .game-data-title {
-  font-size: 15px!important;
+  font-size: 14px!important;
   margin-top: 5px;
   margin-bottom: 5px;
+  text-align: center; /* Ensure text is centered */
 }
 
 .lineups-container p {
@@ -174,6 +176,7 @@
 .custom-datepicker-input .react-datepicker-time__header {
   color: white;
   border: none;
+  font-size: 18px;
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
 }
@@ -359,7 +362,6 @@ h3 {
   display: flex;
   width: 90%;
   justify-content: center; /* Center the entire .last-five content */
-  gap: 7px;
 }
 
 .last-five-column {
@@ -476,7 +478,7 @@ h3 {
 .select-button, .close-button {
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
-  background-color: transparent;
+  background-color: rgba(85, 85, 85, 0.95);
   border: 1px solid white;
   border-radius: 3px;
   color: white;

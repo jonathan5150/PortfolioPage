@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './MLBData.scss';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -29,13 +29,12 @@ const TeamsButton = ({ onClick, isOpen, setIsCalendarOpen }) => {
   );
 };
 
-const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onSelectAll, onDeselectAll, onClose }) => {
+const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onSelectAll, onDeselectAll }) => {
   return (
     <div className="teams-menu">
       <div className="menu-buttons">
         <button className="select-button" onClick={onSelectAll}>ALL</button>
         <button className="select-button" onClick={onDeselectAll}>NONE</button>
-        <button className="close-button" onClick={onClose}>CLOSE</button>
       </div>
       <ul>
         {teams.map((team) => (
@@ -95,6 +94,21 @@ function MLBData() {
   const [isTeamsMenuOpen, setIsTeamsMenuOpen] = useState(false);
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [visibleGames, setVisibleGames] = useState([]);
+
+  const teamsMenuRef = useRef();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (teamsMenuRef.current && !teamsMenuRef.current.contains(event.target)) {
+        setIsTeamsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const updateViewportHeight = () => {
@@ -321,14 +335,15 @@ function MLBData() {
         <div className="controls">
           <TeamsButton onClick={() => setIsTeamsMenuOpen(!isTeamsMenuOpen)} isOpen={isTeamsMenuOpen} setIsCalendarOpen={setIsCalendarOpen} />
           {isTeamsMenuOpen && (
-            <TeamsMenu
-              teams={mlbTeams}
-              selectedTeams={selectedTeams}
-              onTeamChange={handleTeamChange}
-              onSelectAll={handleSelectAll}
-              onDeselectAll={handleDeselectAll}
-              onClose={() => setIsTeamsMenuOpen(false)}
-            />
+            <div ref={teamsMenuRef}>
+              <TeamsMenu
+                teams={mlbTeams}
+                selectedTeams={selectedTeams}
+                onTeamChange={handleTeamChange}
+                onSelectAll={handleSelectAll}
+                onDeselectAll={handleDeselectAll}
+              />
+            </div>
           )}
           <div className="custom-datepicker-input">
             <DatePicker
