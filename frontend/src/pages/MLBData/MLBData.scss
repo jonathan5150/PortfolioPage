@@ -246,8 +246,8 @@ h3 {
 }
 
 .column1 img {
-  max-width: 90%;
-  max-height: 90%;
+  max-width: 85%;
+  max-height: 85%;
   object-fit: contain; /* Ensures the image scales down to fit within its container */
   margin-right: 15px;
   border: 1.5px solid #555555;
@@ -261,16 +261,15 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: auto;
-  margin-bottom: 5px;
-  min-height: 72px;
+  margin-top: 22px;
+  min-height: 68px;
 }
 
 .pitcher-info-bottom {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 25px;
+  margin-top: 30px;
   margin-bottom: auto;
   min-height: 72px;
 }
