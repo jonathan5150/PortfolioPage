@@ -20,7 +20,7 @@ const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCal
 
 const TeamsButton = ({ onClick, isOpen, setIsCalendarOpen }) => {
   return (
-    <button className="custom-datepicker-input" onClick={() => {
+    <button className="teams-button custom-datepicker-input" onClick={() => {
       onClick();
       setIsCalendarOpen(false);
     }}>

@@ -137,11 +137,12 @@
   border-radius: 5px;
   background-color: rgba(70, 70, 70, 0.95);
   cursor: pointer;
-  font-size: 1em;
+  font-size: 1.1em;
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
-  color: inherit; /* Ensures the text color matches the surrounding text */
+  color: inherit;
   user-select: none;
+  margin: 0; /* Remove margin to prevent shifting */
 }
 
 .custom-datepicker-input .arrow {
@@ -449,7 +450,11 @@ h3 {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 10px;
+}
+
+.teams-button {
+  font-size: 1.2em;
+  margin-right: 10px;
 }
 
 .teams-menu {
@@ -457,7 +462,7 @@ h3 {
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
   position: absolute;
-  top: 122.5px;
+  top: 124px;
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(70, 70, 70, 0.95);
@@ -465,17 +470,18 @@ h3 {
   border: 0.1px solid white;
   border-radius: 5px;
   z-index: 1000;
-  width: 250px; /* Adjusted width to accommodate buttons */
+  width: 250px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Add shadow for better visibility */
 }
 
 .menu-buttons {
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: center;
+  gap: 15px;
   margin-bottom: 10px;
 }
 
-.select-button, .close-button {
+.select-button {
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
   background-color: rgba(85, 85, 85, 0.95);
@@ -483,8 +489,8 @@ h3 {
   border-radius: 3px;
   color: white;
   cursor: pointer;
-  font-size: 1em;
-  padding: 5px 10px;
+  font-size: 15px;
+  padding: 5px 25px;
 }
 
 .close-button {
