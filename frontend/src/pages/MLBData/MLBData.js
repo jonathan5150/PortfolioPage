@@ -6,22 +6,24 @@ import { format, subDays } from 'date-fns';
 import Scoreboard from '../../components/MLBData/Scoreboard';
 import Cookies from 'js-cookie';
 
-const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCalendarOpen }, ref) => {
+const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCalendarOpen, setIsTeamsMenuOpen }, ref) => {
   return (
     <button className="custom-datepicker-input" onClick={() => {
       onClick();
-      if (!isCalendarOpen) {
-        setIsCalendarOpen(false);
-      }
+      setIsCalendarOpen(!isCalendarOpen);
+      setIsTeamsMenuOpen(false);
     }} ref={ref}>
       {value} <span className={`arrow ${isCalendarOpen ? 'open' : 'closed'}`}>▼</span>
     </button>
   );
 });
 
-const TeamsButton = ({ onClick, isOpen }) => {
+const TeamsButton = ({ onClick, isOpen, setIsCalendarOpen }) => {
   return (
-    <button className="custom-datepicker-input" onClick={onClick}>
+    <button className="custom-datepicker-input" onClick={() => {
+      onClick();
+      setIsCalendarOpen(false);
+    }}>
       TEAMS <span className={`arrow ${isOpen ? 'open' : 'closed'}`}>▼</span>
     </button>
   );
@@ -317,7 +319,7 @@ function MLBData() {
       <div className="mlbDataNavbar">
         <h2>MLB DATA PROJECT</h2>
         <div className="controls">
-          <TeamsButton onClick={() => setIsTeamsMenuOpen(!isTeamsMenuOpen)} isOpen={isTeamsMenuOpen} />
+          <TeamsButton onClick={() => setIsTeamsMenuOpen(!isTeamsMenuOpen)} isOpen={isTeamsMenuOpen} setIsCalendarOpen={setIsCalendarOpen} />
           {isTeamsMenuOpen && (
             <TeamsMenu
               teams={mlbTeams}
@@ -337,7 +339,7 @@ function MLBData() {
                 setIsCalendarOpen(false);
                 }}
                 dateFormat="M/dd/yyyy"
-                customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} />}
+                customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} setIsTeamsMenuOpen={setIsTeamsMenuOpen} />}
                 onCalendarOpen={() => setIsCalendarOpen(true)}
                 onCalendarClose={() => setIsCalendarOpen(false)}
                 preventOpenOnFocus

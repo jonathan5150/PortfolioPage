@@ -157,25 +157,27 @@
 }
 
 .custom-datepicker-input .react-datepicker {
-  background-color: rgba(70, 70, 70, 0.97);
+  background-color: rgba(70, 70, 70, 0.95);
 }
 
 .custom-datepicker-input .react-datepicker__header {
-  background-color: rgba(70, 70, 70, 0.97);
+  background-color: rgba(70, 70, 70, 0.95);
 }
 
+.react-datepicker__month-container {
+  border-radius: 5px;
+  border: none;
+}
 .custom-datepicker-input .react-datepicker__current-month,
 .custom-datepicker-input .react-datepicker__day,
 .custom-datepicker-input .react-datepicker__day-name,
 .custom-datepicker-input .react-datepicker-time__header {
   color: white;
   border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
 }
 
-.custom-datepicker-input .react-datepicker__navigation--previous,
-.custom-datepicker-input .react-datepicker__navigation--next {
-  border-color: white;
-}
 
 h2 {
   font-family: 'DM Sans', sans-serif;
@@ -453,12 +455,12 @@ h3 {
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
   position: absolute;
-  top: 117px;
+  top: 122.5px;
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(70, 70, 70, 0.95);
   padding: 10px;
-  border: 2px solid #555;
+  border: 0.1px solid white;
   border-radius: 5px;
   z-index: 1000;
   width: 250px; /* Adjusted width to accommodate buttons */
@@ -475,7 +477,7 @@ h3 {
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
   background-color: transparent;
-  border: 2px solid #555;
+  border: 1px solid white;
   border-radius: 3px;
   color: white;
   cursor: pointer;
