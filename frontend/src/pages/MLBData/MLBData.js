@@ -125,11 +125,6 @@ function MLBData() {
   }, []);
 
   useEffect(() => {
-    const formatDate = (date) => format(date, 'yyyy-MM-dd');
-    const todayFormatted = formatDate(selectedDate);
-    const thirtyDaysAgo = formatDate(subDays(new Date(), 30));
-    const yesterday = formatDate(subDays(new Date(), 1));
-
     const fetchInitialData = async () => {
       try {
         const [teamLogosRes, mlbTeamsRes, teamRecordsRes] = await Promise.all([
@@ -177,8 +172,14 @@ function MLBData() {
       }
     };
 
-    const fetchGameData = async () => {
+    fetchInitialData();
+  }, []);
+
+  useEffect(() => {
+    const fetchGameData = async (selectedDate) => {
       try {
+        const formatDate = (date) => format(date, 'yyyy-MM-dd');
+        const todayFormatted = formatDate(selectedDate);
         const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher&startDate=${todayFormatted}&endDate=${todayFormatted}`;
         const response = await fetch(url);
         const data = await response.json();
@@ -191,11 +192,17 @@ function MLBData() {
           return stats ? { era: stats.era, gamesPlayed: stats.gamesPlayed } : { era: 'N/A', gamesPlayed: 'N/A' };
         };
 
-        const fetchLastTenGames = async (teamId) => {
-          const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${thirtyDaysAgo}&endDate=${yesterday}&teamId=${teamId}`);
+        const fetchLastTenGames = async (teamId, selectedDate) => {
+          const formatDate = (date) => format(date, 'yyyy-MM-dd');
+          const startDate = formatDate(subDays(new Date(selectedDate), 30));
+          const endDate = formatDate(subDays(new Date(selectedDate), 1));
+          const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${startDate}&endDate=${endDate}&teamId=${teamId}`);
           const data = await response.json();
           const games = data.dates?.flatMap(date => date.games) || [];
-          return games.filter(game => game.teams.away.score !== undefined && game.teams.home.score !== undefined).slice(-10);
+          return games.filter(game => {
+            const gameStatus = game.status.detailedState;
+            return gameStatus === 'Final' || gameStatus === 'Completed Early';
+          }).slice(-10);
         };
 
         const games = await Promise.all((data.dates || []).map(async (gameDay) => {
@@ -208,8 +215,8 @@ function MLBData() {
               const awayPitcherStats = await fetchPitcherData(game.teams.away.probablePitcher?.id);
               const homePitcherStats = await fetchPitcherData(game.teams.home.probablePitcher?.id);
 
-              const awayLastFiveGames = (await fetchLastTenGames(game.teams.away.team.id)).slice(-5);
-              const homeLastFiveGames = (await fetchLastTenGames(game.teams.home.team.id)).slice(-5);
+              const awayLastFiveGames = (await fetchLastTenGames(game.teams.away.team.id, selectedDate)).slice(-5);
+              const homeLastFiveGames = (await fetchLastTenGames(game.teams.home.team.id, selectedDate)).slice(-5);
 
               return {
                 ...game,
@@ -251,14 +258,12 @@ function MLBData() {
 
     const initializeData = async () => {
       setLoading(true);
-      await fetchInitialData();
-      await fetchGameData();
+      await fetchGameData(selectedDate);
       setLoading(false);
     };
 
     initializeData();
-// eslint-disable-next-line
-  }, [selectedDate]);
+  }, [selectedDate, selectedTeams]);
 
   useEffect(() => {
     setVisibleGames(todayGames.flatMap(date =>
@@ -347,17 +352,17 @@ function MLBData() {
           )}
           <div className="custom-datepicker-input">
             <DatePicker
-                selected={selectedDate}
-                onChange={(date) => {
+              selected={selectedDate}
+              onChange={(date) => {
                 setSelectedDate(date);
                 setLoading(true);
                 setIsCalendarOpen(false);
-                }}
-                dateFormat="M/dd/yyyy"
-                customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} setIsTeamsMenuOpen={setIsTeamsMenuOpen} />}
-                onCalendarOpen={() => setIsCalendarOpen(true)}
-                onCalendarClose={() => setIsCalendarOpen(false)}
-                preventOpenOnFocus
+              }}
+              dateFormat="M/dd/yyyy"
+              customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} setIsTeamsMenuOpen={setIsTeamsMenuOpen} />}
+              onCalendarOpen={() => setIsCalendarOpen(true)}
+              onCalendarClose={() => setIsCalendarOpen(false)}
+              preventOpenOnFocus
             />
           </div>
         </div>
