@@ -263,7 +263,8 @@ function MLBData() {
     };
 
     initializeData();
-  }, [selectedDate, selectedTeams]);
+    // eslint-disable-next-line
+  }, [selectedDate]);
 
   useEffect(() => {
     setVisibleGames(todayGames.flatMap(date =>
