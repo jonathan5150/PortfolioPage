@@ -1,87 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './MLBData.scss';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 import { format, subDays } from 'date-fns';
-import Scoreboard from '../../components/MLBData/Scoreboard';
 import Cookies from 'js-cookie';
-
-const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCalendarOpen, setIsTeamsMenuOpen }, ref) => {
-  return (
-    <button className="custom-datepicker-input" onClick={() => {
-      onClick();
-      setIsCalendarOpen(!isCalendarOpen);
-      setIsTeamsMenuOpen(false);
-    }} ref={ref}>
-      {value} <span className={`arrow ${isCalendarOpen ? 'open' : 'closed'}`}>▼</span>
-    </button>
-  );
-});
-
-const TeamsButton = ({ onClick, isOpen, setIsCalendarOpen }) => {
-  return (
-    <button className="teams-button custom-datepicker-input" onClick={() => {
-      onClick();
-      setIsCalendarOpen(false);
-    }}>
-      TEAMS <span className={`arrow ${isOpen ? 'open' : 'closed'}`}>▼</span>
-    </button>
-  );
-};
-
-const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onSelectAll, onDeselectAll }) => {
-  return (
-    <div className="teams-menu">
-      <div className="menu-buttons">
-        <button className="select-button" onClick={onSelectAll}>ALL</button>
-        <button className="select-button" onClick={onDeselectAll}>NONE</button>
-      </div>
-      <ul>
-        {teams.map((team) => (
-          <li key={team.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={selectedTeams.includes(team.id)}
-                onChange={() => onTeamChange(team.id)}
-              />
-              {team.abbreviation} {team.name}
-            </label>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-};
-
-const LastFiveGames = ({ games, teamId }) => {
-  return (
-    <div className="last-five">
-      {games.map((game, index) => {
-        const awayScore = game.teams.away.score;
-        const homeScore = game.teams.home.score;
-        const isWinner = (game.teams.away.team.id === teamId && awayScore > homeScore) || (game.teams.home.team.id === teamId && homeScore > awayScore);
-        const backgroundColor = isWinner ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
-
-        return (
-          <div key={index} className="last-five-column">
-            <div className="last-five-row date">{format(new Date(game.gameDate), 'M/d')}</div>
-            <div className="team-and-score-group" style={{ backgroundColor }}>
-              <div className="last-five-row">
-                <div className="team-cell">{game.teams.away.team.abbreviation}</div>
-                <div className="score-cell">{game.teams.away.score}</div>
-              </div>
-              <div className="last-five-row">
-                <div className="team-cell">{game.teams.home.team.abbreviation}</div>
-                <div className="score-cell">{game.teams.home.score}</div>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+import Scoreboard from '../../components/MLBData/Scoreboard';
+import LastFiveGames from '../../components/MLBData/LastFiveGames';
+import MLBDataNavbar from '../../components/MLBData/MLBDataNavbar'; // Import the MLBDataNavbar component
 
 function MLBData() {
   const [todayGames, setTodayGames] = useState([]);
@@ -144,7 +67,7 @@ function MLBData() {
 
         const teams = mlbTeamsData.teams.map(team => ({
           id: team.id,
-          name: team.teamName === 'D-backs' ? 'Diamondbacks' : team.teamName,  // Correcting the name
+          name: team.teamName === 'D-backs' ? 'Diamondbacks' : team.teamName,
           abbreviation: team.abbreviation
         })).sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
@@ -160,12 +83,11 @@ function MLBData() {
         setMlbTeams(teams);
         setTeamRecords(records);
 
-        // Load selected teams from cookies
         const savedSelectedTeams = Cookies.get('selectedTeams');
         if (savedSelectedTeams) {
           setSelectedTeams(JSON.parse(savedSelectedTeams));
         } else {
-          setSelectedTeams(teams.map(team => team.id)); // Select all teams by default
+          setSelectedTeams(teams.map(team => team.id));
         }
       } catch (error) {
         console.error('Error fetching initial data:', error);
@@ -336,38 +258,20 @@ function MLBData() {
           backgroundRepeat: 'no-repeat',
         }}
       />
-      <div className="mlbDataNavbar">
-        <h2>MLB DATA PROJECT</h2>
-        <div className="controls">
-          <TeamsButton onClick={() => setIsTeamsMenuOpen(!isTeamsMenuOpen)} isOpen={isTeamsMenuOpen} setIsCalendarOpen={setIsCalendarOpen} />
-          {isTeamsMenuOpen && (
-            <div ref={teamsMenuRef}>
-              <TeamsMenu
-                teams={mlbTeams}
-                selectedTeams={selectedTeams}
-                onTeamChange={handleTeamChange}
-                onSelectAll={handleSelectAll}
-                onDeselectAll={handleDeselectAll}
-              />
-            </div>
-          )}
-          <div className="custom-datepicker-input">
-            <DatePicker
-              selected={selectedDate}
-              onChange={(date) => {
-                setSelectedDate(date);
-                setLoading(true);
-                setIsCalendarOpen(false);
-              }}
-              dateFormat="M/dd/yyyy"
-              customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} setIsTeamsMenuOpen={setIsTeamsMenuOpen} />}
-              onCalendarOpen={() => setIsCalendarOpen(true)}
-              onCalendarClose={() => setIsCalendarOpen(false)}
-              preventOpenOnFocus
-            />
-          </div>
-        </div>
-      </div>
+      <MLBDataNavbar
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        isCalendarOpen={isCalendarOpen}
+        setIsCalendarOpen={setIsCalendarOpen}
+        isTeamsMenuOpen={isTeamsMenuOpen}
+        setIsTeamsMenuOpen={setIsTeamsMenuOpen}
+        mlbTeams={mlbTeams}
+        selectedTeams={selectedTeams}
+        handleTeamChange={handleTeamChange}
+        handleSelectAll={handleSelectAll}
+        handleDeselectAll={handleDeselectAll}
+        teamsMenuRef={teamsMenuRef}
+      />
       {loading ? (
         <div className="loading">
           <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
