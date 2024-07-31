@@ -1,8 +1,9 @@
+// src/components/MLBData/MatchupCard.js
 import React from 'react';
 import Scoreboard from './Scoreboard';
 import LastFiveGames from './LastFiveGames';
 
-const MatchupCard = ({ visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, getTeamScore }) => {
+const MatchupCard = ({ visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, getTeamScore, liveGameData }) => {
   return (
     <div className={`matchup-card fade-in`}>
       <div className="matchup-container">
@@ -53,7 +54,12 @@ const MatchupCard = ({ visibleGames, selectedTeams, getTeamLogo, getTeamRecord, 
                 <div className="column3"></div>
               </div>
               <div className="game-data">
-                <Scoreboard game={game} getTeamAbbreviation={getTeamAbbreviation} getTeamScore={getTeamScore} />
+                <Scoreboard
+                  game={game}
+                  getTeamAbbreviation={getTeamAbbreviation}
+                  getTeamScore={getTeamScore}
+                  liveData={liveGameData[game.gamePk]} // Pass live data
+                />
                 <div className="last-five game-data-container">
                   <p className="game-data-title">LAST 5</p>
                   <div className="last-five-wrapper">

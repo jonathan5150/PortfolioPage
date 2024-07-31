@@ -1,3 +1,4 @@
+// src/containers/MLBData/MLBData.js
 import React, { useEffect, useRef, useState } from 'react';
 import './MLBData.scss';
 import { format, subDays } from 'date-fns';
@@ -16,6 +17,7 @@ function MLBData() {
   const [isTeamsMenuOpen, setIsTeamsMenuOpen] = useState(false);
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [visibleGames, setVisibleGames] = useState([]);
+  const [liveGameData, setLiveGameData] = useState({});
 
   const teamsMenuRef = useRef();
 
@@ -181,6 +183,31 @@ function MLBData() {
     ));
   }, [selectedTeams, todayGames]);
 
+  useEffect(() => {
+    const fetchLiveData = async () => {
+      const liveData = await Promise.all(todayGames.flatMap(date =>
+        date.games.map(async (game) => {
+          const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
+          const response = await fetch(liveGameUrl);
+          const data = await response.json();
+          return { gamePk: game.gamePk, liveData: data.liveData };
+        })
+      ));
+
+      const liveGameDataMap = {};
+      liveData.forEach(game => {
+        liveGameDataMap[game.gamePk] = game.liveData;
+      });
+
+      setLiveGameData(liveGameDataMap);
+    };
+
+    const intervalId = setInterval(fetchLiveData, 10000);
+    fetchLiveData(); // Initial fetch
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, [todayGames]);
+
   const formatTime = (dateTime) => {
     const date = new Date(dateTime);
     return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -256,6 +283,7 @@ function MLBData() {
           formatTime={formatTime}
           getTeamAbbreviation={getTeamAbbreviation}
           getTeamScore={getTeamScore}
+          liveGameData={liveGameData} // Pass live game data
         />
       )}
     </div>

@@ -527,6 +527,21 @@ h3 {
   margin-right: 10px;
 }
 
+/* Add these styles to your MLBData.scss or a separate stylesheet */
+@keyframes flashText {
+  0% {
+    color: yellow;
+  }
+  100% {
+    color: white;
+  }
+}
+
+.flash-text {
+  animation: flashText 1s ease-out;
+}
+
+
 
 @media only screen and (max-width: 768px) {
   .column1 {
