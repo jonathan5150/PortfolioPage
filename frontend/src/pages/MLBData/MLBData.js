@@ -1,12 +1,13 @@
+// src/containers/MLBData/MLBData.js
 import React, { useEffect, useRef, useState } from 'react';
 import './MLBData.scss';
-import { format, subDays } from 'date-fns';
 import Cookies from 'js-cookie';
-import Scoreboard from '../../components/MLBData/Scoreboard';
-import LastFiveGames from '../../components/MLBData/LastFiveGames';
-import MLBDataNavbar from '../../components/MLBData/MLBDataNavbar'; // Import the MLBDataNavbar component
+import MLBDataNavbar from '../../components/MLBData/MLBDataNavbar';
+import MatchupCard from '../../components/MLBData/MatchupCard';
+import { fetchInitialData, fetchGameData } from '../../utils/api';
 
 function MLBData() {
+// eslint-disable-next-line
   const [todayGames, setTodayGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [teamLogos, setTeamLogos] = useState({});
@@ -34,51 +35,9 @@ function MLBData() {
   }, []);
 
   useEffect(() => {
-    const updateViewportHeight = () => {
-      const vh = window.innerHeight * 0.01;
-      document.documentElement.style.setProperty('--vh', `${vh}px`);
-    };
-
-    window.addEventListener('resize', updateViewportHeight);
-    updateViewportHeight();
-
-    return () => {
-      window.removeEventListener('resize', updateViewportHeight);
-    };
-  }, []);
-
-  useEffect(() => {
-    const fetchInitialData = async () => {
+    const loadInitialData = async () => {
       try {
-        const [teamLogosRes, mlbTeamsRes, teamRecordsRes] = await Promise.all([
-          fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams'),
-          fetch('https://statsapi.mlb.com/api/v1/teams?sportId=1'),
-          fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104')
-        ]);
-
-        const teamLogosData = await teamLogosRes.json();
-        const mlbTeamsData = await mlbTeamsRes.json();
-        const teamRecordsData = await teamRecordsRes.json();
-
-        const logos = {};
-        teamLogosData.sports[0].leagues[0].teams.forEach((team) => {
-          logos[team.team.displayName] = team.team.logos[0].href;
-        });
-
-        const teams = mlbTeamsData.teams.map(team => ({
-          id: team.id,
-          name: team.teamName === 'D-backs' ? 'Diamondbacks' : team.teamName,
-          abbreviation: team.abbreviation
-        })).sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
-
-        const records = {};
-        teamRecordsData.records.forEach((league) => {
-          league.teamRecords.forEach((teamRecord) => {
-            const teamId = teamRecord.team.id;
-            records[teamId] = `${teamRecord.wins}-${teamRecord.losses}`;
-          });
-        });
-
+        const { logos, teams, records } = await fetchInitialData();
         setTeamLogos(logos);
         setMlbTeams(teams);
         setTeamRecords(records);
@@ -94,107 +53,25 @@ function MLBData() {
       }
     };
 
-    fetchInitialData();
+    loadInitialData();
   }, []);
 
   useEffect(() => {
-    const fetchGameData = async (selectedDate) => {
+    const loadGameData = async () => {
+      setLoading(true);
       try {
-        const formatDate = (date) => format(date, 'yyyy-MM-dd');
-        const todayFormatted = formatDate(selectedDate);
-        const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher&startDate=${todayFormatted}&endDate=${todayFormatted}`;
-        const response = await fetch(url);
-        const data = await response.json();
-
-        const fetchPitcherData = async (pitcherId) => {
-          if (!pitcherId) return { era: 'N/A', gamesPlayed: 'N/A' };
-          const response = await fetch(`https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`);
-          const data = await response.json();
-          const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
-          return stats ? { era: stats.era, gamesPlayed: stats.gamesPlayed } : { era: 'N/A', gamesPlayed: 'N/A' };
-        };
-
-        const fetchLastTenGames = async (teamId, selectedDate) => {
-          const formatDate = (date) => format(date, 'yyyy-MM-dd');
-          const startDate = formatDate(subDays(new Date(selectedDate), 30));
-          const endDate = formatDate(subDays(new Date(selectedDate), 1));
-          const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${startDate}&endDate=${endDate}&teamId=${teamId}`);
-          const data = await response.json();
-          const games = data.dates?.flatMap(date => date.games) || [];
-          return games.filter(game => {
-            const gameStatus = game.status.detailedState;
-            return gameStatus === 'Final' || gameStatus === 'Completed Early';
-          }).slice(-10);
-        };
-
-        const games = await Promise.all((data.dates || []).map(async (gameDay) => {
-          return {
-            ...gameDay,
-            games: await Promise.all(gameDay.games.map(async (game) => {
-              const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
-              const gameData = await fetch(liveGameUrl).then(res => res.json());
-
-              const awayPitcherStats = await fetchPitcherData(game.teams.away.probablePitcher?.id);
-              const homePitcherStats = await fetchPitcherData(game.teams.home.probablePitcher?.id);
-
-              const awayLastFiveGames = (await fetchLastTenGames(game.teams.away.team.id, selectedDate)).slice(-5);
-              const homeLastFiveGames = (await fetchLastTenGames(game.teams.home.team.id, selectedDate)).slice(-5);
-
-              return {
-                ...game,
-                liveData: gameData.liveData,
-                teams: {
-                  ...game.teams,
-                  away: {
-                    ...game.teams.away,
-                    probablePitcher: {
-                      ...game.teams.away.probablePitcher,
-                      ...awayPitcherStats
-                    },
-                    lastFiveGames: awayLastFiveGames
-                  },
-                  home: {
-                    ...game.teams.home,
-                    probablePitcher: {
-                      ...game.teams.home.probablePitcher,
-                      ...homePitcherStats
-                    },
-                    lastFiveGames: homeLastFiveGames
-                  }
-                }
-              };
-            }))
-          };
-        }));
-
+        const games = await fetchGameData(selectedDate, selectedTeams);
         setTodayGames(games);
-        setVisibleGames(games.flatMap(date =>
-          date.games.filter(game =>
-            selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id)
-          )
-        ));
+        setVisibleGames(games);
       } catch (error) {
         console.error('Error fetching game data:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    const initializeData = async () => {
-      setLoading(true);
-      await fetchGameData(selectedDate);
-      setLoading(false);
-    };
-
-    initializeData();
-    // eslint-disable-next-line
-  }, [selectedDate]);
-
-  useEffect(() => {
-    setVisibleGames(todayGames.flatMap(date =>
-      date.games.filter(game =>
-        selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id)
-      )
-    ));
-  }, [selectedTeams, todayGames]);
+    loadGameData();
+  }, [selectedDate, selectedTeams]);
 
   const formatTime = (dateTime) => {
     const date = new Date(dateTime);
@@ -242,22 +119,7 @@ function MLBData() {
 
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
-      <div
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          zIndex: -1,
-          overflowY: 'hidden',
-          transform: 'scale(1.0)',
-          backgroundImage: `url(${process.env.PUBLIC_URL + '/bg4.jpg'})`,
-          backgroundPosition: 'center',
-          backgroundSize: 'cover',
-          backgroundRepeat: 'no-repeat',
-        }}
-      />
+      <div className="background-image" style={{ backgroundImage: `url(${process.env.PUBLIC_URL + '/bg4.jpg'})` }} />
       <MLBDataNavbar
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
@@ -278,69 +140,15 @@ function MLBData() {
           <p>loading...</p>
         </div>
       ) : (
-        <div className={`pitchingLineups fade-in`}>
-          <div className="lineups-container">
-            {visibleGames.length === 0 ? (
-              <p className="noGames">No games scheduled for this date.</p>
-            ) : (
-              visibleGames.map((game) => (
-                <div className={`game-container ${selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id) ? 'fade-in' : 'fade-out'}`} key={game.gamePk}>
-                  <p className="gameTime">{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
-                  <div className="lineupGroup">
-                    <div className="column1">
-                      <div className="row1">
-                        <img src={getTeamLogo(game.teams.away.team.name)} alt={`${game.teams.away.team.name} logo`} />
-                      </div>
-                      <div className="row2">
-                        <img src={getTeamLogo(game.teams.home.team.name)} alt={`${game.teams.home.team.name} logo`} />
-                      </div>
-                    </div>
-                    <div className="column2">
-                      <div className="pitcher-info-top">
-                        <span style={{ fontWeight: 'bold' }}>
-                          {game.teams.away.team.name} ({getTeamRecord(game.teams.away.team.id)})
-                        </span>
-                        <div className="pitcher-details">
-                          {game.teams.away.probablePitcher?.fullName === '?' ? 'P: TBD' : (
-                            <>
-                              P: {game.teams.away.probablePitcher?.fullName} <br />
-                              ERA: {game.teams.away.probablePitcher?.era}, Games: {game.teams.away.probablePitcher?.gamesPlayed}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <p className="vs">@</p>
-                      <div className="pitcher-info-bottom">
-                        <span style={{ fontWeight: 'bold' }}>
-                          {game.teams.home.team.name} ({getTeamRecord(game.teams.home.team.id)})
-                        </span>
-                        <div className="pitcher-details">
-                          {game.teams.home.probablePitcher?.fullName === '?' ? 'P: TBD' : (
-                            <>
-                              P: {game.teams.home.probablePitcher?.fullName} <br />
-                              ERA: {game.teams.home.probablePitcher?.era}, Games: {game.teams.home.probablePitcher?.gamesPlayed}
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="column3"></div>
-                  </div>
-                  <div className="game-data">
-                    <Scoreboard game={game} getTeamAbbreviation={getTeamAbbreviation} getTeamScore={getTeamScore} />
-                    <div className="last-five game-data-container">
-                      <p className="game-data-title">LAST 5</p>
-                      <div className="last-five-wrapper">
-                        <LastFiveGames games={game.teams.away.lastFiveGames} teamId={game.teams.away.team.id} />
-                        <LastFiveGames games={game.teams.home.lastFiveGames} teamId={game.teams.home.team.id} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <MatchupCard
+          visibleGames={visibleGames}
+          selectedTeams={selectedTeams}
+          getTeamLogo={getTeamLogo}
+          getTeamRecord={getTeamRecord}
+          formatTime={formatTime}
+          getTeamAbbreviation={getTeamAbbreviation}
+          getTeamScore={getTeamScore}
+        />
       )}
     </div>
   );
