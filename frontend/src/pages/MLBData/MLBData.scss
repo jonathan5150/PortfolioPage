@@ -365,27 +365,29 @@ h3 {
   margin-left: 7px;
 }
 
-.last-five {
+.last-twenty {
   display: flex;
-  width: 90%;
-  justify-content: center; /* Center the entire .last-five content */
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
 }
 
-.last-five-column {
-  flex: 1 0 20%; /* 20% width with some margin for the gap */
+.last-twenty-column {
+  flex: 1 0 20%;
   padding: 3px 6px;
   text-align: center;
   box-sizing: border-box;
+  font-size: 11px;
 }
 
-.last-five-row {
+.last-twenty-row {
   display: flex;
   justify-content: space-between;
   padding: 2px 0;
 }
 
-.last-five-row.date {
-  justify-content: center; /* Center the date */
+.last-twenty-row.date {
+  justify-content: center;
 }
 
 .team-cell {
@@ -400,19 +402,32 @@ h3 {
   padding-right: 2px;
 }
 
-.last-five-wrapper {
+.last-twenty-wrapper {
   display: flex;
-  justify-content: center; /* Center the content horizontally */
+  justify-content: center;
   flex-wrap: wrap;
-  font-size: 11px;
+
 }
 
 .team-and-score-group {
   outline: 1.5px solid #555555;
-  border-radius: 3px; /* Add border-radius to create rounded corners */
+  border-radius: 3px;
   padding: 1px 3.3px;
   width: 49px;
 }
+
+.games-container {
+  display: flex;
+  overflow-x: scroll;
+  cursor: grab;
+}
+
+.games-container:active {
+  cursor: grabbing;
+}
+
+
+
 
 
 @keyframes fadeIn {

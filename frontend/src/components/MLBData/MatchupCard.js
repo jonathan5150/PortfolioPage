@@ -1,7 +1,7 @@
 // src/components/MLBData/MatchupCard.js
 import React from 'react';
 import Scoreboard from './Scoreboard';
-import LastFiveGames from './LastFiveGames';
+import LastTwentyGames from './LastTwentyGames';
 
 const MatchupCard = ({ visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, getTeamScore, liveGameData }) => {
   return (
@@ -60,11 +60,11 @@ const MatchupCard = ({ visibleGames, selectedTeams, getTeamLogo, getTeamRecord, 
                   getTeamScore={getTeamScore}
                   liveData={liveGameData[game.gamePk]} // Pass live data
                 />
-                <div className="last-five game-data-container">
-                  <p className="game-data-title">LAST 5</p>
-                  <div className="last-five-wrapper">
-                    <LastFiveGames games={game.teams.away.lastFiveGames} teamId={game.teams.away.team.id} />
-                    <LastFiveGames games={game.teams.home.lastFiveGames} teamId={game.teams.home.team.id} />
+                <div className="game-data-container">
+                  <p className="game-data-title">LAST 20</p>
+                  <div className="last-twenty-wrapper">
+                    <LastTwentyGames games={game.teams.away.lastTwentyGames} teamId={game.teams.away.team.id} />
+                    <LastTwentyGames games={game.teams.home.lastTwentyGames} teamId={game.teams.home.team.id} />
                   </div>
                 </div>
               </div>

@@ -101,9 +101,9 @@ function MLBData() {
           return stats ? { era: stats.era, gamesPlayed: stats.gamesPlayed } : { era: 'N/A', gamesPlayed: 'N/A' };
         };
 
-        const fetchLastTenGames = async (teamId, selectedDate) => {
+        const fetchLastTwentyGames = async (teamId, selectedDate) => {
           const formatDate = (date) => format(date, 'yyyy-MM-dd');
-          const startDate = formatDate(subDays(new Date(selectedDate), 30));
+          const startDate = formatDate(subDays(new Date(selectedDate), 50)); // Adjusted for 20 games
           const endDate = formatDate(subDays(new Date(selectedDate), 1));
           const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${startDate}&endDate=${endDate}&teamId=${teamId}`);
           const data = await response.json();
@@ -111,7 +111,7 @@ function MLBData() {
           return games.filter(game => {
             const gameStatus = game.status.detailedState;
             return gameStatus === 'Final' || gameStatus === 'Completed Early';
-          }).slice(-10);
+          }).slice(-20); // Fetch last 20 games
         };
 
         const games = await Promise.all((data.dates || []).map(async (gameDay) => {
@@ -124,8 +124,8 @@ function MLBData() {
               const awayPitcherStats = await fetchPitcherData(game.teams.away.probablePitcher?.id);
               const homePitcherStats = await fetchPitcherData(game.teams.home.probablePitcher?.id);
 
-              const awayLastFiveGames = (await fetchLastTenGames(game.teams.away.team.id, selectedDate)).slice(-5);
-              const homeLastFiveGames = (await fetchLastTenGames(game.teams.home.team.id, selectedDate)).slice(-5);
+              const awayLastTwentyGames = await fetchLastTwentyGames(game.teams.away.team.id, selectedDate);
+              const homeLastTwentyGames = await fetchLastTwentyGames(game.teams.home.team.id, selectedDate);
 
               return {
                 ...game,
@@ -138,7 +138,7 @@ function MLBData() {
                       ...game.teams.away.probablePitcher,
                       ...awayPitcherStats
                     },
-                    lastFiveGames: awayLastFiveGames
+                    lastTwentyGames: awayLastTwentyGames.slice(-20)
                   },
                   home: {
                     ...game.teams.home,
@@ -146,7 +146,7 @@ function MLBData() {
                       ...game.teams.home.probablePitcher,
                       ...homePitcherStats
                     },
-                    lastFiveGames: homeLastFiveGames
+                    lastTwentyGames: homeLastTwentyGames.slice(-20)
                   }
                 }
               };
