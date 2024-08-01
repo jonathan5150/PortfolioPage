@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from 'react';
 
-const Scoreboard = ({ game, getTeamAbbreviation, getTeamScore, liveData }) => {
+const Scoreboard = ({ game, getTeamAbbreviation, liveData }) => {
   const linescore = liveData?.linescore;
-  const boxscore = liveData?.boxscore;
 
   const [prevLinescore, setPrevLinescore] = useState({});
-  const [prevBoxscore, setPrevBoxscore] = useState({});
 
   useEffect(() => {
     setPrevLinescore(linescore || {});
-    setPrevBoxscore(boxscore || {});
-  }, [linescore, boxscore]);
+  }, [linescore]);
 
   const checkForChange = (current, previous) => {
     return current !== previous ? 'flash-text' : '';
+  };
+
+  const calculateTeamScore = (team, linescore) => {
+    if (!linescore || !linescore.innings) return 0;
+    return linescore.innings.reduce((total, inning) => {
+      return total + (inning[team]?.runs || 0);
+    }, 0);
   };
 
   return (
@@ -46,15 +50,11 @@ const Scoreboard = ({ game, getTeamAbbreviation, getTeamScore, liveData }) => {
             {inningData.away?.runs !== undefined ? inningData.away.runs : '-'}
           </div>
         ))}
-        <div className={`scoreboard-cell runs ${checkForChange(getTeamScore(game.teams.away), prevBoxscore.teams?.away?.teamStats?.batting?.runs)}`} style={{ fontWeight: 'bold' }}>
-          {getTeamScore(game.teams.away)}
+        <div className={`scoreboard-cell runs ${checkForChange(calculateTeamScore('away', linescore), calculateTeamScore('away', prevLinescore))}`} style={{ fontWeight: 'bold' }}>
+          {calculateTeamScore('away', linescore)}
         </div>
-        <div className={`scoreboard-cell hits ${checkForChange(boxscore?.teams.away.teamStats?.batting?.hits, prevBoxscore.teams?.away?.teamStats?.batting?.hits)}`}>
-          {boxscore?.teams.away.teamStats?.batting?.hits || 0}
-        </div>
-        <div className={`scoreboard-cell errors ${checkForChange(boxscore?.teams.away.teamStats?.fielding?.errors, prevBoxscore.teams?.away?.teamStats?.fielding?.errors)}`}>
-          {boxscore?.teams.away.teamStats?.fielding?.errors || 0}
-        </div>
+        <div className="scoreboard-cell hits">{liveData?.boxscore?.teams.away.teamStats?.batting?.hits || 0}</div>
+        <div className="scoreboard-cell errors">{liveData?.boxscore?.teams.away.teamStats?.fielding?.errors || 0}</div>
       </div>
       <div className="scoreboard-row">
         <div className="scoreboard-cell team-abbr">{getTeamAbbreviation(game.teams.home.team.id)}</div>
@@ -71,15 +71,11 @@ const Scoreboard = ({ game, getTeamAbbreviation, getTeamScore, liveData }) => {
             {inningData.home?.runs !== undefined ? inningData.home.runs : '-'}
           </div>
         ))}
-        <div className={`scoreboard-cell runs ${checkForChange(getTeamScore(game.teams.home), prevBoxscore.teams?.home?.teamStats?.batting?.runs)}`} style={{ fontWeight: 'bold' }}>
-          {getTeamScore(game.teams.home)}
+        <div className={`scoreboard-cell runs ${checkForChange(calculateTeamScore('home', linescore), calculateTeamScore('home', prevLinescore))}`} style={{ fontWeight: 'bold' }}>
+          {calculateTeamScore('home', linescore)}
         </div>
-        <div className={`scoreboard-cell hits ${checkForChange(boxscore?.teams.home.teamStats?.batting?.hits, prevBoxscore.teams?.home?.teamStats?.batting?.hits)}`}>
-          {boxscore?.teams.home.teamStats?.batting?.hits || 0}
-        </div>
-        <div className={`scoreboard-cell errors ${checkForChange(boxscore?.teams.home.teamStats?.fielding?.errors, prevBoxscore.teams?.home?.teamStats?.fielding?.errors)}`}>
-          {boxscore?.teams.home.teamStats?.fielding?.errors || 0}
-        </div>
+        <div className="scoreboard-cell hits">{liveData?.boxscore?.teams.home.teamStats?.batting?.hits || 0}</div>
+        <div className="scoreboard-cell errors">{liveData?.boxscore?.teams.home.teamStats?.fielding?.errors || 0}</div>
       </div>
     </div>
   );

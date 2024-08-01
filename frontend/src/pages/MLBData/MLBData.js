@@ -226,10 +226,6 @@ function MLBData() {
     return team ? team.abbreviation : '';
   };
 
-  const getTeamScore = (team) => {
-    return team.score !== undefined ? team.score : 0;
-  };
-
   const handleTeamChange = (teamId) => {
     setSelectedTeams((prevSelectedTeams) => {
       const updatedSelectedTeams = prevSelectedTeams.includes(teamId)
@@ -282,7 +278,6 @@ function MLBData() {
           getTeamRecord={getTeamRecord}
           formatTime={formatTime}
           getTeamAbbreviation={getTeamAbbreviation}
-          getTeamScore={getTeamScore}
           liveGameData={liveGameData} // Pass live game data
         />
       )}
