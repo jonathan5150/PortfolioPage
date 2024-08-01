@@ -1,4 +1,3 @@
-// src/containers/MLBData/MLBData.js
 import React, { useEffect, useRef, useState } from 'react';
 import './MLBData.scss';
 import { format, subDays } from 'date-fns';
@@ -20,21 +19,20 @@ function MLBData() {
   const [liveGameData, setLiveGameData] = useState({});
 
   const teamsMenuRef = useRef();
-// eslint-disable-next-line
-  {/* DO NOT REMOVE THE UPDATEVIEWPORTHEIGHT USEEFFECT, IT FIXES A PROBLEM ON MOBILE*/}
+
   useEffect(() => {
-      const updateViewportHeight = () => {
-        const vh = window.innerHeight * 0.01;
-        document.documentElement.style.setProperty('--vh', `${vh}px`);
-      };
+    const updateViewportHeight = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
 
-      window.addEventListener('resize', updateViewportHeight);
-      updateViewportHeight();
+    window.addEventListener('resize', updateViewportHeight);
+    updateViewportHeight();
 
-      return () => {
-        window.removeEventListener('resize', updateViewportHeight);
-      };
-    }, []);
+    return () => {
+      window.removeEventListener('resize', updateViewportHeight);
+    };
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -101,6 +99,7 @@ function MLBData() {
 
   useEffect(() => {
     const fetchGameData = async (selectedDate) => {
+      setLoading(true); // Set loading state to true before fetching data
       try {
         const formatDate = (date) => format(date, 'yyyy-MM-dd');
         const todayFormatted = formatDate(selectedDate);
@@ -177,13 +176,13 @@ function MLBData() {
         ));
       } catch (error) {
         console.error('Error fetching game data:', error);
+      } finally {
+        setLoading(false); // Set loading state to false after data is fetched
       }
     };
 
     const initializeData = async () => {
-      setLoading(true);
       await fetchGameData(selectedDate);
-      setLoading(false);
     };
 
     initializeData();
@@ -287,6 +286,7 @@ function MLBData() {
         </div>
       ) : (
         <MatchupCard
+          loading={loading}
           visibleGames={visibleGames}
           selectedTeams={selectedTeams}
           getTeamLogo={getTeamLogo}
