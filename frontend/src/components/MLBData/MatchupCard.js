@@ -1,13 +1,22 @@
-// src/components/MLBData/MatchupCard.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Scoreboard from './Scoreboard';
 import LastTwentyGames from './LastTwentyGames';
 
 const MatchupCard = ({ visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, getTeamScore, liveGameData }) => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (visibleGames.length >= 0) {
+      setLoading(false);
+    }
+  }, [visibleGames]);
+
   return (
     <div className={`matchup-card fade-in`}>
       <div className="matchup-container">
-        {visibleGames.length === 0 ? (
+        {loading ? (
+          <p className="loading">Loading...</p>
+        ) : visibleGames.length === 0 ? (
           <p className="noGames">No games scheduled for this date.</p>
         ) : (
           visibleGames.map((game) => (
