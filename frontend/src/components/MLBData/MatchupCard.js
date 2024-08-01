@@ -1,21 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Scoreboard from './Scoreboard';
 import LastTwentyGames from './LastTwentyGames';
 
-const MatchupCard = ({ visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, getTeamScore, liveGameData }) => {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (visibleGames.length >= 0) {
-      setLoading(false);
-    }
-  }, [visibleGames]);
-
+const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, getTeamScore, liveGameData }) => {
   return (
     <div className={`matchup-card fade-in`}>
       <div className="matchup-container">
         {loading ? (
-          <p className="loading">Loading...</p>
+          <div className="loading">
+            <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
+            <p>loading...</p>
+          </div>
         ) : visibleGames.length === 0 ? (
           <p className="noGames">No games scheduled for this date.</p>
         ) : (
