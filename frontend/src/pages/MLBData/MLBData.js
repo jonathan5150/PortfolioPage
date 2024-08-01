@@ -20,7 +20,7 @@ function MLBData() {
   const [liveGameData, setLiveGameData] = useState({});
 
   const teamsMenuRef = useRef();
-
+// eslint-disable-next-line
   {/* DO NOT REMOVE THE UPDATEVIEWPORTHEIGHT USEEFFECT, IT FIXES A PROBLEM ON MOBILE*/}
   useEffect(() => {
       const updateViewportHeight = () => {
