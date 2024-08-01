@@ -21,6 +21,21 @@ function MLBData() {
 
   const teamsMenuRef = useRef();
 
+  {/* DO NOT REMOVE THE UPDATEVIEWPORTHEIGHT USEEFFECT, IT FIXES A PROBLEM ON MOBILE*/}
+  useEffect(() => {
+      const updateViewportHeight = () => {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+      };
+
+      window.addEventListener('resize', updateViewportHeight);
+      updateViewportHeight();
+
+      return () => {
+        window.removeEventListener('resize', updateViewportHeight);
+      };
+    }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (teamsMenuRef.current && !teamsMenuRef.current.contains(event.target)) {
