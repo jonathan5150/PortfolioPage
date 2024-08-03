@@ -104,6 +104,7 @@ function MLBData() {
         const formatDate = (date) => format(date, 'yyyy-MM-dd');
         const todayFormatted = formatDate(selectedDate);
         const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher&startDate=${todayFormatted}&endDate=${todayFormatted}`;
+        console.log(url);
         const response = await fetch(url);
         const data = await response.json();
 

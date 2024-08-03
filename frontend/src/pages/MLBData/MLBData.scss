@@ -288,13 +288,18 @@ h3 {
   font-size: 12px;
 }
 
-.gameTime {
-  background-color: rgba(70, 70, 70, 0.8);
+.game-time {
   margin: 0px;
   border: 1px solid #555555;
   border-radius: 5px;
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
+}
+
+.game-time-container {
+  background-color: rgba(70, 70, 70, 0.8);
+  display: flex;
+  justify-content: center;
 }
 
 @keyframes zoomInOut {

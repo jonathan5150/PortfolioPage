@@ -16,7 +16,9 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
           ) : (
             visibleGames.map((game) => (
               <div className={`game-container ${selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id) ? 'fade-in' : 'fade-out'}`} key={game.gamePk}>
-                <p className="gameTime">{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                <div className="game-time-container">
+                    <p className="game-time">{game.gameDate ? formatTime(game.gameDate) : 'Time not available'}</p>
+                </div>
                 <div className="matchup-group">
                   <div className="column1">
                     <div className="row1">
@@ -58,6 +60,9 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
                   <div className="column3"></div>
                 </div>
                 <div className="game-data">
+                  {/*<div className="game-data-container">
+                    <p>turkey</p>
+                  </div>*/}
                   <Scoreboard
                     game={game}
                     getTeamAbbreviation={getTeamAbbreviation}
@@ -65,7 +70,7 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
                     liveData={liveGameData[game.gamePk]} // Pass live data
                   />
                   <div className="game-data-container">
-                    <p className="game-data-title">LAST 20</p>
+                    <p className="game-data-title">TEAM W/L HISTORY</p>
                     <div className="last-twenty-wrapper">
                       <LastTwentyGames games={game.teams.away.lastTwentyGames} teamId={game.teams.away.team.id} />
                       <LastTwentyGames games={game.teams.home.lastTwentyGames} teamId={game.teams.home.team.id} />
