@@ -1,18 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Scoreboard from './Scoreboard';
 import LastTwentyGames from './LastTwentyGames';
 
 const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, getTeamScore, liveGameData }) => {
+  const [delayOver, setDelayOver] = useState(false);
+  const [fadeIn, setFadeIn] = useState(false);
+
+  useEffect(() => {
+    let timer;
+    if (!loading) {
+      timer = setTimeout(() => {
+        setDelayOver(true);
+        setFadeIn(true);
+      }, 2000);
+    } else {
+      setDelayOver(false);
+      setFadeIn(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
+
   return (
     <div className={`matchup-card fade-in`}>
       <div className="matchup-container">
         {loading ? (
           <div className="loading">
             <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
+            <p>loading...</p>
           </div>
         ) : (
-          visibleGames.length === 0 ? (
-            <p className="noGames">No games scheduled for this date.</p>
+          delayOver && visibleGames.length === 0 ? (
+            <p
+              className="noGames"
+              style={{
+                opacity: fadeIn ? 1 : 0,
+                transition: 'opacity 0.5s ease-in'
+              }}
+            >
+              No games scheduled for this date.
+            </p>
           ) : (
             visibleGames.map((game) => (
               <div className={`game-container ${selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id) ? 'fade-in' : 'fade-out'}`} key={game.gamePk}>
