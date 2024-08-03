@@ -40,7 +40,7 @@ const MLBDataNavbar = ({ selectedDate, setSelectedDate, isCalendarOpen, setIsCal
               setSelectedDate(date);
               setIsCalendarOpen(false);
             }}
-            dateFormat="M/dd/yyyy"
+            dateFormat="M/d/yyyy"
             customInput={<CustomInput isCalendarOpen={isCalendarOpen} setIsCalendarOpen={setIsCalendarOpen} setIsTeamsMenuOpen={setIsTeamsMenuOpen} />}
             onCalendarOpen={() => setIsCalendarOpen(true)}
             onCalendarClose={() => setIsCalendarOpen(false)}
