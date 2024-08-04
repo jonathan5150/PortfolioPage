@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Scoreboard from './Scoreboard';
 import LastTwentyGames from './LastTwentyGames';
+import Cookies from 'js-cookie';
 
 const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, getTeamScore, liveGameData }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
+  const [userPicks, setUserPicks] = useState(JSON.parse(Cookies.get('userPicks') || '{}'));
 
   useEffect(() => {
     let timer;
@@ -19,6 +21,19 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
     }
     return () => clearTimeout(timer);
   }, [loading]);
+
+  const handlePick = (gameId, teamId) => {
+    // Check if the current pick is already selected with the green background
+    if (userPicks[gameId] === teamId && userPicks[gameId] !== '') {
+      const updatedPicks = { ...userPicks, [gameId]: '' };
+      setUserPicks(updatedPicks);
+      Cookies.set('userPicks', JSON.stringify(updatedPicks), { expires: 7 });
+    } else {
+      const updatedPicks = { ...userPicks, [gameId]: teamId };
+      setUserPicks(updatedPicks);
+      Cookies.set('userPicks', JSON.stringify(updatedPicks), { expires: 7 });
+    }
+  };
 
   return (
     <div className={`matchup-card fade-in`}>
@@ -86,9 +101,6 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
                   <div className="column3"></div>
                 </div>
                 <div className="game-data">
-                  {/*<div className="game-data-container">
-                    <p>turkey</p>
-                  </div>*/}
                   <Scoreboard
                     game={game}
                     getTeamAbbreviation={getTeamAbbreviation}
@@ -100,6 +112,29 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
                     <div className="last-twenty-wrapper">
                       <LastTwentyGames games={game.teams.away.lastTwentyGames} teamId={game.teams.away.team.id} />
                       <LastTwentyGames games={game.teams.home.lastTwentyGames} teamId={game.teams.home.team.id} />
+                    </div>
+                  </div>
+                  <div className="user-pick game-data-container">
+                    <p className="game-data-title">WHO DO YOU THINK WILL WIN?</p>
+                    <div className="team-pick-container">
+                      <div
+                        className={`team-pick ${userPicks[game.gamePk] === game.teams.away.team.id ? 'selected' : ''}`}
+                        onClick={() => handlePick(game.gamePk, game.teams.away.team.id)}
+                        style={{
+                          backgroundColor: userPicks[game.gamePk] === game.teams.away.team.id ? 'rgba(0, 255, 0, 0.2)' : (userPicks[game.gamePk] && userPicks[game.gamePk] !== game.teams.away.team.id) ? 'rgba(255, 0, 0, 0.2)' : 'rgba(128, 128, 128, 0.2)'
+                        }}
+                      >
+                        <img src={getTeamLogo(game.teams.away.team.name)} alt={`${game.teams.away.team.name} logo`} />
+                      </div>
+                      <div
+                        className={`team-pick ${userPicks[game.gamePk] === game.teams.home.team.id ? 'selected' : ''}`}
+                        onClick={() => handlePick(game.gamePk, game.teams.home.team.id)}
+                        style={{
+                          backgroundColor: userPicks[game.gamePk] === game.teams.home.team.id ? 'rgba(0, 255, 0, 0.2)' : (userPicks[game.gamePk] && userPicks[game.gamePk] !== game.teams.home.team.id) ? 'rgba(255, 0, 0, 0.2)' : 'rgba(128, 128, 128, 0.2)'
+                        }}
+                      >
+                        <img src={getTeamLogo(game.teams.home.team.name)} alt={`${game.teams.home.team.name} logo`} />
+                      </div>
                     </div>
                   </div>
                 </div>

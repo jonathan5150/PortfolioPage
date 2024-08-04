@@ -247,7 +247,7 @@ function MLBData() {
         ? prevSelectedTeams.filter((id) => id !== teamId)
         : [...prevSelectedTeams, teamId];
 
-      Cookies.set('selectedTeams', JSON.stringify(updatedSelectedTeams), { expires: 7 });
+      Cookies.set('selectedTeams', JSON.stringify(updatedSelectedTeams), { expires: 399 });
       return updatedSelectedTeams;
     });
   };
@@ -255,12 +255,12 @@ function MLBData() {
   const handleSelectAll = () => {
     const allTeamIds = mlbTeams.map(team => team.id);
     setSelectedTeams(allTeamIds);
-    Cookies.set('selectedTeams', JSON.stringify(allTeamIds), { expires: 7 });
+    Cookies.set('selectedTeams', JSON.stringify(allTeamIds), { expires: 399 });
   };
 
   const handleDeselectAll = () => {
     setSelectedTeams([]);
-    Cookies.set('selectedTeams', JSON.stringify([]), { expires: 7 });
+    Cookies.set('selectedTeams', JSON.stringify([]), { expires: 399 });
   };
 
   return (

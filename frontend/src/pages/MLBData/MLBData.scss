@@ -560,6 +560,34 @@ h3 {
   animation: flashText 1s ease-out;
 }
 
+.team-pick-container {
+  display: flex;
+  justify-content: center; /* Center the images in the div */
+  margin-top: 10px;
+}
+
+.team-pick {
+  outline: 2px solid #555555;
+  border-radius: 3px;
+  display: inline-block;
+  width: 60px; /* Adjust the width as needed */
+  height: 60px; /* Adjust the height as needed */
+  cursor: pointer;
+  text-align: center;
+  line-height: 60px; /* Vertically center the image */
+  margin-right: 50px; /* Adjust margin to control spacing */
+  margin-bottom: 10px;
+}
+
+.team-pick img {
+  width: 80%; /* Adjust the percentage as needed to make the logo smaller */
+  height: auto; /* Maintain the aspect ratio */
+  vertical-align: middle; /* Vertically center the image */
+}
+
+.team-pick:last-child {
+  margin-right: 0; /* Remove margin from the last item */
+}
 
 
 @media only screen and (max-width: 768px) {
