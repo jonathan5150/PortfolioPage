@@ -17,6 +17,8 @@ function MLBData() {
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [visibleGames, setVisibleGames] = useState([]);
   const [liveGameData, setLiveGameData] = useState({});
+  const [userPicks, setUserPicks] = useState(JSON.parse(Cookies.get('userPicks') || '{}'));
+  const [correctGuesses, setCorrectGuesses] = useState({ correct: 0, total: 0 });
 
   const teamsMenuRef = useRef();
 
@@ -222,6 +224,39 @@ function MLBData() {
     return () => clearInterval(intervalId); // Cleanup interval on component unmount
   }, [todayGames]);
 
+  useEffect(() => {
+    // Calculate correct guesses based on game results and user picks
+    const calculateCorrectGuesses = () => {
+      let correct = 0;
+      let total = 0;
+
+      todayGames.forEach(date => {
+        date.games.forEach(game => {
+          const gameData = liveGameData[game.gamePk];
+          const statusCode = gameData?.gameData?.status?.statusCode;
+
+          if (statusCode === 'F' && userPicks[game.gamePk]) { // Ensure the game is finished and the user has made a pick
+            total++;
+            const homeTeam = gameData.liveData.boxscore.teams.home;
+            const awayTeam = gameData.liveData.boxscore.teams.away;
+            const homeScore = gameData.liveData.linescore.teams.home.runs;
+            const awayScore = gameData.liveData.linescore.teams.away.runs;
+
+            const winningTeamId = homeScore > awayScore ? homeTeam.team.id : awayTeam.team.id;
+
+            if (userPicks[game.gamePk] === winningTeamId) {
+              correct++;
+            }
+          }
+        });
+      });
+
+      setCorrectGuesses({ correct, total });
+    };
+
+    calculateCorrectGuesses();
+  }, [liveGameData, userPicks, todayGames]);
+
   const formatTime = (dateTime) => {
     const date = new Date(dateTime);
     return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -262,6 +297,11 @@ function MLBData() {
     Cookies.set('selectedTeams', JSON.stringify([]), { expires: 399 });
   };
 
+  const calculateGuessPercentage = () => {
+    if (correctGuesses.total === 0) return 'N/A';
+    return ((correctGuesses.correct / correctGuesses.total) * 100).toFixed(2) + '%';
+  };
+
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
       <div className="background-image" style={{ backgroundImage: `url(${process.env.PUBLIC_URL + '/bg4.jpg'})` }} />
@@ -285,16 +325,24 @@ function MLBData() {
           <p>loading...</p>
         </div>
       ) : (
-        <MatchupCard
-          loading={loading}
-          visibleGames={visibleGames}
-          selectedTeams={selectedTeams}
-          getTeamLogo={getTeamLogo}
-          getTeamRecord={getTeamRecord}
-          formatTime={formatTime}
-          getTeamAbbreviation={getTeamAbbreviation}
-          liveGameData={liveGameData} // Pass live game data
-        />
+        <>
+          <MatchupCard
+            loading={loading}
+            visibleGames={visibleGames}
+            selectedTeams={selectedTeams}
+            getTeamLogo={getTeamLogo}
+            getTeamRecord={getTeamRecord}
+            formatTime={formatTime}
+            getTeamAbbreviation={getTeamAbbreviation}
+            liveGameData={liveGameData} // Pass live game data
+            userPicks={userPicks} // Pass user picks
+            setUserPicks={setUserPicks} // Pass setUserPicks to update picks
+          />
+          <div className="matchup-container guess-results">
+            <p>GAMES GUESSED CORRECTLY: {correctGuesses.correct} / {correctGuesses.total}</p>
+            <p>CORRECT GUESS PERCENTAGE: {calculateGuessPercentage()}</p>
+          </div>
+        </>
       )}
     </div>
   );

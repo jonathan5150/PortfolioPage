@@ -3,10 +3,9 @@ import Scoreboard from './Scoreboard';
 import LastTwentyGames from './LastTwentyGames';
 import Cookies from 'js-cookie';
 
-const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, getTeamScore, liveGameData }) => {
+const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, liveGameData, userPicks, setUserPicks }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
-  const [userPicks, setUserPicks] = useState(JSON.parse(Cookies.get('userPicks') || '{}'));
 
   useEffect(() => {
     let timer;

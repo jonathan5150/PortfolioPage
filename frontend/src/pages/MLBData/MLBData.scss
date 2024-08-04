@@ -589,6 +589,20 @@ h3 {
   margin-right: 0; /* Remove margin from the last item */
 }
 
+.guess-results {
+  background-color: rgba(41, 41, 41, 0.94);
+  border: 1.5px solid #555555;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  width: 95%;
+}
+
+.guess-results p {
+  font-size: 10pt;
+  margin: 5px 0px;
+  padding: 5px;
+}
+
 
 @media only screen and (max-width: 768px) {
   .column1 {
