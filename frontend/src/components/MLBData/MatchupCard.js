@@ -23,7 +23,6 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
   }, [loading]);
 
   const handlePick = (gameId, teamId) => {
-    // Check if the current pick is already selected with the green background
     if (userPicks[gameId] === teamId && userPicks[gameId] !== '') {
       const updatedPicks = { ...userPicks, [gameId]: '' };
       setUserPicks(updatedPicks);
@@ -33,6 +32,27 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
       setUserPicks(updatedPicks);
       Cookies.set('userPicks', JSON.stringify(updatedPicks), { expires: 7 });
     }
+  };
+
+  const getTeamBackgroundColor = (gamePk, teamId) => {
+    const gameData = liveGameData[gamePk];
+    const statusCode = gameData?.gameData?.status?.statusCode;
+
+    if (!statusCode || statusCode !== 'F') return 'rgba(70, 70, 70, 0.8)'; // Ensure the game is finished
+
+    const homeTeam = gameData.liveData.boxscore.teams.home;
+    const awayTeam = gameData.liveData.boxscore.teams.away;
+
+    const homeScore = gameData.liveData.linescore.teams.home.runs;
+    const awayScore = gameData.liveData.linescore.teams.away.runs;
+
+    if (homeTeam.team.id === teamId) {
+      return homeScore > awayScore ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+    }
+    if (awayTeam.team.id === teamId) {
+      return awayScore > homeScore ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+    }
+    return 'rgba(70, 70, 70, 0.8)';
   };
 
   return (
@@ -63,10 +83,18 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
                 <div className="matchup-group">
                   <div className="column1">
                     <div className="row1">
-                      <img src={getTeamLogo(game.teams.away.team.name)} alt={`${game.teams.away.team.name} logo`} />
+                      <img
+                        src={getTeamLogo(game.teams.away.team.name)}
+                        alt={`${game.teams.away.team.name} logo`}
+                        style={{ backgroundColor: getTeamBackgroundColor(game.gamePk, game.teams.away.team.id) }}
+                      />
                     </div>
                     <div className="row2">
-                      <img src={getTeamLogo(game.teams.home.team.name)} alt={`${game.teams.home.team.name} logo`} />
+                      <img
+                        src={getTeamLogo(game.teams.home.team.name)}
+                        alt={`${game.teams.home.team.name} logo`}
+                        style={{ backgroundColor: getTeamBackgroundColor(game.gamePk, game.teams.home.team.id) }}
+                      />
                     </div>
                   </div>
                   <div className="column2">
@@ -101,11 +129,13 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
                   <div className="column3"></div>
                 </div>
                 <div className="game-data">
+                  <div className="game-data-container">
+                    <p className="game-data-title">LIVE DATA</p>
+                  </div>
                   <Scoreboard
                     game={game}
                     getTeamAbbreviation={getTeamAbbreviation}
-                    getTeamScore={getTeamScore}
-                    liveData={liveGameData[game.gamePk]} // Pass live data
+                    liveData={liveGameData[game.gamePk]?.liveData} // Pass live data
                   />
                   <div className="game-data-container">
                     <p className="game-data-title">TEAM W/L HISTORY</p>
@@ -121,7 +151,7 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
                         className={`team-pick ${userPicks[game.gamePk] === game.teams.away.team.id ? 'selected' : ''}`}
                         onClick={() => handlePick(game.gamePk, game.teams.away.team.id)}
                         style={{
-                          backgroundColor: userPicks[game.gamePk] === game.teams.away.team.id ? 'rgba(0, 255, 0, 0.2)' : (userPicks[game.gamePk] && userPicks[game.gamePk] !== game.teams.away.team.id) ? 'rgba(255, 0, 0, 0.2)' : 'rgba(128, 128, 128, 0.2)'
+                          backgroundColor: userPicks[game.gamePk] === game.teams.away.team.id ? 'rgba(0, 255, 0, 0.1)' : (userPicks[game.gamePk] && userPicks[game.gamePk] !== game.teams.away.team.id) ? 'rgba(255, 0, 0, 0.1)' : 'rgba(128, 128, 128, 0.2)'
                         }}
                       >
                         <img src={getTeamLogo(game.teams.away.team.name)} alt={`${game.teams.away.team.name} logo`} />
@@ -130,7 +160,7 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
                         className={`team-pick ${userPicks[game.gamePk] === game.teams.home.team.id ? 'selected' : ''}`}
                         onClick={() => handlePick(game.gamePk, game.teams.home.team.id)}
                         style={{
-                          backgroundColor: userPicks[game.gamePk] === game.teams.home.team.id ? 'rgba(0, 255, 0, 0.2)' : (userPicks[game.gamePk] && userPicks[game.gamePk] !== game.teams.home.team.id) ? 'rgba(255, 0, 0, 0.2)' : 'rgba(128, 128, 128, 0.2)'
+                          backgroundColor: userPicks[game.gamePk] === game.teams.home.team.id ? 'rgba(0, 255, 0, 0.1)' : (userPicks[game.gamePk] && userPicks[game.gamePk] !== game.teams.home.team.id) ? 'rgba(255, 0, 0, 0.1)' : 'rgba(128, 128, 128, 0.2)'
                         }}
                       >
                         <img src={getTeamLogo(game.teams.home.team.name)} alt={`${game.teams.home.team.name} logo`} />

@@ -104,7 +104,6 @@ function MLBData() {
         const formatDate = (date) => format(date, 'yyyy-MM-dd');
         const todayFormatted = formatDate(selectedDate);
         const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher&startDate=${todayFormatted}&endDate=${todayFormatted}`;
-        console.log(url);
         const response = await fetch(url);
         const data = await response.json();
 
@@ -144,7 +143,7 @@ function MLBData() {
 
               return {
                 ...game,
-                liveData: gameData.liveData,
+                liveData: gameData,
                 teams: {
                   ...game.teams,
                   away: {
@@ -205,7 +204,7 @@ function MLBData() {
           const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
           const response = await fetch(liveGameUrl);
           const data = await response.json();
-          return { gamePk: game.gamePk, liveData: data.liveData };
+          return { gamePk: game.gamePk, liveData: data };
         })
       ));
 
