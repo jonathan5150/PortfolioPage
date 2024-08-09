@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import './MLBData.scss';
 import { format, subDays } from 'date-fns';
 import Cookies from 'js-cookie';
-import MLBDataNavbar from '../../components/MLBData/MLBDataNavbar';
 import MatchupCard from '../../components/MLBData/MatchupCard';
 
 function MLBData() {
@@ -134,6 +133,7 @@ function MLBData() {
             ...gameDay,
             games: await Promise.all(gameDay.games.map(async (game) => {
               const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
+              console.log("hi   " + liveGameUrl);
               const gameData = await fetch(liveGameUrl).then(res => res.json());
 
               const awayPitcherStats = await fetchPitcherData(game.teams.away.probablePitcher?.id);
@@ -265,21 +265,8 @@ function MLBData() {
 
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
-      <div className="background-image" style={{ backgroundImage: `url(${process.env.PUBLIC_URL + '/bg4.jpg'})` }} />
-      <MLBDataNavbar
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        isCalendarOpen={isCalendarOpen}
-        setIsCalendarOpen={setIsCalendarOpen}
-        isTeamsMenuOpen={isTeamsMenuOpen}
-        setIsTeamsMenuOpen={setIsTeamsMenuOpen}
-        mlbTeams={mlbTeams}
-        selectedTeams={selectedTeams}
-        handleTeamChange={handleTeamChange}
-        handleSelectAll={handleSelectAll}
-        handleDeselectAll={handleDeselectAll}
-        teamsMenuRef={teamsMenuRef}
-      />
+      {/*<div className="background-image" style={{ backgroundImage: `url(${process.env.PUBLIC_URL + '/bg4.jpg'})` }} />*/}
+
       {loading ? (
         <div className="loading">
           <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
@@ -297,6 +284,19 @@ function MLBData() {
           liveGameData={liveGameData} // Pass live game data
           userPicks={userPicks} // Pass user picks
           setUserPicks={setUserPicks} // Pass setUserPicks to update picks
+
+          // New props to pass
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          isCalendarOpen={isCalendarOpen}
+          setIsCalendarOpen={setIsCalendarOpen}
+          isTeamsMenuOpen={isTeamsMenuOpen}
+          setIsTeamsMenuOpen={setIsTeamsMenuOpen}
+          mlbTeams={mlbTeams}
+          handleTeamChange={handleTeamChange}
+          handleSelectAll={handleSelectAll}
+          handleDeselectAll={handleDeselectAll}
+          teamsMenuRef={teamsMenuRef}
         />
       )}
     </div>

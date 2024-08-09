@@ -22,10 +22,12 @@
   overflow-y: auto;
   position: relative;
   color: white;
+  background-color: #545454;
+  background-image: radial-gradient(circle at 11% -69%, #0000004b 75%, transparent 70.05%),radial-gradient(circle at -17% -80%, #00000017 49%, transparent 49.05%),radial-gradient(circle at 72% -30%, #0000001c 44%, transparent 44.05%),linear-gradient(-323deg, #00000017 44%, transparent 44.05%);
 }
 
 .game-container {
-  background-color: rgba(41, 41, 41, 0.94);
+  background-color: rgba(41, 41, 41, 0.85);
   border: 1.5px solid #555555;
   border-radius: 6px;
   margin-bottom: 10px;
@@ -198,7 +200,7 @@ h2 {
   font-size: 30px;
   margin-top: 25px;
   margin-bottom: 10px;
-  border: 1.5px solid #555555;
+  border: 2.5px solid black;
   border-radius: 5px;
   background-color: rgba(70, 70, 70, 0.8);
   padding: 5px 15px;
@@ -478,6 +480,13 @@ h3 {
   align-items: center;
 }
 
+.controls button {
+  box-shadow: 1px 2px 2px 0px black;
+  border: 1px solid black;
+  font-size: 15pt;
+  padding: 2px 5px;
+}
+
 .teams-button {
   font-size: 1.2em;
   margin-right: 10px;
@@ -497,7 +506,6 @@ h3 {
   border-radius: 5px;
   z-index: 1000;
   width: 250px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Add shadow for better visibility */
 }
 
 .menu-buttons {
@@ -505,7 +513,7 @@ h3 {
   justify-content: center;
   gap: 15px;
   margin-bottom: 10px;
-}
+  box-shadow: 1px 1px 2px 1px black;}
 
 .select-button {
   font-family: 'DM Sans', sans-serif;

@@ -1,9 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import Scoreboard from './Scoreboard';
 import LastTwentyGames from './LastTwentyGames';
+import MLBDataNavbar from './MLBDataNavbar';
 import Cookies from 'js-cookie';
 
-const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTeamRecord, formatTime, getTeamAbbreviation, liveGameData, userPicks, setUserPicks }) => {
+const MatchupCard = ({
+  loading,
+  visibleGames,
+  selectedTeams,
+  getTeamLogo,
+  getTeamRecord,
+  formatTime,
+  getTeamAbbreviation,
+  liveGameData,
+  userPicks,
+  setUserPicks,
+  selectedDate,          // New prop
+  setSelectedDate,       // New prop
+  isCalendarOpen,        // New prop
+  setIsCalendarOpen,     // New prop
+  isTeamsMenuOpen,       // New prop
+  setIsTeamsMenuOpen,    // New prop
+  mlbTeams,              // New prop
+  handleTeamChange,      // New prop
+  handleSelectAll,       // New prop
+  handleDeselectAll,     // New prop
+  teamsMenuRef           // New prop
+}) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const [correctGuesses, setCorrectGuesses] = useState({ correct: 0, total: 0 });
@@ -93,6 +116,20 @@ const MatchupCard = ({ loading, visibleGames, selectedTeams, getTeamLogo, getTea
 
   return (
     <div className={`matchup-card fade-in`}>
+      <MLBDataNavbar
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        isCalendarOpen={isCalendarOpen}
+        setIsCalendarOpen={setIsCalendarOpen}
+        isTeamsMenuOpen={isTeamsMenuOpen}
+        setIsTeamsMenuOpen={setIsTeamsMenuOpen}
+        mlbTeams={mlbTeams}
+        selectedTeams={selectedTeams}
+        handleTeamChange={handleTeamChange}
+        handleSelectAll={handleSelectAll}
+        handleDeselectAll={handleDeselectAll}
+        teamsMenuRef={teamsMenuRef}
+      />
       <div className="matchup-container">
         {loading ? (
           <div className="loading">
