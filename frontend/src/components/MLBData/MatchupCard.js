@@ -203,9 +203,9 @@ const MatchupCard = ({
                     <div className="column3"></div>
                   </div>
                   <div className="game-data">
-                    <div className="game-data-container">
+                    {/*<div className="game-data-container">
                       <p className="game-data-title">LIVE DATA</p>
-                    </div>
+                    </div>*/} 
                     <Scoreboard
                       game={game}
                       getTeamAbbreviation={getTeamAbbreviation}
