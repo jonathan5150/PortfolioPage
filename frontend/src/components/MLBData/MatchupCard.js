@@ -32,6 +32,7 @@ const MatchupCard = ({
   const [fadeIn, setFadeIn] = useState(false);
   const [correctGuesses, setCorrectGuesses] = useState({ correct: 0, total: 0 });
   const [allGamesLoaded, setAllGamesLoaded] = useState(false);
+  const [pitcherHandedness, setPitcherHandedness] = useState({});
 
   useEffect(() => {
     let timer;
@@ -48,7 +49,6 @@ const MatchupCard = ({
   }, [loading]);
 
   useEffect(() => {
-    // Set a timer to check when all games are loaded
     let timer;
     if (visibleGames.length > 0) {
       timer = setTimeout(() => {
@@ -58,6 +58,37 @@ const MatchupCard = ({
       setAllGamesLoaded(false);
     }
     return () => clearTimeout(timer);
+  }, [visibleGames]);
+
+  useEffect(() => {
+    // Fetch and set the pitcher's handedness
+    const fetchPitcherHandedness = async (pitcherId) => {
+      if (!pitcherId) return;
+      const response = await fetch(`https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`);
+      const data = await response.json();
+      const handedness = data.people?.[0]?.pitchHand?.code; // 'R' for right, 'L' for left
+      return handedness;
+    };
+
+    const fetchAllPitcherHandedness = async () => {
+      const handednessData = {};
+
+      for (const game of visibleGames) {
+        if (game.teams.away.probablePitcher?.id) {
+          const awayHandedness = await fetchPitcherHandedness(game.teams.away.probablePitcher.id);
+          handednessData[game.teams.away.probablePitcher.id] = awayHandedness;
+        }
+
+        if (game.teams.home.probablePitcher?.id) {
+          const homeHandedness = await fetchPitcherHandedness(game.teams.home.probablePitcher.id);
+          handednessData[game.teams.home.probablePitcher.id] = homeHandedness;
+        }
+      }
+
+      setPitcherHandedness(handednessData);
+    };
+
+    fetchAllPitcherHandedness();
   }, [visibleGames]);
 
   const handlePick = (gameId, teamId) => {
@@ -133,7 +164,6 @@ const MatchupCard = ({
     );
   };
 
-  // Access totalGames from the first item in the todayGames array
   const totalGamesToday = todayGames.length > 0 ? todayGames[0].totalGames : 0;
   const totalGamesDisplayed = visibleGames.length;
 
@@ -218,48 +248,46 @@ const MatchupCard = ({
                   <div className="column2">
                     <div className="pitcher-info-top">
                       <span style={{ fontWeight: 'bold' }}>
-                        {game.teams.away.team.name} (
-                        {getTeamRecord(game.teams.away.team.id)})
+                        {game.teams.away.team.name} ({getTeamRecord(game.teams.away.team.id)})
                       </span>
                       <div className="pitcher-details">
-                        {game.teams.away.probablePitcher?.fullName === '?' ? (
-                          'P: TBD'
-                        ) : (
+                        {game.teams.away.probablePitcher?.fullName ? (
                           <>
-                            <b>P:</b> {game.teams.home.probablePitcher?.fullName},
-                            <b> ERA:</b> {game.teams.home.probablePitcher?.era}  <br />
-                            <b>G:</b> {game.teams.home.probablePitcher?.gamesPlayed},
-                            <b> IP:</b> {game.teams.home.probablePitcher?.inningsPitched},
-                            <b> AVG IP:</b> {
-                              game.teams.home.probablePitcher?.gamesPlayed > 0
-                              ? (game.teams.home.probablePitcher?.inningsPitched / game.teams.home.probablePitcher?.gamesPlayed).toFixed(1)
-                              : 'N/A'
-                            }
+                            <b>P:</b> {game.teams.away.probablePitcher.fullName} ({pitcherHandedness[game.teams.away.probablePitcher.id]}) /
+                            <b> ERA:</b> {game.teams.away.probablePitcher.era} <br />
+                            <b>G:</b> {game.teams.away.probablePitcher.gamesPlayed} /
+                            <b> IP:</b> {game.teams.away.probablePitcher.inningsPitched} /
+                            <b> AVG IP: </b>
+                            {game.teams.away.probablePitcher.gamesPlayed > 0
+                              ? (game.teams.away.probablePitcher.inningsPitched / game.teams.away.probablePitcher.gamesPlayed).toFixed(1)
+                              : 'N/A'}
                           </>
+                        ) : (
+                          <span><b>P:</b> N/A</span>
                         )}
                       </div>
                     </div>
+
                     <p className="vs">@</p>
+
                     <div className="pitcher-info-bottom">
                       <span style={{ fontWeight: 'bold' }}>
-                        {game.teams.home.team.name} (
-                        {getTeamRecord(game.teams.home.team.id)})
+                        {game.teams.home.team.name} ({getTeamRecord(game.teams.home.team.id)})
                       </span>
                       <div className="pitcher-details">
-                        {game.teams.away.probablePitcher?.fullName === '?' ? (
-                          'P: TBD'
-                        ) : (
+                        {game.teams.home.probablePitcher?.fullName ? (
                           <>
-                            <b>P:</b> {game.teams.away.probablePitcher?.fullName},
-                            <b> ERA:</b> {game.teams.away.probablePitcher?.era} <br />
-                            <b>G:</b> {game.teams.away.probablePitcher?.gamesPlayed},
-                            <b> IP:</b> {game.teams.away.probablePitcher?.inningsPitched},
-                            <b> AVG IP:</b> {
-                              game.teams.away.probablePitcher?.gamesPlayed > 0
-                              ? (game.teams.away.probablePitcher?.inningsPitched / game.teams.away.probablePitcher?.gamesPlayed).toFixed(1)
-                              : 'N/A'
-                            }
+                            <b>P:</b> {game.teams.home.probablePitcher.fullName} ({pitcherHandedness[game.teams.home.probablePitcher.id]}) /
+                            <b> ERA:</b> {game.teams.home.probablePitcher.era} <br />
+                            <b>G:</b> {game.teams.home.probablePitcher.gamesPlayed} /
+                            <b> IP:</b> {game.teams.home.probablePitcher.inningsPitched} /
+                            <b> AVG IP: </b>
+                            {game.teams.home.probablePitcher.gamesPlayed > 0
+                              ? (game.teams.home.probablePitcher.inningsPitched / game.teams.home.probablePitcher.gamesPlayed).toFixed(1)
+                              : 'N/A'}
                           </>
+                        ) : (
+                          <span><b>P:</b> N/A</span>
                         )}
                       </div>
                     </div>
@@ -345,10 +373,10 @@ const MatchupCard = ({
             ))}
             {allGamesLoaded && (
               <div className="matchup-container guess-results">
-                <p>GAMES GUESSED CORRECTLY: {correctGuesses.correct} / {correctGuesses.total}</p>
-                <p>CORRECT GUESS PERCENTAGE: {calculateGuessPercentage()}</p>
-                <p>TOTAL GAMES TODAY: {totalGamesToday}</p>
-                <p>TOTAL GAMES DISPLAYED: {totalGamesDisplayed}</p>
+                <p><b>GAMES GUESSED CORRECTLY: </b>{correctGuesses.correct} / {correctGuesses.total}</p>
+                <p><b>CORRECT GUESS PERCENTAGE: </b>{calculateGuessPercentage()}</p>
+                <p><b>TOTAL GAMES TODAY: </b>{totalGamesToday}</p>
+                <p><b>TOTAL GAMES DISPLAYED: </b>{totalGamesDisplayed}</p>
               </div>
             )}
           </>

@@ -108,11 +108,12 @@ function MLBData() {
         const data = await response.json();
 
         const fetchPitcherData = async (pitcherId) => {
-          if (!pitcherId) return { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A' };
+          if (!pitcherId) return { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
           const response = await fetch(`https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`);
           const data = await response.json();
           const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
-          return stats ? { era: stats.era, inningsPitched: stats.inningsPitched, gamesPlayed: stats.gamesPlayed } : { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A' };
+          const pitchHand = data.people?.[0]?.pitchHand?.code; // 'R' for right, 'L' for left
+          return stats ? { ...stats, pitchHand } : { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
         };
 
         const fetchLastTwentyGames = async (teamId, selectedDate) => {
