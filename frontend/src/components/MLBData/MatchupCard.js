@@ -53,7 +53,7 @@ const MatchupCard = ({
     if (visibleGames.length > 0) {
       timer = setTimeout(() => {
         setAllGamesLoaded(true);
-      }, 2000); // Adjust this delay as needed
+      }, 1000); // Adjust this delay as needed
     } else {
       setAllGamesLoaded(false);
     }
