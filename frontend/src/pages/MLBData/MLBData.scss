@@ -75,6 +75,8 @@
   align-items: center;
   justify-content: center;
   height: 21px; /* Ensure all cells have the same height */
+  opacity: 0;
+  animation: fadeIn 0.5s ease-in-out forwards;
 }
 
 .scoreboard-cell.inning, .scoreboard-cell.runs, .scoreboard-cell.hits, .scoreboard-cell.errors {
