@@ -328,7 +328,7 @@ function MLBData() {
           mlbTeams={mlbTeams}
           handleTeamChange={handleTeamChange}
           handleSelectAll={handleSelectAll}
-          handcd leDeselectAll={handleDeselectAll}
+          handleDeselectAll={handleDeselectAll}
           teamsMenuRef={teamsMenuRef}
           todayGames={todayGames} // Pass the entire todayGames array to MatchupCard
           gameBackgroundColors={gameBackgroundColors} // Pass pre-calculated background colors
