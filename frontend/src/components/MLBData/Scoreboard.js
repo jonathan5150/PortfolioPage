@@ -25,9 +25,9 @@ const Scoreboard = ({ game, getTeamAbbreviation, liveData }) => {
             {extraInning + 10}
           </div>
         ))}
-        <div className="scoreboard-cell runs" style={{ animationDelay: '0.1s' }}>R</div>
-        <div className="scoreboard-cell hits" style={{ animationDelay: '0.1s' }}>H</div>
-        <div className="scoreboard-cell errors" style={{ animationDelay: '0.1s' }}>E</div>
+        <div className="scoreboard-cell runs" style={{ animationDelay: '1.0s' }}>R</div>
+        <div className="scoreboard-cell hits" style={{ animationDelay: '1.1s' }}>H</div>
+        <div className="scoreboard-cell errors" style={{ animationDelay: '1.2s' }}>E</div>
       </div>
       <div className="scoreboard-row">
         <div className="scoreboard-cell team-abbr" style={{ animationDelay: '0.1s' }}>{getTeamAbbreviation(game.teams.away.team.id)}</div>
