@@ -17,6 +17,7 @@ function MLBData() {
   const [visibleGames, setVisibleGames] = useState([]);
   const [liveGameData, setLiveGameData] = useState({});
   const [userPicks, setUserPicks] = useState(JSON.parse(Cookies.get('userPicks') || '{}'));
+  const [gameBackgroundColors, setGameBackgroundColors] = useState({});
 
   const teamsMenuRef = useRef();
 
@@ -99,7 +100,7 @@ function MLBData() {
 
   useEffect(() => {
     const fetchGameData = async (selectedDate) => {
-      setLoading(true); // Set loading state to true before fetching data
+      setLoading(true);
       try {
         const formatDate = (date) => format(date, 'yyyy-MM-dd');
         const todayFormatted = formatDate(selectedDate);
@@ -112,13 +113,13 @@ function MLBData() {
           const response = await fetch(`https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`);
           const data = await response.json();
           const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
-          const pitchHand = data.people?.[0]?.pitchHand?.code; // 'R' for right, 'L' for left
+          const pitchHand = data.people?.[0]?.pitchHand?.code;
           return stats ? { ...stats, pitchHand } : { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
         };
 
         const fetchLastTwentyGames = async (teamId, selectedDate) => {
           const formatDate = (date) => format(date, 'yyyy-MM-dd');
-          const startDate = formatDate(subDays(new Date(selectedDate), 50)); // Adjusted for 20 games
+          const startDate = formatDate(subDays(new Date(selectedDate), 50));
           const endDate = formatDate(subDays(new Date(selectedDate), 1));
           const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${startDate}&endDate=${endDate}&teamId=${teamId}`);
           const data = await response.json();
@@ -126,7 +127,7 @@ function MLBData() {
           return games.filter(game => {
             const gameStatus = game.status.detailedState;
             return gameStatus === 'Final' || gameStatus === 'Completed Early';
-          }).slice(-20); // Fetch last 20 games
+          }).slice(-20);
         };
 
         const games = await Promise.all((data.dates || []).map(async (gameDay) => {
@@ -169,6 +170,40 @@ function MLBData() {
           };
         }));
 
+        const backgroundColors = {};
+
+        games.forEach((gameDay) => {
+          gameDay.games.forEach((game) => {
+            const gamePk = game.gamePk;
+            const gameData = game.liveData;
+            const statusCode = gameData?.gameData?.status?.statusCode;
+
+            const getTeamBackgroundColor = (teamId) => {
+              if (!statusCode || statusCode !== 'F') return 'rgba(70, 70, 70, 0.8)'; // Ensure the game is finished
+
+              const homeTeam = gameData.liveData.boxscore.teams.home;
+              const awayTeam = gameData.liveData.boxscore.teams.away;
+
+              const homeScore = gameData.liveData.linescore.teams.home.runs;
+              const awayScore = gameData.liveData.linescore.teams.away.runs;
+
+              if (homeTeam.team.id === teamId) {
+                return homeScore > awayScore ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+              }
+              if (awayTeam.team.id === teamId) {
+                return awayScore > homeScore ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+              }
+              return 'rgba(70, 70, 70, 0.8)';
+            };
+
+            backgroundColors[gamePk] = {
+              away: getTeamBackgroundColor(game.teams.away.team.id),
+              home: getTeamBackgroundColor(game.teams.home.team.id),
+            };
+          });
+        });
+
+        setGameBackgroundColors(backgroundColors);
         setTodayGames(games);
         setVisibleGames(games.flatMap(date =>
           date.games.filter(game =>
@@ -178,7 +213,7 @@ function MLBData() {
       } catch (error) {
         console.error('Error fetching game data:', error);
       } finally {
-        setLoading(false); // Set loading state to false after data is fetched
+        setLoading(false);
       }
     };
 
@@ -296,6 +331,7 @@ function MLBData() {
           handleDeselectAll={handleDeselectAll}
           teamsMenuRef={teamsMenuRef}
           todayGames={todayGames} // Pass the entire todayGames array to MatchupCard
+          gameBackgroundColors={gameBackgroundColors} // Pass pre-calculated background colors
         />
       )}
     </div>

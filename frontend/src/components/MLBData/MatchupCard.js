@@ -26,13 +26,13 @@ const MatchupCard = ({
   handleSelectAll,
   handleDeselectAll,
   teamsMenuRef,
-  todayGames // Access todayGames passed from MLBData
+  todayGames,
+  gameBackgroundColors // Receive pre-calculated background colors
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const [correctGuesses, setCorrectGuesses] = useState({ correct: 0, total: 0 });
   const [allGamesLoaded, setAllGamesLoaded] = useState(false);
-  const [pitcherHandedness, setPitcherHandedness] = useState({});
 
   useEffect(() => {
     let timer;
@@ -60,68 +60,16 @@ const MatchupCard = ({
     return () => clearTimeout(timer);
   }, [visibleGames]);
 
-  useEffect(() => {
-    // Fetch and set the pitcher's handedness
-    const fetchPitcherHandedness = async (pitcherId) => {
-      if (!pitcherId) return;
-      const response = await fetch(`https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`);
-      const data = await response.json();
-      const handedness = data.people?.[0]?.pitchHand?.code; // 'R' for right, 'L' for left
-      return handedness;
-    };
-
-    const fetchAllPitcherHandedness = async () => {
-      const handednessData = {};
-
-      for (const game of visibleGames) {
-        if (game.teams.away.probablePitcher?.id) {
-          const awayHandedness = await fetchPitcherHandedness(game.teams.away.probablePitcher.id);
-          handednessData[game.teams.away.probablePitcher.id] = awayHandedness;
-        }
-
-        if (game.teams.home.probablePitcher?.id) {
-          const homeHandedness = await fetchPitcherHandedness(game.teams.home.probablePitcher.id);
-          handednessData[game.teams.home.probablePitcher.id] = homeHandedness;
-        }
-      }
-
-      setPitcherHandedness(handednessData);
-    };
-
-    fetchAllPitcherHandedness();
-  }, [visibleGames]);
-
   const handlePick = (gameId, teamId) => {
     if (userPicks[gameId] === teamId && userPicks[gameId] !== '') {
       const updatedPicks = { ...userPicks, [gameId]: '' };
       setUserPicks(updatedPicks);
-      Cookies.set('userPicks', JSON.stringify(updatedPicks), { expires: 7 });
+      Cookies.set('userPicks', JSON.stringify(updatedPicks), { expires: 399 });
     } else {
       const updatedPicks = { ...userPicks, [gameId]: teamId };
       setUserPicks(updatedPicks);
-      Cookies.set('userPicks', JSON.stringify(updatedPicks), { expires: 7 });
+      Cookies.set('userPicks', JSON.stringify(updatedPicks), { expires: 399 });
     }
-  };
-
-  const getTeamBackgroundColor = (gamePk, teamId) => {
-    const gameData = liveGameData[gamePk];
-    const statusCode = gameData?.gameData?.status?.statusCode;
-
-    if (!statusCode || statusCode !== 'F') return 'rgba(70, 70, 70, 0.8)'; // Ensure the game is finished
-
-    const homeTeam = gameData.liveData.boxscore.teams.home;
-    const awayTeam = gameData.liveData.boxscore.teams.away;
-
-    const homeScore = gameData.liveData.linescore.teams.home.runs;
-    const awayScore = gameData.liveData.linescore.teams.away.runs;
-
-    if (homeTeam.team.id === teamId) {
-      return homeScore > awayScore ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
-    }
-    if (awayTeam.team.id === teamId) {
-      return awayScore > homeScore ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
-    }
-    return 'rgba(70, 70, 70, 0.8)';
   };
 
   useEffect(() => {
@@ -225,10 +173,7 @@ const MatchupCard = ({
                         src={getTeamLogo(game.teams.away.team.name)}
                         alt={`${game.teams.away.team.name} logo`}
                         style={{
-                          backgroundColor: getTeamBackgroundColor(
-                            game.gamePk,
-                            game.teams.away.team.id
-                          ),
+                          backgroundColor: gameBackgroundColors[game.gamePk]?.away,
                         }}
                       />
                     </div>
@@ -237,10 +182,7 @@ const MatchupCard = ({
                         src={getTeamLogo(game.teams.home.team.name)}
                         alt={`${game.teams.home.team.name} logo`}
                         style={{
-                          backgroundColor: getTeamBackgroundColor(
-                            game.gamePk,
-                            game.teams.home.team.id
-                          ),
+                          backgroundColor: gameBackgroundColors[game.gamePk]?.home,
                         }}
                       />
                     </div>
@@ -253,7 +195,7 @@ const MatchupCard = ({
                       <div className="pitcher-details">
                         {game.teams.away.probablePitcher?.fullName ? (
                           <>
-                            <b>P:</b> {game.teams.away.probablePitcher.fullName} ({pitcherHandedness[game.teams.away.probablePitcher.id]}) /
+                            <b>P:</b> {game.teams.away.probablePitcher.fullName} ({game.teams.away.probablePitcher.pitchHand}) /
                             <b> ERA:</b> {game.teams.away.probablePitcher.era} <br />
                             <b>G:</b> {game.teams.away.probablePitcher.gamesPlayed} /
                             <b> IP:</b> {game.teams.away.probablePitcher.inningsPitched} /
@@ -277,7 +219,7 @@ const MatchupCard = ({
                       <div className="pitcher-details">
                         {game.teams.home.probablePitcher?.fullName ? (
                           <>
-                            <b>P:</b> {game.teams.home.probablePitcher.fullName} ({pitcherHandedness[game.teams.home.probablePitcher.id]}) /
+                            <b>P:</b> {game.teams.home.probablePitcher.fullName} ({game.teams.home.probablePitcher.pitchHand}) /
                             <b> ERA:</b> {game.teams.home.probablePitcher.era} <br />
                             <b>G:</b> {game.teams.home.probablePitcher.gamesPlayed} /
                             <b> IP:</b> {game.teams.home.probablePitcher.inningsPitched} /
