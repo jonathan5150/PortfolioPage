@@ -1,17 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 const Scoreboard = ({ game, getTeamAbbreviation, liveData }) => {
   const linescore = liveData?.linescore;
-
-  const [prevLinescore, setPrevLinescore] = useState({});
-
-  useEffect(() => {
-    setPrevLinescore(linescore || {});
-  }, [linescore]);
-
-  const checkForChange = (current, previous) => {
-    return current !== previous ? 'flash-text' : '';
-  };
 
   const calculateTeamScore = (team, linescore) => {
     if (!linescore || !linescore.innings) return 0;
@@ -40,17 +30,17 @@ const Scoreboard = ({ game, getTeamAbbreviation, liveData }) => {
         {[...Array(9)].map((_, inning) => {
           const inningData = linescore?.innings[inning];
           return (
-            <div key={inning} className={`scoreboard-cell inning ${checkForChange(inningData?.away?.runs, prevLinescore.innings?.[inning]?.away?.runs)}`}>
+            <div key={inning} className="scoreboard-cell inning">
               {inningData ? (inningData.away?.runs !== undefined ? inningData.away.runs : '-') : '-'}
             </div>
           );
         })}
         {linescore?.innings.slice(9).map((inningData, extraInning) => (
-          <div key={extraInning + 9} className={`scoreboard-cell inning ${checkForChange(inningData.away?.runs, prevLinescore.innings?.[extraInning + 9]?.away?.runs)}`}>
+          <div key={extraInning + 9} className="scoreboard-cell inning">
             {inningData.away?.runs !== undefined ? inningData.away.runs : '-'}
           </div>
         ))}
-        <div className={`scoreboard-cell runs ${checkForChange(calculateTeamScore('away', linescore), calculateTeamScore('away', prevLinescore))}`} style={{ fontWeight: 'bold' }}>
+        <div className="scoreboard-cell runs" style={{ fontWeight: 'bold' }}>
           {calculateTeamScore('away', linescore)}
         </div>
         <div className="scoreboard-cell hits">{liveData?.boxscore?.teams.away.teamStats?.batting?.hits || 0}</div>
@@ -61,17 +51,17 @@ const Scoreboard = ({ game, getTeamAbbreviation, liveData }) => {
         {[...Array(9)].map((_, inning) => {
           const inningData = linescore?.innings[inning];
           return (
-            <div key={inning} className={`scoreboard-cell inning ${checkForChange(inningData?.home?.runs, prevLinescore.innings?.[inning]?.home?.runs)}`}>
+            <div key={inning} className="scoreboard-cell inning">
               {inningData ? (inningData.home?.runs !== undefined ? inningData.home.runs : '-') : '-'}
             </div>
           );
         })}
         {linescore?.innings.slice(9).map((inningData, extraInning) => (
-          <div key={extraInning + 9} className={`scoreboard-cell inning ${checkForChange(inningData.home?.runs, prevLinescore.innings?.[extraInning + 9]?.home?.runs)}`}>
+          <div key={extraInning + 9} className="scoreboard-cell inning">
             {inningData.home?.runs !== undefined ? inningData.home.runs : '-'}
           </div>
         ))}
-        <div className={`scoreboard-cell runs ${checkForChange(calculateTeamScore('home', linescore), calculateTeamScore('home', prevLinescore))}`} style={{ fontWeight: 'bold' }}>
+        <div className="scoreboard-cell runs" style={{ fontWeight: 'bold' }}>
           {calculateTeamScore('home', linescore)}
         </div>
         <div className="scoreboard-cell hits">{liveData?.boxscore?.teams.home.teamStats?.batting?.hits || 0}</div>
