@@ -108,11 +108,11 @@ function MLBData() {
         const data = await response.json();
 
         const fetchPitcherData = async (pitcherId) => {
-          if (!pitcherId) return { era: 'N/A', gamesPlayed: 'N/A' };
+          if (!pitcherId) return { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A' };
           const response = await fetch(`https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`);
           const data = await response.json();
           const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
-          return stats ? { era: stats.era, gamesPlayed: stats.gamesPlayed } : { era: 'N/A', gamesPlayed: 'N/A' };
+          return stats ? { era: stats.era, inningsPitched: stats.inningsPitched, gamesPlayed: stats.gamesPlayed } : { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A' };
         };
 
         const fetchLastTwentyGames = async (teamId, selectedDate) => {
@@ -133,7 +133,6 @@ function MLBData() {
             ...gameDay,
             games: await Promise.all(gameDay.games.map(async (game) => {
               const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
-              console.log("hi   " + liveGameUrl);
               const gameData = await fetch(liveGameUrl).then(res => res.json());
 
               const awayPitcherStats = await fetchPitcherData(game.teams.away.probablePitcher?.id);
@@ -265,8 +264,6 @@ function MLBData() {
 
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
-      {/*<div className="background-image" style={{ backgroundImage: `url(${process.env.PUBLIC_URL + '/bg4.jpg'})` }} />*/}
-
       {loading ? (
         <div className="loading">
           <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
@@ -297,6 +294,7 @@ function MLBData() {
           handleSelectAll={handleSelectAll}
           handleDeselectAll={handleDeselectAll}
           teamsMenuRef={teamsMenuRef}
+          todayGames={todayGames} // Pass the entire todayGames array to MatchupCard
         />
       )}
     </div>
