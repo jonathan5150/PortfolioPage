@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Scoreboard from './Scoreboard';
 import LastTwentyGames from './LastTwentyGames';
 import MLBDataNavbar from './MLBDataNavbar';
-import Cookies from 'js-cookie';
 
 const MatchupCard = ({
   loading,
@@ -13,8 +12,6 @@ const MatchupCard = ({
   formatTime,
   getTeamAbbreviation,
   liveGameData,
-  userPicks,
-  setUserPicks,
   selectedDate,
   setSelectedDate,
   isCalendarOpen,
@@ -31,8 +28,6 @@ const MatchupCard = ({
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
-  const [correctGuesses, setCorrectGuesses] = useState({ correct: 0, total: 0 });
-  const [allGamesLoaded, setAllGamesLoaded] = useState(false);
 
   useEffect(() => {
     let timer;
@@ -52,68 +47,11 @@ const MatchupCard = ({
     let timer;
     if (visibleGames.length > 0) {
       timer = setTimeout(() => {
-        setAllGamesLoaded(true);
+        // Removed the `setAllGamesLoaded` function and the related variable
       }, 1000); // Adjust this delay as needed
-    } else {
-      setAllGamesLoaded(false);
     }
     return () => clearTimeout(timer);
   }, [visibleGames]);
-
-  const handlePick = (gameId, teamId) => {
-    if (userPicks[gameId] === teamId && userPicks[gameId] !== '') {
-      const updatedPicks = { ...userPicks, [gameId]: '' };
-      setUserPicks(updatedPicks);
-      Cookies.set('userPicks', JSON.stringify(updatedPicks), { expires: 399 });
-    } else {
-      const updatedPicks = { ...userPicks, [gameId]: teamId };
-      setUserPicks(updatedPicks);
-      Cookies.set('userPicks', JSON.stringify(updatedPicks), { expires: 399 });
-    }
-  };
-
-  useEffect(() => {
-    // Calculate correct guesses based on game results and user picks
-    const calculateCorrectGuesses = () => {
-      let correct = 0;
-      let total = 0;
-
-      visibleGames.forEach((game) => {
-        const gameData = liveGameData[game.gamePk];
-        const statusCode = gameData?.gameData?.status?.statusCode;
-
-        if (statusCode === 'F' && userPicks[game.gamePk]) {
-          // Ensure the game is finished and the user has made a pick
-          total++;
-          const homeTeam = gameData.liveData.boxscore.teams.home;
-          const awayTeam = gameData.liveData.boxscore.teams.away;
-          const homeScore = gameData.liveData.linescore.teams.home.runs;
-          const awayScore = gameData.liveData.linescore.teams.away.runs;
-
-          const winningTeamId =
-            homeScore > awayScore ? homeTeam.team.id : awayTeam.team.id;
-
-          if (userPicks[game.gamePk] === winningTeamId) {
-            correct++;
-          }
-        }
-      });
-
-      setCorrectGuesses({ correct, total });
-    };
-
-    calculateCorrectGuesses();
-  }, [liveGameData, userPicks, visibleGames]);
-
-  const calculateGuessPercentage = () => {
-    if (correctGuesses.total === 0) return 'N/A';
-    return (
-      ((correctGuesses.correct / correctGuesses.total) * 100).toFixed(2) + '%'
-    );
-  };
-
-  const totalGamesToday = todayGames.length > 0 ? todayGames[0].totalGames : 0;
-  const totalGamesDisplayed = visibleGames.length;
 
   return (
     <div className={`matchup-card fade-in`}>
@@ -255,72 +193,9 @@ const MatchupCard = ({
                       />
                     </div>
                   </div>
-                  <div className="user-pick game-data-container">
-                    <p className="game-data-title">WHO DO YOU THINK WILL WIN?</p>
-                    <div className="team-pick-container">
-                      <div
-                        className={`team-pick ${
-                          userPicks[game.gamePk] === game.teams.away.team.id
-                            ? 'selected'
-                            : ''
-                        }`}
-                        onClick={() =>
-                          handlePick(game.gamePk, game.teams.away.team.id)
-                        }
-                        style={{
-                          backgroundColor:
-                            userPicks[game.gamePk] === game.teams.away.team.id
-                              ? 'rgba(0, 255, 0, 0.1)'
-                              : userPicks[game.gamePk] &&
-                                userPicks[game.gamePk] !==
-                                  game.teams.away.team.id
-                              ? 'rgba(255, 0, 0, 0.1)'
-                              : 'rgba(128, 128, 128, 0.2)',
-                        }}
-                      >
-                        <img
-                          src={getTeamLogo(game.teams.away.team.name)}
-                          alt={`${game.teams.away.team.name} logo`}
-                        />
-                      </div>
-                      <div
-                        className={`team-pick ${
-                          userPicks[game.gamePk] === game.teams.home.team.id
-                            ? 'selected'
-                            : ''
-                        }`}
-                        onClick={() =>
-                          handlePick(game.gamePk, game.teams.home.team.id)
-                        }
-                        style={{
-                          backgroundColor:
-                            userPicks[game.gamePk] === game.teams.home.team.id
-                              ? 'rgba(0, 255, 0, 0.1)'
-                              : userPicks[game.gamePk] &&
-                                userPicks[game.gamePk] !==
-                                  game.teams.home.team.id
-                              ? 'rgba(255, 0, 0, 0.1)'
-                              : 'rgba(128, 128, 128, 0.2)',
-                        }}
-                      >
-                        <img
-                          src={getTeamLogo(game.teams.home.team.name)}
-                          alt={`${game.teams.home.team.name} logo`}
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             ))}
-            {allGamesLoaded && (
-              <div className="matchup-container guess-results">
-                <p><b>GAMES GUESSED CORRECTLY: </b>{correctGuesses.correct} / {correctGuesses.total}</p>
-                <p><b>CORRECT GUESS PERCENTAGE: </b>{calculateGuessPercentage()}</p>
-                <p><b>TOTAL GAMES TODAY: </b>{totalGamesToday}</p>
-                <p><b>TOTAL GAMES DISPLAYED: </b>{totalGamesDisplayed}</p>
-              </div>
-            )}
           </>
         )}
       </div>
