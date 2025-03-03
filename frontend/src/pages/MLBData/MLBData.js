@@ -188,10 +188,10 @@ function MLBData() {
               const awayScore = gameData.liveData.linescore.teams.away.runs;
 
               if (homeTeam.team.id === teamId) {
-                return homeScore > awayScore ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+                return homeScore > awayScore ? 'rgba(0, 155, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
               }
               if (awayTeam.team.id === teamId) {
-                return awayScore > homeScore ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+                return awayScore > homeScore ? 'rgba(0, 155, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
               }
               return 'rgba(70, 70, 70, 0.8)';
             };

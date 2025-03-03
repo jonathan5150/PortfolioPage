@@ -111,7 +111,7 @@ const MatchupCard = ({
                         src={getTeamLogo(game.teams.away.team.name)}
                         alt={`${game.teams.away.team.name} logo`}
                         style={{
-                          backgroundColor: gameBackgroundColors[game.gamePk]?.away,
+                          border: `3px solid ${gameBackgroundColors[game.gamePk]?.away}`,
                         }}
                       />
                     </div>
@@ -120,7 +120,7 @@ const MatchupCard = ({
                         src={getTeamLogo(game.teams.home.team.name)}
                         alt={`${game.teams.home.team.name} logo`}
                         style={{
-                          backgroundColor: gameBackgroundColors[game.gamePk]?.home,
+                          border: `3px solid ${gameBackgroundColors[game.gamePk]?.home}`,
                         }}
                       />
                     </div>
