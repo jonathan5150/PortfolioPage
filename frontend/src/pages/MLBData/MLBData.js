@@ -179,7 +179,7 @@ function MLBData() {
             const statusCode = gameData?.gameData?.status?.statusCode;
 
             const getTeamBackgroundColor = (teamId) => {
-              if (!statusCode || statusCode !== 'F') return 'rgba(70, 70, 70, 0.8)'; // Ensure the game is finished
+              if (!statusCode || statusCode !== 'F') return 'rgba(85, 85, 85, 1)'; // Ensure the game is finished
 
               const homeTeam = gameData.liveData.boxscore.teams.home;
               const awayTeam = gameData.liveData.boxscore.teams.away;
@@ -193,7 +193,7 @@ function MLBData() {
               if (awayTeam.team.id === teamId) {
                 return awayScore > homeScore ? 'rgba(0, 155, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
               }
-              return 'rgba(70, 70, 70, 0.8)';
+              return 'rgba(50, 50, 50, 0.9)';
             };
 
             backgroundColors[gamePk] = {

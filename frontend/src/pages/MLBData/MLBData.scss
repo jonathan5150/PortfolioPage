@@ -259,14 +259,14 @@ h3 {
 }
 
 .column1 img {
-  max-width: 86%;
-  max-height: 86%;
+  max-width: 80%;
+  max-height: 80%;
   object-fit: contain; /* Ensures the image scales down to fit within its container */
   margin-right: 15px;
   border: 1.5px solid #555555;
   background-color: rgba(70, 70, 70, 0.8);
   border-radius: 7px;
-  padding: 2px;
+  padding: 5px;
   opacity: .85;
 }
 
