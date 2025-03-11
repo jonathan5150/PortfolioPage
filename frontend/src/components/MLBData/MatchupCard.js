@@ -28,6 +28,7 @@ const MatchupCard = ({
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
+  const [selectedData, setSelectedData] = useState('team-history'); // State to store selected data type
 
   useEffect(() => {
     let timer;
@@ -52,6 +53,10 @@ const MatchupCard = ({
     }
     return () => clearTimeout(timer);
   }, [visibleGames]);
+
+  const handleDataSelect = (dataType) => {
+    setSelectedData(dataType); // Update the selected data type
+  };
 
   return (
     <div className={`matchup-card fade-in`}>
@@ -181,17 +186,38 @@ const MatchupCard = ({
                     liveData={liveGameData[game.gamePk]?.liveData} // Pass live data
                   />
                   <div className="game-data-container">
-                    <p className="game-data-title">TEAM W/L HISTORY</p>
-                    <div className="last-twenty-wrapper">
-                      <LastTwentyGames
-                        games={game.teams.away.lastTwentyGames}
-                        teamId={game.teams.away.team.id}
-                      />
-                      <LastTwentyGames
-                        games={game.teams.home.lastTwentyGames}
-                        teamId={game.teams.home.team.id}
-                      />
-                    </div>
+                    <select
+                      value={selectedData}
+                      onChange={(e) => handleDataSelect(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        fontSize: '14px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc',
+                        backgroundColor: '#fff',
+                      }}
+                    >
+                      <option value="team-history">TEAM W/L HISTORY</option>
+                      <option value="team-stats">TEAM STATS</option>
+                    </select>
+                    {selectedData === 'team-history' && (
+                      <div className="last-twenty-wrapper">
+                        <LastTwentyGames
+                          games={game.teams.away.lastTwentyGames}
+                          teamId={game.teams.away.team.id}
+                        />
+                        <LastTwentyGames
+                          games={game.teams.home.lastTwentyGames}
+                          teamId={game.teams.home.team.id}
+                        />
+                      </div>
+                    )}
+                    {selectedData === 'team-stats' && (
+                      <div className="team-stats-placeholder">
+                        <p>Placeholder for Team Stats</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
