@@ -185,18 +185,10 @@ const MatchupCard = ({
                     getTeamAbbreviation={getTeamAbbreviation}
                     liveData={liveGameData[game.gamePk]?.liveData} // Pass live data
                   />
-                  <div className="game-data-container">
+                  <div className="game-data-container stat-toggle-container">
                     <select
                       value={selectedData}
                       onChange={(e) => handleDataSelect(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '8px',
-                        fontSize: '14px',
-                        borderRadius: '4px',
-                        border: '1px solid #ccc',
-                        backgroundColor: '#fff',
-                      }}
                     >
                       <option value="team-history">TEAM W/L HISTORY</option>
                       <option value="team-stats">TEAM STATS</option>
@@ -214,8 +206,11 @@ const MatchupCard = ({
                       </div>
                     )}
                     {selectedData === 'team-stats' && (
-                      <div className="team-stats-placeholder">
-                        <p>Placeholder for Team Stats</p>
+                      <div className="team-stats">
+                        <p>Batting Average:</p>
+                        <p>Home Runs:</p>
+                        <p>ERA:</p>
+                        <p>OBP:</p>
                       </div>
                     )}
                   </div>

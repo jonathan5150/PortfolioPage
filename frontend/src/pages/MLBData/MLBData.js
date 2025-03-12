@@ -112,7 +112,7 @@ function MLBData() {
           if (!pitcherId) return { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
 
           const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`;
-          console.log('PitcherData URL:', url);  // Log the URL here
+          //console.log('PitcherData URL:', url);  // Log the URL here
           const response = await fetch(url);
           const data = await response.json();
           const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
