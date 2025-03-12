@@ -134,10 +134,6 @@
   text-align: center; /* Ensure text is centered */
 }
 
-.matchup-container p {
-  font-size: 12px;
-}
-
 .column2 p, .column2 span, .column2 div {
   font-size: 16px; /* Change this value to your desired font size */
 }
@@ -333,7 +329,7 @@ select:focus {
 }
 
 .game-time {
-  font-size: 20px;
+  font-size: 19px;
   margin: 0px;
 }
 
@@ -564,6 +560,7 @@ select:focus {
 }
 
 .team-stats {
+  font-size: 12.2px;
   text-align: left;
   margin-left: 15px;
 }
