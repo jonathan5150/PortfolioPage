@@ -192,6 +192,7 @@ const MatchupCard = ({
                     >
                       <option value="team-history">TEAM W/L HISTORY</option>
                       <option value="team-stats">TEAM STATS</option>
+                      <option value="player-stats">PLAYER STATS</option>
                     </select>
                     {selectedData === 'team-history' && (
                       <div className="last-twenty-wrapper">
@@ -211,6 +212,14 @@ const MatchupCard = ({
                         <p>OBP:</p>
                       </div>
                     )}
+                    {selectedData === 'player-stats' && (
+                      <div className="player-stats">
+                        <p>Shohei Ohtani:</p>
+                        <p>Mookie Betts:</p>
+                        <p>Freddie Freeman:</p>
+                        <p>Max Muncy:</p>
+                      </div>
+                     )}
                   </div>
                 </div>
               </div>
