@@ -407,18 +407,18 @@ select:focus {
 
 .last-twenty {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   overflow: hidden;
   width: 100%;
 }
 
 .last-twenty-column {
+  min-width: 60px;
   flex: 1 0 20%;
   padding: 3px 6px;
   text-align: center;
   box-sizing: border-box;
   font-size: 11px;
-  direction: ltr; /* Reset text direction for columns */
 }
 
 .last-twenty-row {
@@ -429,6 +429,18 @@ select:focus {
 
 .last-twenty-row.date {
   justify-content: center;
+}
+
+.team-row {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.scroll-wrapper {
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto; /* Single scrollbar */
+  white-space: nowrap;
 }
 
 .team-cell {
@@ -453,15 +465,15 @@ select:focus {
 .team-and-score-group {
   outline: 1.5px solid #555555;
   border-radius: 3px;
-  padding: 1px 0.2px;
+  padding: 1px 3.3px;
   width: 49px;
 }
 
 .games-container {
+  overflow-x: auto; /* Enables horizontal scrolling */
+  white-space: nowrap;
   display: flex;
-  overflow-x: scroll;
-  cursor: grab;
-  direction: rtl; /* Right-to-left for scroll */
+  flex-direction: column;
 }
 
 .games-container:active {
@@ -487,7 +499,7 @@ select:focus {
 }
 
 .fade-in {
-  animation: fadeIn 0.7s ease-in forwards; /* Adjust the duration as needed */
+  animation: fadeIn 0.5s ease-in forwards; /* Adjust the duration as needed */
 }
 
 .fade-out {

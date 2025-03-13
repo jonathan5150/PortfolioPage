@@ -1,26 +1,33 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
-const LastTwentyGames = ({ games, teamId, scrollPosition, onScroll }) => {
+const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
   const containerRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
-  // Set the initial scroll position to the right
   useEffect(() => {
     if (containerRef.current) {
-      containerRef.current.scrollLeft = containerRef.current.scrollWidth; // Scroll to the right
+      containerRef.current.scrollLeft = containerRef.current.scrollWidth;
     }
   }, []);
 
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.scrollLeft = scrollPosition; // Sync scroll position
-    }
-  }, [scrollPosition]); // Only update when scrollPosition changes
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    setStartX(e.pageX - containerRef.current.offsetLeft);
+    setScrollLeft(containerRef.current.scrollLeft);
+  };
 
-  const handleScroll = () => {
-    if (containerRef.current) {
-      onScroll(containerRef.current.scrollLeft); // Notify parent of scroll position
-    }
+  const handleMouseLeave = () => setIsDragging(false);
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - containerRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    containerRef.current.scrollLeft = scrollLeft - walk;
   };
 
   return (
@@ -28,30 +35,66 @@ const LastTwentyGames = ({ games, teamId, scrollPosition, onScroll }) => {
       <div
         className="games-container"
         ref={containerRef}
-        onScroll={handleScroll}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
       >
-        {games.slice().reverse().map((game, index) => { // Reverse the array here
-          const awayScore = game.teams.away.score;
-          const homeScore = game.teams.home.score;
-          const isWinner = (game.teams.away.team.id === teamId && awayScore > homeScore) || (game.teams.home.team.id === teamId && homeScore > awayScore);
-          const backgroundColor = isWinner ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+        {/* Away Team's Last 15 Games (First Row) */}
+        <div className="team-row">
+          {awayGames.slice(0, 15).map((game, index) => {
+            const awayScore = game.teams.away.score;
+            const homeScore = game.teams.home.score;
+            const isWinner =
+              (game.teams.away.team.id === awayTeamId && awayScore > homeScore) ||
+              (game.teams.home.team.id === awayTeamId && homeScore > awayScore);
+            const backgroundColor = isWinner ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
 
-          return (
-            <div key={index} className="last-twenty-column">
-              <div className="last-twenty-row date">{format(new Date(game.gameDate), 'M/d')}</div>
-              <div className="team-and-score-group" style={{ backgroundColor }}>
-                <div className="last-twenty-row last-twenty-row-one">
-                  <div className="team-cell">{game.teams.away.team.abbreviation}</div>
-                  <div className="score-cell">{game.teams.away.score}</div>
-                </div>
-                <div className="last-twenty-row last-twenty-row-two">
-                  <div className="team-cell">{game.teams.home.team.abbreviation}</div>
-                  <div className="score-cell">{game.teams.home.score}</div>
+            return (
+              <div key={index} className="last-twenty-column">
+                <div className="last-twenty-row date">{format(new Date(game.gameDate), 'M/d')}</div>
+                <div className="team-and-score-group" style={{ backgroundColor }}>
+                  <div className="last-twenty-row last-twenty-row-one">
+                    <div className="team-cell">{game.teams.away.team.abbreviation}</div>
+                    <div className="score-cell">{game.teams.away.score}</div>
+                  </div>
+                  <div className="last-twenty-row last-twenty-row-two">
+                    <div className="team-cell">{game.teams.home.team.abbreviation}</div>
+                    <div className="score-cell">{game.teams.home.score}</div>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {/* Home Team's Last 15 Games (Second Row) */}
+        <div className="team-row">
+          {homeGames.slice(0, 15).map((game, index) => {
+            const awayScore = game.teams.away.score;
+            const homeScore = game.teams.home.score;
+            const isWinner =
+              (game.teams.away.team.id === homeTeamId && awayScore > homeScore) ||
+              (game.teams.home.team.id === homeTeamId && homeScore > awayScore);
+            const backgroundColor = isWinner ? 'rgba(0, 255, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)';
+
+            return (
+              <div key={index} className="last-twenty-column">
+                <div className="last-twenty-row date">{format(new Date(game.gameDate), 'M/d')}</div>
+                <div className="team-and-score-group" style={{ backgroundColor }}>
+                  <div className="last-twenty-row last-twenty-row-one">
+                    <div className="team-cell">{game.teams.away.team.abbreviation}</div>
+                    <div className="score-cell">{game.teams.away.score}</div>
+                  </div>
+                  <div className="last-twenty-row last-twenty-row-two">
+                    <div className="team-cell">{game.teams.home.team.abbreviation}</div>
+                    <div className="score-cell">{game.teams.home.score}</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
