@@ -30,6 +30,9 @@ const MatchupCard = ({
   const [fadeIn, setFadeIn] = useState(false);
   const [selectedData, setSelectedData] = useState('team-history'); // State to store selected data type
 
+  // Create a scroll position state for each game
+  const [scrollPositions, setScrollPositions] = useState({});
+
   useEffect(() => {
     let timer;
     if (!loading) {
@@ -44,18 +47,16 @@ const MatchupCard = ({
     return () => clearTimeout(timer);
   }, [loading]);
 
-  useEffect(() => {
-    let timer;
-    if (visibleGames.length > 0) {
-      timer = setTimeout(() => {
-        // Removed the `setAllGamesLoaded` function and the related variable
-      }, 1000); // Adjust this delay as needed
-    }
-    return () => clearTimeout(timer);
-  }, [visibleGames]);
-
   const handleDataSelect = (dataType) => {
     setSelectedData(dataType); // Update the selected data type
+  };
+
+  // Handle scroll event to synchronize scroll positions for LastTwentyGames within each game-container
+  const handleScroll = (gamePk, scrollLeft) => {
+    setScrollPositions((prevPositions) => ({
+      ...prevPositions,
+      [gamePk]: scrollLeft,
+    }));
   };
 
   return (
@@ -198,10 +199,14 @@ const MatchupCard = ({
                         <LastTwentyGames
                           games={game.teams.away.lastTwentyGames}
                           teamId={game.teams.away.team.id}
+                          onScroll={(scrollLeft) => handleScroll(game.gamePk, scrollLeft)} // Pass scroll handler for the current game
+                          scrollPosition={scrollPositions[game.gamePk] || 0} // Get scroll position for this specific game
                         />
                         <LastTwentyGames
                           games={game.teams.home.lastTwentyGames}
                           teamId={game.teams.home.team.id}
+                          onScroll={(scrollLeft) => handleScroll(game.gamePk, scrollLeft)} // Pass scroll handler for the current game
+                          scrollPosition={scrollPositions[game.gamePk] || 0} // Get scroll position for this specific game
                         />
                       </div>
                     )}

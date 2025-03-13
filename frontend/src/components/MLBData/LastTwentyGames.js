@@ -1,38 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 
-const LastTwentyGames = ({ games, teamId }) => {
+const LastTwentyGames = ({ games, teamId, scrollPosition, onScroll }) => {
   const containerRef = useRef(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
 
+  // Set the initial scroll position to the right
   useEffect(() => {
     if (containerRef.current) {
-      containerRef.current.scrollLeft = containerRef.current.scrollWidth;
+      containerRef.current.scrollLeft = containerRef.current.scrollWidth; // Scroll to the right
     }
   }, []);
 
-  const handleMouseDown = (e) => {
-    setIsDragging(true);
-    setStartX(e.pageX - containerRef.current.offsetLeft);
-    setScrollLeft(containerRef.current.scrollLeft);
-  };
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollLeft = scrollPosition; // Sync scroll position
+    }
+  }, [scrollPosition]); // Only update when scrollPosition changes
 
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const x = e.pageX - containerRef.current.offsetLeft;
-    const walk = (x - startX) * 2; // The *2 makes the scroll faster
-    containerRef.current.scrollLeft = scrollLeft - walk;
+  const handleScroll = () => {
+    if (containerRef.current) {
+      onScroll(containerRef.current.scrollLeft); // Notify parent of scroll position
+    }
   };
 
   return (
@@ -40,10 +28,7 @@ const LastTwentyGames = ({ games, teamId }) => {
       <div
         className="games-container"
         ref={containerRef}
-        onMouseDown={handleMouseDown}
-        onMouseLeave={handleMouseLeave}
-        onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
+        onScroll={handleScroll}
       >
         {games.map((game, index) => {
           const awayScore = game.teams.away.score;
