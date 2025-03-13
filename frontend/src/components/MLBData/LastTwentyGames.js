@@ -30,7 +30,7 @@ const LastTwentyGames = ({ games, teamId, scrollPosition, onScroll }) => {
         ref={containerRef}
         onScroll={handleScroll}
       >
-        {games.map((game, index) => {
+        {games.slice().reverse().map((game, index) => { // Reverse the array here
           const awayScore = game.teams.away.score;
           const homeScore = game.teams.home.score;
           const isWinner = (game.teams.away.team.id === teamId && awayScore > homeScore) || (game.teams.home.team.id === teamId && homeScore > awayScore);
