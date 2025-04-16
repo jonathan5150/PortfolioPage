@@ -1,12 +1,12 @@
 import React from 'react';
-import resumeImage from '../assets/images/Rainey, Jonathan - Resume 6-16-2024-1.png';
-import resumeImage2 from '../assets/images/Rainey, Jonathan - Resume 6-16-2024-2.png';
+import resumeImage from '../assets/images/Rainey, Jonathan - Resume 4-15-2025_1.png';
+import resumeImage2 from '../assets/images/Rainey, Jonathan - Resume 4-15-2025_2.png';
 
 function Resume() {
     return (
         <div className="resume-page-container">
             <div className="download-pdf-container">
-                <a href="/Resume 6-16-2024.pdf" download>
+                <a href="/Resume 4-15-2025.pdf" download>
                     <button className="downloadPDF">Download PDF</button>
                 </a>
             </div>

@@ -47,8 +47,6 @@ function Header() {
                           <li><Link to="/excelproject">- Excel Project</Link></li>
                           <li><Link to="/alongtheway">- Along The Way</Link></li>
                           <li><Link to="/sportsdataproject">- Sports Data Project</Link></li>
-                          <li><Link to="/vehiclesearch">- Vehicle Search</Link></li>
-                          <li><Link to="/thiswebsite">- This Website</Link></li>
                         </>
                     )}
                     <li><Link to="/contact">Contact</Link></li>

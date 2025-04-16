@@ -288,6 +288,24 @@ ul {
   padding-right: 18px;
 }
 
+.excel-container p {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+.excel-photo {
+  display: flex;
+  justify-content: center;
+}
+
+.excel-image {
+  margin-top: 15px;
+  max-width: 90%; /* Set maximum width for the images */
+  width: auto; /* Allow images to adjust width proportionally */
+  margin-bottom: 5px; /* Add margin between images */
+  border: 1px solid black;
+}
+
 .image {
   margin-top: 15px;
   max-width: 90%; /* Set maximum width for the images */
