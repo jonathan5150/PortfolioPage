@@ -272,6 +272,10 @@ h3 {
   border-radius: 7px;
   padding: 5px;
   opacity: .85;
+  user-select: none;
+  -webkit-user-drag: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .pitcher-info-top {
@@ -310,6 +314,7 @@ h3 {
   position: relative;
   display: inline-block;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .team-logo-container img {
@@ -320,12 +325,12 @@ h3 {
 
 .star-icon {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  font-size: 18px;
+  top: 6px;
+  left: 4px;
+  font-size: 11px;
   color: gold;
-  text-shadow: 0 0 2px black;
   pointer-events: none; // Make sure the star doesn't block clicks on the image
+  opacity: 0.8;
 }
 
 select {
@@ -694,7 +699,7 @@ select:focus {
   }
 
 .column2 .pitcher-details {
-  font-size: 13px; /* Adjust the font size */
+  font-size: 12px; /* Adjust the font size */
 }
 
   .column3 {
@@ -704,6 +709,10 @@ select:focus {
   .column1 img {
     margin-right: 0px;
     margin-top: 5px;
+    user-select: none;
+    -webkit-user-drag: none;
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   p.vs {
