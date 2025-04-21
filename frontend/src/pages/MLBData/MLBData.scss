@@ -312,6 +312,12 @@ h3 {
   cursor: pointer;
 }
 
+.team-logo-container img {
+  user-select: none;
+  -webkit-user-drag: none;
+  outline: none;
+}
+
 .star-icon {
   position: absolute;
   top: 2px;
