@@ -306,6 +306,22 @@ h3 {
   display: inline-block;
 }
 
+.team-logo-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.star-icon {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 18px;
+  color: gold;
+  text-shadow: 0 0 2px black;
+  pointer-events: none; // Make sure the star doesn't block clicks on the image
+}
+
 select {
   width: auto; /* Allows the select to take its natural width */
   max-width: 97.5%; /* Prevents it from taking up the full width */

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Scoreboard from './Scoreboard';
 import LastTwentyGames from './LastTwentyGames';
 import MLBDataNavbar from './MLBDataNavbar';
+import Cookies from 'js-cookie';
 
 const MatchupCard = ({
   loading,
@@ -24,11 +25,15 @@ const MatchupCard = ({
   handleDeselectAll,
   teamsMenuRef,
   todayGames,
-  gameBackgroundColors // Receive pre-calculated background colors
+  gameBackgroundColors
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
-  const [selectedData, setSelectedData] = useState('team-history'); // State to store selected data type
+  const [selectedData, setSelectedData] = useState('team-history');
+  const [starredTeams, setStarredTeams] = useState(() => {
+    const saved = Cookies.get('starredTeams');
+    return saved ? JSON.parse(saved) : {};
+  });
 
   useEffect(() => {
     let timer;
@@ -49,13 +54,36 @@ const MatchupCard = ({
     if (visibleGames.length > 0) {
       timer = setTimeout(() => {
         // Removed the `setAllGamesLoaded` function and the related variable
-      }, 1000); // Adjust this delay as needed
+      }, 1000);
     }
     return () => clearTimeout(timer);
   }, [visibleGames]);
 
   const handleDataSelect = (dataType) => {
-    setSelectedData(dataType); // Update the selected data type
+    setSelectedData(dataType);
+  };
+
+  // ⭐ Helper function to star a team in a particular game
+  const handleStarClick = (gamePk, teamId) => {
+    setStarredTeams((prev) => {
+      let updated;
+      if (prev[gamePk] === teamId) {
+        // Remove star
+        updated = { ...prev };
+        delete updated[gamePk];
+      } else {
+        // Add/update star
+        updated = {
+          ...prev,
+          [gamePk]: teamId,
+        };
+      }
+
+      // Save updated star selections into cookie
+      Cookies.set('starredTeams', JSON.stringify(updated), { expires: 365 });
+
+      return updated;
+    });
   };
 
   return (
@@ -112,22 +140,40 @@ const MatchupCard = ({
                 <div className="matchup-group">
                   <div className="column1">
                     <div className="row1">
-                      <img
-                        src={getTeamLogo(game.teams.away.team.name)}
-                        alt={`${game.teams.away.team.name} logo`}
-                        style={{
-                          border: `2px solid ${gameBackgroundColors[game.gamePk]?.away}`,
-                        }}
-                      />
+                      <div
+                        className="team-logo-container"
+                        onClick={() => handleStarClick(game.gamePk, game.teams.away.team.id)}
+                      >
+                        <img
+                          src={getTeamLogo(game.teams.away.team.name)}
+                          alt={`${game.teams.away.team.name} logo`}
+                          style={{
+                            border: `2px solid ${gameBackgroundColors[game.gamePk]?.away}`,
+                            position: 'relative',
+                          }}
+                        />
+                        {starredTeams[game.gamePk] === game.teams.away.team.id && (
+                          <div className="star-icon">⭐</div>
+                        )}
+                      </div>
                     </div>
                     <div className="row2">
-                      <img
-                        src={getTeamLogo(game.teams.home.team.name)}
-                        alt={`${game.teams.home.team.name} logo`}
-                        style={{
-                          border: `2px solid ${gameBackgroundColors[game.gamePk]?.home}`,
-                        }}
-                      />
+                      <div
+                        className="team-logo-container"
+                        onClick={() => handleStarClick(game.gamePk, game.teams.home.team.id)}
+                      >
+                        <img
+                          src={getTeamLogo(game.teams.home.team.name)}
+                          alt={`${game.teams.home.team.name} logo`}
+                          style={{
+                            border: `2px solid ${gameBackgroundColors[game.gamePk]?.home}`,
+                            position: 'relative',
+                          }}
+                        />
+                        {starredTeams[game.gamePk] === game.teams.home.team.id && (
+                          <div className="star-icon">⭐</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="column2">
@@ -183,7 +229,7 @@ const MatchupCard = ({
                   <Scoreboard
                     game={game}
                     getTeamAbbreviation={getTeamAbbreviation}
-                    liveData={liveGameData[game.gamePk]?.liveData} // Pass live data
+                    liveData={liveGameData[game.gamePk]?.liveData}
                   />
                   <div className="game-data-container stat-toggle-container">
                     <select
@@ -219,7 +265,7 @@ const MatchupCard = ({
                         <p>Freddie Freeman:</p>
                         <p>Max Muncy:</p>
                       </div>
-                     )}
+                    )}
                   </div>
                 </div>
               </div>
