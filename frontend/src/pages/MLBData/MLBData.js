@@ -207,13 +207,21 @@ function MLBData() {
           });
         });
 
-        setGameBackgroundColors(backgroundColors);
-        setTodayGames(games);
-        setVisibleGames(games.flatMap(date =>
+        // Sort the games inside each gameDay by gameDate
+        games.forEach((gameDay) => {
+          gameDay.games.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
+        });
+
+        // Sort visible games too
+        const sortedVisibleGames = games.flatMap(date =>
           date.games.filter(game =>
             selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id)
           )
-        ));
+        ).sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
+
+        setGameBackgroundColors(backgroundColors);
+        setTodayGames(games);
+        setVisibleGames(sortedVisibleGames);
       } catch (error) {
         console.error('Error fetching game data:', error);
       } finally {
