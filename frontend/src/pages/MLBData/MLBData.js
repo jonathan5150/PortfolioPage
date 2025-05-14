@@ -104,7 +104,7 @@ function MLBData() {
       try {
         const formatDate = (date) => format(date, 'yyyy-MM-dd');
         const todayFormatted = formatDate(selectedDate);
-        const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher&startDate=${todayFormatted}&endDate=${todayFormatted}`;
+        const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher,lineups,person,stats(group=[hitting],type=[season],season=2025)&startDate=${todayFormatted}&endDate=${todayFormatted}`;
         const response = await fetch(url);
         const data = await response.json();
 
@@ -138,7 +138,7 @@ function MLBData() {
             ...gameDay,
              games: await Promise.all(gameDay.games.map(async (game) => {
               const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
-              console.log('LiveGameData URL:', url);  // Log the URL here
+              //console.log('LiveGameData URL:', url);  // Log the URL here
               const gameData = await fetch(liveGameUrl).then(res => res.json());
 
               const awayPitcherStats = await fetchPitcherData(game.teams.away.probablePitcher?.id);
@@ -250,6 +250,7 @@ function MLBData() {
       const liveData = await Promise.all(todayGames.flatMap(date =>
         date.games.map(async (game) => {
           const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
+          //console.log(liveGameUrl);
           const response = await fetch(liveGameUrl);
           const data = await response.json();
           return { gamePk: game.gamePk, liveData: data };
