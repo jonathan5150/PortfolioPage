@@ -112,12 +112,22 @@ function MLBData() {
           if (!pitcherId) return { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
 
           const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`;
-          //console.log('PitcherData URL:', url);  // Log the URL here
           const response = await fetch(url);
           const data = await response.json();
           const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
           const pitchHand = data.people?.[0]?.pitchHand?.code;
           return stats ? { ...stats, pitchHand } : { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
+        };
+
+        const fetchHitterStats = async (playerId) => {
+          try {
+            const url = `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[hitting],type=[season],season=2025)`;
+            const res = await fetch(url);
+            const data = await res.json();
+            return data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat || {};
+          } catch {
+            return {};
+          }
         };
 
         const fetchLastTwentyGames = async (teamId, selectedDate) => {
@@ -136,9 +146,8 @@ function MLBData() {
         const games = await Promise.all((data.dates || []).map(async (gameDay) => {
           return {
             ...gameDay,
-             games: await Promise.all(gameDay.games.map(async (game) => {
+            games: await Promise.all(gameDay.games.map(async (game) => {
               const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
-              //console.log('LiveGameData URL:', url);  // Log the URL here
               const gameData = await fetch(liveGameUrl).then(res => res.json());
 
               const awayPitcherStats = await fetchPitcherData(game.teams.away.probablePitcher?.id);
@@ -146,6 +155,24 @@ function MLBData() {
 
               const awayLastTwentyGames = await fetchLastTwentyGames(game.teams.away.team.id, selectedDate);
               const homeLastTwentyGames = await fetchLastTwentyGames(game.teams.home.team.id, selectedDate);
+
+              if (game.lineups?.awayPlayers) {
+                game.lineups.awayPlayers = await Promise.all(
+                  game.lineups.awayPlayers.map(async (player) => {
+                    const stats = await fetchHitterStats(player.id);
+                    return { ...player, seasonStats: stats };
+                  })
+                );
+              }
+
+              if (game.lineups?.homePlayers) {
+                game.lineups.homePlayers = await Promise.all(
+                  game.lineups.homePlayers.map(async (player) => {
+                    const stats = await fetchHitterStats(player.id);
+                    return { ...player, seasonStats: stats };
+                  })
+                );
+              }
 
               return {
                 ...game,
@@ -183,7 +210,7 @@ function MLBData() {
             const statusCode = gameData?.gameData?.status?.statusCode;
 
             const getTeamBackgroundColor = (teamId) => {
-              if (!statusCode || statusCode !== 'F') return 'rgba(85, 85, 85, 1)'; // Ensure the game is finished
+              if (!statusCode || statusCode !== 'F') return 'rgba(85, 85, 85, 1)';
 
               const homeTeam = gameData.liveData.boxscore.teams.home;
               const awayTeam = gameData.liveData.boxscore.teams.away;
@@ -207,12 +234,10 @@ function MLBData() {
           });
         });
 
-        // Sort the games inside each gameDay by gameDate
         games.forEach((gameDay) => {
           gameDay.games.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
         });
 
-        // Sort visible games too
         const sortedVisibleGames = games.flatMap(date =>
           date.games.filter(game =>
             selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id)
@@ -234,8 +259,7 @@ function MLBData() {
     };
 
     initializeData();
-    // eslint-disable-next-line
-  }, [selectedDate]);
+  }, [selectedDate, selectedTeams]);
 
   useEffect(() => {
     setVisibleGames(todayGames.flatMap(date =>
@@ -250,7 +274,6 @@ function MLBData() {
       const liveData = await Promise.all(todayGames.flatMap(date =>
         date.games.map(async (game) => {
           const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
-          //console.log(liveGameUrl);
           const response = await fetch(liveGameUrl);
           const data = await response.json();
           return { gamePk: game.gamePk, liveData: data };
@@ -266,9 +289,9 @@ function MLBData() {
     };
 
     const intervalId = setInterval(fetchLiveData, 10000);
-    fetchLiveData(); // Initial fetch
+    fetchLiveData();
 
-    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
   }, [todayGames]);
 
   const formatTime = (dateTime) => {
@@ -327,11 +350,9 @@ function MLBData() {
           getTeamRecord={getTeamRecord}
           formatTime={formatTime}
           getTeamAbbreviation={getTeamAbbreviation}
-          liveGameData={liveGameData} // Pass live game data
-          userPicks={userPicks} // Pass user picks
-          setUserPicks={setUserPicks} // Pass setUserPicks to update picks
-
-          // New props to pass
+          liveGameData={liveGameData}
+          userPicks={userPicks}
+          setUserPicks={setUserPicks}
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
           isCalendarOpen={isCalendarOpen}
@@ -343,8 +364,8 @@ function MLBData() {
           handleSelectAll={handleSelectAll}
           handleDeselectAll={handleDeselectAll}
           teamsMenuRef={teamsMenuRef}
-          todayGames={todayGames} // Pass the entire todayGames array to MatchupCard
-          gameBackgroundColors={gameBackgroundColors} // Pass pre-calculated background colors
+          todayGames={todayGames}
+          gameBackgroundColors={gameBackgroundColors}
         />
       )}
     </div>
