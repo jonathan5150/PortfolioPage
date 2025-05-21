@@ -114,7 +114,6 @@ const MatchupCard = ({
         ) : (
           <>
             {visibleGames.map((game) => {
-              console.log('Game data:', game);
 
               return (
                 <div
@@ -233,7 +232,6 @@ const MatchupCard = ({
                         onChange={(e) => handleDataSelect(e.target.value)}
                       >
                         <option value="team-history">TEAM W/L HISTORY</option>
-                        <option value="team-stats">TEAM STATS</option>
                         <option value="player-stats">PLAYER STATS</option>
                       </select>
                       {selectedData === 'team-history' && (
@@ -246,30 +244,16 @@ const MatchupCard = ({
                           />
                         </div>
                       )}
-                      {selectedData === 'team-stats' && (
-                        <div className="team-stats">
-                          <p>Batting Average:</p>
-                          <p>Home Runs:</p>
-                          <p>ERA:</p>
-                          <p>OBP:</p>
-                        </div>
-                      )}
                       {selectedData === 'player-stats' && (
                         <div className="player-stats">
-                          <h4>Starting Lineups</h4>
                           <div className="lineup">
                             <strong>{game.teams.away.team.name}</strong>
                             {game.lineups?.awayPlayers?.map((player, index) => {
-                              {/*const stats = player?.stats?.stats?.[0]?.splits?.[0]?.stat || {};*/}
                               return (
                                 <div key={player.id || index}>
                                   <p>
                                     {index + 1}. {player.fullName} –
-                                    POS: {player.primaryPosition?.abbreviation || 'N/A'},
-                                    {/*}AVG: {stats.avg || 'N/A'},*/}
-                                    {/*HR: {stats.homeRuns || 'N/A'},*/}
-                                    {/*RBI: {stats.rbi || 'N/A'},*/}
-                                    {/*H: {stats.hits || 'N/A'}*/}
+                                    POS: {player.primaryPosition?.abbreviation || 'N/A'}
                                   </p>
                                 </div>
                               );
@@ -279,16 +263,11 @@ const MatchupCard = ({
                           <div className="lineup">
                             <strong>{game.teams.home.team.name}</strong>
                             {game.lineups?.homePlayers?.map((player, index) => {
-                              {/*const stats = player?.stats?.stats?.[0]?.splits?.[0]?.stat || {};*/}
                               return (
                                 <div key={player.id || index}>
                                   <p>
                                     {index + 1}. {player.fullName} –
-                                    POS: {player.primaryPosition?.abbreviation || 'N/A'},
-                                    {/*AVG: {stats.avg || 'N/A'},*/}
-                                    {/*HR: {stats.homeRuns || 'N/A'},*/}
-                                    {/*RBI: {stats.rbi || 'N/A'},*/}
-                                    {/*H: {stats.hits || 'N/A'}*/}
+                                    POS: {player.primaryPosition?.abbreviation || 'N/A'}
                                   </p>
                                 </div>
                               );
