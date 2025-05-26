@@ -40,9 +40,9 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
       >
-        {/* Away Team's Last 15 Games (First Row) */}
+        {/* Away Team's Last 20 Games (First Row) */}
         <div className="team-row">
-          {awayGames.slice(0, 15).map((game, index) => {
+          {awayGames.slice(0, 20).map((game, index) => {
             const awayScore = game.teams.away.score;
             const homeScore = game.teams.home.score;
             const isWinner =
@@ -68,9 +68,9 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
           })}
         </div>
 
-        {/* Home Team's Last 15 Games (Second Row) */}
+        {/* Home Team's Last 20 Games (Second Row) */}
         <div className="team-row">
-          {homeGames.slice(0, 15).map((game, index) => {
+          {homeGames.slice(0, 20).map((game, index) => {
             const awayScore = game.teams.away.score;
             const homeScore = game.teams.home.score;
             const isWinner =

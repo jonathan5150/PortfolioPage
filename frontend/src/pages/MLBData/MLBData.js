@@ -140,7 +140,7 @@ function MLBData() {
           return games.filter(game => {
             const gameStatus = game.status.detailedState;
             return gameStatus === 'Final' || gameStatus === 'Completed Early';
-          }).slice(-15);
+          }).slice(-20);
         };
 
         const games = await Promise.all((data.dates || []).map(async (gameDay) => {

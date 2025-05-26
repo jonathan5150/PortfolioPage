@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Scoreboard from './Scoreboard';
-import LastTwentyGames from './LastTwentyGames';
 import MLBDataNavbar from './MLBDataNavbar';
 import Cookies from 'js-cookie';
+import TeamHistory from './MatchupCardSelections/TeamHistory';
+import PlayerStats from './MatchupCardSelections/PlayerStats';
+import PitcherMatchup from './MatchupCardComponents/PitcherMatchup'; // Adjust path if needed
+
 
 const MatchupCard = ({
   loading,
@@ -170,53 +173,8 @@ const MatchupCard = ({
                     </div>
                   </div>
                   <div className="column2">
-                    <div className="pitcher-info-top">
-                      <span style={{ fontWeight: 'bold' }}>
-                        {game.teams.away.team.name} ({getTeamRecord(game.teams.away.team.id)})
-                      </span>
-                      <div className="pitcher-details">
-                        {game.teams.away.probablePitcher?.fullName ? (
-                          <>
-                            <b>P:</b> {game.teams.away.probablePitcher.fullName} ({game.teams.away.probablePitcher.pitchHand}) /
-                            <b> ERA:</b> {game.teams.away.probablePitcher.era} <br />
-                            <b>G:</b> {game.teams.away.probablePitcher.gamesPlayed} /
-                            <b> IP:</b> {game.teams.away.probablePitcher.inningsPitched} /
-                            <b> AVG IP: </b>
-                            {game.teams.away.probablePitcher.gamesPlayed > 0
-                              ? (game.teams.away.probablePitcher.inningsPitched / game.teams.away.probablePitcher.gamesPlayed).toFixed(1)
-                              : 'N/A'}
-                          </>
-                        ) : (
-                          <span><b>P:</b> N/A</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <p className="vs">@</p>
-
-                    <div className="pitcher-info-bottom">
-                      <span style={{ fontWeight: 'bold' }}>
-                        {game.teams.home.team.name} ({getTeamRecord(game.teams.home.team.id)})
-                      </span>
-                      <div className="pitcher-details">
-                        {game.teams.home.probablePitcher?.fullName ? (
-                          <>
-                            <b>P:</b> {game.teams.home.probablePitcher.fullName} ({game.teams.home.probablePitcher.pitchHand}) /
-                            <b> ERA:</b> {game.teams.home.probablePitcher.era} <br />
-                            <b>G:</b> {game.teams.home.probablePitcher.gamesPlayed} /
-                            <b> IP:</b> {game.teams.home.probablePitcher.inningsPitched} /
-                            <b> AVG IP: </b>
-                            {game.teams.home.probablePitcher.gamesPlayed > 0
-                              ? (game.teams.home.probablePitcher.inningsPitched / game.teams.home.probablePitcher.gamesPlayed).toFixed(1)
-                              : 'N/A'}
-                          </>
-                        ) : (
-                          <span><b>P:</b> N/A</span>
-                        )}
-                      </div>
-                    </div>
+                    <PitcherMatchup game={game} getTeamRecord={getTeamRecord} />
                   </div>
-                  <div className="column3"></div>
                 </div>
                 <div className="game-data">
                   <Scoreboard
@@ -232,52 +190,8 @@ const MatchupCard = ({
                       <option value="team-history">TEAM W/L HISTORY</option>
                       <option value="player-stats">2025 PLAYER STATS</option>
                     </select>
-                    {selectedData === 'team-history' && (
-                      <div className="last-twenty-wrapper">
-                        <LastTwentyGames
-                          awayGames={game.teams.away.lastTwentyGames}
-                          homeGames={game.teams.home.lastTwentyGames}
-                          awayTeamId={game.teams.away.team.id}
-                          homeTeamId={game.teams.home.team.id}
-                        />
-                      </div>
-                    )}
-                    {selectedData === 'player-stats' && (
-                      <div className="player-stats">
-                        <div className="lineup">
-                          <h3>{game.teams.away.team.name}</h3>
-                          {game.lineups?.awayPlayers?.map((player, index) => (
-                            <div key={player.id || index}>
-                              <p>
-                                {index + 1}. {player.fullName} – {player.primaryPosition?.abbreviation || 'N/A'}
-                                <br />
-                                <strong>AVG: </strong> {player.seasonStats?.avg || 'N/A'},
-                                <strong> H: </strong> {player.seasonStats?.hits || 'N/A'},
-                                <strong> RBI: </strong> {player.seasonStats?.rbi || 'N/A'},
-                                <strong> HR: </strong> {player.seasonStats?.homeRuns || 'N/A'},
-                                <strong> SB: </strong> {player.seasonStats?.stolenBases || 'N/A'}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="lineup">
-                          <h3>{game.teams.home.team.name}</h3>
-                          {game.lineups?.homePlayers?.map((player, index) => (
-                            <div key={player.id || index}>
-                              <p>
-                                {index + 1}. {player.fullName} – {player.primaryPosition?.abbreviation || 'N/A'}
-                                <br />
-                                <strong>AVG: </strong> {player.seasonStats?.avg || 'N/A'},
-                                <strong> H: </strong> {player.seasonStats?.hits || 'N/A'},
-                                <strong> RBI: </strong> {player.seasonStats?.rbi || 'N/A'},
-                                <strong> HR: </strong> {player.seasonStats?.homeRuns || 'N/A'},
-                                <strong> SB: </strong> {player.seasonStats?.stolenBases || 'N/A'}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    {selectedData === 'team-history' && <TeamHistory game={game} />}
+                    {selectedData === 'player-stats' && <PlayerStats game={game} />}
                   </div>
                 </div>
               </div>
