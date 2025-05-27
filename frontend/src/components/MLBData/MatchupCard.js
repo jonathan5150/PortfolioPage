@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 import TeamHistory from './MatchupCardSelections/TeamHistory';
 import PlayerStats from './MatchupCardSelections/PlayerStats';
 import PitcherMatchup from './MatchupCardComponents/PitcherMatchup'; // Adjust path if needed
+import PitcherLastFive from './MatchupCardSelections/PitcherLastFive';
 
 
 const MatchupCard = ({
@@ -188,10 +189,17 @@ const MatchupCard = ({
                       onChange={(e) => handleDataSelect(e.target.value)}
                     >
                       <option value="team-history">TEAM W/L HISTORY</option>
-                      <option value="player-stats">2025 PLAYER STATS</option>
+                      <option value="player-stats">LINEUP & 2025 STATS</option>
+                      <option value="pitcher-last-5">STARTING PITCHER: LAST 5 STARTS</option>
                     </select>
                     {selectedData === 'team-history' && <TeamHistory game={game} />}
                     {selectedData === 'player-stats' && <PlayerStats game={game} />}
+                    {selectedData === 'pitcher-last-5' && (
+                      <PitcherLastFive
+                        game={game}
+                        getTeamAbbreviation={getTeamAbbreviation}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
