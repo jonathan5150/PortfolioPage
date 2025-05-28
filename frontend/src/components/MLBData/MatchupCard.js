@@ -241,7 +241,7 @@ const MatchupCard = ({
                       onChange={(e) => handleDataSelect(e.target.value)}
                     >
                       <option value="team-history">TEAM W/L HISTORY</option>
-                      <option value="player-stats">LINEUP & 2025 STATS</option>
+                      <option value="player-stats">LINEUP</option>
                       <option value="pitcher-last-5">PITCHER GAME LOG</option>
                     </select>
                     {selectedData === 'team-history' && <TeamHistory game={game} />}

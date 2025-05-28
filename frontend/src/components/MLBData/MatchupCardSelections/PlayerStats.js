@@ -1,40 +1,46 @@
 import React from 'react';
 
+const renderPlayerTable = (teamName, players) => (
+  <div className="lineup">
+    <h3>{teamName}</h3>
+    <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed' }}>
+      <thead>
+        <tr>
+          <th style={{ width: '5%' }}>#</th>
+          <th style={{ width: '36%' }}>Name</th>
+          <th style={{ width: '8%' }}>POS</th>
+          <th style={{ width: '10%' }}>AVG</th>
+          <th style={{ width: '8%' }}>H</th>
+          <th style={{ width: '8%' }}>RBI</th>
+          <th style={{ width: '8%' }}>HR</th>
+          <th style={{ width: '8%' }}>SB</th>
+        </tr>
+      </thead>
+      <tbody>
+        {players?.map((player, index) => (
+          <tr key={player.id || index}>
+            <td>{index + 1}</td>
+            <td style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {player.fullName}
+            </td>
+            <td>{player.primaryPosition?.abbreviation || 'N/A'}</td>
+            <td>{player.seasonStats?.avg || 'N/A'}</td>
+            <td>{player.seasonStats?.hits || 'N/A'}</td>
+            <td>{player.seasonStats?.rbi || 'N/A'}</td>
+            <td>{player.seasonStats?.homeRuns || 'N/A'}</td>
+            <td>{player.seasonStats?.stolenBases || 'N/A'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+
 const PlayerStats = ({ game }) => {
   return (
     <div className="player-stats">
-      <div className="lineup">
-        <h3>{game.teams.away.team.name}</h3>
-        {game.lineups?.awayPlayers?.map((player, index) => (
-          <div key={player.id || index}>
-            <p>
-              {index + 1}. {player.fullName} – {player.primaryPosition?.abbreviation || 'N/A'}
-              <br />
-              <strong>AVG: </strong> {player.seasonStats?.avg || 'N/A'},
-              <strong> H: </strong> {player.seasonStats?.hits || 'N/A'},
-              <strong> RBI: </strong> {player.seasonStats?.rbi || 'N/A'},
-              <strong> HR: </strong> {player.seasonStats?.homeRuns || 'N/A'},
-              <strong> SB: </strong> {player.seasonStats?.stolenBases || 'N/A'}
-            </p>
-          </div>
-        ))}
-      </div>
-      <div className="lineup">
-        <h3>{game.teams.home.team.name}</h3>
-        {game.lineups?.homePlayers?.map((player, index) => (
-          <div key={player.id || index}>
-            <p>
-              {index + 1}. {player.fullName} – {player.primaryPosition?.abbreviation || 'N/A'}
-              <br />
-              <strong>AVG: </strong> {player.seasonStats?.avg || 'N/A'},
-              <strong> H: </strong> {player.seasonStats?.hits || 'N/A'},
-              <strong> RBI: </strong> {player.seasonStats?.rbi || 'N/A'},
-              <strong> HR: </strong> {player.seasonStats?.homeRuns || 'N/A'},
-              <strong> SB: </strong> {player.seasonStats?.stolenBases || 'N/A'}
-            </p>
-          </div>
-        ))}
-      </div>
+      {renderPlayerTable(game.teams.away.team.name, game.lineups?.awayPlayers)}
+      {renderPlayerTable(game.teams.home.team.name, game.lineups?.homePlayers)}
     </div>
   );
 };

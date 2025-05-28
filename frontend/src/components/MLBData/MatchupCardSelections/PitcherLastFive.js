@@ -1,4 +1,3 @@
-// MatchupCardSelections/PitcherLastFive.js
 import React from 'react';
 
 const PitcherLastFive = ({ game, awayGames, homeGames }) => {
@@ -8,32 +7,44 @@ const PitcherLastFive = ({ game, awayGames, homeGames }) => {
       {games.length === 0 ? (
         <p>No recent starts found.</p>
       ) : (
-        <table style={{ fontSize: '14px', width: '100%', tableLayout: 'fixed' }}>
+        <table style={{ fontSize: '13px', width: '100%', tableLayout: 'fixed' }}>
           <thead>
             <tr>
-              <th>Date</th>
-              <th>OPP</th>
-              <th>IP</th>
-              <th>H</th>
-              <th>ER</th>
-              <th>BB</th>
-              <th>K</th>
-              <th>RES</th>
+              <th style={{ width: '16%' }}>DATE</th>
+              <th style={{ width: '16%' }}>OPP</th>
+              <th style={{ width: '12%' }}>IP</th>
+              <th style={{ width: '12%' }}>H</th>
+              <th style={{ width: '12%' }}>ER</th>
+              <th style={{ width: '12%' }}>BB</th>
+              <th style={{ width: '12%' }}>K</th>
+              <th style={{ width: '12%' }}>RES</th>
             </tr>
           </thead>
           <tbody>
-            {games.map((game, idx) => (
-              <tr key={idx}>
-                <td>{`${parseInt(game.date.split('-')[1])}/${parseInt(game.date.split('-')[2])}`}</td>
-                <td>{game.opponent}</td>
-                <td>{game.inningsPitched}</td>
-                <td>{game.hits}</td>
-                <td>{game.earnedRuns}</td>
-                <td>{game.walks}</td>
-                <td>{game.strikeouts}</td>
-                <td>{game.result}</td>
-              </tr>
-            ))}
+            {games.map((game, idx) => {
+              const resultStyle = {
+                fontWeight: 'bold',
+                color:
+                  game.result === 'W'
+                    ? 'rgba(0, 155, 0, 0.6)'
+                    : game.result === 'L'
+                    ? 'rgba(255, 0, 0, 0.6)'
+                    : undefined,
+              };
+
+              return (
+                <tr key={idx}>
+                  <td>{`${parseInt(game.date.split('-')[1])}/${parseInt(game.date.split('-')[2])}`}</td>
+                  <td>{game.opponent}</td>
+                  <td>{game.inningsPitched}</td>
+                  <td>{game.hits}</td>
+                  <td>{game.earnedRuns}</td>
+                  <td>{game.walks}</td>
+                  <td>{game.strikeouts}</td>
+                  <td style={resultStyle}>{game.result}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
