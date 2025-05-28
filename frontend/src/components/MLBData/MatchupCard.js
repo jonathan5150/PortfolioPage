@@ -4,9 +4,38 @@ import MLBDataNavbar from './MLBDataNavbar';
 import Cookies from 'js-cookie';
 import TeamHistory from './MatchupCardSelections/TeamHistory';
 import PlayerStats from './MatchupCardSelections/PlayerStats';
-import PitcherMatchup from './MatchupCardComponents/PitcherMatchup'; // Adjust path if needed
+import PitcherMatchup from './MatchupCardComponents/PitcherMatchup';
 import PitcherLastFive from './MatchupCardSelections/PitcherLastFive';
 
+const fetchPitcherGameLog = async (playerId, getTeamAbbreviation, beforeDate) => {
+  try {
+    const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=pitching&season=2025`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const splits = data.stats?.[0]?.splits || [];
+
+    const beforeDay = new Date(beforeDate).toISOString().split('T')[0];
+
+    const filtered = splits
+      .filter(game => game.date < beforeDay)
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 10);
+
+    return filtered.map((game) => ({
+      date: game.date,
+      opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
+      inningsPitched: game.stat?.inningsPitched ?? 'N/A',
+      hits: game.stat?.hits ?? 'N/A',
+      earnedRuns: game.stat?.earnedRuns ?? 'N/A',
+      walks: game.stat?.baseOnBalls ?? 'N/A',
+      strikeouts: game.stat?.strikeOuts ?? 'N/A',
+      result: game.isWin === true ? 'W' : game.isWin === false ? 'L' : 'ND',
+    }));
+  } catch (err) {
+    console.error('Error fetching pitcher game log:', err);
+    return [];
+  }
+};
 
 const MatchupCard = ({
   loading,
@@ -39,6 +68,39 @@ const MatchupCard = ({
     return saved ? JSON.parse(saved) : {};
   });
 
+  const [pitcherLogs, setPitcherLogs] = useState({});
+
+  useEffect(() => {
+    const preloadPitcherData = async () => {
+      const logs = {};
+
+      for (const game of visibleGames) {
+        const gamePk = game.gamePk;
+
+        const [awayId, homeId] = [
+          game.teams.away.probablePitcher?.id,
+          game.teams.home.probablePitcher?.id,
+        ];
+
+        const [awayGames, homeGames] = await Promise.all([
+          awayId ? fetchPitcherGameLog(awayId, getTeamAbbreviation, game.gameDate) : [],
+          homeId ? fetchPitcherGameLog(homeId, getTeamAbbreviation, game.gameDate) : [],
+        ]);
+
+        logs[gamePk] = {
+          away: awayGames,
+          home: homeGames,
+        };
+      }
+
+      setPitcherLogs(logs);
+    };
+
+    if (!loading && visibleGames.length > 0) {
+      preloadPitcherData();
+    }
+  }, [visibleGames, loading, getTeamAbbreviation]);
+
   useEffect(() => {
     let timer;
     if (!loading) {
@@ -52,14 +114,6 @@ const MatchupCard = ({
     }
     return () => clearTimeout(timer);
   }, [loading]);
-
-  useEffect(() => {
-    let timer;
-    if (visibleGames.length > 0) {
-      timer = setTimeout(() => {}, 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [visibleGames]);
 
   const handleDataSelect = (dataType) => {
     setSelectedData(dataType);
@@ -129,9 +183,7 @@ const MatchupCard = ({
               >
                 <div className="game-time-container">
                   <p className="game-time">
-                    {game.gameDate
-                      ? formatTime(game.gameDate)
-                      : 'Time not available'}
+                    {game.gameDate ? formatTime(game.gameDate) : 'Time not available'}
                   </p>
                 </div>
                 <div className="matchup-group">
@@ -190,14 +242,15 @@ const MatchupCard = ({
                     >
                       <option value="team-history">TEAM W/L HISTORY</option>
                       <option value="player-stats">LINEUP & 2025 STATS</option>
-                      <option value="pitcher-last-5">STARTING PITCHER: LAST 5 STARTS</option>
+                      <option value="pitcher-last-5">PITCHER GAME LOG</option>
                     </select>
                     {selectedData === 'team-history' && <TeamHistory game={game} />}
                     {selectedData === 'player-stats' && <PlayerStats game={game} />}
                     {selectedData === 'pitcher-last-5' && (
                       <PitcherLastFive
                         game={game}
-                        getTeamAbbreviation={getTeamAbbreviation}
+                        awayGames={pitcherLogs[game.gamePk]?.away || []}
+                        homeGames={pitcherLogs[game.gamePk]?.home || []}
                       />
                     )}
                   </div>
