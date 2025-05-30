@@ -206,6 +206,7 @@ const MatchupCard = ({
                         )}
                       </div>
                     </div>
+
                     <div className="row2">
                       <div
                         className="team-logo-container"
@@ -225,6 +226,7 @@ const MatchupCard = ({
                       </div>
                     </div>
                   </div>
+
                   <div className="column2">
                     <PitcherMatchup game={game} getTeamRecord={getTeamRecord} />
                   </div>

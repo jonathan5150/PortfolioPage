@@ -28,7 +28,9 @@ const PitcherMatchup = ({ game, getTeamRecord }) => {
         {renderPitcherInfo(game.teams.away.team, game.teams.away.probablePitcher)}
       </div>
 
-      <p className="vs">@</p>
+      <div className="vs">
+        <p>@</p>
+      </div>
 
       <div className="pitcher-info-bottom">
         {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}

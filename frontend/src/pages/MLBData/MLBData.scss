@@ -18,7 +18,6 @@
   flex-direction: column;
   width: 100%;
   height: calc(var(--vh, 1vh) * 100);
-  text-align: center;
   overflow-y: auto;
   position: relative;
   color: white;
@@ -141,13 +140,11 @@
 }
 
 .matchup-group {
+  padding: 5px;
   display: flex;
-  justify-content: center; /* Ensure space between columns */
-  min-height: 130px;
+  align-items: stretch;
+  height: auto; /* let it grow with content */
   border: 1px solid #555555;
-  padding: 5px; /* Add padding for better spacing */
-  padding-top: 0px;
-  padding-bottom: 0px;
 }
 
 .custom-datepicker-input {
@@ -225,26 +222,26 @@ h3 {
   margin: 5px 50px 5px 50px;
 }
 
+.column1 {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%; /* important */
+  flex: 1; /* allow it to stretch */
+}
+
 .column1, .column2, .column3 {
   display: flex;
   flex-direction: column; /* Stack items vertically */
 }
 
-.column1 {
-  width: 10%; /* Take 10% of the width */
-}
 
-.column1 .row1, .column1 .row2 {
-  flex: 1; /* Divide the space equally between row1 and row2 */
+.column1 .row1,
+.column1 .row2 {
+  flex: 1 0 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0px;
-}
-
-.row2 {
-  margin-top: 5px;
-  margin-bottom: 5px;
 }
 
 .column2 {
@@ -266,14 +263,12 @@ h3 {
 }
 
 .column1 img {
-  max-width: 80%;
-  max-height: 80%;
+  width: 90%;
+  height: 100%;
   object-fit: contain; /* Ensures the image scales down to fit within its container */
-  margin-right: 15px;
   border: 1.5px solid #555555;
   background-color: rgba(70, 70, 70, 0.8);
   border-radius: 7px;
-  padding: 5px;
   opacity: .85;
   user-select: none;
   -webkit-user-drag: none;
@@ -294,7 +289,7 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 24px;
+  margin-top: 12px;
   margin-bottom: auto;
   min-height: 72px;
 }
@@ -314,10 +309,11 @@ h3 {
 }
 
 .team-logo-container {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  display: flex;
+  justify-content: center; /* horizontal centering */
+  align-items: center;     /* vertical centering */
+  height: 100%;            /* or any specific height */
+  width: 100%;             /* optional, ensures full width */
 }
 
 .team-logo-container img {
@@ -694,7 +690,6 @@ select:focus {
 @media only screen and (max-width: 768px) {
   .column1 {
     width: 25%; /* Take 25% of the width */
-    padding: 5px;
   }
 
   .column2 {
@@ -710,8 +705,6 @@ select:focus {
   }
 
   .column1 img {
-    margin-right: 0px;
-    margin-top: 5px;
     user-select: none;
     -webkit-user-drag: none;
     outline: none;
@@ -723,4 +716,14 @@ select:focus {
     margin: 0px;
     margin-bottom: -13px;
   }
+}
+
+.vs {
+  width: 100%;
+  text-align: center;
+}
+
+.vs p {
+  margin: 0;
+  font-size: 12px;
 }
