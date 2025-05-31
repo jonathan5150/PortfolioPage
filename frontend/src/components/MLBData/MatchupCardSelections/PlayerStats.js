@@ -67,7 +67,7 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
     return (
       <div className="lineup">
         <h3>{teamName}</h3>
-        <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed', cursor: 'pointer' }}>
+        <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed', cursor: 'pointer', userSelect: 'none' }}>
           <thead>
             <tr>
               <th style={{ width: '26%', textAlign: 'left', paddingLeft: '5px' }} onClick={() => handleSort('fullName')}>
