@@ -326,24 +326,29 @@ function MLBData() {
         ).sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
 
         setGameBackgroundColors(backgroundColors);
-        setTodayGames(games);
-        setVisibleGames(sortedVisibleGames);
+                setTodayGames(games);
+                setVisibleGames(sortedVisibleGames);
 
-        const batterLogs = {};
+                const batterLogs = {};
 
-        await Promise.all(sortedVisibleGames.flatMap(game =>
-          [game.teams.away.team, game.teams.home.team].map(async (team) => {
-              const { logs, roster } = await fetchBatterLogsForTeam(team.id, team.name, game.gameDate, getTeamAbbreviation);
-              batterLogs[team.id] = { logs, roster };
-          })
-        ));
+                await Promise.all(sortedVisibleGames.flatMap(game =>
+                  [game.teams.away.team, game.teams.home.team].map(async (team) => {
+                    const { logs, roster } = await fetchBatterLogsForTeam(
+                      team.id,
+                      team.name,
+                      game.gameDate,
+                      getTeamAbbreviation
+                    );
+                    batterLogs[team.id] = { logs, roster };
+                  })
+                ));
 
-        setBatterGameLogs(batterLogs);
-      } catch (error) {
-        console.error('Error fetching game data:', error);
-      } finally {
-        setLoading(false);
-      }
+                setBatterGameLogs(batterLogs);
+                setLoading(false); // ✅ Only happens after batter logs finish
+              } catch (error) {
+                console.error('Error fetching game data:', error);
+                setLoading(false); // ✅ Still fallback in error case
+              }
     };
 
     const initializeData = async () => {
