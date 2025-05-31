@@ -65,9 +65,13 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
     const sortedPlayers = sortPlayers(players);
 
     return (
-      <div className="lineup">
+      <div
+        className="lineup noselect"
+        tabIndex={-1} // Prevent focus
+        draggable={false} // Prevent drag highlight
+      >
         <h3>{teamName}</h3>
-        <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed', cursor: 'pointer', userSelect: 'none' }}>
+        <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed', cursor: 'pointer' }}>
           <thead>
             <tr>
               <th style={{ width: '26%', textAlign: 'left', paddingLeft: '5px' }} onClick={() => handleSort('fullName')}>
@@ -106,17 +110,18 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
                     textOverflow: 'ellipsis',
                     textAlign: 'left',
                     paddingLeft: '5px',
+                    userSelect: 'none',
                   }}
                 >
                   {player.person?.fullName || player.fullName || 'N/A'}
                 </td>
-                <td>{player.seasonStats?.hits ?? 0}</td>
-                <td>{player.seasonStats?.rbi ?? 0}</td>
-                <td>{player.seasonStats?.baseOnBalls ?? 0}</td>
-                <td>{player.seasonStats?.strikeOuts ?? 0}</td>
-                <td>{player.seasonStats?.homeRuns ?? 0}</td>
-                <td>{player.seasonStats?.stolenBases ?? 0}</td>
-                <td>{player.seasonStats?.avg ?? '.000'}</td>
+                <td style={{ userSelect: 'none' }}>{player.seasonStats?.hits ?? 0}</td>
+                <td style={{ userSelect: 'none' }}>{player.seasonStats?.rbi ?? 0}</td>
+                <td style={{ userSelect: 'none' }}>{player.seasonStats?.baseOnBalls ?? 0}</td>
+                <td style={{ userSelect: 'none' }}>{player.seasonStats?.strikeOuts ?? 0}</td>
+                <td style={{ userSelect: 'none' }}>{player.seasonStats?.homeRuns ?? 0}</td>
+                <td style={{ userSelect: 'none' }}>{player.seasonStats?.stolenBases ?? 0}</td>
+                <td style={{ userSelect: 'none' }}>{player.seasonStats?.avg ?? '.000'}</td>
               </tr>
             ))}
           </tbody>

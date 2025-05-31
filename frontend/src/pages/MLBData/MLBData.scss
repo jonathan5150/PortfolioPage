@@ -352,6 +352,19 @@ h3 {
   outline: none;
 }
 
+.noselect {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+
+  -webkit-touch-callout: none !important;
+  touch-action: manipulation !important;
+
+  /* Prevent iOS from highlighting on tap */
+  -webkit-tap-highlight-color: transparent !important;
+}
+
 .star-icon {
   position: absolute;
   top: 6px;
