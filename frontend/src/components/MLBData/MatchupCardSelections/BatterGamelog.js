@@ -3,8 +3,6 @@ import React, { useEffect, useState } from 'react';
 const BatterGamelog = ({
   team,
   teamType,
-  gameDate,
-  getTeamAbbreviation,
   showGameCountSelector,
   numGamesToShow,
   setNumGamesToShow,
@@ -15,82 +13,18 @@ const BatterGamelog = ({
   const [roster, setRoster] = useState([]);
 
   useEffect(() => {
-    let isMounted = true;
+    if (batterLogs && Object.keys(batterLogs).length > 0) {
+      setPlayerLogs(batterLogs);
 
-    const fetchBatterGameLog = async (playerId) => {
-      try {
-        const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=2025`;
-        const res = await fetch(url);
-        const data = await res.json();
-        const splits = data.stats?.[0]?.splits || [];
-
-        const gameDay = new Date(gameDate).toISOString().split('T')[0];
-
-        const filtered = splits
-          .filter((game) => game.date <= gameDay)
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-        return filtered.map((game) => ({
-          date: game.date,
-          opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
-          atBats: game.stat?.atBats ?? 'N/A',
-          runs: game.stat?.runs ?? 'N/A',
-          hits: game.stat?.hits ?? 'N/A',
-          rbi: game.stat?.rbi ?? 'N/A',
-          baseOnBalls: game.stat?.baseOnBalls ?? 'N/A',
-          strikeOuts: game.stat?.strikeOuts ?? 'N/A',
-          homeRuns: game.stat?.homeRuns ?? 'N/A',
-          stolenBases: game.stat?.stolenBases ?? 'N/A',
-          avg: game.stat?.avg ?? 'N/A',
-        }));
-      } catch (err) {
-        console.error(`Error fetching log for player ${playerId}`, err);
-        return [];
-      }
-    };
-
-    const loadBatterLogs = async () => {
-      const logs = {};
-      const homeRunLeaders = [];
-
-      try {
-        const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${team.id}/roster/40Man`);
-        const data = await res.json();
-        const batters = data.roster;
-
-        if (!isMounted) return;
-        setRoster(batters);
-
-        await Promise.all(
-          batters.map(async (batter) => {
-            const fullName = batter.person.fullName;
-            const gameLog = await fetchBatterGameLog(batter.person.id);
-            logs[fullName] = gameLog;
-
-            const totalHRs = gameLog.reduce((sum, g) => {
-              const val = parseInt(g.homeRuns);
-              return sum + (isNaN(val) ? 0 : val);
-            }, 0);
-
-            homeRunLeaders.push({ name: fullName, homeRuns: totalHRs });
-          })
-        );
-
-        if (!isMounted) return;
-
-        homeRunLeaders.sort((a, b) => b.homeRuns - a.homeRuns);
-        setPlayerLogs(logs);
-
-      } catch (err) {
-        console.error('Error loading batter logs for team:', team.name, err);
-      }
-    };
-
-    loadBatterLogs();
-    return () => {
-      isMounted = false;
-    };
-  }, [team, gameDate, getTeamAbbreviation]);
+      const names = Object.keys(batterLogs);
+      setRoster(
+        names.map((name) => ({
+          person: { fullName: name, id: null },
+          position: { abbreviation: 'N/A' },
+        }))
+      );
+    }
+  }, [batterLogs]);
 
   useEffect(() => {
     if (!selectedPlayer && Object.keys(playerLogs).length > 0) {
@@ -112,7 +46,14 @@ const BatterGamelog = ({
   return (
     <div className="batter-gamelog-wrapper">
       <div style={{ position: 'relative', marginBottom: '10px', height: '30px' }}>
-        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            textAlign: 'center',
+          }}
+        >
           <h3 style={{ margin: '7px 0px 5px 0px' }}>{team.name}</h3>
         </div>
 
@@ -143,7 +84,7 @@ const BatterGamelog = ({
             .map((player) => {
               const position = player.position?.abbreviation || 'N/A';
               return (
-                <option key={player.person.id} value={player.person.fullName}>
+                <option key={player.person.fullName} value={player.person.fullName}>
                   {player.person.fullName} ({position})
                 </option>
               );
@@ -159,15 +100,11 @@ const BatterGamelog = ({
             <tr>
               <th style={{ width: '12%' }}>DATE</th>
               <th style={{ width: '14%' }}>OPP</th>
-              <th style={{ width: '8%' }}>AB</th>
-              <th style={{ width: '8%' }}>R</th>
+              <th style={{ width: '8%' }}>AVG</th>
               <th style={{ width: '8%' }}>H</th>
               <th style={{ width: '8%' }}>RBI</th>
-              <th style={{ width: '8%' }}>BB</th>
-              <th style={{ width: '8%' }}>SO</th>
               <th style={{ width: '8%' }}>HR</th>
               <th style={{ width: '8%' }}>SB</th>
-              <th style={{ width: '10%' }}>AVG</th>
             </tr>
           </thead>
           <tbody>
@@ -175,15 +112,11 @@ const BatterGamelog = ({
               <tr key={idx}>
                 <td>{`${parseInt(game.date.split('-')[1])}/${parseInt(game.date.split('-')[2])}`}</td>
                 <td>{game.opponent}</td>
-                <td>{game.atBats}</td>
-                <td>{game.runs}</td>
+                <td>{game.avg}</td>
                 <td>{game.hits}</td>
                 <td>{game.rbi}</td>
-                <td>{game.baseOnBalls}</td>
-                <td>{game.strikeOuts}</td>
                 <td>{game.homeRuns}</td>
                 <td>{game.stolenBases}</td>
-                <td>{game.avg}</td>
               </tr>
             ))}
           </tbody>
