@@ -24,10 +24,10 @@ const BatterGamelog = ({
         const data = await res.json();
         const splits = data.stats?.[0]?.splits || [];
 
-        const beforeDay = new Date(gameDate).toISOString().split('T')[0];
+        const gameDay = new Date(gameDate).toISOString().split('T')[0];
 
         const filtered = splits
-          .filter((game) => game.date < beforeDay)
+          .filter((game) => game.date <= gameDay)
           .sort((a, b) => new Date(b.date) - new Date(a.date));
 
         return filtered.map((game) => ({
