@@ -71,14 +71,20 @@ const BatterGamelog = ({
           onChange={(e) => setSelectedPlayer(e.target.value)}
           style={{ marginBottom: '10px', padding: '4px', width: '100%' }}
         >
-          {teamRoster.map((player) => {
-            const position = player.position?.abbreviation || 'N/A';
-            return (
-              <option key={player.person.fullName} value={player.person.fullName}>
-                {player.person.fullName} ({position})
-              </option>
-            );
-          })}
+          {[...teamRoster]
+            .sort((a, b) => {
+              const aLast = a.person.fullName.split(' ').slice(-1)[0];
+              const bLast = b.person.fullName.split(' ').slice(-1)[0];
+              return aLast.localeCompare(bLast);
+            })
+            .map((player) => {
+              const position = player.position?.abbreviation || 'N/A';
+              return (
+                <option key={player.person.fullName} value={player.person.fullName}>
+                  {player.person.fullName} ({position})
+                </option>
+              );
+            })}
         </select>
       )}
 
