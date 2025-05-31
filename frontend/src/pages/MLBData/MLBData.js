@@ -27,15 +27,17 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
           .filter(game => game.date < beforeDay)
           .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        logs[fullName] = filtered.map((game) => ({
-          date: game.date,
-          opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
-          avg: game.stat?.avg ?? 'N/A',
-          hits: game.stat?.hits ?? 'N/A',
-          rbi: game.stat?.rbi ?? 'N/A',
-          homeRuns: game.stat?.homeRuns ?? 'N/A',
-          stolenBases: game.stat?.stolenBases ?? 'N/A',
-        }));
+        if (filtered.length > 0) {
+          logs[fullName] = filtered.map((game) => ({
+            date: game.date,
+            opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
+            avg: game.stat?.avg ?? 'N/A',
+            hits: game.stat?.hits ?? 'N/A',
+            rbi: game.stat?.rbi ?? 'N/A',
+            homeRuns: game.stat?.homeRuns ?? 'N/A',
+            stolenBases: game.stat?.stolenBases ?? 'N/A',
+          }));
+        }
       }
     } catch (err) {
       console.error(`Error loading batter logs for ${teamName}:`, err);

@@ -80,7 +80,6 @@ const BatterGamelog = ({
           style={{ marginBottom: '10px', padding: '4px', width: '100%' }}
         >
           {roster
-            .filter((player) => (playerLogs[player.person.fullName] || []).length > 0)
             .map((player) => {
               const position = player.position?.abbreviation || 'N/A';
               return (
