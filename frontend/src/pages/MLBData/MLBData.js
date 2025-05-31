@@ -16,10 +16,21 @@ function MLBData() {
   const [selectedTeams, setSelectedTeams] = useState([]);
   const [visibleGames, setVisibleGames] = useState([]);
   const [liveGameData, setLiveGameData] = useState({});
-  const [userPicks, setUserPicks] = useState(JSON.parse(Cookies.get('userPicks') || '{}'));
   const [gameBackgroundColors, setGameBackgroundColors] = useState({});
   const [numGamesToShow, setNumGamesToShow] = useState(10);
   const teamsMenuRef = useRef();
+  const [userPicks, setUserPicks] = useState({});
+
+  useEffect(() => {
+    const savedPicks = Cookies.get('userPicks');
+    if (savedPicks) {
+      try {
+        setUserPicks(JSON.parse(savedPicks));
+      } catch {
+        setUserPicks({});
+      }
+    }
+  }, []);
 
 
   useEffect(() => {
