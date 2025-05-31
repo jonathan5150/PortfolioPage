@@ -17,10 +17,17 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
       const fullName = batter.person.fullName;
       const playerId = batter.person.id;
 
-      const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=2025`;
-      const res = await fetch(url);
-      const result = await res.json();
-      const splits = result.stats?.[0]?.splits || [];
+      // Fetch season stats
+      const seasonUrl = `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[hitting],type=[season],season=2025)`;
+      const seasonRes = await fetch(seasonUrl);
+      const seasonData = await seasonRes.json();
+      const seasonStats = seasonData.people?.[0]?.stats?.[0]?.splits?.[0]?.stat || {};
+
+      // Fetch game logs
+      const logUrl = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=2025`;
+      const logRes = await fetch(logUrl);
+      const logData = await logRes.json();
+      const splits = logData.stats?.[0]?.splits || [];
 
       const beforeDay = new Date(gameDate).toISOString().split('T')[0];
 
@@ -29,7 +36,6 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
       const positionCode = batter.position?.abbreviation || '';
-
 
       if (filtered.length > 0 && positionCode !== 'P') {
         logs[fullName] = filtered.map((game) => ({
@@ -46,8 +52,10 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
           strikeOuts: game.stat?.strikeOuts ?? 'N/A',
         }));
 
-        // ✅ Add only players with valid logs to the roster
-        filteredRoster.push(batter);
+        filteredRoster.push({
+          ...batter,
+          seasonStats, // ✅ Inject here
+        });
       }
     }
   } catch (err) {

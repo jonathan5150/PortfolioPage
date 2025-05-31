@@ -250,14 +250,14 @@ const MatchupCard = ({
                   <div className="game-data-container stat-toggle-container">
                     <select value={contentKey} onChange={(e) => handleDataSelect(e.target.value)}>
                       <option value="team-history">TEAM W/L HISTORY</option>
-                      <option value="player-stats">LINEUP</option>
+                      <option value="player-stats">BATTER SEASON STATS</option>
                       <option value="batter-gamelog">BATTER GAME LOG</option>
                       <option value="pitcher-last-5">PITCHER GAME LOG</option>
                     </select>
                     <div className={`stat-section`}>
                       <div className={contentVisible ? 'fade-in' : 'fade-out'}>
                         {contentKey === 'team-history' && <TeamHistory game={game} />}
-                        {contentKey === 'player-stats' && <PlayerStats game={game} />}
+                        {contentKey === 'player-stats' && <PlayerStats game={game} batterGameLogs={batterGameLogs} />}
                         {contentKey === 'pitcher-last-5' && (
                           <PitcherLastFive
                             game={game}
