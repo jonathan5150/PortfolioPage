@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Cookies from 'js-cookie';
 
 const BatterGamelog = ({
   team,
@@ -13,7 +12,6 @@ const BatterGamelog = ({
   const [playerLogs, setPlayerLogs] = useState({});
   const [selectedPlayer, setSelectedPlayer] = useState('');
   const [roster, setRoster] = useState([]);
-
 
   useEffect(() => {
     let isMounted = true;
@@ -134,11 +132,7 @@ const BatterGamelog = ({
           <div style={{ position: 'absolute', right: 0 }}>
             <select
               value={numGamesToShow}
-              onChange={(e) => {
-                const value = parseInt(e.target.value);
-                setNumGamesToShow(value);
-                Cookies.set('numGamesToShow', value, { expires: 365 });
-              }}
+              onChange={(e) => setNumGamesToShow(parseInt(e.target.value))}
               style={{ padding: '4px' }}
             >
               <option value={5}>5</option>

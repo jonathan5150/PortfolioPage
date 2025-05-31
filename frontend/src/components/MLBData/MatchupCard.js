@@ -64,17 +64,13 @@ const MatchupCard = ({
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const [selectedData, setSelectedData] = useState('team-history');
+  const [numGamesToShow, setNumGamesToShow] = useState(5); // ✅ default is 5
   const [starredTeams, setStarredTeams] = useState(() => {
     const saved = Cookies.get('starredTeams');
     return saved ? JSON.parse(saved) : {};
   });
 
   const [pitcherLogs, setPitcherLogs] = useState({});
-
-  const [numGamesToShow, setNumGamesToShow] = useState(() => {
-    const saved = Cookies.get('numGamesToShow');
-    return saved ? parseInt(saved) : 5; // default to 5
-  });
 
   useEffect(() => {
     const preloadPitcherData = async () => {
@@ -177,7 +173,7 @@ const MatchupCard = ({
           </p>
         ) : (
           <>
-            {visibleGames.map((game, idx) => (
+            {visibleGames.map((game) => (
               <div
                 className={`game-container ${
                   selectedTeams.includes(game.teams.away.team.id) ||
@@ -280,6 +276,7 @@ const MatchupCard = ({
                           getTeamAbbreviation={getTeamAbbreviation}
                           showGameCountSelector={false}
                           numGamesToShow={numGamesToShow}
+                          setNumGamesToShow={setNumGamesToShow}
                         />
                       </>
                     )}
