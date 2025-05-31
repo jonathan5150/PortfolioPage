@@ -64,7 +64,7 @@ const MatchupCard = ({
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
-  const [numGamesToShow, setNumGamesToShow] = useState(10);
+  const [numGamesToShow, setNumGamesToShow] = useState(5);
   const [contentKey, setContentKey] = useState('team-history');
   const [contentVisible, setContentVisible] = useState(true);
   const [starredTeams, setStarredTeams] = useState(() => {

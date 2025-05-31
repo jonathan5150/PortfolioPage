@@ -70,7 +70,7 @@ function MLBData() {
   const [visibleGames, setVisibleGames] = useState([]);
   const [liveGameData, setLiveGameData] = useState({});
   const [gameBackgroundColors, setGameBackgroundColors] = useState({});
-  const [numGamesToShow, setNumGamesToShow] = useState(10);
+  const [numGamesToShow, setNumGamesToShow] = useState({});
   const teamsMenuRef = useRef();
   const [userPicks, setUserPicks] = useState({});
   const [batterGameLogs, setBatterGameLogs] = useState({});
