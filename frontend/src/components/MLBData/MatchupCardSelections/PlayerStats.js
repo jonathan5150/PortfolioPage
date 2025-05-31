@@ -24,11 +24,11 @@ const renderPlayerTable = (teamName, players) => (
               {player.fullName}
             </td>
             <td>{player.primaryPosition?.abbreviation || 'N/A'}</td>
-            <td>{player.seasonStats?.avg || 'N/A'}</td>
-            <td>{player.seasonStats?.hits || 'N/A'}</td>
-            <td>{player.seasonStats?.rbi || 'N/A'}</td>
-            <td>{player.seasonStats?.homeRuns || 'N/A'}</td>
-            <td>{player.seasonStats?.stolenBases || 'N/A'}</td>
+            <td>{player.seasonStats?.avg ?? .000}</td>
+            <td>{player.seasonStats?.hits ?? 0}</td>
+            <td>{player.seasonStats?.rbi ?? 0}</td>
+            <td>{player.seasonStats?.homeRuns ?? 0}</td>
+            <td>{player.seasonStats?.stolenBases ?? 0}</td>
           </tr>
         ))}
       </tbody>
