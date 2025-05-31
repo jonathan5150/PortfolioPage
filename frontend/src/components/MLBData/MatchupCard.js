@@ -6,6 +6,7 @@ import TeamHistory from './MatchupCardSelections/TeamHistory';
 import PlayerStats from './MatchupCardSelections/PlayerStats';
 import PitcherMatchup from './MatchupCardComponents/PitcherMatchup';
 import PitcherLastFive from './MatchupCardSelections/PitcherLastFive';
+import BatterGamelog from './MatchupCardSelections/BatterGamelog';
 
 const fetchPitcherGameLog = async (playerId, getTeamAbbreviation, beforeDate) => {
   try {
@@ -58,7 +59,9 @@ const MatchupCard = ({
   handleDeselectAll,
   teamsMenuRef,
   todayGames,
-  gameBackgroundColors
+  gameBackgroundColors,
+  numGamesToShow,
+  setNumGamesToShow // ✅ new prop
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
@@ -171,7 +174,7 @@ const MatchupCard = ({
           </p>
         ) : (
           <>
-            {visibleGames.map((game) => (
+            {visibleGames.map((game, idx) => (
               <div
                 className={`game-container ${
                   selectedTeams.includes(game.teams.away.team.id) ||
@@ -188,47 +191,47 @@ const MatchupCard = ({
                 </div>
                 <div className="matchup-group">
                   <div className="matchup-columns">
-                  <div className="column1">
-                    <div className="row1">
-                      <div
-                        className="team-logo-container"
-                        onClick={() => handleStarClick(game.gamePk, game.teams.away.team.id)}
-                      >
-                        <img
-                          src={getTeamLogo(game.teams.away.team.name)}
-                          alt={`${game.teams.away.team.name} logo`}
-                          style={{
-                            border: `2px solid ${gameBackgroundColors[game.gamePk]?.away}`,
-                            position: 'relative',
-                          }}
-                        />
-                        {starredTeams[game.gamePk] === game.teams.away.team.id && (
-                          <div className="star-icon">⭐</div>
-                        )}
+                    <div className="column1">
+                      <div className="row1">
+                        <div
+                          className="team-logo-container"
+                          onClick={() => handleStarClick(game.gamePk, game.teams.away.team.id)}
+                        >
+                          <img
+                            src={getTeamLogo(game.teams.away.team.name)}
+                            alt={`${game.teams.away.team.name} logo`}
+                            style={{
+                              border: `2px solid ${gameBackgroundColors[game.gamePk]?.away}`,
+                              position: 'relative',
+                            }}
+                          />
+                          {starredTeams[game.gamePk] === game.teams.away.team.id && (
+                            <div className="star-icon">⭐</div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="row2">
+                        <div
+                          className="team-logo-container"
+                          onClick={() => handleStarClick(game.gamePk, game.teams.home.team.id)}
+                        >
+                          <img
+                            src={getTeamLogo(game.teams.home.team.name)}
+                            alt={`${game.teams.home.team.name} logo`}
+                            style={{
+                              border: `2px solid ${gameBackgroundColors[game.gamePk]?.home}`,
+                              position: 'relative',
+                            }}
+                          />
+                          {starredTeams[game.gamePk] === game.teams.home.team.id && (
+                            <div className="star-icon">⭐</div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="row2">
-                      <div
-                        className="team-logo-container"
-                        onClick={() => handleStarClick(game.gamePk, game.teams.home.team.id)}
-                      >
-                        <img
-                          src={getTeamLogo(game.teams.home.team.name)}
-                          alt={`${game.teams.home.team.name} logo`}
-                          style={{
-                            border: `2px solid ${gameBackgroundColors[game.gamePk]?.home}`,
-                            position: 'relative',
-                          }}
-                        />
-                        {starredTeams[game.gamePk] === game.teams.home.team.id && (
-                          <div className="star-icon">⭐</div>
-                        )}
-                      </div>
+                    <div className="column2">
+                      <PitcherMatchup game={game} getTeamRecord={getTeamRecord} />
                     </div>
-                  </div>
-                  <div className="column2">
-                    <PitcherMatchup game={game} getTeamRecord={getTeamRecord} />
-                  </div>
                   </div>
                 </div>
                 <div className="game-data">
@@ -244,6 +247,7 @@ const MatchupCard = ({
                     >
                       <option value="team-history">TEAM W/L HISTORY</option>
                       <option value="player-stats">LINEUP</option>
+                      <option value="batter-gamelog">BATTER GAME LOG</option>
                       <option value="pitcher-last-5">PITCHER GAME LOG</option>
                     </select>
                     {selectedData === 'team-history' && <TeamHistory game={game} />}
@@ -254,6 +258,27 @@ const MatchupCard = ({
                         awayGames={pitcherLogs[game.gamePk]?.away || []}
                         homeGames={pitcherLogs[game.gamePk]?.home || []}
                       />
+                    )}
+                    {selectedData === 'batter-gamelog' && (
+                      <>
+                        <BatterGamelog
+                          team={game.teams.away.team}
+                          teamType="Away"
+                          gameDate={game.gameDate}
+                          getTeamAbbreviation={getTeamAbbreviation}
+                          showGameCountSelector={true}
+                          numGamesToShow={numGamesToShow}
+                          setNumGamesToShow={setNumGamesToShow}
+                        />
+                        <BatterGamelog
+                          team={game.teams.home.team}
+                          teamType="Home"
+                          gameDate={game.gameDate}
+                          getTeamAbbreviation={getTeamAbbreviation}
+                          showGameCountSelector={false}
+                          numGamesToShow={numGamesToShow}
+                        />
+                      </>
                     )}
                   </div>
                 </div>

@@ -18,7 +18,7 @@ function MLBData() {
   const [liveGameData, setLiveGameData] = useState({});
   const [userPicks, setUserPicks] = useState(JSON.parse(Cookies.get('userPicks') || '{}'));
   const [gameBackgroundColors, setGameBackgroundColors] = useState({});
-
+  const [numGamesToShow, setNumGamesToShow] = useState(10);
   const teamsMenuRef = useRef();
 
   useEffect(() => {
@@ -366,6 +366,8 @@ function MLBData() {
           teamsMenuRef={teamsMenuRef}
           todayGames={todayGames}
           gameBackgroundColors={gameBackgroundColors}
+          numGamesToShow={numGamesToShow}
+          setNumGamesToShow={setNumGamesToShow}
         />
       )}
     </div>
