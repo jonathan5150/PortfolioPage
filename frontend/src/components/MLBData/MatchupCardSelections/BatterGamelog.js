@@ -89,12 +89,16 @@ const BatterGamelog = ({
           <thead>
             <tr>
               <th style={{ width: '12%' }}>DATE</th>
-              <th style={{ width: '14%' }}>OPP</th>
-              <th style={{ width: '8%' }}>AVG</th>
-              <th style={{ width: '8%' }}>H</th>
+              <th style={{ width: '11%' }}>OPP</th>
+              <th style={{ width: '7%' }}>AB</th>
+              <th style={{ width: '7%' }}>R</th>
+              <th style={{ width: '7%' }}>H</th>
               <th style={{ width: '8%' }}>RBI</th>
+              <th style={{ width: '7%' }}>BB</th>
+              <th style={{ width: '7%' }}>SO</th>
               <th style={{ width: '8%' }}>HR</th>
               <th style={{ width: '8%' }}>SB</th>
+              <th style={{ width: '11%' }}>AVG</th>
             </tr>
           </thead>
           <tbody>
@@ -102,11 +106,15 @@ const BatterGamelog = ({
               <tr key={idx}>
                 <td>{`${parseInt(game.date.split('-')[1])}/${parseInt(game.date.split('-')[2])}`}</td>
                 <td>{game.opponent}</td>
-                <td>{game.avg}</td>
-                <td>{game.hits}</td>
-                <td>{game.rbi}</td>
-                <td>{game.homeRuns}</td>
-                <td>{game.stolenBases}</td>
+                <td>{game.atBats ?? 'N/A'}</td>
+                <td>{game.runs ?? 'N/A'}</td>
+                <td>{game.hits ?? 'N/A'}</td>
+                <td>{game.rbi ?? 'N/A'}</td>
+                <td>{game.baseOnBalls ?? 'N/A'}</td>
+                <td>{game.strikeOuts ?? 'N/A'}</td>
+                <td>{game.homeRuns ?? 'N/A'}</td>
+                <td>{game.stolenBases ?? 'N/A'}</td>
+                <td>{game.avg ?? 'N/A'}</td>
               </tr>
             ))}
           </tbody>

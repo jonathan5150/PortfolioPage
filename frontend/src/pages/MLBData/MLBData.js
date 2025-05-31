@@ -37,6 +37,10 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
           rbi: game.stat?.rbi ?? 'N/A',
           homeRuns: game.stat?.homeRuns ?? 'N/A',
           stolenBases: game.stat?.stolenBases ?? 'N/A',
+          atBats: game.stat?.atBats ?? 'N/A',
+          runs: game.stat?.runs ?? 'N/A',
+          baseOnBalls: game.stat?.baseOnBalls ?? 'N/A',
+          strikeOuts: game.stat?.strikeOuts ?? 'N/A',
         }));
 
         // ✅ Add only players with valid logs to the roster
