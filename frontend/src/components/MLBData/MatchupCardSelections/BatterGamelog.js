@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
 
 const BatterGamelog = ({
   team,
@@ -12,6 +13,7 @@ const BatterGamelog = ({
   const [playerLogs, setPlayerLogs] = useState({});
   const [selectedPlayer, setSelectedPlayer] = useState('');
   const [roster, setRoster] = useState([]);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -78,21 +80,33 @@ const BatterGamelog = ({
 
         setPlayerLogs(logs);
 
-        if (homeRunLeaders.length > 0) {
-          setSelectedPlayer(homeRunLeaders[0].name);
-        }
       } catch (err) {
         console.error('Error loading batter logs for team:', team.name, err);
       }
     };
 
     // Run in background
-    setTimeout(loadBatterLogs, 0);
-
+    loadBatterLogs();
     return () => {
       isMounted = false;
     };
   }, [team, gameDate, getTeamAbbreviation]);
+
+  useEffect(() => {
+    if (!selectedPlayer && Object.keys(playerLogs).length > 0) {
+      // Find the player with the most HRs
+      const leader = Object.entries(playerLogs)
+        .map(([name, logs]) => ({
+          name,
+          homeRuns: logs.reduce((sum, g) => sum + (parseInt(g.homeRuns) || 0), 0),
+        }))
+        .sort((a, b) => b.homeRuns - a.homeRuns)[0];
+
+      if (leader) {
+        setSelectedPlayer(leader.name);
+      }
+    }
+  }, [playerLogs, selectedPlayer]);
 
   const games = (playerLogs[selectedPlayer] || []).slice(0, numGamesToShow);
 
@@ -120,7 +134,11 @@ const BatterGamelog = ({
           <div style={{ position: 'absolute', right: 0 }}>
             <select
               value={numGamesToShow}
-              onChange={(e) => setNumGamesToShow(parseInt(e.target.value))}
+              onChange={(e) => {
+                const value = parseInt(e.target.value);
+                setNumGamesToShow(value);
+                Cookies.set('numGamesToShow', value, { expires: 365 });
+              }}
               style={{ padding: '4px' }}
             >
               <option value={5}>5</option>
@@ -137,11 +155,16 @@ const BatterGamelog = ({
           onChange={(e) => setSelectedPlayer(e.target.value)}
           style={{ marginBottom: '10px', padding: '4px', width: '100%' }}
         >
-          {roster.map((player) => (
-            <option key={player.person.id} value={player.person.fullName}>
-              {player.person.fullName}
-            </option>
-          ))}
+          {roster
+            .filter((player) => (playerLogs[player.person.fullName] || []).length > 0)
+            .map((player) => {
+              const position = player.position?.abbreviation || 'N/A';
+              return (
+                <option key={player.person.id} value={player.person.fullName}>
+                  {player.person.fullName} ({position})
+                </option>
+              );
+            })}
         </select>
       )}
 

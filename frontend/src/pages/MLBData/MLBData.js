@@ -21,6 +21,7 @@ function MLBData() {
   const [numGamesToShow, setNumGamesToShow] = useState(10);
   const teamsMenuRef = useRef();
 
+
   useEffect(() => {
     const updateViewportHeight = () => {
       const vh = window.innerHeight * 0.01;

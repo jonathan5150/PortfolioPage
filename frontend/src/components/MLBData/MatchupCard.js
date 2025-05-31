@@ -60,8 +60,6 @@ const MatchupCard = ({
   teamsMenuRef,
   todayGames,
   gameBackgroundColors,
-  numGamesToShow,
-  setNumGamesToShow // ✅ new prop
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
@@ -72,6 +70,11 @@ const MatchupCard = ({
   });
 
   const [pitcherLogs, setPitcherLogs] = useState({});
+
+  const [numGamesToShow, setNumGamesToShow] = useState(() => {
+    const saved = Cookies.get('numGamesToShow');
+    return saved ? parseInt(saved) : 5; // default to 5
+  });
 
   useEffect(() => {
     const preloadPitcherData = async () => {
