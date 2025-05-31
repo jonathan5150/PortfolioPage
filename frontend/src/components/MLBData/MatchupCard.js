@@ -60,11 +60,12 @@ const MatchupCard = ({
   teamsMenuRef,
   todayGames,
   gameBackgroundColors,
+  batterGameLogs
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const [selectedData, setSelectedData] = useState('team-history');
-  const [numGamesToShow, setNumGamesToShow] = useState(5); // ✅ default is 5
+  const [numGamesToShow, setNumGamesToShow] = useState(10);
   const [starredTeams, setStarredTeams] = useState(() => {
     const saved = Cookies.get('starredTeams');
     return saved ? JSON.parse(saved) : {};
@@ -268,7 +269,9 @@ const MatchupCard = ({
                           showGameCountSelector={true}
                           numGamesToShow={numGamesToShow}
                           setNumGamesToShow={setNumGamesToShow}
+                          batterLogs={batterGameLogs[game.teams.away.team.id]}
                         />
+
                         <BatterGamelog
                           team={game.teams.home.team}
                           teamType="Home"
@@ -277,6 +280,7 @@ const MatchupCard = ({
                           showGameCountSelector={false}
                           numGamesToShow={numGamesToShow}
                           setNumGamesToShow={setNumGamesToShow}
+                          batterLogs={batterGameLogs[game.teams.home.team.id]}
                         />
                       </>
                     )}

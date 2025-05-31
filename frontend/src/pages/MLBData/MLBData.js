@@ -1,8 +1,47 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import './MLBData.scss';
 import { format, subDays } from 'date-fns';
 import Cookies from 'js-cookie';
 import MatchupCard from '../../components/MLBData/MatchupCard';
+
+const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbreviation) => {
+
+    const logs = {};
+    try {
+      const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster/40Man`);
+      const data = await res.json();
+      const batters = data.roster;
+
+      for (const batter of batters) {
+        const fullName = batter.person.fullName;
+        const playerId = batter.person.id;
+
+        const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=2025`;
+        const res = await fetch(url);
+        const result = await res.json();
+        const splits = result.stats?.[0]?.splits || [];
+
+        const beforeDay = new Date(gameDate).toISOString().split('T')[0];
+
+        const filtered = splits
+          .filter(game => game.date < beforeDay)
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        logs[fullName] = filtered.map((game) => ({
+          date: game.date,
+          opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
+          avg: game.stat?.avg ?? 'N/A',
+          hits: game.stat?.hits ?? 'N/A',
+          rbi: game.stat?.rbi ?? 'N/A',
+          homeRuns: game.stat?.homeRuns ?? 'N/A',
+          stolenBases: game.stat?.stolenBases ?? 'N/A',
+        }));
+      }
+    } catch (err) {
+      console.error(`Error loading batter logs for ${teamName}:`, err);
+    }
+    return logs;
+  };
 
 function MLBData() {
   const [todayGames, setTodayGames] = useState([]);
@@ -20,6 +59,14 @@ function MLBData() {
   const [numGamesToShow, setNumGamesToShow] = useState(10);
   const teamsMenuRef = useRef();
   const [userPicks, setUserPicks] = useState({});
+  const [batterGameLogs, setBatterGameLogs] = useState({});
+
+
+
+  const getTeamAbbreviation = useCallback((teamId) => {
+    const team = mlbTeams.find((team) => team.id === teamId);
+    return team ? team.abbreviation : '';
+  }, [mlbTeams]); // Only depends on mlbTeams
 
   useEffect(() => {
     const savedPicks = Cookies.get('userPicks');
@@ -259,6 +306,17 @@ function MLBData() {
         setGameBackgroundColors(backgroundColors);
         setTodayGames(games);
         setVisibleGames(sortedVisibleGames);
+
+        const batterLogs = {};
+
+        await Promise.all(sortedVisibleGames.flatMap(game =>
+          [game.teams.away.team, game.teams.home.team].map(async (team) => {
+              const logs = await fetchBatterLogsForTeam(team.id, team.name, game.gameDate, getTeamAbbreviation);
+            batterLogs[team.id] = logs;
+          })
+        ));
+
+        setBatterGameLogs(batterLogs);
       } catch (error) {
         console.error('Error fetching game data:', error);
       } finally {
@@ -271,7 +329,8 @@ function MLBData() {
     };
 
     initializeData();
-  }, [selectedDate, selectedTeams]);
+  }, [selectedDate, selectedTeams, getTeamAbbreviation]);
+
 
   useEffect(() => {
     setVisibleGames(todayGames.flatMap(date =>
@@ -319,11 +378,6 @@ function MLBData() {
     return teamRecords[teamId] || '0-0';
   };
 
-  const getTeamAbbreviation = (teamId) => {
-    const team = mlbTeams.find((team) => team.id === teamId);
-    return team ? team.abbreviation : '';
-  };
-
   const handleTeamChange = (teamId) => {
     setSelectedTeams((prevSelectedTeams) => {
       const updatedSelectedTeams = prevSelectedTeams.includes(teamId)
@@ -345,6 +399,8 @@ function MLBData() {
     setSelectedTeams([]);
     Cookies.set('selectedTeams', JSON.stringify([]), { expires: 399 });
   };
+
+
 
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
@@ -380,6 +436,7 @@ function MLBData() {
           gameBackgroundColors={gameBackgroundColors}
           numGamesToShow={numGamesToShow}
           setNumGamesToShow={setNumGamesToShow}
+          batterGameLogs={batterGameLogs}
         />
       )}
     </div>

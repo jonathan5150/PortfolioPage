@@ -8,6 +8,7 @@ const BatterGamelog = ({
   showGameCountSelector,
   numGamesToShow,
   setNumGamesToShow,
+  batterLogs = {}
 }) => {
   const [playerLogs, setPlayerLogs] = useState({});
   const [selectedPlayer, setSelectedPlayer] = useState('');
@@ -32,11 +33,15 @@ const BatterGamelog = ({
         return filtered.map((game) => ({
           date: game.date,
           opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
-          avg: game.stat?.avg ?? 'N/A',
+          atBats: game.stat?.atBats ?? 'N/A',
+          runs: game.stat?.runs ?? 'N/A',
           hits: game.stat?.hits ?? 'N/A',
           rbi: game.stat?.rbi ?? 'N/A',
+          baseOnBalls: game.stat?.baseOnBalls ?? 'N/A',
+          strikeOuts: game.stat?.strikeOuts ?? 'N/A',
           homeRuns: game.stat?.homeRuns ?? 'N/A',
           stolenBases: game.stat?.stolenBases ?? 'N/A',
+          avg: game.stat?.avg ?? 'N/A',
         }));
       } catch (err) {
         console.error(`Error fetching log for player ${playerId}`, err);
@@ -54,7 +59,6 @@ const BatterGamelog = ({
         const batters = data.roster;
 
         if (!isMounted) return;
-
         setRoster(batters);
 
         await Promise.all(
@@ -75,7 +79,6 @@ const BatterGamelog = ({
         if (!isMounted) return;
 
         homeRunLeaders.sort((a, b) => b.homeRuns - a.homeRuns);
-
         setPlayerLogs(logs);
 
       } catch (err) {
@@ -83,7 +86,6 @@ const BatterGamelog = ({
       }
     };
 
-    // Run in background
     loadBatterLogs();
     return () => {
       isMounted = false;
@@ -92,7 +94,6 @@ const BatterGamelog = ({
 
   useEffect(() => {
     if (!selectedPlayer && Object.keys(playerLogs).length > 0) {
-      // Find the player with the most HRs
       const leader = Object.entries(playerLogs)
         .map(([name, logs]) => ({
           name,
@@ -110,21 +111,8 @@ const BatterGamelog = ({
 
   return (
     <div className="batter-gamelog-wrapper">
-      <div
-        style={{
-          position: 'relative',
-          marginBottom: '10px',
-          height: '30px',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            textAlign: 'center',
-          }}
-        >
+      <div style={{ position: 'relative', marginBottom: '10px', height: '30px' }}>
+        <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
           <h3 style={{ margin: '7px 0px 5px 0px' }}>{team.name}</h3>
         </div>
 
@@ -138,6 +126,7 @@ const BatterGamelog = ({
               <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={20}>20</option>
+              <option value={50}>50</option>
             </select>
           </div>
         )}
@@ -168,13 +157,17 @@ const BatterGamelog = ({
         <table style={{ fontSize: '13px', width: '100%', tableLayout: 'fixed' }}>
           <thead>
             <tr>
-              <th style={{ width: '16%' }}>DATE</th>
-              <th style={{ width: '16%' }}>OPP</th>
-              <th style={{ width: '12%' }}>AVG</th>
-              <th style={{ width: '12%' }}>H</th>
-              <th style={{ width: '12%' }}>RBI</th>
-              <th style={{ width: '12%' }}>HR</th>
-              <th style={{ width: '12%' }}>SB</th>
+              <th style={{ width: '12%' }}>DATE</th>
+              <th style={{ width: '14%' }}>OPP</th>
+              <th style={{ width: '8%' }}>AB</th>
+              <th style={{ width: '8%' }}>R</th>
+              <th style={{ width: '8%' }}>H</th>
+              <th style={{ width: '8%' }}>RBI</th>
+              <th style={{ width: '8%' }}>BB</th>
+              <th style={{ width: '8%' }}>SO</th>
+              <th style={{ width: '8%' }}>HR</th>
+              <th style={{ width: '8%' }}>SB</th>
+              <th style={{ width: '10%' }}>AVG</th>
             </tr>
           </thead>
           <tbody>
@@ -182,11 +175,15 @@ const BatterGamelog = ({
               <tr key={idx}>
                 <td>{`${parseInt(game.date.split('-')[1])}/${parseInt(game.date.split('-')[2])}`}</td>
                 <td>{game.opponent}</td>
-                <td>{game.avg}</td>
+                <td>{game.atBats}</td>
+                <td>{game.runs}</td>
                 <td>{game.hits}</td>
                 <td>{game.rbi}</td>
+                <td>{game.baseOnBalls}</td>
+                <td>{game.strikeOuts}</td>
                 <td>{game.homeRuns}</td>
                 <td>{game.stolenBases}</td>
+                <td>{game.avg}</td>
               </tr>
             ))}
           </tbody>
