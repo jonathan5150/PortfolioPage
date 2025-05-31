@@ -6,23 +6,15 @@ const BatterGamelog = ({
   showGameCountSelector,
   numGamesToShow,
   setNumGamesToShow,
-  batterLogs = {}
+  batterLogs = {},
+  teamRoster = []
 }) => {
   const [playerLogs, setPlayerLogs] = useState({});
   const [selectedPlayer, setSelectedPlayer] = useState('');
-  const [roster, setRoster] = useState([]);
 
   useEffect(() => {
     if (batterLogs && Object.keys(batterLogs).length > 0) {
-      setPlayerLogs(batterLogs);
-
-      const names = Object.keys(batterLogs);
-      setRoster(
-        names.map((name) => ({
-          person: { fullName: name, id: null },
-          position: { abbreviation: 'N/A' },
-        }))
-      );
+      setPlayerLogs(batterLogs.logs || {});
     }
   }, [batterLogs]);
 
@@ -73,21 +65,20 @@ const BatterGamelog = ({
         )}
       </div>
 
-      {roster.length > 0 && (
+      {teamRoster.length > 0 && (
         <select
           value={selectedPlayer}
           onChange={(e) => setSelectedPlayer(e.target.value)}
           style={{ marginBottom: '10px', padding: '4px', width: '100%' }}
         >
-          {roster
-            .map((player) => {
-              const position = player.position?.abbreviation || 'N/A';
-              return (
-                <option key={player.person.fullName} value={player.person.fullName}>
-                  {player.person.fullName} ({position})
-                </option>
-              );
-            })}
+          {teamRoster.map((player) => {
+            const position = player.position?.abbreviation || 'N/A';
+            return (
+              <option key={player.person.fullName} value={player.person.fullName}>
+                {player.person.fullName} ({position})
+              </option>
+            );
+          })}
         </select>
       )}
 

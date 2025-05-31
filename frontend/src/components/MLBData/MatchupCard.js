@@ -275,6 +275,7 @@ const MatchupCard = ({
                             numGamesToShow={numGamesToShow}
                             setNumGamesToShow={setNumGamesToShow}
                             batterLogs={batterGameLogs[game.teams.away.team.id]}
+                            teamRoster={batterGameLogs[game.teams.away.team.id]?.roster}
                           />
                           <BatterGamelog
                             team={game.teams.home.team}
@@ -285,6 +286,7 @@ const MatchupCard = ({
                             numGamesToShow={numGamesToShow}
                             setNumGamesToShow={setNumGamesToShow}
                             batterLogs={batterGameLogs[game.teams.home.team.id]}
+                            teamRoster={batterGameLogs[game.teams.home.team.id]?.roster}
                           />
                         </>
                       )}

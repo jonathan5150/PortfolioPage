@@ -5,45 +5,50 @@ import Cookies from 'js-cookie';
 import MatchupCard from '../../components/MLBData/MatchupCard';
 
 const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbreviation) => {
+  const logs = {};
+  const filteredRoster = [];
 
-    const logs = {};
-    try {
-      const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster/40Man`);
-      const data = await res.json();
-      const batters = data.roster;
+  try {
+    const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster/40Man`);
+    const data = await res.json();
+    const batters = data.roster;
 
-      for (const batter of batters) {
-        const fullName = batter.person.fullName;
-        const playerId = batter.person.id;
+    for (const batter of batters) {
+      const fullName = batter.person.fullName;
+      const playerId = batter.person.id;
 
-        const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=2025`;
-        const res = await fetch(url);
-        const result = await res.json();
-        const splits = result.stats?.[0]?.splits || [];
+      const url = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=2025`;
+      const res = await fetch(url);
+      const result = await res.json();
+      const splits = result.stats?.[0]?.splits || [];
 
-        const beforeDay = new Date(gameDate).toISOString().split('T')[0];
+      const beforeDay = new Date(gameDate).toISOString().split('T')[0];
 
-        const filtered = splits
-          .filter(game => game.date < beforeDay)
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
+      const filtered = splits
+        .filter(game => game.date < beforeDay)
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        if (filtered.length > 0) {
-          logs[fullName] = filtered.map((game) => ({
-            date: game.date,
-            opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
-            avg: game.stat?.avg ?? 'N/A',
-            hits: game.stat?.hits ?? 'N/A',
-            rbi: game.stat?.rbi ?? 'N/A',
-            homeRuns: game.stat?.homeRuns ?? 'N/A',
-            stolenBases: game.stat?.stolenBases ?? 'N/A',
-          }));
-        }
+      if (filtered.length > 0) {
+        logs[fullName] = filtered.map((game) => ({
+          date: game.date,
+          opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
+          avg: game.stat?.avg ?? 'N/A',
+          hits: game.stat?.hits ?? 'N/A',
+          rbi: game.stat?.rbi ?? 'N/A',
+          homeRuns: game.stat?.homeRuns ?? 'N/A',
+          stolenBases: game.stat?.stolenBases ?? 'N/A',
+        }));
+
+        // ✅ Add only players with valid logs to the roster
+        filteredRoster.push(batter);
       }
-    } catch (err) {
-      console.error(`Error loading batter logs for ${teamName}:`, err);
     }
-    return logs;
-  };
+  } catch (err) {
+    console.error(`Error loading batter logs for ${teamName}:`, err);
+  }
+
+  return { logs, roster: filteredRoster };
+};
 
 function MLBData() {
   const [todayGames, setTodayGames] = useState([]);
@@ -313,8 +318,8 @@ function MLBData() {
 
         await Promise.all(sortedVisibleGames.flatMap(game =>
           [game.teams.away.team, game.teams.home.team].map(async (team) => {
-              const logs = await fetchBatterLogsForTeam(team.id, team.name, game.gameDate, getTeamAbbreviation);
-            batterLogs[team.id] = logs;
+              const { logs, roster } = await fetchBatterLogsForTeam(team.id, team.name, game.gameDate, getTeamAbbreviation);
+              batterLogs[team.id] = { logs, roster };
           })
         ));
 
