@@ -564,6 +564,16 @@ select:focus {
   transition: opacity 1s ease-out;
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 .fade-in-background {
   background-color: rgba(41, 41, 41, 1);
   opacity: 0;

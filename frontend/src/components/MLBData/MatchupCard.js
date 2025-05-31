@@ -126,7 +126,7 @@ const MatchupCard = ({
     setTimeout(() => {
       setContentKey(dataType);
       setContentVisible(true);
-    }, 200); // Duration of fade-out
+    }, 200);
   };
 
   const handleStarClick = (gamePk, teamId) => {
@@ -254,42 +254,44 @@ const MatchupCard = ({
                       <option value="batter-gamelog">BATTER GAME LOG</option>
                       <option value="pitcher-last-5">PITCHER GAME LOG</option>
                     </select>
-                    <div className={`stat-section ${contentVisible ? 'fade-in' : 'fade-out'}`}>
-                      {contentKey === 'team-history' && <TeamHistory game={game} />}
-                      {contentKey === 'player-stats' && <PlayerStats game={game} />}
-                      {contentKey === 'pitcher-last-5' && (
-                        <PitcherLastFive
-                          game={game}
-                          awayGames={pitcherLogs[game.gamePk]?.away || []}
-                          homeGames={pitcherLogs[game.gamePk]?.home || []}
-                        />
-                      )}
-                      {contentKey === 'batter-gamelog' && (
-                        <>
-                          <BatterGamelog
-                            team={game.teams.away.team}
-                            teamType="Away"
-                            gameDate={game.gameDate}
-                            getTeamAbbreviation={getTeamAbbreviation}
-                            showGameCountSelector={true}
-                            numGamesToShow={numGamesToShow}
-                            setNumGamesToShow={setNumGamesToShow}
-                            batterLogs={batterGameLogs[game.teams.away.team.id]}
-                            teamRoster={batterGameLogs[game.teams.away.team.id]?.roster}
+                    <div className={`stat-section`}>
+                      <div className={contentVisible ? 'fade-in' : 'fade-out'}>
+                        {contentKey === 'team-history' && <TeamHistory game={game} />}
+                        {contentKey === 'player-stats' && <PlayerStats game={game} />}
+                        {contentKey === 'pitcher-last-5' && (
+                          <PitcherLastFive
+                            game={game}
+                            awayGames={pitcherLogs[game.gamePk]?.away || []}
+                            homeGames={pitcherLogs[game.gamePk]?.home || []}
                           />
-                          <BatterGamelog
-                            team={game.teams.home.team}
-                            teamType="Home"
-                            gameDate={game.gameDate}
-                            getTeamAbbreviation={getTeamAbbreviation}
-                            showGameCountSelector={false}
-                            numGamesToShow={numGamesToShow}
-                            setNumGamesToShow={setNumGamesToShow}
-                            batterLogs={batterGameLogs[game.teams.home.team.id]}
-                            teamRoster={batterGameLogs[game.teams.home.team.id]?.roster}
-                          />
-                        </>
-                      )}
+                        )}
+                        {contentKey === 'batter-gamelog' && (
+                          <>
+                            <BatterGamelog
+                              team={game.teams.away.team}
+                              teamType="Away"
+                              gameDate={game.gameDate}
+                              getTeamAbbreviation={getTeamAbbreviation}
+                              showGameCountSelector={true}
+                              numGamesToShow={numGamesToShow}
+                              setNumGamesToShow={setNumGamesToShow}
+                              batterLogs={batterGameLogs[game.teams.away.team.id]}
+                              teamRoster={batterGameLogs[game.teams.away.team.id]?.roster}
+                            />
+                            <BatterGamelog
+                              team={game.teams.home.team}
+                              teamType="Home"
+                              gameDate={game.gameDate}
+                              getTeamAbbreviation={getTeamAbbreviation}
+                              showGameCountSelector={false}
+                              numGamesToShow={numGamesToShow}
+                              setNumGamesToShow={setNumGamesToShow}
+                              batterLogs={batterGameLogs[game.teams.home.team.id]}
+                              teamRoster={batterGameLogs[game.teams.home.team.id]?.roster}
+                            />
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
