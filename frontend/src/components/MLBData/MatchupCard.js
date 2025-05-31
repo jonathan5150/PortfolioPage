@@ -18,7 +18,7 @@ const fetchPitcherGameLog = async (playerId, getTeamAbbreviation, beforeDate) =>
     const beforeDay = new Date(beforeDate).toISOString().split('T')[0];
 
     const filtered = splits
-      .filter(game => game.date < beforeDay)
+      .filter(game => game.date <= beforeDay)
       .sort((a, b) => new Date(b.date) - new Date(a.date))
       .slice(0, 10);
 
