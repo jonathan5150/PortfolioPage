@@ -4,8 +4,9 @@ const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onSelectAll, onDeselect
   return (
     <div className="teams-menu">
       <div className="menu-buttons">
-        <button className="select-button" onClick={onSelectAll}>ALL</button>
-        <button className="select-button" onClick={onDeselectAll}>NONE</button>
+        <button type="button" className="select-button" onClick={onSelectAll}>ALL</button>
+        <button type="button" className="select-button" onClick={onDeselectAll}>NONE</button>
+
       </div>
       <ul>
         {teams.map((team) => (
@@ -14,7 +15,11 @@ const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onSelectAll, onDeselect
               <input
                 type="checkbox"
                 checked={selectedTeams.includes(team.id)}
-                onChange={() => onTeamChange(team.id)}
+                onChange={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onTeamChange(team.id);
+                }}
               />
               {team.abbreviation} {team.name}
             </label>

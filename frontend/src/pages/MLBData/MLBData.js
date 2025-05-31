@@ -319,32 +319,29 @@ function MLBData() {
           gameDay.games.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
         });
 
-        const sortedVisibleGames = games.flatMap(date =>
-          date.games.filter(game =>
-            selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id)
-          )
-        ).sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
+        const sortedGames = games.flatMap(date => date.games)
+          .sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
 
         setGameBackgroundColors(backgroundColors);
-                setTodayGames(games);
-                setVisibleGames(sortedVisibleGames);
+        setTodayGames(games); // Save full list for filtering later
+        setVisibleGames(sortedGames); // Initial unfiltered list
 
-                const batterLogs = {};
+        const batterLogs = {};
 
-                await Promise.all(sortedVisibleGames.flatMap(game =>
-                  [game.teams.away.team, game.teams.home.team].map(async (team) => {
-                    const { logs, roster } = await fetchBatterLogsForTeam(
-                      team.id,
-                      team.name,
-                      game.gameDate,
-                      getTeamAbbreviation
-                    );
-                    batterLogs[team.id] = { logs, roster };
-                  })
-                ));
+        await Promise.all(sortedGames.flatMap(game =>
+          [game.teams.away.team, game.teams.home.team].map(async (team) => {
+            const { logs, roster } = await fetchBatterLogsForTeam(
+              team.id,
+              team.name,
+              game.gameDate,
+              getTeamAbbreviation
+            );
+            batterLogs[team.id] = { logs, roster };
+          })
+        ));
 
-                setBatterGameLogs(batterLogs);
-                setLoading(false); // ✅ Only happens after batter logs finish
+        setBatterGameLogs(batterLogs);
+        setLoading(false); // ✅ Only happens after batter logs finish
               } catch (error) {
                 console.error('Error fetching game data:', error);
                 setLoading(false); // ✅ Still fallback in error case
@@ -356,7 +353,7 @@ function MLBData() {
     };
 
     initializeData();
-  }, [selectedDate, selectedTeams, getTeamAbbreviation]);
+  }, [selectedDate, getTeamAbbreviation]);
 
 
   useEffect(() => {
