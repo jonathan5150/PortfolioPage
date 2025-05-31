@@ -231,7 +231,8 @@ h3 {
 }
 
 .column1 {
-  width: 10%; /* Take 10% of the width */
+  width: 25%; /* Take 10% of the width */
+  padding: 5px;
 }
 
 .column1 .row1, .column1 .row2 {
@@ -248,7 +249,7 @@ h3 {
 }
 
 .column2 {
-  width: 20%; /* Take 20% of the width */
+  width: 85%; /* Take 75% of the width */
   display: flex;
   flex-direction: column;
 }
@@ -266,6 +267,7 @@ h3 {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: -7px;
 }
 
 .column2 .pitcher-info-bottom {
@@ -307,15 +309,15 @@ h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: -2px;
   min-height: 68px;
+  margin-top: -1px;
 }
 
 .pitcher-info-bottom {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: auto;
+  margin-top: -20px;
   min-height: 72px;
 }
 
@@ -710,6 +712,13 @@ select:focus {
   margin: 5px 0px;
 }
 
+.matchup-columns {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+}
+
 
 @media only screen and (max-width: 768px) {
   .column1 {
@@ -725,9 +734,6 @@ select:focus {
   font-size: 13px; /* Adjust the font size */
 }
 
-  .column3 {
-    display: none; /* Hide column3 on mobile devices */
-  }
 
   .column1 img {
     margin-right: 0px;
@@ -740,7 +746,6 @@ select:focus {
 
   p.vs {
     font-size: 12px;
-    margin: 0px;
-    margin-bottom: -13px;
+    margin-top: 13px;
   }
 }

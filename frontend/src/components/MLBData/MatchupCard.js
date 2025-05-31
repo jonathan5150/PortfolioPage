@@ -187,6 +187,7 @@ const MatchupCard = ({
                   </p>
                 </div>
                 <div className="matchup-group">
+                  <div className="matchup-columns">
                   <div className="column1">
                     <div className="row1">
                       <div
@@ -227,6 +228,7 @@ const MatchupCard = ({
                   </div>
                   <div className="column2">
                     <PitcherMatchup game={game} getTeamRecord={getTeamRecord} />
+                  </div>
                   </div>
                 </div>
                 <div className="game-data">
