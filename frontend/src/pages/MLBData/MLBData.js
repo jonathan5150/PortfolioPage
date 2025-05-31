@@ -28,7 +28,10 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
         .filter(game => game.date < beforeDay)
         .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-      if (filtered.length > 0) {
+      const positionCode = batter.position?.abbreviation || '';
+
+
+      if (filtered.length > 0 && positionCode !== 'P') {
         logs[fullName] = filtered.map((game) => ({
           date: game.date,
           opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
