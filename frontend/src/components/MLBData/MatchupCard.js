@@ -60,7 +60,9 @@ const MatchupCard = ({
   teamsMenuRef,
   todayGames,
   gameBackgroundColors,
-  batterGameLogs
+  batterGameLogs,
+  playerStatsSortConfig,
+  setPlayerStatsSortConfig
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
@@ -257,7 +259,12 @@ const MatchupCard = ({
                     <div className={`stat-section`}>
                       <div className={contentVisible ? 'fade-in' : 'fade-out'}>
                         {contentKey === 'team-history' && <TeamHistory game={game} />}
-                        {contentKey === 'player-stats' && <PlayerStats game={game} batterGameLogs={batterGameLogs} />}
+                        {contentKey === 'player-stats' && <PlayerStats
+                                                            game={game}
+                                                            batterGameLogs={batterGameLogs}
+                                                            playerStatsSortConfig={playerStatsSortConfig}
+                                                            setPlayerStatsSortConfig={setPlayerStatsSortConfig}
+                                                          />}
                         {contentKey === 'pitcher-last-5' && (
                           <PitcherLastFive
                             game={game}

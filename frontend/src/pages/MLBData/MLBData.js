@@ -82,7 +82,10 @@ function MLBData() {
   const teamsMenuRef = useRef();
   const [userPicks, setUserPicks] = useState({});
   const [batterGameLogs, setBatterGameLogs] = useState({});
-
+  const [playerStatsSortConfig, setPlayerStatsSortConfig] = useState({
+    key: 'fullName',
+    direction: 'asc',
+  });
 
 
   const getTeamAbbreviation = useCallback((teamId) => {
@@ -461,6 +464,8 @@ function MLBData() {
           numGamesToShow={numGamesToShow}
           setNumGamesToShow={setNumGamesToShow}
           batterGameLogs={batterGameLogs}
+          playerStatsSortConfig={playerStatsSortConfig}
+          setPlayerStatsSortConfig={setPlayerStatsSortConfig}
         />
       )}
     </div>

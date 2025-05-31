@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-const PlayerStats = ({ game, batterGameLogs }) => {
+const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerStatsSortConfig }) => {
   const awayTeamId = game.teams.away.team.id;
   const homeTeamId = game.teams.home.team.id;
 
   const awayRoster = batterGameLogs[awayTeamId]?.roster || [];
   const homeRoster = batterGameLogs[homeTeamId]?.roster || [];
 
-  const [sortConfig, setSortConfig] = useState({ key: 'fullName', direction: 'asc' });
+  const sortConfig = playerStatsSortConfig || { key: 'fullName', direction: 'asc' };
 
   const getSortableValue = (player, key) => {
     if (key === 'fullName') {
@@ -35,7 +35,7 @@ const PlayerStats = ({ game, batterGameLogs }) => {
   };
 
   const handleSort = (key) => {
-    setSortConfig((prev) => {
+    setPlayerStatsSortConfig((prev) => {
       if (prev.key === key) {
         return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
       }
