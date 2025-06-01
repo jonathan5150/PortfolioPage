@@ -313,26 +313,24 @@ const MatchupCard = ({
                           batterGameLogs[game.teams.home.team.id] && (
                             <div className = "fade-in">
                               <BatterGamelog
-                                team={game.teams.away.team}
-                                teamType="Away"
+                                teams={[
+                                  {
+                                    team: game.teams.away.team,
+                                    teamType: 'Away',
+                                    logs: batterGameLogs[game.teams.away.team.id]?.logs,
+                                    roster: batterGameLogs[game.teams.away.team.id]?.roster,
+                                  },
+                                  {
+                                    team: game.teams.home.team,
+                                    teamType: 'Home',
+                                    logs: batterGameLogs[game.teams.home.team.id]?.logs,
+                                    roster: batterGameLogs[game.teams.home.team.id]?.roster,
+                                  },
+                                ]}
                                 gameDate={game.gameDate}
                                 getTeamAbbreviation={getTeamAbbreviation}
-                                showGameCountSelector={true}
                                 numGamesToShow={numGamesToShow}
                                 setNumGamesToShow={setNumGamesToShow}
-                                batterLogs={batterGameLogs[game.teams.away.team.id]}
-                                teamRoster={batterGameLogs[game.teams.away.team.id]?.roster}
-                              />
-                              <BatterGamelog
-                                team={game.teams.home.team}
-                                teamType="Home"
-                                gameDate={game.gameDate}
-                                getTeamAbbreviation={getTeamAbbreviation}
-                                showGameCountSelector={false}
-                                numGamesToShow={numGamesToShow}
-                                setNumGamesToShow={setNumGamesToShow}
-                                batterLogs={batterGameLogs[game.teams.home.team.id]}
-                                teamRoster={batterGameLogs[game.teams.home.team.id]?.roster}
                               />
                             </div>
                           )}
