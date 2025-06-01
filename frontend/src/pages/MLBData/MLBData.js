@@ -68,7 +68,7 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
       }
     });
 
-    await throttleAsyncTasks(tasks, 5); // 👈 Throttle to 15 concurrent fetches
+    await throttleAsyncTasks(tasks, 10); // 👈 Throttle to 15 concurrent fetches
   } catch (err) {
     console.error(`Error loading batter logs for ${teamName}:`, err);
   }
@@ -341,22 +341,29 @@ function MLBData() {
         setVisibleGames(sortedGames); // Initial unfiltered list
 
         const batterLogs = {};
+        const teamFetchTasks = [];
 
         for (const game of sortedGames) {
           for (const team of [game.teams.away.team, game.teams.home.team]) {
-            try {
-              const { logs, roster } = await fetchBatterLogsForTeam(
-                team.id,
-                team.name,
-                game.gameDate,
-                getTeamAbbreviation
-              );
-              batterLogs[team.id] = { logs, roster };
-            } catch (err) {
-              console.warn(`Skipping ${team.name} due to error`, err);
-            }
+            teamFetchTasks.push(
+              (async () => {
+                try {
+                  const { logs, roster } = await fetchBatterLogsForTeam(
+                    team.id,
+                    team.name,
+                    game.gameDate,
+                    getTeamAbbreviation
+                  );
+                  batterLogs[team.id] = { logs, roster };
+                } catch (err) {
+                  console.warn(`Skipping ${team.name} due to error`, err);
+                }
+              })()
+            );
           }
         }
+
+        await Promise.all(teamFetchTasks);
 
         setBatterGameLogs(batterLogs);
         setLoading(false); // ✅ Only happens after batter logs finish
