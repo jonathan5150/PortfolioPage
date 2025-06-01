@@ -259,8 +259,8 @@ const MatchupCard = ({
                   <div className="game-data-container stat-toggle-container">
                     <select value={contentKey} onChange={(e) => handleDataSelect(e.target.value)}>
                       <option value="team-history">TEAM W/L HISTORY</option>
-                      <option value="player-stats">BATTER SEASON STATS</option>
-                      <option value="batter-gamelog">BATTER GAME LOG</option>
+                      <option value="player-stats">PLAYER SEASON STATS</option>
+                      <option value="batter-gamelog">PLAYER GAME LOG</option>
                       <option value="pitcher-last-5">PITCHER GAME LOG</option>
                     </select>
 

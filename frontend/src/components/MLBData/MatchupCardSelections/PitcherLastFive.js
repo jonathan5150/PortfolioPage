@@ -7,7 +7,7 @@ const PitcherLastFive = ({ game, awayGames, homeGames }) => {
       {games.length === 0 ? (
         <p>No recent starts found.</p>
       ) : (
-        <table style={{ fontSize: '13px', width: '100%', tableLayout: 'fixed' }}>
+        <table style={{ fontSize: '13px', width: '100%', tableLayout: 'fixed'}}>
           <thead>
             <tr>
               <th style={{ width: '16%' }}>DATE</th>

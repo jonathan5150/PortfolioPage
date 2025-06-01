@@ -7,12 +7,12 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
   const awayRoster = batterGameLogs[awayTeamId]?.roster || [];
   const homeRoster = batterGameLogs[homeTeamId]?.roster || [];
 
-  const sortConfig = playerStatsSortConfig || { key: 'fullName', direction: 'asc' };
+  const sortConfig = playerStatsSortConfig || { key: 'gamesPlayed', direction: 'desc' };
 
   const getSortableValue = (player, key) => {
     if (key === 'fullName') {
       const name = player.person?.fullName || player.fullName || '';
-      return name.split(' ').pop().toLowerCase(); // sort by last name
+      return name.split(' ').pop().toLowerCase();
     }
     return player.seasonStats?.[key] ?? 0;
   };
@@ -21,7 +21,6 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
     return [...players].sort((a, b) => {
       const aVal = getSortableValue(a, sortConfig.key);
       const bVal = getSortableValue(b, sortConfig.key);
-
       if (typeof aVal === 'string') {
         return sortConfig.direction === 'asc'
           ? aVal.localeCompare(bVal)
@@ -47,15 +46,13 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
   const renderArrow = (key) => {
     if (sortConfig.key !== key) return null;
     return (
-      <span
-        style={{
-          fontSize: '10px',
-          verticalAlign: 'middle',
-          marginLeft: '2px',
-          position: 'relative',
-          top: '-2px',
-        }}
-      >
+      <span style={{
+        fontSize: '10px',
+        verticalAlign: 'middle',
+        marginLeft: '2px',
+        position: 'relative',
+        top: '-2px',
+      }}>
         {sortConfig.direction === 'asc' ? '▲' : '▼'}
       </span>
     );
@@ -65,22 +62,21 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
     const sortedPlayers = sortPlayers(players);
 
     return (
-      <div
-        className="lineup noselect"
-        tabIndex={-1} // Prevent focus
-        draggable={false} // Prevent drag highlight
-      >
+      <div className="lineup noselect" tabIndex={-1} draggable={false}>
         <h3>{teamName}</h3>
         <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed', cursor: 'pointer' }}>
           <thead>
             <tr>
-              <th style={{ width: '26%', textAlign: 'left', paddingLeft: '5px' }} onClick={() => handleSort('fullName')}>
+              <th style={{ width: '35%', textAlign: 'left', paddingLeft: '5px' }} onClick={() => handleSort('fullName')}>
                 NAME{renderArrow('fullName')}
+              </th>
+              <th style={{ width: '8%' }} onClick={() => handleSort('gamesPlayed')}>
+                GP{renderArrow('gamesPlayed')}
               </th>
               <th style={{ width: '8%' }} onClick={() => handleSort('hits')}>
                 H{renderArrow('hits')}
               </th>
-              <th style={{ width: '10%' }} onClick={() => handleSort('rbi')}>
+              <th style={{ width: '8%' }} onClick={() => handleSort('rbi')}>
                 RBI{renderArrow('rbi')}
               </th>
               <th style={{ width: '8%' }} onClick={() => handleSort('baseOnBalls')}>
@@ -103,18 +99,17 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
           <tbody>
             {sortedPlayers.map((player, index) => (
               <tr key={player.person?.id || index}>
-                <td
-                  style={{
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    textAlign: 'left',
-                    paddingLeft: '5px',
-                    userSelect: 'none',
-                  }}
-                >
+                <td style={{
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  textAlign: 'left',
+                  paddingLeft: '5px',
+                  userSelect: 'none',
+                }}>
                   {player.person?.fullName || player.fullName || 'N/A'}
                 </td>
+                <td style={{ userSelect: 'none' }}>{player.seasonStats?.gamesPlayed ?? 0}</td>
                 <td style={{ userSelect: 'none' }}>{player.seasonStats?.hits ?? 0}</td>
                 <td style={{ userSelect: 'none' }}>{player.seasonStats?.rbi ?? 0}</td>
                 <td style={{ userSelect: 'none' }}>{player.seasonStats?.baseOnBalls ?? 0}</td>

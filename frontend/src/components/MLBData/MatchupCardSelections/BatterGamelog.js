@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Cookies from 'js-cookie';
 
 const BatterGamelog = ({
   teams = [],
@@ -7,8 +8,10 @@ const BatterGamelog = ({
   numGamesToShow,
   setNumGamesToShow
 }) => {
-  const [selectedPlayers, setSelectedPlayers] = useState({});
-
+  const [selectedPlayers, setSelectedPlayers] = useState(() => {
+    const saved = Cookies.get('selectedPlayers');
+    return saved ? JSON.parse(saved) : {};
+  });
   const getInitialSelected = (logs = {}) => {
     const leader = Object.entries(logs)
       .map(([name, logs]) => ({
@@ -20,20 +23,35 @@ const BatterGamelog = ({
   };
 
   useEffect(() => {
-    const initial = {};
-    for (const { team, logs } of teams) {
-      if (logs && Object.keys(logs).length > 0) {
-        initial[team.id] = getInitialSelected(logs);
+    setSelectedPlayers((prev) => {
+      const initial = { ...prev };
+      let updated = false;
+
+      for (const { team, logs } of teams) {
+        if (!initial[team.id] && logs && Object.keys(logs).length > 0) {
+          initial[team.id] = getInitialSelected(logs);
+          updated = true;
+        }
       }
-    }
-    setSelectedPlayers(initial);
+
+      if (updated) {
+        Cookies.set('selectedPlayers', JSON.stringify(initial), { expires: 365 });
+      }
+
+      return initial;
+    });
   }, [teams]);
 
+
   const handleSelectChange = (teamId, playerName) => {
-    setSelectedPlayers(prev => ({
-      ...prev,
-      [teamId]: playerName
-    }));
+    setSelectedPlayers(prev => {
+      const updated = {
+        ...prev,
+        [teamId]: playerName
+      };
+      Cookies.set('selectedPlayers', JSON.stringify(updated), { expires: 365 });
+      return updated;
+    });
   };
 
   return (
