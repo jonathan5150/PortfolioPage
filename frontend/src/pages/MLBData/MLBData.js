@@ -68,7 +68,7 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
       }
     });
 
-    await throttleAsyncTasks(tasks, 6); // 👈 Throttle to 15 concurrent fetches
+    await throttleAsyncTasks(tasks, 5); // 👈 Throttle to 15 concurrent fetches
   } catch (err) {
     console.error(`Error loading batter logs for ${teamName}:`, err);
   }

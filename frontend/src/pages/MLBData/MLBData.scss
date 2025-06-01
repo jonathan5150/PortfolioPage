@@ -568,13 +568,13 @@ select:focus {
 }
 
 .fade-in {
-  animation: fadeIn 0.6s ease-in forwards; /* Adjust the duration as needed */
+  animation: fadeIn 0.8s ease-in forwards; /* Adjust the duration as needed */
 }
 
 .fade-out {
-  animation: fadeOut 1s ease-out;
+  animation: fadeOut 3s ease-out;
   opacity: 0; /* Ensure the element becomes transparent at the end of the animation */
-  transition: opacity 1s ease-out;
+  transition: opacity 3s ease-out;
 }
 
 @keyframes fadeIn {
