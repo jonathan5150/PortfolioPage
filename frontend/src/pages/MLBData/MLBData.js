@@ -41,7 +41,7 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
 
         const filtered = splits
           .filter(game => game.date < beforeDay)
-          .sort((a, b) => new Date(b.date) - new Date(a.date));
+          .sort((a, b) => new Date(b.date) - new Date(a.date))
 
         if (filtered.length > 0 && positionCode !== 'P') {
           logs[fullName] = filtered.map((game) => ({
@@ -68,7 +68,7 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
       }
     });
 
-    await throttleAsyncTasks(tasks, 7); // 👈 Throttle to 15 concurrent fetches
+    await throttleAsyncTasks(tasks, 6); // 👈 Throttle to 15 concurrent fetches
   } catch (err) {
     console.error(`Error loading batter logs for ${teamName}:`, err);
   }

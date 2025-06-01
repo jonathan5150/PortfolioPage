@@ -273,7 +273,7 @@ const MatchupCard = ({
                           />
                         )}
                         {contentKey === 'batter-gamelog' && (
-                          <>
+                          <div>
                             <BatterGamelog
                               team={game.teams.away.team}
                               teamType="Away"
@@ -296,7 +296,7 @@ const MatchupCard = ({
                               batterLogs={batterGameLogs[game.teams.home.team.id]}
                               teamRoster={batterGameLogs[game.teams.home.team.id]?.roster}
                             />
-                          </>
+                          </div>
                         )}
                       </div>
                     </div>
