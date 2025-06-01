@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import Scoreboard from './Scoreboard';
 import MLBDataNavbar from './MLBDataNavbar';
 import Cookies from 'js-cookie';
@@ -68,13 +68,30 @@ const MatchupCard = ({
   const [fadeIn, setFadeIn] = useState(false);
   const [numGamesToShow, setNumGamesToShow] = useState(5);
   const [contentKey, setContentKey] = useState('team-history');
-  const [contentVisible, setContentVisible] = useState(true);
   const [starredTeams, setStarredTeams] = useState(() => {
     const saved = Cookies.get('starredTeams');
     return saved ? JSON.parse(saved) : {};
   });
 
   const [pitcherLogs, setPitcherLogs] = useState({});
+  const [contentHeight, setContentHeight] = useState('auto');
+  const contentRef = useRef(null);
+
+  useEffect(() => {
+    if (!contentRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        if (entry.target === contentRef.current) {
+          setContentHeight(entry.contentRect.height + 'px');
+        }
+      }
+    });
+
+    observer.observe(contentRef.current);
+
+    return () => observer.disconnect();
+  }, [visibleGames, contentKey]);
 
   useEffect(() => {
     const preloadPitcherData = async () => {
@@ -124,12 +141,14 @@ const MatchupCard = ({
   const handleDataSelect = (dataType) => {
     if (dataType === contentKey) return;
 
-    setContentVisible(false);
-    setTimeout(() => {
-      setContentKey(dataType);
-      setContentVisible(true);
-    }, 200);
+    setContentKey(dataType);
   };
+
+  useLayoutEffect(() => {
+    if (contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight + 'px');
+    }
+  }, [contentKey, visibleGames, batterGameLogs]);
 
   const handleStarClick = (gamePk, teamId) => {
     setStarredTeams((prev) => {
@@ -256,48 +275,67 @@ const MatchupCard = ({
                       <option value="batter-gamelog">BATTER GAME LOG</option>
                       <option value="pitcher-last-5">PITCHER GAME LOG</option>
                     </select>
-                    <div className={`stat-section`}>
-                      <div className={contentVisible ? 'fade-in' : 'fade-out'}>
-                        {contentKey === 'team-history' && <TeamHistory game={game} />}
-                        {contentKey === 'player-stats' && <PlayerStats
-                                                            game={game}
-                                                            batterGameLogs={batterGameLogs}
-                                                            playerStatsSortConfig={playerStatsSortConfig}
-                                                            setPlayerStatsSortConfig={setPlayerStatsSortConfig}
-                                                          />}
+                    <div
+                      className="stat-section"
+                      style={{
+                        height: contentHeight,
+                        overflow: 'hidden',
+                        transition: 'height 0.4s ease',
+                      }}
+                    >
+                      <div ref={contentRef}>
+                        {contentKey === 'team-history' && (
+                          <div className = "fade-in">
+                            <TeamHistory game={game} />
+                          </div>
+                        )}
+                        {contentKey === 'player-stats' && (
+                          <div className = "fade-in">
+                          <PlayerStats
+                            game={game}
+                            batterGameLogs={batterGameLogs}
+                            playerStatsSortConfig={playerStatsSortConfig}
+                            setPlayerStatsSortConfig={setPlayerStatsSortConfig}
+                          />
+                          </div>
+                        )}
                         {contentKey === 'pitcher-last-5' && (
+                          <div className = "fade-in">
                           <PitcherLastFive
                             game={game}
                             awayGames={pitcherLogs[game.gamePk]?.away || []}
                             homeGames={pitcherLogs[game.gamePk]?.home || []}
                           />
-                        )}
-                        {contentKey === 'batter-gamelog' && (
-                          <div>
-                            <BatterGamelog
-                              team={game.teams.away.team}
-                              teamType="Away"
-                              gameDate={game.gameDate}
-                              getTeamAbbreviation={getTeamAbbreviation}
-                              showGameCountSelector={true}
-                              numGamesToShow={numGamesToShow}
-                              setNumGamesToShow={setNumGamesToShow}
-                              batterLogs={batterGameLogs[game.teams.away.team.id]}
-                              teamRoster={batterGameLogs[game.teams.away.team.id]?.roster}
-                            />
-                            <BatterGamelog
-                              team={game.teams.home.team}
-                              teamType="Home"
-                              gameDate={game.gameDate}
-                              getTeamAbbreviation={getTeamAbbreviation}
-                              showGameCountSelector={false}
-                              numGamesToShow={numGamesToShow}
-                              setNumGamesToShow={setNumGamesToShow}
-                              batterLogs={batterGameLogs[game.teams.home.team.id]}
-                              teamRoster={batterGameLogs[game.teams.home.team.id]?.roster}
-                            />
                           </div>
                         )}
+                        {contentKey === 'batter-gamelog' &&
+                          batterGameLogs[game.teams.away.team.id] &&
+                          batterGameLogs[game.teams.home.team.id] && (
+                            <div className = "fade-in">
+                              <BatterGamelog
+                                team={game.teams.away.team}
+                                teamType="Away"
+                                gameDate={game.gameDate}
+                                getTeamAbbreviation={getTeamAbbreviation}
+                                showGameCountSelector={true}
+                                numGamesToShow={numGamesToShow}
+                                setNumGamesToShow={setNumGamesToShow}
+                                batterLogs={batterGameLogs[game.teams.away.team.id]}
+                                teamRoster={batterGameLogs[game.teams.away.team.id]?.roster}
+                              />
+                              <BatterGamelog
+                                team={game.teams.home.team}
+                                teamType="Home"
+                                gameDate={game.gameDate}
+                                getTeamAbbreviation={getTeamAbbreviation}
+                                showGameCountSelector={false}
+                                numGamesToShow={numGamesToShow}
+                                setNumGamesToShow={setNumGamesToShow}
+                                batterLogs={batterGameLogs[game.teams.home.team.id]}
+                                teamRoster={batterGameLogs[game.teams.home.team.id]?.roster}
+                              />
+                            </div>
+                          )}
                       </div>
                     </div>
                   </div>

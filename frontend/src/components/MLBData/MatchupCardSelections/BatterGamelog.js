@@ -36,7 +36,7 @@ const BatterGamelog = ({
   const games = (playerLogs[selectedPlayer] || []).slice(0, numGamesToShow);
 
   return (
-    <div className="fade-in batter-gamelog-wrapper">
+    <div className="batter-gamelog-wrapper">
       <div style={{ position: 'relative', marginBottom: '10px', height: '30px' }}>
         <div
           style={{
@@ -90,7 +90,7 @@ const BatterGamelog = ({
       {games.length === 0 ? (
         <p>No recent games found for {selectedPlayer}.</p>
       ) : (
-        <table className="fade-in" style={{ fontSize: '13px', width: '100%', tableLayout: 'fixed' }}>
+        <table style={{ fontSize: '13px', width: '100%', tableLayout: 'fixed' }}>
           <thead>
             <tr>
               <th style={{ width: '12%' }}>DATE</th>
