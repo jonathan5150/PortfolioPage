@@ -50,7 +50,7 @@ const MatchupCard = ({
   const updateContentHeight = (gamePk) => {
     const ref = contentRefs.current[gamePk];
     if (ref) {
-      setContentHeights(prev => ({
+      setContentHeights((prev) => ({
         ...prev,
         [gamePk]: ref.scrollHeight + 'px'
       }));
@@ -59,13 +59,12 @@ const MatchupCard = ({
 
   useLayoutEffect(() => {
     const timeout = setTimeout(() => {
-      visibleGames.forEach(game => {
+      visibleGames.forEach((game) => {
         updateContentHeight(game.gamePk);
       });
-    }, 10); // allow DOM to complete render before measuring
-
+    }, 10); // allow render to finish
     return () => clearTimeout(timeout);
-  }, [contentKey, visibleGames, batterGameLogs]);
+  }, [contentKey, visibleGames, batterGameLogs, numGamesToShow]);
 
   useEffect(() => {
     const fetchPitcherGameLog = async (playerId, getTeamAbbreviation, beforeDate) => {
@@ -185,15 +184,13 @@ const MatchupCard = ({
           visibleGames.map((game) => {
             const gamePk = game.gamePk;
             const contentRef = (el) => {
-              if (el) {
-                contentRefs.current[gamePk] = el;
-              }
+              if (el) contentRefs.current[gamePk] = el;
             };
 
             const contentStyle = {
               height: contentHeights[gamePk] || 'auto',
               overflow: 'hidden',
-              transition: 'height 0.4s ease'
+              transition: 'height 0.6s ease'
             };
 
             return (
