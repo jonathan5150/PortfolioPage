@@ -280,7 +280,7 @@ const MatchupCard = ({
                       style={{
                         height: contentHeight,
                         overflow: 'hidden',
-                        transition: 'height 0.8s ease',
+                        transition: 'height 0.5s ease',
                       }}
                     >
                       <div ref={contentRef}>
