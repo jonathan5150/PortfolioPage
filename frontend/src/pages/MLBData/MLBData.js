@@ -13,37 +13,41 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
   try {
     const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster/40Man`);
     const data = await res.json();
-    const batters = data.roster;
+    const batters = data.roster.filter(
+      (b) => b.position?.abbreviation !== 'P' && b.person?.id
+    );
+
+    const playerIds = batters.map((b) => b.person.id);
+    const idString = playerIds.join(',');
+
+    // ✅ Batch season stats
+    const seasonUrl = `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2025)`;
+    const seasonRes = await fetch(seasonUrl);
+    const seasonData = await seasonRes.json();
+
+    const seasonStatsMap = {};
+    for (const person of seasonData.people || []) {
+      seasonStatsMap[person.id] = person.stats?.[0]?.splits?.[0]?.stat || {};
+    }
 
     const beforeDay = new Date(gameDate).toISOString().split('T')[0];
 
     const tasks = batters.map((batter) => async () => {
       const fullName = batter.person.fullName;
       const playerId = batter.person.id;
-      const positionCode = batter.position?.abbreviation || '';
 
-      const seasonUrl = `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[hitting],type=[season],season=2025)`;
       const logUrl = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=2025`;
 
       try {
-        const [seasonRes, logRes] = await Promise.all([
-          fetch(seasonUrl),
-          fetch(logUrl),
-        ]);
-
-        const [seasonData, logData] = await Promise.all([
-          seasonRes.json(),
-          logRes.json(),
-        ]);
-
-        const seasonStats = seasonData.people?.[0]?.stats?.[0]?.splits?.[0]?.stat || {};
+        const logRes = await fetch(logUrl);
+        const logData = await logRes.json();
         const splits = logData.stats?.[0]?.splits || [];
 
         const filtered = splits
           .filter(game => game.date < beforeDay)
-          .sort((a, b) => new Date(b.date) - new Date(a.date))
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        if (filtered.length > 0 && positionCode !== 'P') {
+        if (filtered.length > 0) {
           logs[fullName] = filtered.map((game) => ({
             date: game.date,
             opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
@@ -60,15 +64,15 @@ const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbrevi
 
           filteredRoster.push({
             ...batter,
-            seasonStats,
+            seasonStats: seasonStatsMap[playerId] || {},
           });
         }
       } catch (err) {
-        console.warn(`Failed to load stats for ${fullName}:`, err);
+        console.warn(`Failed to load logs for ${fullName}:`, err);
       }
     });
 
-    await throttleAsyncTasks(tasks, 10); // 👈 Throttle to 15 concurrent fetches
+    await throttleAsyncTasks(tasks, 10); // 🧵 Still throttle log fetches
   } catch (err) {
     console.error(`Error loading batter logs for ${teamName}:`, err);
   }
