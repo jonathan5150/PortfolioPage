@@ -37,8 +37,10 @@ const MatchupCard = ({
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const [numGamesToShow, setNumGamesToShow] = useState(5);
-  const [contentKey, setContentKey] = useState('team-history');
-  const [starredTeams, setStarredTeams] = useState(() => {
+  const [contentKey, setContentKey] = useState(() => {
+    const saved = Cookies.get('contentKey');
+    return saved || 'team-history';
+  });  const [starredTeams, setStarredTeams] = useState(() => {
     const saved = Cookies.get('starredTeams');
     return saved ? JSON.parse(saved) : {};
   });
@@ -141,7 +143,10 @@ const MatchupCard = ({
   }, [loading]);
 
   const handleDataSelect = (dataType) => {
-    if (dataType !== contentKey) setContentKey(dataType);
+    if (dataType !== contentKey) {
+      setContentKey(dataType);
+      Cookies.set('contentKey', dataType, { expires: 365 });
+    }
   };
 
   const handleStarClick = (gamePk, teamId) => {
@@ -278,6 +283,11 @@ const MatchupCard = ({
                               batterGameLogs={batterGameLogs}
                               playerStatsSortConfig={playerStatsSortConfig}
                               setPlayerStatsSortConfig={setPlayerStatsSortConfig}
+                              setContentKey={setContentKey}
+                              setSelectedPlayers={(teamId, playerName) => {
+                                const updated = { ...JSON.parse(Cookies.get('selectedPlayers') || '{}'), [teamId]: playerName };
+                                Cookies.set('selectedPlayers', JSON.stringify(updated), { expires: 365 });
+                              }}
                             />
                           </div>
                         )}

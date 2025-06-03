@@ -12,6 +12,17 @@ const BatterGamelog = ({
     const saved = Cookies.get('selectedPlayers');
     return saved ? JSON.parse(saved) : {};
   });
+
+  useEffect(() => {
+    const savedGames = Cookies.get('numGamesToShow');
+    if (savedGames) {
+      const parsed = parseInt(savedGames);
+      if (!isNaN(parsed)) {
+        setNumGamesToShow(parsed);
+      }
+    }
+  }, [setNumGamesToShow]);
+
   const getInitialSelected = (logs = {}) => {
     const leader = Object.entries(logs)
       .map(([name, logs]) => ({
@@ -41,7 +52,6 @@ const BatterGamelog = ({
       return initial;
     });
   }, [teams]);
-
 
   const handleSelectChange = (teamId, playerName) => {
     setSelectedPlayers(prev => {
@@ -78,7 +88,11 @@ const BatterGamelog = ({
                 <div style={{ position: 'absolute', right: 0 }}>
                   <select
                     value={numGamesToShow}
-                    onChange={(e) => setNumGamesToShow(parseInt(e.target.value))}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      setNumGamesToShow(value);
+                      Cookies.set('numGamesToShow', value, { expires: 365 });
+                    }}
                     style={{ padding: '4px' }}
                   >
                     <option value={5}>5</option>

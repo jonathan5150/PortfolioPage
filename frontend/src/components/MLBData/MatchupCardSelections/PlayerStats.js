@@ -1,6 +1,13 @@
 import React from 'react';
 
-const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerStatsSortConfig }) => {
+const PlayerStats = ({
+  game,
+  batterGameLogs,
+  playerStatsSortConfig,
+  setPlayerStatsSortConfig,
+  setContentKey,
+  setSelectedPlayers
+}) => {
   const awayTeamId = game.teams.away.team.id;
   const homeTeamId = game.teams.home.team.id;
 
@@ -154,14 +161,26 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
               return (
                 <React.Fragment key={player.person?.id || index}>
                   <tr>
-                    <td style={{
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      textAlign: 'left',
-                      paddingLeft: '5px',
-                      userSelect: 'none',
-                    }}>
+                    <td
+                      onClick={() => {
+                        setContentKey('batter-gamelog');
+                        setSelectedPlayers(teamId, playerName);
+                        setTimeout(() => {
+                          const dropdown = document.querySelector(`select[value="${playerName}"]`);
+                          if (dropdown) dropdown.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 50);
+                      }}
+                      style={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        textAlign: 'left',
+                        paddingLeft: '5px',
+                        userSelect: 'none',
+                        textDecoration: 'underline',
+                        cursor: 'pointer'
+                      }}
+                    >
                       {playerName || 'N/A'}
                     </td>
                     <td>{gp || ''}</td>
