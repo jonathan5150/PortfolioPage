@@ -58,8 +58,40 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
     );
   };
 
-  const renderPlayerTable = (teamName, players) => {
-    const sortedPlayers = sortPlayers(players);
+  const renderGamesPerStat = (stat, gamesPlayed) => {
+    if (!gamesPlayed || !stat || stat === 0) return '–';
+    const value = (gamesPlayed / stat).toFixed(1);
+    return value.endsWith('.0') ? value.slice(0, -2) : value;
+  };
+
+  const renderGamesSinceStat = (logs = [], statKey) => {
+    if (!Array.isArray(logs) || logs.length === 0) return '–';
+    for (let i = logs.length - 1; i >= 0; i--) {
+      const val = parseInt(logs[i][statKey]) || 0;
+      if (val > 0) {
+        return logs.length - 1 - i;
+      }
+    }
+    return '–';
+  };
+
+  const getGamesSinceColor = (since, perStat) => {
+    if (since === '–' || perStat === '–') return undefined;
+    const sinceNum = Number(since);
+    const perStatNum = Number(perStat);
+    if (isNaN(sinceNum) || isNaN(perStatNum)) return undefined;
+
+    return sinceNum > perStatNum ? 'red' : undefined;
+  };
+
+  const renderStatCell = (value, isGpOrAvg = false) => {
+    if (isGpOrAvg) return value || '';
+    return value === 0 ? '–' : value;
+  };
+
+  const renderPlayerTable = (teamName, players, teamId) => {
+    const filteredPlayers = players.filter(p => (p.seasonStats?.gamesPlayed || 0) >= 10);
+    const sortedPlayers = sortPlayers(filteredPlayers);
 
     return (
       <div className="lineup noselect" tabIndex={-1} draggable={false}>
@@ -67,7 +99,7 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
         <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed', cursor: 'pointer' }}>
           <thead>
             <tr>
-              <th style={{ width: '35%', textAlign: 'left', paddingLeft: '5px' }} onClick={() => handleSort('fullName')}>
+              <th style={{ width: '35%', textAlign: 'center', paddingLeft: '5px' }} onClick={() => handleSort('fullName')}>
                 NAME{renderArrow('fullName')}
               </th>
               <th style={{ width: '8%' }} onClick={() => handleSort('gamesPlayed')}>
@@ -97,28 +129,77 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
             </tr>
           </thead>
           <tbody>
-            {sortedPlayers.map((player, index) => (
-              <tr key={player.person?.id || index}>
-                <td style={{
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  textAlign: 'left',
-                  paddingLeft: '5px',
-                  userSelect: 'none',
-                }}>
-                  {player.person?.fullName || player.fullName || 'N/A'}
-                </td>
-                <td style={{ userSelect: 'none' }}>{player.seasonStats?.gamesPlayed ?? 0}</td>
-                <td style={{ userSelect: 'none' }}>{player.seasonStats?.hits ?? 0}</td>
-                <td style={{ userSelect: 'none' }}>{player.seasonStats?.rbi ?? 0}</td>
-                <td style={{ userSelect: 'none' }}>{player.seasonStats?.baseOnBalls ?? 0}</td>
-                <td style={{ userSelect: 'none' }}>{player.seasonStats?.strikeOuts ?? 0}</td>
-                <td style={{ userSelect: 'none' }}>{player.seasonStats?.homeRuns ?? 0}</td>
-                <td style={{ userSelect: 'none' }}>{player.seasonStats?.stolenBases ?? 0}</td>
-                <td style={{ userSelect: 'none' }}>{player.seasonStats?.avg ?? '.000'}</td>
-              </tr>
-            ))}
+            {sortedPlayers.map((player, index) => {
+              const stats = player.seasonStats || {};
+              const gp = stats.gamesPlayed || 0;
+              const playerName = player.fullName || player.person?.fullName || '';
+              const logs = batterGameLogs[teamId]?.logs?.[playerName] || {};
+
+              const perStats = {
+                hits: renderGamesPerStat(stats.hits, gp),
+                rbi: renderGamesPerStat(stats.rbi, gp),
+                baseOnBalls: renderGamesPerStat(stats.baseOnBalls, gp),
+                strikeOuts: renderGamesPerStat(stats.strikeOuts, gp),
+                homeRuns: renderGamesPerStat(stats.homeRuns, gp),
+                stolenBases: renderGamesPerStat(stats.stolenBases, gp),
+              };
+
+              const sinceStats = {
+                hits: renderGamesSinceStat(logs, 'hits'),
+                rbi: renderGamesSinceStat(logs, 'rbi'),
+                baseOnBalls: renderGamesSinceStat(logs, 'baseOnBalls'),
+                strikeOuts: renderGamesSinceStat(logs, 'strikeOuts'),
+                homeRuns: renderGamesSinceStat(logs, 'homeRuns'),
+                stolenBases: renderGamesSinceStat(logs, 'stolenBases'),
+              };
+
+              return (
+                <React.Fragment key={player.person?.id || index}>
+                  <tr>
+                    <td style={{
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      textAlign: 'left',
+                      paddingLeft: '5px',
+                      userSelect: 'none',
+                    }}>
+                      {playerName || 'N/A'}
+                    </td>
+                    <td>{renderStatCell(gp, true)}</td>
+                    <td>{renderStatCell(stats.hits)}</td>
+                    <td>{renderStatCell(stats.rbi)}</td>
+                    <td>{renderStatCell(stats.baseOnBalls)}</td>
+                    <td>{renderStatCell(stats.strikeOuts)}</td>
+                    <td>{renderStatCell(stats.homeRuns)}</td>
+                    <td>{renderStatCell(stats.stolenBases)}</td>
+                    <td>{renderStatCell(stats.avg, true)}</td>
+                  </tr>
+                  <tr style={{ fontStyle: 'italic', color: '#888' }}>
+                    <td style={{ textAlign: 'right', paddingRight: '5px' }}>GAMES PER STAT</td>
+                    <td></td>
+                    <td style={{ textAlign: 'center' }}>{perStats.hits}</td>
+                    <td style={{ textAlign: 'center' }}>{perStats.rbi}</td>
+                    <td style={{ textAlign: 'center' }}>{perStats.baseOnBalls}</td>
+                    <td style={{ textAlign: 'center' }}>{perStats.strikeOuts}</td>
+                    <td style={{ textAlign: 'center' }}>{perStats.homeRuns}</td>
+                    <td style={{ textAlign: 'center' }}>{perStats.stolenBases}</td>
+                    <td></td>
+                  </tr>
+                  <tr style={{ fontStyle: 'italic', color: '#aaa' }}>
+                    <td style={{ textAlign: 'right', paddingRight: '5px' }}>GAMES SINCE</td>
+                    <td></td>
+                    {Object.keys(sinceStats).map((key) => {
+                      const color = getGamesSinceColor(sinceStats[key], perStats[key]);
+                      return (
+                        <td key={key} style={{ textAlign: 'center', color: color }}>{sinceStats[key]}</td>
+                      );
+                    })}
+                    <td></td>
+                  </tr>
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -127,8 +208,8 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
 
   return (
     <div className="player-stats">
-      {renderPlayerTable(game.teams.away.team.name, awayRoster)}
-      {renderPlayerTable(game.teams.home.team.name, homeRoster)}
+      {renderPlayerTable(game.teams.away.team.name, awayRoster, awayTeamId)}
+      {renderPlayerTable(game.teams.home.team.name, homeRoster, homeTeamId)}
     </div>
   );
 };
