@@ -72,7 +72,7 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
 
     for (let i = 0; i < reversed.length; i++) {
       const val = parseInt(reversed[i][statKey]) || 0;
-      if (val > 0) return i - 1 >= 0 ? i - 1 : '0'; // subtract 1, but don't go below 0
+      if (val > 0) return i >= 0 ? i : '0'; // subtract 1, but don't go below 0
     }
 
     return '–';
