@@ -59,6 +59,7 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
   };
 
   const renderGamesPerStat = (stat, gamesPlayed) => {
+
     if (!gamesPlayed || !stat || stat === 0) return '–';
     const value = (gamesPlayed / stat).toFixed(1);
     return value.endsWith('.0') ? value.slice(0, -2) : value;
@@ -66,12 +67,14 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
 
   const renderGamesSinceStat = (logs = [], statKey) => {
     if (!Array.isArray(logs) || logs.length === 0) return '–';
-    for (let i = logs.length - 1; i >= 0; i--) {
-      const val = parseInt(logs[i][statKey]) || 0;
-      if (val > 0) {
-        return logs.length - 1 - i;
-      }
+
+    const reversed = [...logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    for (let i = 0; i < reversed.length; i++) {
+      const val = parseInt(reversed[i][statKey]) || 0;
+      if (val > 0) return i - 1 >= 0 ? i - 1 : '0'; // subtract 1, but don't go below 0
     }
+
     return '–';
   };
 
@@ -82,11 +85,6 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
     if (isNaN(sinceNum) || isNaN(perStatNum)) return undefined;
 
     return sinceNum > perStatNum ? 'red' : undefined;
-  };
-
-  const renderStatCell = (value, isGpOrAvg = false) => {
-    if (isGpOrAvg) return value || '';
-    return value === 0 ? '–' : value;
   };
 
   const renderPlayerTable = (teamName, players, teamId) => {
@@ -166,14 +164,14 @@ const PlayerStats = ({ game, batterGameLogs, playerStatsSortConfig, setPlayerSta
                     }}>
                       {playerName || 'N/A'}
                     </td>
-                    <td>{renderStatCell(gp, true)}</td>
-                    <td>{renderStatCell(stats.hits)}</td>
-                    <td>{renderStatCell(stats.rbi)}</td>
-                    <td>{renderStatCell(stats.baseOnBalls)}</td>
-                    <td>{renderStatCell(stats.strikeOuts)}</td>
-                    <td>{renderStatCell(stats.homeRuns)}</td>
-                    <td>{renderStatCell(stats.stolenBases)}</td>
-                    <td>{renderStatCell(stats.avg, true)}</td>
+                    <td>{gp || ''}</td>
+                    <td>{stats.hits ?? 0}</td>
+                    <td>{stats.rbi ?? 0}</td>
+                    <td>{stats.baseOnBalls ?? 0}</td>
+                    <td>{stats.strikeOuts ?? 0}</td>
+                    <td>{stats.homeRuns ?? 0}</td>
+                    <td>{stats.stolenBases ?? 0}</td>
+                    <td>{stats.avg || ''}</td>
                   </tr>
                   <tr style={{ fontStyle: 'italic', color: '#888' }}>
                     <td style={{ textAlign: 'right', paddingRight: '5px' }}>GAMES PER STAT</td>
