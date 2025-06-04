@@ -21,7 +21,7 @@ const BoxScore = ({ liveData }) => {
   if (!away || !home || lineupUnavailable) {
     return (
       <div style={{ padding: '1rem', textAlign: 'center', fontStyle: 'italic' }}>
-        Lineup not yet available.
+        Lineup not yet available
       </div>
     );
   }
