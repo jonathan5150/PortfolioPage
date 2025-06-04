@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import './MLBData.scss';
 import { format, subDays } from 'date-fns';
 import Cookies from 'js-cookie';
-import MatchupCard from '../../components/MLBData/MatchupCard';
+import MatchupCard from '../../components/MLBDataComponents/MatchupCard/MatchupCard';
 import { throttleAsyncTasks } from '../../utils/concurrency';
 
 

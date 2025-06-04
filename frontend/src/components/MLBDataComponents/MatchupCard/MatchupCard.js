@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import Scoreboard from './Scoreboard';
-import MLBDataNavbar from './MLBDataNavbar';
+import Scoreboard from './MatchupCardComponents/Scoreboard';
+import MLBDataNavbar from '../MLBDataNavbar/MLBDataNavbar';
 import Cookies from 'js-cookie';
-import TeamHistory from './MatchupCardSelections/TeamHistory';
+import TeamHistory from './MatchupCardSelections/TeamHistory/TeamHistory';
 import PlayerStats from './MatchupCardSelections/PlayerStats';
 import PitcherMatchup from './MatchupCardComponents/PitcherMatchup';
 import PitcherLastFive from './MatchupCardSelections/PitcherLastFive';

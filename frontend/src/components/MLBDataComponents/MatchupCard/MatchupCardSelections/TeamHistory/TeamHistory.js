@@ -1,5 +1,5 @@
 import React from 'react';
-import LastTwentyGames from '../MatchupCardComponents/LastTwentyGames';
+import LastTwentyGames from './TeamHistoryComponents/LastTwentyGames';
 
 const TeamHistory = ({ game }) => {
   return (

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import LastCommitTimer from '../components/LastCommitTimer';
+import LastCommitTimer from '../components/PortfolioComponents/LastCommitTimer';
 
 function Home() {
   useEffect(() => {

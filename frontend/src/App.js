@@ -8,7 +8,7 @@ import AlongTheWay from './pages/AlongTheWay';
 import SportsDataProject from './pages/SportsDataProject';
 import Contact from './pages/Contact';
 import MLBData from './pages/MLBData/MLBData';
-import Header from './components/Header';
+import Header from './components/PortfolioComponents/Header';
 
 
 function App() {

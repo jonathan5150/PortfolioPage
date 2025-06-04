@@ -1,8 +1,8 @@
 import React from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import TeamsButton from './TeamsButton';
-import TeamsMenu from './TeamsMenu';
+import TeamsButton from './MLBDataNavbarComponents/TeamsButton';
+import TeamsMenu from './MLBDataNavbarComponents/TeamsMenu';
 
 const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCalendarOpen, setIsTeamsMenuOpen }, ref) => {
   return (
