@@ -7,6 +7,7 @@ import PlayerStats from './MatchupCardSelections/PlayerStats';
 import PitcherMatchup from './MatchupCardComponents/PitcherMatchup';
 import PitcherLastFive from './MatchupCardSelections/PitcherLastFive';
 import BatterGamelog from './MatchupCardSelections/BatterGamelog';
+import BoxScore from './MatchupCardSelections/BoxScore';
 
 const MatchupCard = ({
   loading,
@@ -263,6 +264,7 @@ const MatchupCard = ({
 
                   <div className="game-data-container stat-toggle-container">
                     <select value={contentKey} onChange={(e) => handleDataSelect(e.target.value)}>
+                      <option value="box-score">BOX SCORE</option>
                       <option value="team-history">TEAM W/L HISTORY</option>
                       <option value="player-stats">PLAYER SEASON STATS</option>
                       <option value="batter-gamelog">PLAYER GAME LOG</option>
@@ -271,6 +273,11 @@ const MatchupCard = ({
 
                     <div className="stat-section" style={contentStyle}>
                       <div ref={contentRef}>
+                        {contentKey === 'box-score' && (
+                          <div className="fade-in">
+                            <BoxScore liveData={liveGameData[game.gamePk]} />
+                          </div>
+                        )}
                         {contentKey === 'team-history' && (
                           <div className="fade-in">
                             <TeamHistory game={game} />
