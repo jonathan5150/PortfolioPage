@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import Scoreboard from './MatchupCardComponents/Scoreboard';
 import MLBDataNavbar from '../MLBDataNavbar/MLBDataNavbar';
 import Cookies from 'js-cookie';
 import TeamHistory from './MatchupCardSelections/TeamHistory/TeamHistory';
 import PlayerStats from './MatchupCardSelections/PlayerStats';
-import PitcherMatchup from './MatchupCardComponents/PitcherMatchup';
 import PitcherLastFive from './MatchupCardSelections/PitcherLastFive';
 import BatterGamelog from './MatchupCardSelections/BatterGamelog';
 import BoxScore from './MatchupCardSelections/BoxScore';
+import BeforeAfterScoreBug from './MatchupCardComponents/BeforeAfterScoreBug/BeforeAfterScoreBug';
+
 
 const MatchupCard = ({
   loading,
@@ -215,52 +215,18 @@ const MatchupCard = ({
                   </p>
                 </div>
 
-                <div className="matchup-group">
-                  <div className="matchup-columns">
-                    <div className="column1">
-                      <div className="row1">
-                        <div
-                          className="team-logo-container"
-                          onClick={() => handleStarClick(gamePk, game.teams.away.team.id)}
-                        >
-                          <img
-                            src={getTeamLogo(game.teams.away.team.name)}
-                            alt={`${game.teams.away.team.name} logo`}
-                            style={{ border: `2px solid ${gameBackgroundColors[gamePk]?.away}` }}
-                          />
-                          {starredTeams[gamePk] === game.teams.away.team.id && (
-                            <div className="star-icon">⭐</div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="row2">
-                        <div
-                          className="team-logo-container"
-                          onClick={() => handleStarClick(gamePk, game.teams.home.team.id)}
-                        >
-                          <img
-                            src={getTeamLogo(game.teams.home.team.name)}
-                            alt={`${game.teams.home.team.name} logo`}
-                            style={{ border: `2px solid ${gameBackgroundColors[gamePk]?.home}` }}
-                          />
-                          {starredTeams[gamePk] === game.teams.home.team.id && (
-                            <div className="star-icon">⭐</div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="column2">
-                      <PitcherMatchup game={game} getTeamRecord={getTeamRecord} />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="game-data">
-                  <Scoreboard
-                    game={game}
-                    getTeamAbbreviation={getTeamAbbreviation}
-                    liveData={liveGameData[gamePk]?.liveData}
-                  />
+                <div>
+                <BeforeAfterScoreBug
+                  game={game}
+                  gamePk={gamePk}
+                  handleStarClick={handleStarClick}
+                  getTeamLogo={getTeamLogo}
+                  gameBackgroundColors={gameBackgroundColors}
+                  starredTeams={starredTeams}
+                  getTeamRecord={getTeamRecord}
+                  getTeamAbbreviation={getTeamAbbreviation}
+                  liveData={liveGameData[gamePk]?.liveData}
+                />
 
                   <div className="game-data-container stat-toggle-container">
                     <select value={contentKey} onChange={(e) => handleDataSelect(e.target.value)}>
