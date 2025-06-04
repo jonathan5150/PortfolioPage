@@ -11,6 +11,12 @@ const BoxScore = ({ liveData }) => {
 
   const formatIP = (ip) => (typeof ip === 'number' ? ip.toFixed(1) : ip);
 
+  const parseInningsPitched = (ipStr) => {
+    if (!ipStr || typeof ipStr !== 'string') return 0;
+    const [whole, decimal] = ipStr.split('.').map(Number);
+    return whole + (decimal === 1 ? 1 / 3 : decimal === 2 ? 2 / 3 : 0);
+  };
+
   const cellStyle = {
     whiteSpace: 'nowrap',
     overflow: 'hidden',
@@ -55,7 +61,7 @@ const BoxScore = ({ liveData }) => {
     const pitcherTotals = pitchers.reduce(
       (totals, p) => {
         const pitching = p.stats.pitching;
-        const ip = parseFloat(pitching.inningsPitched || 0);
+        const ip = parseInningsPitched(pitching.inningsPitched);
         const hits = pitching.hits || 0;
         const er = pitching.earnedRuns || 0;
         const so = pitching.strikeOuts || 0;
@@ -179,16 +185,16 @@ const BoxScore = ({ liveData }) => {
             {pitchers.map((p, i) => {
               const pitching = p.stats.pitching;
               const name = p.person?.fullName || '—';
-              const ip = pitching.inningsPitched || '0.0';
+              const ip = parseInningsPitched(pitching.inningsPitched);
               const h = pitching.hits ?? 0;
               const er = pitching.earnedRuns ?? 0;
               const k = pitching.strikeOuts ?? 0;
               const bb = pitching.baseOnBalls ?? 0;
-              const era = (er / (parseFloat(ip || 1))) * 9;
+              const era = (er / (ip || 1)) * 9;
               return (
                 <tr key={i}>
                   <td style={{ ...cellStyle, textAlign: 'left' }}>{name}</td>
-                  <td>{ip}</td>
+                  <td>{formatIP(ip)}</td>
                   <td>{h}</td>
                   <td>{er}</td>
                   <td>{k}</td>
