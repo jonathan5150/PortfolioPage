@@ -9,7 +9,6 @@ import BoxScore from './MatchupCardSelections/BoxScore';
 import BeforeAfterScoreBug from './MatchupCardComponents/BeforeAfterScoreBug/BeforeAfterScoreBug';
 import LiveScoreBug from './MatchupCardComponents/LiveScoreBug/LiveScoreBug';
 
-
 const MatchupCard = ({
   loading,
   visibleGames,
@@ -39,12 +38,20 @@ const MatchupCard = ({
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const [numGamesToShow, setNumGamesToShow] = useState(5);
+
   const [contentKey, setContentKey] = useState(() => {
     const saved = Cookies.get('contentKey');
     return saved || 'team-history';
-  });  const [starredTeams, setStarredTeams] = useState(() => {
+  });
+
+  const [starredTeams, setStarredTeams] = useState(() => {
     const saved = Cookies.get('starredTeams');
     return saved ? JSON.parse(saved) : {};
+  });
+
+  const [allExpanded, setAllExpanded] = useState(() => {
+    const saved = Cookies.get('allExpanded');
+    return saved ? JSON.parse(saved) : false;
   });
 
   const [pitcherLogs, setPitcherLogs] = useState({});
@@ -66,7 +73,7 @@ const MatchupCard = ({
       visibleGames.forEach((game) => {
         updateContentHeight(game.gamePk);
       });
-    }, 10); // allow render to finish
+    }, 10);
     return () => clearTimeout(timeout);
   }, [contentKey, visibleGames, batterGameLogs, numGamesToShow]);
 
@@ -103,26 +110,18 @@ const MatchupCard = ({
 
     const preloadPitcherData = async () => {
       const logs = {};
-
       for (const game of visibleGames) {
         const gamePk = game.gamePk;
-
         const [awayId, homeId] = [
           game.teams.away.probablePitcher?.id,
           game.teams.home.probablePitcher?.id,
         ];
-
         const [awayGames, homeGames] = await Promise.all([
           awayId ? fetchPitcherGameLog(awayId, getTeamAbbreviation, game.gameDate) : [],
           homeId ? fetchPitcherGameLog(homeId, getTeamAbbreviation, game.gameDate) : [],
         ]);
-
-        logs[gamePk] = {
-          away: awayGames,
-          home: homeGames,
-        };
+        logs[gamePk] = { away: awayGames, home: homeGames };
       }
-
       setPitcherLogs(logs);
     };
 
@@ -161,6 +160,12 @@ const MatchupCard = ({
     });
   };
 
+  const toggleGameData = () => {
+    const newState = !allExpanded;
+    setAllExpanded(newState);
+    Cookies.set('allExpanded', JSON.stringify(newState), { expires: 365 });
+  };
+
   return (
     <div className="matchup-card fade-in">
       <MLBDataNavbar
@@ -188,139 +193,184 @@ const MatchupCard = ({
             No games scheduled for this date.
           </p>
         ) : (
-          visibleGames.map((game) => {
-            const gamePk = game.gamePk;
-            const contentRef = (el) => {
-              if (el) contentRefs.current[gamePk] = el;
-            };
+          <>
+            {visibleGames.map((game) => {
+              const gamePk = game.gamePk;
+              const contentRef = (el) => {
+                if (el) contentRefs.current[gamePk] = el;
+              };
 
-            const contentStyle = {
-              height: contentHeights[gamePk] || 'auto',
-              overflow: 'hidden',
-              transition: 'height 0.6s ease'
-            };
+              const contentStyle = {
+                height: contentHeights[gamePk] || 'auto',
+                overflow: 'hidden',
+                transition: 'height 0.6s ease'
+              };
 
-            return (
-              <div
-                className={`game-container ${
-                  selectedTeams.includes(game.teams.away.team.id) ||
-                  selectedTeams.includes(game.teams.home.team.id)
-                    ? 'fade-in'
-                    : 'fade-out'
-                }`}
-                key={gamePk}
-              >
-                <div className="game-time-container">
-                  <p className="game-time">
-                    {game.gameDate ? formatTime(game.gameDate) : 'Time not available'}
-                  </p>
-                </div>
+              const liveData = liveGameData[gamePk];
+              const detailedState = liveData?.gameData?.status?.detailedState;
+              const isLive = liveData?.gameData?.status?.abstractGameState === 'Live';
+              const isPostponed = detailedState === 'Postponed: Rain';
+              const now = new Date();
+              const scheduledTime = new Date(game.gameDate);
+              const hasGameStarted = !isPostponed && now >= scheduledTime;
 
-                <div>
-                {liveGameData[gamePk]?.gameData?.status?.abstractGameState === 'Live' ? (
-                  <LiveScoreBug
-                    game={game}
-                    gamePk={gamePk}
-                    handleStarClick={handleStarClick}
-                    getTeamLogo={getTeamLogo}
-                    gameBackgroundColors={gameBackgroundColors}
-                    starredTeams={starredTeams}
-                    getTeamRecord={getTeamRecord}
-                    getTeamAbbreviation={getTeamAbbreviation}
-                    liveData={liveGameData[gamePk]?.liveData}
-                  />
-                ) : (
-                  <BeforeAfterScoreBug
-                    game={game}
-                    gamePk={gamePk}
-                    handleStarClick={handleStarClick}
-                    getTeamLogo={getTeamLogo}
-                    gameBackgroundColors={gameBackgroundColors}
-                    starredTeams={starredTeams}
-                    getTeamRecord={getTeamRecord}
-                    getTeamAbbreviation={getTeamAbbreviation}
-                    liveData={liveGameData[gamePk]?.liveData}
-                  />
-                )}
+              return (
+                <div
+                  className={`game-container ${
+                    selectedTeams.includes(game.teams.away.team.id) ||
+                    selectedTeams.includes(game.teams.home.team.id)
+                      ? 'fade-in'
+                      : 'fade-out'
+                  }`}
+                  key={gamePk}
+                >
+                  <div className="game-time-container">
+                    <p className="game-time">
+                      {detailedState === 'Postponed: Rain'
+                        ? 'POSTPONED'
+                        : game.gameDate
+                        ? formatTime(game.gameDate)
+                        : 'Time not available'}
+                    </p>
+                  </div>
 
-                  <div className="game-data-container stat-toggle-container">
-                    <select value={contentKey} onChange={(e) => handleDataSelect(e.target.value)}>
-                      <option value="box-score">BOX SCORE</option>
-                      <option value="team-history">TEAM W/L HISTORY</option>
-                      <option value="player-stats">PLAYER SEASON STATS</option>
-                      <option value="batter-gamelog">PLAYER GAME LOG</option>
-                      <option value="pitcher-last-5">PITCHER GAME LOG</option>
-                    </select>
+                  <div>
+                    {isLive && hasGameStarted ? (
+                      <LiveScoreBug
+                        game={game}
+                        gamePk={gamePk}
+                        handleStarClick={handleStarClick}
+                        getTeamLogo={getTeamLogo}
+                        gameBackgroundColors={gameBackgroundColors}
+                        starredTeams={starredTeams}
+                        getTeamRecord={getTeamRecord}
+                        getTeamAbbreviation={getTeamAbbreviation}
+                        liveData={liveData?.liveData}
+                      />
+                    ) : (
+                      <BeforeAfterScoreBug
+                        game={game}
+                        gamePk={gamePk}
+                        scheduledDate={game.gameDate}
+                        handleStarClick={handleStarClick}
+                        getTeamLogo={getTeamLogo}
+                        gameBackgroundColors={gameBackgroundColors}
+                        starredTeams={starredTeams}
+                        getTeamRecord={getTeamRecord}
+                        getTeamAbbreviation={getTeamAbbreviation}
+                        liveData={liveData}
+                      />
+                    )}
 
-                    <div className="stat-section" style={contentStyle}>
-                      <div ref={contentRef}>
-                        {contentKey === 'box-score' && (
-                          <div className="fade-in">
-                            <BoxScore liveData={liveGameData[game.gamePk]} />
-                          </div>
-                        )}
-                        {contentKey === 'team-history' && (
-                          <div className="fade-in">
-                            <TeamHistory game={game} />
-                          </div>
-                        )}
-                        {contentKey === 'player-stats' && (
-                          <div className="fade-in">
-                            <PlayerStats
-                              game={game}
-                              batterGameLogs={batterGameLogs}
-                              playerStatsSortConfig={playerStatsSortConfig}
-                              setPlayerStatsSortConfig={setPlayerStatsSortConfig}
-                              setContentKey={setContentKey}
-                              setSelectedPlayers={(teamId, playerName) => {
-                                const updated = { ...JSON.parse(Cookies.get('selectedPlayers') || '{}'), [teamId]: playerName };
-                                Cookies.set('selectedPlayers', JSON.stringify(updated), { expires: 365 });
-                              }}
-                            />
-                          </div>
-                        )}
-                        {contentKey === 'pitcher-last-5' && (
-                          <div className="fade-in">
-                            <PitcherLastFive
-                              game={game}
-                              awayGames={pitcherLogs[gamePk]?.away || []}
-                              homeGames={pitcherLogs[gamePk]?.home || []}
-                            />
-                          </div>
-                        )}
-                        {contentKey === 'batter-gamelog' &&
-                          batterGameLogs[game.teams.away.team.id] &&
-                          batterGameLogs[game.teams.home.team.id] && (
+                    <button
+                      onClick={toggleGameData}
+                      style={{
+                        color: 'white',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        marginTop: '5px',
+                        marginBottom: '0px',
+                        transform: allExpanded ? 'rotate(270deg)' : 'rotate(90deg)',
+                        transition: 'transform 0.3s',
+                        alignItems: 'center',
+                      }}
+                      aria-label="Toggle All Stats"
+                    >
+                      ▶
+                    </button>
+
+                    <div
+                      className="game-data-container stat-toggle-container"
+                      style={{
+                        maxHeight: allExpanded ? '1000px' : '0px',
+                        overflow: 'hidden',
+                        transition: 'max-height 0.7s ease, padding 0.5s ease, opacity 0.5s ease',
+                        padding: allExpanded ? '5px' : '0',
+                        marginTop: allExpanded ? '5px' : '0',
+                        marginBottom: allExpanded ? '12px' : '0',
+                        opacity: allExpanded ? 1 : 0,
+                      }}
+                    >
+                      <select value={contentKey} onChange={(e) => handleDataSelect(e.target.value)}>
+                        <option value="box-score">BOX SCORE</option>
+                        <option value="team-history">TEAM W/L HISTORY</option>
+                        <option value="player-stats">PLAYER SEASON STATS</option>
+                        <option value="batter-gamelog">PLAYER GAME LOG</option>
+                        <option value="pitcher-last-5">PITCHER GAME LOG</option>
+                      </select>
+
+                      <div className="stat-section" style={contentStyle}>
+                        <div ref={contentRef}>
+                          {contentKey === 'box-score' && (
                             <div className="fade-in">
-                              <BatterGamelog
-                                teams={[
-                                  {
-                                    team: game.teams.away.team,
-                                    teamType: 'Away',
-                                    logs: batterGameLogs[game.teams.away.team.id]?.logs,
-                                    roster: batterGameLogs[game.teams.away.team.id]?.roster
-                                  },
-                                  {
-                                    team: game.teams.home.team,
-                                    teamType: 'Home',
-                                    logs: batterGameLogs[game.teams.home.team.id]?.logs,
-                                    roster: batterGameLogs[game.teams.home.team.id]?.roster
-                                  }
-                                ]}
-                                gameDate={game.gameDate}
-                                getTeamAbbreviation={getTeamAbbreviation}
-                                numGamesToShow={numGamesToShow}
-                                setNumGamesToShow={setNumGamesToShow}
+                              <BoxScore liveData={liveData} />
+                            </div>
+                          )}
+                          {contentKey === 'team-history' && (
+                            <div className="fade-in">
+                              <TeamHistory game={game} />
+                            </div>
+                          )}
+                          {contentKey === 'player-stats' && (
+                            <div className="fade-in">
+                              <PlayerStats
+                                game={game}
+                                batterGameLogs={batterGameLogs}
+                                playerStatsSortConfig={playerStatsSortConfig}
+                                setPlayerStatsSortConfig={setPlayerStatsSortConfig}
+                                setContentKey={setContentKey}
+                                setSelectedPlayers={(teamId, playerName) => {
+                                  const updated = { ...JSON.parse(Cookies.get('selectedPlayers') || '{}'), [teamId]: playerName };
+                                  Cookies.set('selectedPlayers', JSON.stringify(updated), { expires: 365 });
+                                }}
                               />
                             </div>
                           )}
+                          {contentKey === 'pitcher-last-5' && (
+                            <div className="fade-in">
+                              <PitcherLastFive
+                                game={game}
+                                awayGames={pitcherLogs[gamePk]?.away || []}
+                                homeGames={pitcherLogs[gamePk]?.home || []}
+                              />
+                            </div>
+                          )}
+                          {contentKey === 'batter-gamelog' &&
+                            batterGameLogs[game.teams.away.team.id] &&
+                            batterGameLogs[game.teams.home.team.id] && (
+                              <div className="fade-in">
+                                <BatterGamelog
+                                  teams={[
+                                    {
+                                      team: game.teams.away.team,
+                                      teamType: 'Away',
+                                      logs: batterGameLogs[game.teams.away.team.id]?.logs,
+                                      roster: batterGameLogs[game.teams.away.team.id]?.roster
+                                    },
+                                    {
+                                      team: game.teams.home.team,
+                                      teamType: 'Home',
+                                      logs: batterGameLogs[game.teams.home.team.id]?.logs,
+                                      roster: batterGameLogs[game.teams.home.team.id]?.roster
+                                    }
+                                  ]}
+                                  gameDate={game.gameDate}
+                                  getTeamAbbreviation={getTeamAbbreviation}
+                                  numGamesToShow={numGamesToShow}
+                                  setNumGamesToShow={setNumGamesToShow}
+                                />
+                              </div>
+                            )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
+              );
+            })}
+          </>
         )}
       </div>
     </div>

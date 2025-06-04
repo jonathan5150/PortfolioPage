@@ -5,6 +5,7 @@ import Scoreboard from '../Scoreboard';
 const BeforeAfterScoreBug = ({
   game,
   gamePk,
+  scheduledDate, // 👈 Add this
   handleStarClick,
   getTeamLogo,
   gameBackgroundColors,
@@ -13,6 +14,14 @@ const BeforeAfterScoreBug = ({
   getTeamAbbreviation,
   liveData,
 }) => {
+  const detailedState = liveData?.gameData?.status?.detailedState;
+
+  const now = new Date();
+  const gameStartTime = new Date(scheduledDate); // 👈 use explicit prop
+  const isPostponed = detailedState === 'Postponed: Rain';
+  const hasGameStarted = !isPostponed && now >= gameStartTime;
+
+
   return (
     <>
       <div className="matchup-group">
@@ -55,11 +64,14 @@ const BeforeAfterScoreBug = ({
         </div>
       </div>
 
-      <Scoreboard
-        game={game}
-        getTeamAbbreviation={getTeamAbbreviation}
-        liveData={liveData}
-      />
+      {/* Show scoreboard only if the game has started and is not postponed */}
+      {hasGameStarted && (
+        <Scoreboard
+          game={game}
+          getTeamAbbreviation={getTeamAbbreviation}
+          liveData={liveData?.liveData}
+        />
+      )}
     </>
   );
 };

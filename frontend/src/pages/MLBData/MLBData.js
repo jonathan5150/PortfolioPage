@@ -337,8 +337,17 @@ function MLBData() {
           gameDay.games.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
         });
 
-        const sortedGames = games.flatMap(date => date.games)
-          .sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
+        const sortedGames = games
+          .flatMap(date => date.games)
+          .sort((a, b) => {
+            const aIsPostponed = a.liveData?.gameData?.status?.detailedState?.includes('Postponed');
+            const bIsPostponed = b.liveData?.gameData?.status?.detailedState?.includes('Postponed');
+
+            if (aIsPostponed && !bIsPostponed) return 1;
+            if (!aIsPostponed && bIsPostponed) return -1;
+
+            return new Date(a.gameDate) - new Date(b.gameDate);
+          });
 
         setGameBackgroundColors(backgroundColors);
         setTodayGames(games); // Save full list for filtering later
@@ -386,12 +395,13 @@ function MLBData() {
 
 
   useEffect(() => {
-    setVisibleGames(todayGames.flatMap(date =>
-      date.games.filter(game =>
-        selectedTeams.includes(game.teams.away.team.id) || selectedTeams.includes(game.teams.home.team.id)
+    setVisibleGames(prev =>
+      prev.filter(game =>
+        selectedTeams.includes(game.teams.away.team.id) ||
+        selectedTeams.includes(game.teams.home.team.id)
       )
-    ));
-  }, [selectedTeams, todayGames]);
+    );
+  }, [selectedTeams]);
 
   useEffect(() => {
     const fetchLiveData = async () => {
