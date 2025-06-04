@@ -6,16 +6,33 @@ const BoxScore = ({ liveData }) => {
   const away = boxscore?.teams?.away;
   const home = boxscore?.teams?.home;
 
+  const lineupUnavailable =
+    !away?.battingOrder?.length || !home?.battingOrder?.length;
+
+  const formatIP = (ip) => (typeof ip === 'number' ? ip.toFixed(1) : ip);
+
+  const cellStyle = {
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    maxWidth: '100px',
+  };
+
+  if (!away || !home || lineupUnavailable) {
+    return (
+      <div style={{ padding: '1rem', textAlign: 'center', fontStyle: 'italic' }}>
+        Lineup not yet available.
+      </div>
+    );
+  }
+
   const renderTeam = (teamData, label) => {
     const players = teamData?.players || {};
     const battingOrder = teamData?.battingOrder || [];
     const pitcherIdsInOrder = teamData?.pitchers || [];
 
-    const batters = battingOrder
-      .map((id) => players[`ID${id}`])
-      .filter((p) => p && p.stats?.batting);
-
-    const batterTotals = batters.reduce(
+    const allBatters = Object.values(players).filter(p => p?.stats?.batting);
+    const batterTotals = allBatters.reduce(
       (totals, p) => {
         const b = p.stats.batting;
         return {
@@ -57,24 +74,16 @@ const BoxScore = ({ liveData }) => {
       { IP: 0, H: 0, ER: 0, K: 0, BB: 0, ERAList: [] }
     );
 
-    const formatIP = (ip) => (typeof ip === 'number' ? ip.toFixed(1) : ip);
     const averageERA =
       pitcherTotals.ERAList.length > 0
         ? (pitcherTotals.ERAList.reduce((sum, e) => sum + e, 0) / pitcherTotals.ERAList.length).toFixed(2)
         : '—';
 
-    const cellStyle = {
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis',
-      maxWidth: '100px',
-    };
-
     return (
       <div style={{ width: '100%' }}>
         <h3 style={{ textAlign: 'center' }}>{teamData?.team?.name || label}</h3>
 
-        <h3 style={{ fontSize: '12px', width: '100%', margin: '0px' }}>Batters</h3>
+        <h3 style={{ fontSize: '12px', width: '100%', margin: '0px', display: 'block' }}>Batters</h3>
         <table style={{ width: '100%', fontSize: '12px' }}>
           <thead>
             <tr>
@@ -90,22 +99,53 @@ const BoxScore = ({ liveData }) => {
             </tr>
           </thead>
           <tbody>
-            {batters.map((p, i) => {
-              const b = p.stats.batting;
-              const name = p.person?.fullName || '—';
-              const pos = p.position?.abbreviation || '—';
+            {battingOrder.map((id, i) => {
+              const starter = players[`ID${id}`];
+              const starterStats = starter?.stats?.batting;
+              const starterName = starter?.person?.fullName || '—';
+              const starterPos = starter?.position?.abbreviation || '—';
+
+              const subs = Object.values(players).filter(
+                (p) =>
+                  p?.stats?.batting &&
+                  p.battingOrder === id &&
+                  p.person?.id !== starter?.person?.id
+              );
+
               return (
-                <tr key={i}>
-                  <td style={{ ...cellStyle, textAlign: 'left' }}>{name}</td>
-                  <td>{pos}</td>
-                  <td>{b.atBats ?? 0}</td>
-                  <td>{b.runs ?? 0}</td>
-                  <td>{b.hits ?? 0}</td>
-                  <td>{b.rbi ?? 0}</td>
-                  <td>{b.baseOnBalls ?? 0}</td>
-                  <td>{b.strikeOuts ?? 0}</td>
-                  <td>{b.homeRuns ?? 0}</td>
-                </tr>
+                <React.Fragment key={id}>
+                  {starterStats && (
+                    <tr>
+                      <td style={{ ...cellStyle, textAlign: 'left' }}>{starterName}</td>
+                      <td>{starterPos}</td>
+                      <td>{starterStats.atBats ?? 0}</td>
+                      <td>{starterStats.runs ?? 0}</td>
+                      <td>{starterStats.hits ?? 0}</td>
+                      <td>{starterStats.rbi ?? 0}</td>
+                      <td>{starterStats.baseOnBalls ?? 0}</td>
+                      <td>{starterStats.strikeOuts ?? 0}</td>
+                      <td>{starterStats.homeRuns ?? 0}</td>
+                    </tr>
+                  )}
+                  {subs.map((sub, j) => {
+                    const s = sub.stats.batting;
+                    return (
+                      <tr key={`sub-${i}-${j}`}>
+                        <td style={{ ...cellStyle, textAlign: 'left', fontStyle: 'italic' }}>
+                          — {sub.person?.fullName}
+                        </td>
+                        <td>{sub.position?.abbreviation || '—'}</td>
+                        <td>{s.atBats ?? 0}</td>
+                        <td>{s.runs ?? 0}</td>
+                        <td>{s.hits ?? 0}</td>
+                        <td>{s.rbi ?? 0}</td>
+                        <td>{s.baseOnBalls ?? 0}</td>
+                        <td>{s.strikeOuts ?? 0}</td>
+                        <td>{s.homeRuns ?? 0}</td>
+                      </tr>
+                    );
+                  })}
+                </React.Fragment>
               );
             })}
             <tr style={{ fontWeight: 'bold', borderTop: '1px solid #ccc' }}>
@@ -122,7 +162,7 @@ const BoxScore = ({ liveData }) => {
           </tbody>
         </table>
 
-        <h3 style={{ fontSize: '12px', width: '100%', margin: '0px' }}>Pitchers</h3>
+        <h3 style={{ fontSize: '12px', width: '100%', margin: '0px', display: 'block' }}>Pitchers</h3>
         <table style={{ width: '100%', fontSize: '12px' }}>
           <thead>
             <tr>
@@ -171,10 +211,6 @@ const BoxScore = ({ liveData }) => {
       </div>
     );
   };
-
-  if (!away || !home) {
-    return <p style={{ fontStyle: 'italic', color: '#888' }}>Box score not yet available.</p>;
-  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
