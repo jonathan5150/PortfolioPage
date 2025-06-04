@@ -7,6 +7,7 @@ import PitcherLastFive from './MatchupCardSelections/PitcherLastFive';
 import BatterGamelog from './MatchupCardSelections/BatterGamelog';
 import BoxScore from './MatchupCardSelections/BoxScore';
 import BeforeAfterScoreBug from './MatchupCardComponents/BeforeAfterScoreBug/BeforeAfterScoreBug';
+import LiveScoreBug from './MatchupCardComponents/LiveScoreBug/LiveScoreBug';
 
 
 const MatchupCard = ({
@@ -216,17 +217,31 @@ const MatchupCard = ({
                 </div>
 
                 <div>
-                <BeforeAfterScoreBug
-                  game={game}
-                  gamePk={gamePk}
-                  handleStarClick={handleStarClick}
-                  getTeamLogo={getTeamLogo}
-                  gameBackgroundColors={gameBackgroundColors}
-                  starredTeams={starredTeams}
-                  getTeamRecord={getTeamRecord}
-                  getTeamAbbreviation={getTeamAbbreviation}
-                  liveData={liveGameData[gamePk]?.liveData}
-                />
+                {liveGameData[gamePk]?.gameData?.status?.abstractGameState === 'Live' ? (
+                  <LiveScoreBug
+                    game={game}
+                    gamePk={gamePk}
+                    handleStarClick={handleStarClick}
+                    getTeamLogo={getTeamLogo}
+                    gameBackgroundColors={gameBackgroundColors}
+                    starredTeams={starredTeams}
+                    getTeamRecord={getTeamRecord}
+                    getTeamAbbreviation={getTeamAbbreviation}
+                    liveData={liveGameData[gamePk]?.liveData}
+                  />
+                ) : (
+                  <BeforeAfterScoreBug
+                    game={game}
+                    gamePk={gamePk}
+                    handleStarClick={handleStarClick}
+                    getTeamLogo={getTeamLogo}
+                    gameBackgroundColors={gameBackgroundColors}
+                    starredTeams={starredTeams}
+                    getTeamRecord={getTeamRecord}
+                    getTeamAbbreviation={getTeamAbbreviation}
+                    liveData={liveGameData[gamePk]?.liveData}
+                  />
+                )}
 
                   <div className="game-data-container stat-toggle-container">
                     <select value={contentKey} onChange={(e) => handleDataSelect(e.target.value)}>

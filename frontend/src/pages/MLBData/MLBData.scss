@@ -48,8 +48,8 @@
   flex-direction: column;
   width: 90%;
   padding: 5px;
-  margin-top: 5px;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
+  margin-top: 0px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -146,7 +146,6 @@
   display: flex;
   justify-content: center; /* Ensure space between columns */
   min-height: 130px;
-  border: 1px solid #555555;
   padding: 5px; /* Add padding for better spacing */
   padding-top: 0px;
   padding-bottom: 0px;
@@ -245,11 +244,6 @@ h3 {
   padding: 0px;
 }
 
-.row2 {
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
-
 .column2 {
   width: 85%; /* Take 75% of the width */
   display: flex;
@@ -269,7 +263,7 @@ h3 {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: -7px;
+  margin-top: -5px;
 }
 
 .column2 .pitcher-info-bottom {
@@ -766,11 +760,15 @@ select:focus {
 
   .column1 img {
     margin-right: 0px;
-    margin-top: 5px;
+    margin-top: 4px;
     user-select: none;
     -webkit-user-drag: none;
     outline: none;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .column1 img:first-child {
+    margin-top: 4px;
   }
 
   p.vs {
