@@ -15,6 +15,8 @@ const BeforeAfterScoreBug = ({
   liveData,
 }) => {
   const detailedState = liveData?.gameData?.status?.detailedState;
+  const statusCode = liveData?.gameData?.status?.statusCode;
+  const isFinished = ['F', 'O'].includes(statusCode); // Final or Game Over
 
   const now = new Date();
   const gameStartTime = new Date(scheduledDate);
@@ -46,7 +48,6 @@ const BeforeAfterScoreBug = ({
     zIndex: 2,
   });
 
-
   return (
     <>
       <div className="matchup-group">
@@ -63,7 +64,9 @@ const BeforeAfterScoreBug = ({
                   alt={`${game.teams.away.team.name} logo`}
                   style={imageStyle(gameBackgroundColors[gamePk]?.away)}
                 />
-                <span style={triangleStyle(gameBackgroundColors[gamePk]?.away)} />
+                {isFinished && (
+                  <span style={triangleStyle(gameBackgroundColors[gamePk]?.away)} />
+                )}
                 {starredTeams[gamePk] === game.teams.away.team.id && (
                   <div className="star-icon">⭐</div>
                 )}
@@ -80,7 +83,9 @@ const BeforeAfterScoreBug = ({
                   alt={`${game.teams.home.team.name} logo`}
                   style={imageStyle(gameBackgroundColors[gamePk]?.home)}
                 />
-                <span style={triangleStyle(gameBackgroundColors[gamePk]?.home)} />
+                {isFinished && (
+                  <span style={triangleStyle(gameBackgroundColors[gamePk]?.home)} />
+                )}
                 {starredTeams[gamePk] === game.teams.home.team.id && (
                   <div className="star-icon">⭐</div>
                 )}
