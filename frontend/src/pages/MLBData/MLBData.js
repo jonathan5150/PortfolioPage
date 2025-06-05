@@ -403,14 +403,29 @@ function MLBData() {
 
 
   useEffect(() => {
+    const selectedDateStr = format(new Date(selectedDate), 'yyyy-MM-dd');
+
+    const getEffectiveDate = (game) => {
+      const detailedState = game.liveData?.gameData?.status?.detailedState;
+      const originalDate = game.liveData?.gameData?.datetime?.originalDate;
+      const originalDateStr = originalDate ? format(new Date(originalDate), 'yyyy-MM-dd') : null;
+
+      if (detailedState?.includes('Postponed') && selectedDateStr === originalDateStr) {
+        return new Date(originalDate);
+      }
+      return new Date(game.gameDate);
+    };
+
     const filtered = todayGames.flatMap(date =>
       date.games.filter(game =>
         selectedTeams.includes(game.teams.away.team.id) ||
         selectedTeams.includes(game.teams.home.team.id)
       )
     );
-    setVisibleGames(filtered);
-  }, [selectedTeams, todayGames]);
+
+    const sorted = filtered.sort((a, b) => getEffectiveDate(a) - getEffectiveDate(b));
+    setVisibleGames(sorted);
+  }, [selectedTeams, todayGames, selectedDate]);
 
   useEffect(() => {
     const fetchLiveData = async () => {
