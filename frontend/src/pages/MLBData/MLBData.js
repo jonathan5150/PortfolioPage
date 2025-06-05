@@ -309,7 +309,8 @@ function MLBData() {
             const statusCode = gameData?.gameData?.status?.statusCode;
 
             const getTeamBackgroundColor = (teamId) => {
-              if (!statusCode || statusCode !== 'F') return 'rgba(85, 85, 85, 1)';
+              const isFinished = ['F', 'O'].includes(statusCode); // Final or Game Over
+              if (!statusCode || !isFinished) return 'rgba(85, 85, 85, 1)';
 
               const homeTeam = gameData.liveData.boxscore.teams.home;
               const awayTeam = gameData.liveData.boxscore.teams.away;
@@ -325,6 +326,7 @@ function MLBData() {
               }
               return 'rgba(50, 50, 50, 0.9)';
             };
+
 
             backgroundColors[gamePk] = {
               away: getTeamBackgroundColor(game.teams.away.team.id),

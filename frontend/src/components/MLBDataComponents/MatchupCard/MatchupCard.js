@@ -231,16 +231,21 @@ const MatchupCard = ({
                         const originalDateStr = liveData?.gameData?.datetime?.originalDate;
                         const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
                         const original = originalDateStr ? format(new Date(originalDateStr), 'yyyy-MM-dd') : null;
-                        const isPostponed = detailedState?.includes('Postponed') && selected === original;
+                        const detailedState = liveData?.gameData?.status?.detailedState ?? '';
+                        const isPostponed = detailedState.includes('Postponed') && selected === original;
 
                         const displayTime = isPostponed
                           ? new Date(originalDateStr)
                           : new Date(game.gameDate);
+
                         const suffix = isPostponed
                           ? ' (Postponed)'
-                          : detailedState?.includes('Delayed')
+                          : /Delayed/i.test(detailedState)
                           ? ' (Delayed)'
                           : '';
+
+                        console.log('Game', gamePk, 'detailedState:', detailedState);
+
                         return `${formatTime(displayTime)}${suffix}`;
                       })()}
                     </p>
