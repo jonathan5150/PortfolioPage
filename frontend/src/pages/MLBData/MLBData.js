@@ -403,13 +403,14 @@ function MLBData() {
 
 
   useEffect(() => {
-    setVisibleGames(prev =>
-      prev.filter(game =>
+    const filtered = todayGames.flatMap(date =>
+      date.games.filter(game =>
         selectedTeams.includes(game.teams.away.team.id) ||
         selectedTeams.includes(game.teams.home.team.id)
       )
     );
-  }, [selectedTeams]);
+    setVisibleGames(filtered);
+  }, [selectedTeams, todayGames]);
 
   useEffect(() => {
     const fetchLiveData = async () => {
