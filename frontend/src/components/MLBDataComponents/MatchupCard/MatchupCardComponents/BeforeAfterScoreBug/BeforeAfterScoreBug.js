@@ -5,7 +5,7 @@ import Scoreboard from '../Scoreboard';
 const BeforeAfterScoreBug = ({
   game,
   gamePk,
-  scheduledDate, // 👈 Add this
+  scheduledDate,
   handleStarClick,
   getTeamLogo,
   gameBackgroundColors,
@@ -17,9 +17,34 @@ const BeforeAfterScoreBug = ({
   const detailedState = liveData?.gameData?.status?.detailedState;
 
   const now = new Date();
-  const gameStartTime = new Date(scheduledDate); // 👈 use explicit prop
+  const gameStartTime = new Date(scheduledDate);
   const isPostponed = detailedState === 'Postponed: Rain';
   const hasGameStarted = !isPostponed && now >= gameStartTime;
+
+  const containerStyle = {
+    position: 'relative'
+  };
+
+  const imageStyle = (color) => ({
+    width: '100%',
+    height: 'auto',
+    border: `2px solid ${color}`,
+    borderRadius: '4px',
+    position: 'relative',
+  });
+
+  const triangleStyle = (color) => ({
+    position: 'absolute',
+    top: 8,
+    right: 6,
+    width: 0,
+    height: 0,
+    borderStyle: 'solid',
+    borderWidth: '0 16px 16px 0',
+    borderColor: `transparent ${color} transparent transparent`,
+    borderRadius: '2px',
+    zIndex: 2,
+  });
 
 
   return (
@@ -30,13 +55,15 @@ const BeforeAfterScoreBug = ({
             <div className="row1">
               <div
                 className="team-logo-container"
+                style={containerStyle}
                 onClick={() => handleStarClick(gamePk, game.teams.away.team.id)}
               >
                 <img
                   src={getTeamLogo(game.teams.away.team.name)}
                   alt={`${game.teams.away.team.name} logo`}
-                  style={{ border: `2px solid ${gameBackgroundColors[gamePk]?.away}` }}
+                  style={imageStyle(gameBackgroundColors[gamePk]?.away)}
                 />
+                <span style={triangleStyle(gameBackgroundColors[gamePk]?.away)} />
                 {starredTeams[gamePk] === game.teams.away.team.id && (
                   <div className="star-icon">⭐</div>
                 )}
@@ -45,13 +72,15 @@ const BeforeAfterScoreBug = ({
             <div className="row2">
               <div
                 className="team-logo-container"
+                style={containerStyle}
                 onClick={() => handleStarClick(gamePk, game.teams.home.team.id)}
               >
                 <img
                   src={getTeamLogo(game.teams.home.team.name)}
                   alt={`${game.teams.home.team.name} logo`}
-                  style={{ border: `2px solid ${gameBackgroundColors[gamePk]?.home}` }}
+                  style={imageStyle(gameBackgroundColors[gamePk]?.home)}
                 />
+                <span style={triangleStyle(gameBackgroundColors[gamePk]?.home)} />
                 {starredTeams[gamePk] === game.teams.home.team.id && (
                   <div className="star-icon">⭐</div>
                 )}
@@ -64,7 +93,6 @@ const BeforeAfterScoreBug = ({
         </div>
       </div>
 
-      {/* Show scoreboard only if the game has started and is not postponed */}
       {hasGameStarted && (
         <Scoreboard
           game={game}
