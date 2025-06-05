@@ -3,13 +3,6 @@ import React from 'react';
 const Scoreboard = ({ game, getTeamAbbreviation, liveData }) => {
   const linescore = liveData?.linescore;
 
-  const calculateTeamScore = (team, linescore) => {
-    if (!linescore || !linescore.innings) return 0;
-    return linescore.innings.reduce((total, inning) => {
-      return total + (inning[team]?.runs || 0);
-    }, 0);
-  };
-
   return (
     <div className="scoreboard game-data-container">
       <p className="game-data-title">SCOREBOARD</p>
@@ -45,7 +38,7 @@ const Scoreboard = ({ game, getTeamAbbreviation, liveData }) => {
           </div>
         ))}
         <div className="scoreboard-cell runs" style={{ fontWeight: 'bold', animationDelay: '1.0s' }}>
-          {calculateTeamScore('away', linescore)}
+          {linescore?.teams?.away?.runs ?? 0}
         </div>
         <div className="scoreboard-cell hits" style={{ animationDelay: '1.1s' }}>{liveData?.boxscore?.teams.away.teamStats?.batting?.hits || 0}</div>
         <div className="scoreboard-cell errors" style={{ animationDelay: '1.2s' }}>{liveData?.boxscore?.teams.away.teamStats?.fielding?.errors || 0}</div>
@@ -66,7 +59,7 @@ const Scoreboard = ({ game, getTeamAbbreviation, liveData }) => {
           </div>
         ))}
         <div className="scoreboard-cell runs" style={{ fontWeight: 'bold', animationDelay: '1.0s' }}>
-          {calculateTeamScore('home', linescore)}
+          {linescore?.teams?.home?.runs ?? 0}
         </div>
         <div className="scoreboard-cell hits" style={{ animationDelay: '1.1s' }}>{liveData?.boxscore?.teams.home.teamStats?.batting?.hits || 0}</div>
         <div className="scoreboard-cell errors" style={{ animationDelay: '1.2s' }}>{liveData?.boxscore?.teams.home.teamStats?.fielding?.errors || 0}</div>
