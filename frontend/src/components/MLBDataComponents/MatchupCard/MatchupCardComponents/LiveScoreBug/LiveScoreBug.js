@@ -36,7 +36,6 @@ const LiveScoreBug = ({
         className="team-cell"
         style={{
           display: 'flex',
-          alignItems: 'center',
           cursor: 'pointer',
         }}
         onClick={() => handleStarClick(gamePk, team.id)}
@@ -124,11 +123,9 @@ const LiveScoreBug = ({
         <div
           style={{
             flex: 1,
-            height: '70px',
             border: '2px solid #555555',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
             borderRadius: '7px',
-            padding: '5px 10px',
             opacity: 0.85,
             display: 'flex',
             flexDirection: 'column',
@@ -166,7 +163,6 @@ const LiveScoreBug = ({
             opacity: 0.85,
             display: 'flex',
             justifyContent: 'center',
-            alignItems: 'center',
           }}
         >
           <div style={{ position: 'relative', width: '50px', height: '50px' }}>
@@ -225,13 +221,21 @@ const LiveScoreBug = ({
           gridTemplateRows: '1fr 1fr',
           gap: '5px',
           padding: '10px',
-          marginRight: '5px',
+          marginRight: '3px',
         }}
       >
         {renderTeamCell(awayTeam, awayScore, 'away')}
         {renderPitchOutBox()}
         {renderTeamCell(homeTeam, homeScore, 'home')}
-        <div />
+        <div
+          style={{
+            border: '2px solid #555555',
+            backgroundColor: 'rgba(70, 70, 70, 0.8)',
+            borderRadius: '7px',
+            opacity: 0.85,
+          }}
+        />
+
       </div>
 
       <Scoreboard

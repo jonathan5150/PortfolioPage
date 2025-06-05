@@ -202,9 +202,9 @@ const MatchupCard = ({
               };
 
               const contentStyle = {
-                height: contentHeights[gamePk] || 'auto',
-                overflow: 'hidden',
-                transition: 'height 0.6s ease'
+                maxHeight: allExpanded ? 'none' : contentHeights[gamePk] || '0',
+                overflow: 'visible',
+                transition: 'max-height 0.6s ease'
               };
 
               const liveData = liveGameData[gamePk];
