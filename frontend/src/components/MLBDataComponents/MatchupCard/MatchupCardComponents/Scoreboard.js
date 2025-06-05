@@ -5,7 +5,6 @@ const Scoreboard = ({ game, getTeamAbbreviation, liveData }) => {
 
   return (
     <div className="scoreboard game-data-container">
-      <p className="game-data-title">SCOREBOARD</p>
       <div className="scoreboard-row">
         <div className="scoreboard-cell team-abbr"></div>
         {[...Array(9)].map((_, inning) => (

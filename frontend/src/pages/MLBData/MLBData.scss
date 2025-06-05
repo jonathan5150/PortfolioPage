@@ -65,6 +65,10 @@
   margin-top: 10px;
 }
 
+.scoreboard {
+  border-radius: 0 0 7px 7px;
+}
+
 .scoreboard-row {
   display: flex;
   width: 100%;
@@ -388,7 +392,7 @@ select:focus {
 }
 
 .game-time {
-  font-size: 19px;
+  font-size: 16px;
   margin: 0px;
 }
 

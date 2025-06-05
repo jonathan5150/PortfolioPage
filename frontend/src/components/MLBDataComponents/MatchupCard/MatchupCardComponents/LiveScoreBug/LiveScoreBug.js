@@ -44,12 +44,13 @@ const LiveScoreBug = ({
           className="team-info-container"
           style={{
             width: '100%',
+            height: '50px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             border: '2px solid #555555',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            borderRadius: '7px',
+            borderRadius: side === 'away' ? '7px 0 0 0' : '0',
             padding: '5px 10px',
             opacity: 0.85,
           }}
@@ -60,8 +61,8 @@ const LiveScoreBug = ({
               src={getTeamLogo(team.name)}
               alt={`${team.name} logo`}
               style={{
-                width: '55px',
-                height: '55px',
+                width: '45px',
+                height: '45px',
                 objectFit: 'contain',
                 userSelect: 'none',
                 WebkitUserDrag: 'none',
@@ -83,7 +84,7 @@ const LiveScoreBug = ({
               alignItems: 'center',
               justifyContent: 'center',
               fontWeight: 'bold',
-              fontSize: '25px',
+              fontSize: '30px',
               color: '#fff',
               textAlign: 'center',
             }}
@@ -95,7 +96,7 @@ const LiveScoreBug = ({
           <div
             style={{
               fontWeight: 'bold',
-              fontSize: '25px',
+              fontSize: '30px',
               color: '#fff',
               width: '30px',
               textAlign: 'center',
@@ -114,6 +115,7 @@ const LiveScoreBug = ({
         className="pitch-out-container"
         style={{
           width: '100%',
+          height: '60px',
           display: 'flex',
           gap: '5px',
           justifyContent: 'space-between',
@@ -123,9 +125,9 @@ const LiveScoreBug = ({
         <div
           style={{
             flex: 1,
+            height: '60px',
             border: '2px solid #555555',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            borderRadius: '7px',
             opacity: 0.85,
             display: 'flex',
             flexDirection: 'column',
@@ -156,10 +158,10 @@ const LiveScoreBug = ({
         <div
           style={{
             flex: 1,
-            height: '70px',
+            height: '60px',
             border: '2px solid #555555',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            borderRadius: '7px',
+            borderRadius: '0 7px 0 0',
             opacity: 0.85,
             display: 'flex',
             justifyContent: 'center',
@@ -170,7 +172,7 @@ const LiveScoreBug = ({
             <div
               style={{
                 position: 'absolute',
-                top: '16px',
+                top: '7px',
                 left: '50%',
                 transform: 'translate(-50%, 0) rotate(45deg)',
                 width: '16px',
@@ -183,8 +185,8 @@ const LiveScoreBug = ({
             <div
               style={{
                 position: 'absolute',
-                bottom: 0,
-                left: '99%',
+                bottom: 8,
+                left: '102%',
                 transform: 'translate(-100%, 0) rotate(45deg)',
                 width: '16px',
                 height: '16px',
@@ -196,8 +198,8 @@ const LiveScoreBug = ({
             <div
               style={{
                 position: 'absolute',
-                bottom: 0,
-                left: 0,
+                bottom: 8,
+                left: -1,
                 transform: 'rotate(45deg)',
                 width: '16px',
                 height: '16px',
@@ -220,8 +222,11 @@ const LiveScoreBug = ({
           gridTemplateColumns: '1fr 1fr',
           gridTemplateRows: '1fr 1fr',
           gap: '5px',
-          padding: '10px',
+          paddingRight: '10px',
+          paddingLeft: '11px',
+          paddingTop: '10px',
           marginRight: '3px',
+          marginBottom: '5px'
         }}
       >
         {renderTeamCell(awayTeam, awayScore, 'away')}
@@ -231,7 +236,6 @@ const LiveScoreBug = ({
           style={{
             border: '2px solid #555555',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            borderRadius: '7px',
             opacity: 0.85,
           }}
         />
