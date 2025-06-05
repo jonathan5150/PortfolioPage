@@ -340,13 +340,21 @@ function MLBData() {
         const sortedGames = games
           .flatMap(date => date.games)
           .sort((a, b) => {
-            const aIsPostponed = a.liveData?.gameData?.status?.detailedState?.includes('Postponed');
-            const bIsPostponed = b.liveData?.gameData?.status?.detailedState?.includes('Postponed');
+            const getEffectiveDate = (game) => {
+              const detailedState = game.liveData?.gameData?.status?.detailedState;
+              const originalDate = game.liveData?.gameData?.datetime?.originalDate;
 
-            if (aIsPostponed && !bIsPostponed) return 1;
-            if (!aIsPostponed && bIsPostponed) return -1;
+              // Convert to YYYY-MM-DD for safe comparison
+              const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
+              const original = originalDate ? format(new Date(originalDate), 'yyyy-MM-dd') : null;
 
-            return new Date(a.gameDate) - new Date(b.gameDate);
+              if (detailedState?.includes('Postponed') && selected === original) {
+                return new Date(originalDate); // Show original time *only if user is viewing original date*
+              }
+              return new Date(game.gameDate); // Otherwise, use actual scheduled/rescheduled time
+            };
+
+            return getEffectiveDate(a) - getEffectiveDate(b);
           });
 
         setGameBackgroundColors(backgroundColors);

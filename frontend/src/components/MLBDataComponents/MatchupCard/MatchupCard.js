@@ -8,6 +8,7 @@ import BatterGamelog from './MatchupCardSelections/BatterGamelog';
 import BoxScore from './MatchupCardSelections/BoxScore';
 import BeforeAfterScoreBug from './MatchupCardComponents/BeforeAfterScoreBug/BeforeAfterScoreBug';
 import LiveScoreBug from './MatchupCardComponents/LiveScoreBug/LiveScoreBug';
+import { format } from 'date-fns';
 
 const MatchupCard = ({
   loading,
@@ -226,11 +227,22 @@ const MatchupCard = ({
                 >
                   <div className="game-time-container">
                     <p className="game-time">
-                      {detailedState === 'Postponed: Rain'
-                        ? 'POSTPONED'
-                        : game.gameDate
-                        ? formatTime(game.gameDate)
-                        : 'Time not available'}
+                      {(() => {
+                        const originalDateStr = liveData?.gameData?.datetime?.originalDate;
+                        const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
+                        const original = originalDateStr ? format(new Date(originalDateStr), 'yyyy-MM-dd') : null;
+                        const isPostponed = detailedState?.includes('Postponed') && selected === original;
+
+                        const displayTime = isPostponed
+                          ? new Date(originalDateStr)
+                          : new Date(game.gameDate);
+                        const suffix = isPostponed
+                          ? ' (Postponed)'
+                          : detailedState?.includes('Delayed')
+                          ? ' (Delayed)'
+                          : '';
+                        return `${formatTime(displayTime)}${suffix}`;
+                      })()}
                     </p>
                   </div>
 
