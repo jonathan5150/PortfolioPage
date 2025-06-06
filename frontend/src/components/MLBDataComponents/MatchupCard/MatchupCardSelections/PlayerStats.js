@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import Cookies from 'js-cookie';
 
 const PlayerStats = ({
   game,
@@ -6,8 +7,7 @@ const PlayerStats = ({
   playerStatsSortConfig,
   setPlayerStatsSortConfig,
   setContentKey,
-  setSelectedPlayers,
-  onHeightChange // ⬅️ NEW PROP
+  setSelectedPlayers
 }) => {
   const awayTeamId = game.teams.away.team.id;
   const homeTeamId = game.teams.home.team.id;
@@ -17,19 +17,20 @@ const PlayerStats = ({
   const awayRoster = batterGameLogs[awayTeamId]?.roster || [];
   const homeRoster = batterGameLogs[homeTeamId]?.roster || [];
 
-  const [selectedTeam, setSelectedTeam] = useState(awayTeamId);
+  const [selectedTeam, setSelectedTeam] = useState(() => {
+    const cookie = Cookies.get('playerStatsTeam');
+    const parsed = parseInt(cookie);
+    if (parsed === awayTeamId || parsed === homeTeamId) return parsed;
+    return awayTeamId;
+  });
+
+  useEffect(() => {
+    Cookies.set('playerStatsTeam', selectedTeam, { expires: 7 });
+  }, [selectedTeam]);
 
   const sortConfig = useMemo(() => {
     return playerStatsSortConfig || { key: 'gamesPlayed', direction: 'desc' };
   }, [playerStatsSortConfig]);
-
-  // ⬇️ TRIGGER HEIGHT RECALC ON RELEVANT CHANGES
-  useEffect(() => {
-    if (onHeightChange) {
-      const timeout = setTimeout(onHeightChange, 50); // slight delay for DOM render
-      return () => clearTimeout(timeout);
-    }
-  }, [selectedTeam, sortConfig, batterGameLogs, onHeightChange]);
 
   const getSortableValue = (player, key) => {
     if (key === 'fullName') {
@@ -102,7 +103,6 @@ const PlayerStats = ({
 
     return (
       <div className="lineup noselect" tabIndex={-1} draggable={false} style={{ marginBottom: '3px' }}>
-
         <table style={{ fontSize: '12px', marginBottom: '3px', width: '100%', tableLayout: 'fixed', cursor: 'pointer' }}>
           <thead>
             <tr>
