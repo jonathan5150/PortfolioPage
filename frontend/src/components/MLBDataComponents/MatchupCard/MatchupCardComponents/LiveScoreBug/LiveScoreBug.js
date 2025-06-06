@@ -22,10 +22,14 @@ const LiveScoreBug = ({
   const strikes = count.strikes ?? 0;
   const outs = count.outs ?? 0;
 
-  const offense = liveData?.liveData?.linescore?.offense || {};
+  const offense = liveData?.linescore?.offense || {};
   const onFirst = !!offense.first;
   const onSecond = !!offense.second;
   const onThird = !!offense.third;
+
+  const inning = liveData?.linescore?.currentInning ?? '';
+  const isTopInning = liveData?.linescore?.isTopInning;
+  const inningArrow = isTopInning ? '▲' : '▼';
 
   const renderTeamCell = (team, score, side) => {
     const abbr = getTeamAbbreviation(team.id);
@@ -55,7 +59,6 @@ const LiveScoreBug = ({
             opacity: 0.85,
           }}
         >
-          {/* Logo */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <img
               src={getTeamLogo(team.name)}
@@ -75,7 +78,6 @@ const LiveScoreBug = ({
             )}
           </div>
 
-          {/* Abbreviation + Record */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}>
             <div
               className="abbreviation"
@@ -105,7 +107,6 @@ const LiveScoreBug = ({
             </div>
           </div>
 
-          {/* Score */}
           <div
             style={{
               fontWeight: 'bold',
@@ -175,14 +176,16 @@ const LiveScoreBug = ({
             borderRadius: '0 7px 0 0',
             opacity: 0.85,
             display: 'flex',
+            flexDirection: 'column',
             justifyContent: 'center',
+            alignItems: 'center',
           }}
         >
           <div style={{ position: 'relative', width: '50px', height: '50px' }}>
             <div
               style={{
                 position: 'absolute',
-                top: '7px',
+                top: '8px',
                 left: '50%',
                 transform: 'translate(-50%, 0) rotate(45deg)',
                 width: '16px',
@@ -194,7 +197,7 @@ const LiveScoreBug = ({
             <div
               style={{
                 position: 'absolute',
-                bottom: 8,
+                bottom: -6,
                 left: '102%',
                 transform: 'translate(-100%, 0) rotate(45deg)',
                 width: '16px',
@@ -206,7 +209,7 @@ const LiveScoreBug = ({
             <div
               style={{
                 position: 'absolute',
-                bottom: 8,
+                bottom: -6,
                 left: -1,
                 transform: 'rotate(45deg)',
                 width: '16px',
@@ -215,6 +218,21 @@ const LiveScoreBug = ({
                 border: '2px solid black',
               }}
             />
+          </div>
+          <div
+            style={{
+              marginTop: '2px',
+              marginBottom: '4px',
+              marginRight: '2px',
+              fontWeight: 'bold',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <span style={{ fontSize: '6px', marginRight: '2px' }}>{inningArrow}</span>
+            <span style={{ fontSize: '13px' }}>{inning}</span>
           </div>
         </div>
       </div>
