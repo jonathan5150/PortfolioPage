@@ -172,9 +172,19 @@ const MatchupCard = ({
   };
 
   const toggleGameData = () => {
+    const firstVisibleGamePk = visibleGames?.[0]?.gamePk;
+    const anchor = cardRefs.current[firstVisibleGamePk];
+    const prevY = anchor?.getBoundingClientRect().top;
+
     const newState = !allExpanded;
     setAllExpanded(newState);
     Cookies.set('allExpanded', JSON.stringify(newState), { expires: 365 });
+
+    requestAnimationFrame(() => {
+      const newY = anchor?.getBoundingClientRect().top;
+      const deltaY = newY - prevY;
+      window.scrollBy({ top: deltaY });
+    });
   };
 
   return (
