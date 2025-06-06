@@ -225,8 +225,8 @@ const MatchupCard = ({
                   }`}
                   key={gamePk}
                 >
-                  <div className="game-time-container">
-                    <p className="game-time">
+                  <div className="game-time-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <p className="game-time" style={{ margin: 0 }}>
                       {(() => {
                         const originalDateStr = liveData?.gameData?.datetime?.originalDate;
                         const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
@@ -244,12 +244,22 @@ const MatchupCard = ({
                           ? ' (DELAYED)'
                           : '';
 
-                        console.log('Game', gamePk, 'detailedState:', detailedState);
-
                         return `${formatTime(displayTime)}${suffix}`;
                       })()}
                     </p>
+                    {liveData?.gameData?.status?.abstractGameState === 'Live' && (
+                      <div
+                        className="live-indicator"
+                        style={{
+                          width: '5px',
+                          height: '5px',
+                          borderRadius: '50%',
+                          backgroundColor: 'red',
+                        }}
+                      />
+                    )}
                   </div>
+
 
                   <div>
                     {isLive && hasGameStarted ? (
