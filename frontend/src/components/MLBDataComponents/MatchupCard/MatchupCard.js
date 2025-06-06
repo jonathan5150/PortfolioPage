@@ -239,9 +239,9 @@ const MatchupCard = ({
                           : new Date(game.gameDate);
 
                         const suffix = isPostponed
-                          ? ' (Postponed)'
+                          ? ' (POSTPONED)'
                           : /Delayed/i.test(detailedState)
-                          ? ' (Delayed)'
+                          ? ' (DELAYED)'
                           : '';
 
                         console.log('Game', gamePk, 'detailedState:', detailedState);

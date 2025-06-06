@@ -258,30 +258,6 @@ h3 {
   flex-direction: column;
 }
 
-.column2 .pitcher-info-top {
-  flex: 0 0 49%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-
-.column2 .vs {
-  flex: 0 0 2%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: -5px;
-}
-
-.column2 .pitcher-info-bottom {
-  flex: 0 0 49%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-
 .column3 {
   width: 60%; /* Take 60% of the width */
 }
@@ -309,23 +285,13 @@ h3 {
   -webkit-tap-highlight-color: transparent;
 }
 
-.pitcher-info-top {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 68px;
-  margin-top: -1px;
-}
-
-.pitcher-info-bottom {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: -20px;
-  min-height: 72px;
-}
-
 .pitcher-details {
+  display: flex;
+  font-size: 11px;
+  flex-direction: column;  /* Stack lines vertically */
+  justify-content: center; /* Vertically center in container */
+  align-items: center;     /* Horizontally center text */
+  height: 100%;            /* Fill container to center vertically */
   text-align: center;
 }
 
@@ -401,7 +367,7 @@ select:focus {
 }
 
 .abbreviation {
-  font-size: 25px;
+  font-size: 20px;
   width: 40px;
   height: 55px;
   display: flex;
@@ -414,7 +380,7 @@ select:focus {
 
 
 .game-time {
-  font-size: 16px;
+  font-size: 14px;
   margin: 0px;
 }
 
@@ -771,11 +737,6 @@ select:focus {
   .column2 {
     width: 85%; /* Take 75% of the width */
   }
-
-.column2 .pitcher-details {
-  font-size: 13px; /* Adjust the font size */
-}
-
 
   .column1 img {
     margin-right: 0px;

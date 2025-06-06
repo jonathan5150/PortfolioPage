@@ -17,6 +17,24 @@ const BeforeAfterScoreBug = ({
   const awayScore = liveData?.liveData?.linescore?.teams?.away?.runs ?? '-';
   const homeScore = liveData?.liveData?.linescore?.teams?.home?.runs ?? '-';
 
+  const renderPitcherInfo = (team, pitcher) => (
+    <div className="pitcher-details" style={{ fontSize: '12px' }}>
+      {pitcher?.fullName ? (
+        <>
+          <div>
+            <span style={{ fontWeight: 'bold' }}></span> {pitcher.fullName} ({pitcher.pitchHand})
+          </div>
+          <div>
+            <span style={{ fontWeight: 'bold' }}>ERA:</span> {pitcher.era}
+          </div>
+        </>
+      ) : (
+        <span><b>P:</b> N/A</span>
+      )}
+    </div>
+  );
+
+
   const renderTeamCell = (team, score, side) => {
     const abbr = getTeamAbbreviation(team.id);
     const record = getTeamRecord(team.id);
@@ -45,7 +63,6 @@ const BeforeAfterScoreBug = ({
             opacity: 0.85,
           }}
         >
-          {/* Logo */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <img
               src={getTeamLogo(team.name)}
@@ -65,7 +82,6 @@ const BeforeAfterScoreBug = ({
             )}
           </div>
 
-          {/* Abbreviation + Record */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}>
             <div
               className="abbreviation"
@@ -95,7 +111,6 @@ const BeforeAfterScoreBug = ({
             </div>
           </div>
 
-          {/* Score */}
           <div
             style={{
               fontWeight: 'bold',
@@ -119,7 +134,7 @@ const BeforeAfterScoreBug = ({
         style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gridTemplateRows: '1fr 1fr',
+          gridTemplateRows: 'auto auto auto',
           gap: '5px',
           paddingRight: '10px',
           paddingLeft: '10px',
@@ -129,37 +144,39 @@ const BeforeAfterScoreBug = ({
       >
         {renderTeamCell(awayTeam, awayScore, 'away')}
 
-        {/* Replaces pitch-out-container with blank cell */}
         <div
           style={{
             border: '2px solid #555555',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
             opacity: 0.85,
-            height: '60px',
-            borderRadius: '0 7px 0 0'
+            borderRadius: '0 7px 0 0',
+            padding: '5px',
           }}
-        />
+        >
+          {renderPitcherInfo(game.teams.away.team, game.teams.away.probablePitcher)}
+        </div>
 
         {renderTeamCell(homeTeam, homeScore, 'home')}
 
-        {/* Bottom right cell */}
         <div
           style={{
             border: '2px solid #555555',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
             opacity: 0.85,
+            padding: '5px',
           }}
-        />
+        >
+          {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}
+        </div>
+
         <div style={{ gridColumn: '1 / span 2' }}>
-            <Scoreboard
+          <Scoreboard
             game={game}
             getTeamAbbreviation={getTeamAbbreviation}
             liveData={liveData}
           />
         </div>
       </div>
-
-
     </>
   );
 };

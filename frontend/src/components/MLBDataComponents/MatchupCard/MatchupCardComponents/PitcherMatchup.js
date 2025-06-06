@@ -3,9 +3,6 @@ import React from 'react';
 const PitcherMatchup = ({ game, getTeamRecord }) => {
   const renderPitcherInfo = (team, pitcher) => (
     <>
-      <span style={{ fontWeight: 'bold' }}>
-        {team.name} ({getTeamRecord(team.id)})
-      </span>
       <div className="pitcher-details">
         {pitcher?.fullName ? (
           <>
