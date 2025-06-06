@@ -351,8 +351,8 @@ h3 {
 
 .star-icon {
   position: absolute;
-  top: 6px;
-  left: 4px;
+  bottom: 5px;
+  left: -30px;
   font-size: 11px;
   color: gold;
   pointer-events: none; // Make sure the star doesn't block clicks on the image

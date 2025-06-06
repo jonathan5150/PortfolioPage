@@ -58,6 +58,7 @@ const MatchupCard = ({
   const [pitcherLogs, setPitcherLogs] = useState({});
   const [contentHeights, setContentHeights] = useState({});
   const contentRefs = useRef({});
+  const cardRefs = useRef({});
 
   const updateContentHeight = (gamePk) => {
     const ref = contentRefs.current[gamePk];
@@ -144,11 +145,20 @@ const MatchupCard = ({
     }
   }, [loading]);
 
-  const handleDataSelect = (dataType) => {
+  const handleDataSelectWithAnchor = (dataType, gamePk) => {
+    const anchor = cardRefs.current[gamePk];
+    const prevY = anchor?.getBoundingClientRect().top;
+
     if (dataType !== contentKey) {
       setContentKey(dataType);
       Cookies.set('contentKey', dataType, { expires: 365 });
     }
+
+    requestAnimationFrame(() => {
+      const newY = anchor?.getBoundingClientRect().top;
+      const deltaY = newY - prevY;
+      window.scrollBy({ top: deltaY });
+    });
   };
 
   const handleStarClick = (gamePk, teamId) => {
@@ -200,11 +210,14 @@ const MatchupCard = ({
               const contentRef = (el) => {
                 if (el) contentRefs.current[gamePk] = el;
               };
+              const cardRef = (el) => {
+                if (el) cardRefs.current[gamePk] = el;
+              };
 
               const contentStyle = {
                 maxHeight: allExpanded ? 'none' : contentHeights[gamePk] || '0',
                 overflow: 'visible',
-                transition: 'max-height 0.6s ease'
+                transition: 'max-height 1.2s ease'
               };
 
               const liveData = liveGameData[gamePk];
@@ -224,6 +237,7 @@ const MatchupCard = ({
                       : 'fade-out'
                   }`}
                   key={gamePk}
+                  ref={cardRef}
                 >
                   <div className="game-time-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <p className="game-time" style={{ margin: 0 }}>
@@ -259,7 +273,6 @@ const MatchupCard = ({
                       />
                     )}
                   </div>
-
 
                   <div>
                     {isLive && hasGameStarted ? (
@@ -320,7 +333,10 @@ const MatchupCard = ({
                         opacity: allExpanded ? 1 : 0,
                       }}
                     >
-                      <select value={contentKey} onChange={(e) => handleDataSelect(e.target.value)}>
+                      <select
+                        value={contentKey}
+                        onChange={(e) => handleDataSelectWithAnchor(e.target.value, gamePk)}
+                      >
                         <option value="box-score">BOX SCORE</option>
                         <option value="team-history">TEAM W/L HISTORY</option>
                         <option value="player-stats">PLAYER SEASON STATS</option>
