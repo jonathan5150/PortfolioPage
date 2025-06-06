@@ -4,7 +4,7 @@ const Scoreboard = ({ game, getTeamAbbreviation, liveData }) => {
   const linescore = liveData?.linescore;
 
   return (
-    <div className="scoreboard game-data-container">
+    <div className="scoreboard">
       <div className="scoreboard-row">
         <div className="scoreboard-cell team-abbr"></div>
         {[...Array(9)].map((_, inning) => (

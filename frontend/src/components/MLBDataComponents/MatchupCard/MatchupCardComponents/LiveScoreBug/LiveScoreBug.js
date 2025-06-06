@@ -231,9 +231,8 @@ const LiveScoreBug = ({
           gridTemplateRows: '1fr 1fr',
           gap: '5px',
           paddingRight: '10px',
-          paddingLeft: '11px',
+          paddingLeft: '10px',
           paddingTop: '10px',
-          marginRight: '3px',
           marginBottom: '5px',
         }}
       >
@@ -247,13 +246,14 @@ const LiveScoreBug = ({
             opacity: 0.85,
           }}
         />
+        <div style={{ gridColumn: '1 / span 2' }}>
+          <Scoreboard
+            game={game}
+            getTeamAbbreviation={getTeamAbbreviation}
+            liveData={liveData}
+          />
+        </div>
       </div>
-
-      <Scoreboard
-        game={game}
-        getTeamAbbreviation={getTeamAbbreviation}
-        liveData={liveData}
-      />
     </>
   );
 };
