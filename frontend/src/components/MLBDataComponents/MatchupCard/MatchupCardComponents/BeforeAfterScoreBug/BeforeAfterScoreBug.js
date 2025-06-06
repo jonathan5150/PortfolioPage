@@ -18,7 +18,7 @@ const BeforeAfterScoreBug = ({
   const homeScore = liveData?.liveData?.linescore?.teams?.home?.runs ?? '-';
 
   const renderPitcherInfo = (team, pitcher) => (
-    <div className="pitcher-details" style={{ fontSize: '12px' }}>
+    <div className="pitcher-details">
       {pitcher?.fullName ? (
         <>
           <div>
