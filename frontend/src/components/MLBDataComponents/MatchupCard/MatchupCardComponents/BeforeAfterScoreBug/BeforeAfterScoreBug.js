@@ -41,8 +41,8 @@ const BeforeAfterScoreBug = ({
 
     if (lost) {
       return {
-        borderColor: 'rgba(139, 0, 0, 0.6)',
-        backgroundColor: 'rgba(139, 0, 0, 0.1)',
+        borderColor: 'rgba(139, 0, 0, 0.9)',
+        backgroundColor: 'rgba(139, 0, 0, 0.2)',
       };
     }
 
