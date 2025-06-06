@@ -391,6 +391,19 @@ select:focus {
   outline: none;
 }
 
+.abbreviation {
+  font-size: 25px;
+  width: 40px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+}
+
+
 .game-time {
   font-size: 16px;
   margin: 0px;

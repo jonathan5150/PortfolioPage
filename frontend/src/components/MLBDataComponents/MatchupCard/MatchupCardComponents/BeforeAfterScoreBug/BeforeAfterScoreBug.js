@@ -9,6 +9,7 @@ const BeforeAfterScoreBug = ({
   gameBackgroundColors,
   starredTeams,
   getTeamAbbreviation,
+  getTeamRecord,
   liveData,
 }) => {
   const awayTeam = game.teams.away.team;
@@ -16,9 +17,9 @@ const BeforeAfterScoreBug = ({
   const awayScore = liveData?.liveData?.linescore?.teams?.away?.runs ?? '-';
   const homeScore = liveData?.liveData?.linescore?.teams?.home?.runs ?? '-';
 
-
   const renderTeamCell = (team, score, side) => {
     const abbr = getTeamAbbreviation(team.id);
+    const record = getTeamRecord(team.id);
 
     return (
       <div
@@ -50,8 +51,8 @@ const BeforeAfterScoreBug = ({
               src={getTeamLogo(team.name)}
               alt={`${team.name} logo`}
               style={{
-                width: '45px',
-                height: '45px',
+                width: '37px',
+                height: '37px',
                 objectFit: 'contain',
                 userSelect: 'none',
                 WebkitUserDrag: 'none',
@@ -64,28 +65,41 @@ const BeforeAfterScoreBug = ({
             )}
           </div>
 
-          {/* Abbreviation */}
-          <div
-            style={{
-              width: '40px',
-              height: '55px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 'bold',
-              fontSize: '30px',
-              color: '#fff',
-              textAlign: 'center',
-            }}
-          >
-            {abbr}
+          {/* Abbreviation + Record */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}>
+            <div
+              className="abbreviation"
+              style={{
+                height: '30px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {abbr}
+            </div>
+            <div
+              style={{
+                fontSize: '11px',
+                color: '#ccc',
+                lineHeight: '12px',
+                width: '60px',
+                textAlign: 'center',
+                alignItems: 'center',
+              }}
+            >
+              {record}
+            </div>
           </div>
 
           {/* Score */}
           <div
             style={{
               fontWeight: 'bold',
-              fontSize: '30px',
+              fontSize: '25px',
               color: '#fff',
               width: '30px',
               textAlign: 'center',

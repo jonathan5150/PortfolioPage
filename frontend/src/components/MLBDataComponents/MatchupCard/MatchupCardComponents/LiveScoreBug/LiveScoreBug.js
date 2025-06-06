@@ -9,6 +9,7 @@ const LiveScoreBug = ({
   gameBackgroundColors,
   starredTeams,
   getTeamAbbreviation,
+  getTeamRecord,
   liveData,
 }) => {
   const awayTeam = game.teams.away.team;
@@ -16,13 +17,11 @@ const LiveScoreBug = ({
   const awayScore = liveData?.linescore?.teams?.away?.runs ?? '-';
   const homeScore = liveData?.linescore?.teams?.home?.runs ?? '-';
 
-  // ✅ Extract pitch count + outs
   const count = liveData?.plays?.currentPlay?.count || {};
   const balls = count.balls ?? 0;
   const strikes = count.strikes ?? 0;
   const outs = count.outs ?? 0;
 
-  // ✅ Extract base runners
   const offense = liveData?.liveData?.linescore?.offense || {};
   const onFirst = !!offense.first;
   const onSecond = !!offense.second;
@@ -30,6 +29,7 @@ const LiveScoreBug = ({
 
   const renderTeamCell = (team, score, side) => {
     const abbr = getTeamAbbreviation(team.id);
+    const record = getTeamRecord(team.id);
 
     return (
       <div
@@ -61,8 +61,8 @@ const LiveScoreBug = ({
               src={getTeamLogo(team.name)}
               alt={`${team.name} logo`}
               style={{
-                width: '45px',
-                height: '45px',
+                width: '37px',
+                height: '37px',
                 objectFit: 'contain',
                 userSelect: 'none',
                 WebkitUserDrag: 'none',
@@ -75,28 +75,41 @@ const LiveScoreBug = ({
             )}
           </div>
 
-          {/* Abbreviation */}
-          <div
-            style={{
-              width: '40px',
-              height: '55px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 'bold',
-              fontSize: '30px',
-              color: '#fff',
-              textAlign: 'center',
-            }}
-          >
-            {abbr}
+          {/* Abbreviation + Record */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}>
+            <div
+              className="abbreviation"
+              style={{
+                height: '30px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {abbr}
+            </div>
+            <div
+              style={{
+                fontSize: '11px',
+                color: '#ccc',
+                lineHeight: '12px',
+                width: '60px',
+                textAlign: 'center',
+                alignItems: 'center',
+              }}
+            >
+              {record}
+            </div>
           </div>
 
           {/* Score */}
           <div
             style={{
               fontWeight: 'bold',
-              fontSize: '30px',
+              fontSize: '25px',
               color: '#fff',
               width: '30px',
               textAlign: 'center',
@@ -121,7 +134,6 @@ const LiveScoreBug = ({
           justifyContent: 'space-between',
         }}
       >
-        {/* Pitch/Out Left Cell */}
         <div
           style={{
             flex: 1,
@@ -154,7 +166,6 @@ const LiveScoreBug = ({
           </div>
         </div>
 
-        {/* Right Cell: Baseball Diamond */}
         <div
           style={{
             flex: 1,
@@ -168,7 +179,6 @@ const LiveScoreBug = ({
           }}
         >
           <div style={{ position: 'relative', width: '50px', height: '50px' }}>
-            {/* Second Base */}
             <div
               style={{
                 position: 'absolute',
@@ -181,7 +191,6 @@ const LiveScoreBug = ({
                 border: '2px solid black',
               }}
             />
-            {/* First Base */}
             <div
               style={{
                 position: 'absolute',
@@ -194,7 +203,6 @@ const LiveScoreBug = ({
                 border: '2px solid black',
               }}
             />
-            {/* Third Base */}
             <div
               style={{
                 position: 'absolute',
@@ -226,7 +234,7 @@ const LiveScoreBug = ({
           paddingLeft: '11px',
           paddingTop: '10px',
           marginRight: '3px',
-          marginBottom: '5px'
+          marginBottom: '5px',
         }}
       >
         {renderTeamCell(awayTeam, awayScore, 'away')}
@@ -239,7 +247,6 @@ const LiveScoreBug = ({
             opacity: 0.85,
           }}
         />
-
       </div>
 
       <Scoreboard
