@@ -184,37 +184,34 @@ const LiveScoreBug = ({
             <div
               style={{
                 position: 'absolute',
-                top: '8px',
+                top: '10px',
                 left: '50%',
                 transform: 'translate(-50%, 0) rotate(45deg)',
                 width: '16px',
                 height: '16px',
                 backgroundColor: onSecond ? 'gold' : 'white',
-                border: '2px solid black',
               }}
             />
             <div
               style={{
                 position: 'absolute',
-                bottom: -6,
-                left: '102%',
+                bottom: -3,
+                left: '97%',
                 transform: 'translate(-100%, 0) rotate(45deg)',
                 width: '16px',
                 height: '16px',
                 backgroundColor: onFirst ? 'gold' : 'white',
-                border: '2px solid black',
               }}
             />
             <div
               style={{
                 position: 'absolute',
-                bottom: -6,
-                left: -1,
+                bottom: -3,
+                left: 2,
                 transform: 'rotate(45deg)',
                 width: '16px',
                 height: '16px',
                 backgroundColor: onThird ? 'gold' : 'white',
-                border: '2px solid black',
               }}
             />
           </div>

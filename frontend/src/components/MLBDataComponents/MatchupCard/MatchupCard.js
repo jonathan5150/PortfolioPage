@@ -342,6 +342,7 @@ const MatchupCard = ({
                                   const updated = { ...JSON.parse(Cookies.get('selectedPlayers') || '{}'), [teamId]: playerName };
                                   Cookies.set('selectedPlayers', JSON.stringify(updated), { expires: 365 });
                                 }}
+                                onHeightChange={() => updateContentHeight(gamePk)}
                               />
                             </div>
                           )}
