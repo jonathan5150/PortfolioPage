@@ -35,13 +35,12 @@ const LiveScoreBug = ({
     const abbr = getTeamAbbreviation(team.id);
     const record = getTeamRecord(team.id);
 
+    console.log('LiveScoreBug liveData:', liveData);
+
     return (
       <div
         className="team-cell"
-        style={{
-          display: 'flex',
-          cursor: 'pointer',
-        }}
+        style={{ display: 'flex', cursor: 'pointer' }}
         onClick={() => handleStarClick(gamePk, team.id)}
       >
         <div
@@ -239,39 +238,57 @@ const LiveScoreBug = ({
     );
   };
 
+  const batter = liveData?.plays?.currentPlay?.matchup?.batter;
+  const pitcher = liveData?.plays?.currentPlay?.matchup?.pitcher;
+
+  const formatName = (player) =>
+    player ? `${player.fullName.split(' ')[0][0]}. ${player.fullName.split(' ').slice(-1)}` : 'N/A';
+
   return (
-    <>
+    <div
+      className="score-grid"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gridTemplateRows: '1fr 1fr',
+        gap: '5px',
+        paddingRight: '10px',
+        paddingLeft: '10px',
+        paddingTop: '10px',
+      }}
+    >
+      {renderTeamCell(awayTeam, awayScore, 'away')}
+      {renderPitchOutBox()}
+      {renderTeamCell(homeTeam, homeScore, 'home')}
       <div
-        className="score-grid"
         style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gridTemplateRows: '1fr 1fr',
-          gap: '5px',
-          paddingRight: '10px',
-          paddingLeft: '10px',
-          paddingTop: '10px',
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          opacity: 0.85,
+          fontSize: '13px',
+          color: 'white',
+          padding: '6px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          lineHeight: '1.3',
+          textAlign: 'left',
+          paddingLeft: '14px',
         }}
       >
-        {renderTeamCell(awayTeam, awayScore, 'away')}
-        {renderPitchOutBox()}
-        {renderTeamCell(homeTeam, homeScore, 'home')}
-        <div
-          style={{
-            border: '2px solid #555555',
-            backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            opacity: 0.85,
-          }}
-        />
-        <div style={{ gridColumn: '1 / span 2' }}>
-          <Scoreboard
-            game={game}
-            getTeamAbbreviation={getTeamAbbreviation}
-            liveData={liveData}
-          />
+        <div style={{ marginBottom: '4px' }}>
+          <strong>AB:</strong>{' '}
+          {batter ? formatName(batter) : 'Batter: N/A'}
+        </div>
+        <div>
+          <strong>P:</strong>{' '}
+          {pitcher ? formatName(pitcher) : 'Pitcher: N/A'}
         </div>
       </div>
-    </>
+      <div style={{ gridColumn: '1 / span 2' }}>
+        <Scoreboard game={game} getTeamAbbreviation={getTeamAbbreviation} liveData={liveData} />
+      </div>
+    </div>
   );
 };
 

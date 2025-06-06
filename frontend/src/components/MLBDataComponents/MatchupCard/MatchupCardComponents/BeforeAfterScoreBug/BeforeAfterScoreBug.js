@@ -12,10 +12,45 @@ const BeforeAfterScoreBug = ({
   getTeamRecord,
   liveData,
 }) => {
+  const trueLiveData = liveData?.liveData ?? liveData;
+
   const awayTeam = game.teams.away.team;
   const homeTeam = game.teams.home.team;
-  const awayScore = liveData?.liveData?.linescore?.teams?.away?.runs ?? '-';
-  const homeScore = liveData?.liveData?.linescore?.teams?.home?.runs ?? '-';
+  const awayScore = trueLiveData?.linescore?.teams?.away?.runs ?? '-';
+  const homeScore = trueLiveData?.linescore?.teams?.home?.runs ?? '-';
+
+  const getStyles = (teamSide) => {
+    if (typeof awayScore !== 'number' || typeof homeScore !== 'number') {
+      return { borderColor: '#555555', backgroundColor: 'rgba(70, 70, 70, 0.8)' };
+    }
+
+    const won =
+      (teamSide === 'away' && awayScore > homeScore) ||
+      (teamSide === 'home' && homeScore > awayScore);
+
+    const lost =
+      (teamSide === 'away' && awayScore < homeScore) ||
+      (teamSide === 'home' && homeScore < awayScore);
+
+    if (won) {
+      return {
+        borderColor: 'rgba(0, 128, 0, 0.6)',
+        backgroundColor: 'rgba(0, 128, 0, 0.1)',
+      };
+    }
+
+    if (lost) {
+      return {
+        borderColor: 'rgba(139, 0, 0, 0.6)',
+        backgroundColor: 'rgba(139, 0, 0, 0.1)',
+      };
+    }
+
+    return {
+      borderColor: '#555555',
+      backgroundColor: 'rgba(70, 70, 70, 0.8)',
+    };
+  };
 
   const renderPitcherInfo = (team, pitcher) => (
     <div className="pitcher-details">
@@ -34,18 +69,15 @@ const BeforeAfterScoreBug = ({
     </div>
   );
 
-
   const renderTeamCell = (team, score, side) => {
     const abbr = getTeamAbbreviation(team.id);
     const record = getTeamRecord(team.id);
+    const { borderColor, backgroundColor } = getStyles(side);
 
     return (
       <div
         className="team-cell"
-        style={{
-          display: 'flex',
-          cursor: 'pointer',
-        }}
+        style={{ display: 'flex', cursor: 'pointer' }}
         onClick={() => handleStarClick(gamePk, team.id)}
       >
         <div
@@ -56,8 +88,8 @@ const BeforeAfterScoreBug = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            border: '2px solid #555555',
-            backgroundColor: 'rgba(70, 70, 70, 0.8)',
+            border: `2px solid ${borderColor}`,
+            backgroundColor,
             borderRadius: side === 'away' ? '7px 0 0 0' : '0',
             padding: '5px 10px',
             opacity: 0.85,
@@ -128,56 +160,54 @@ const BeforeAfterScoreBug = ({
   };
 
   return (
-    <>
+    <div
+      className="score-grid"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gridTemplateRows: 'auto auto auto',
+        gap: '5px',
+        paddingRight: '10px',
+        paddingLeft: '10px',
+        paddingTop: '10px',
+        marginRight: '3px',
+      }}
+    >
+      {renderTeamCell(awayTeam, awayScore, 'away')}
+
       <div
-        className="score-grid"
         style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gridTemplateRows: 'auto auto auto',
-          gap: '5px',
-          paddingRight: '10px',
-          paddingLeft: '10px',
-          paddingTop: '10px',
-          marginRight: '3px',
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          opacity: 0.85,
+          borderRadius: '0 7px 0 0',
+          padding: '5px',
         }}
       >
-        {renderTeamCell(awayTeam, awayScore, 'away')}
-
-        <div
-          style={{
-            border: '2px solid #555555',
-            backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            opacity: 0.85,
-            borderRadius: '0 7px 0 0',
-            padding: '5px',
-          }}
-        >
-          {renderPitcherInfo(game.teams.away.team, game.teams.away.probablePitcher)}
-        </div>
-
-        {renderTeamCell(homeTeam, homeScore, 'home')}
-
-        <div
-          style={{
-            border: '2px solid #555555',
-            backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            opacity: 0.85,
-            padding: '5px',
-          }}
-        >
-          {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}
-        </div>
-
-        <div style={{ gridColumn: '1 / span 2' }}>
-          <Scoreboard
-            game={game}
-            getTeamAbbreviation={getTeamAbbreviation}
-            liveData={liveData}
-          />
-        </div>
+        {renderPitcherInfo(game.teams.away.team, game.teams.away.probablePitcher)}
       </div>
-    </>
+
+      {renderTeamCell(homeTeam, homeScore, 'home')}
+
+      <div
+        style={{
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          opacity: 0.85,
+          padding: '5px',
+        }}
+      >
+        {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}
+      </div>
+
+      <div style={{ gridColumn: '1 / span 2' }}>
+        <Scoreboard
+          game={game}
+          getTeamAbbreviation={getTeamAbbreviation}
+          liveData={trueLiveData}
+        />
+      </div>
+    </div>
   );
 };
 
