@@ -233,7 +233,6 @@ const LiveScoreBug = ({
           paddingRight: '10px',
           paddingLeft: '10px',
           paddingTop: '10px',
-          marginBottom: '5px',
         }}
       >
         {renderTeamCell(awayTeam, awayScore, 'away')}

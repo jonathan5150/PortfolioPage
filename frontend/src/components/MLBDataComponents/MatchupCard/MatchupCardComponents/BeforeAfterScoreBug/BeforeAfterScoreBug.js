@@ -125,7 +125,6 @@ const BeforeAfterScoreBug = ({
           paddingLeft: '10px',
           paddingTop: '10px',
           marginRight: '3px',
-          marginBottom: '5px',
         }}
       >
         {renderTeamCell(awayTeam, awayScore, 'away')}
