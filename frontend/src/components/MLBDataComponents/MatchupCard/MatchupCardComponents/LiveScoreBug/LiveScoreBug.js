@@ -53,7 +53,7 @@ const LiveScoreBug = ({
             justifyContent: 'space-between',
             border: '2px solid #555555',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            borderRadius: side === 'away' ? '7px 0 0 0' : '0',
+            borderRadius: side === 'away' ? '5px 0 0 0' : '0',
             padding: '5px 10px',
             opacity: 0.85,
           }}
@@ -172,7 +172,7 @@ const LiveScoreBug = ({
             height: '60px',
             border: '2px solid #555555',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            borderRadius: '0 7px 0 0',
+            borderRadius: '0 5px 0 0',
             opacity: 0.85,
             display: 'flex',
             flexDirection: 'column',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MLBDataNavbar from '../MLBDataNavbar/MLBDataNavbar';
 import Cookies from 'js-cookie';
 import TeamHistory from './MatchupCardSelections/TeamHistory/TeamHistory';
@@ -50,34 +50,12 @@ const MatchupCard = ({
     return saved ? JSON.parse(saved) : {};
   });
 
-  const [allExpanded, setAllExpanded] = useState(() => {
-    const saved = Cookies.get('allExpanded');
-    return saved ? JSON.parse(saved) : false;
-  });
+  const [expandedCards, setExpandedCards] = useState({});
 
   const [pitcherLogs, setPitcherLogs] = useState({});
-  const [contentHeights, setContentHeights] = useState({});
   const contentRefs = useRef({});
   const cardRefs = useRef({});
 
-  const updateContentHeight = (gamePk) => {
-    const ref = contentRefs.current[gamePk];
-    if (ref) {
-      setContentHeights((prev) => ({
-        ...prev,
-        [gamePk]: ref.scrollHeight + 'px'
-      }));
-    }
-  };
-
-  useLayoutEffect(() => {
-    const timeout = setTimeout(() => {
-      visibleGames.forEach((game) => {
-        updateContentHeight(game.gamePk);
-      });
-    }, 10);
-    return () => clearTimeout(timeout);
-  }, [contentKey, visibleGames, batterGameLogs, numGamesToShow]);
 
   useEffect(() => {
     const fetchPitcherGameLog = async (playerId, getTeamAbbreviation, beforeDate) => {
@@ -171,20 +149,11 @@ const MatchupCard = ({
     });
   };
 
-  const toggleGameData = () => {
-    const firstVisibleGamePk = visibleGames?.[0]?.gamePk;
-    const anchor = cardRefs.current[firstVisibleGamePk];
-    const prevY = anchor?.getBoundingClientRect().top;
-
-    const newState = !allExpanded;
-    setAllExpanded(newState);
-    Cookies.set('allExpanded', JSON.stringify(newState), { expires: 365 });
-
-    requestAnimationFrame(() => {
-      const newY = anchor?.getBoundingClientRect().top;
-      const deltaY = newY - prevY;
-      window.scrollBy({ top: deltaY });
-    });
+  const toggleGameData = (gamePk) => {
+    setExpandedCards((prev) => ({
+      ...prev,
+      [gamePk]: !prev[gamePk],
+    }));
   };
 
   return (
@@ -225,7 +194,6 @@ const MatchupCard = ({
               };
 
               const contentStyle = {
-                maxHeight: allExpanded ? 'none' : contentHeights[gamePk] || '0',
                 overflow: 'visible',
                 transition: 'max-height 1.2s ease'
               };
@@ -249,40 +217,43 @@ const MatchupCard = ({
                   key={gamePk}
                   ref={cardRef}
                 >
-                  <div className="game-time-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <p className="game-time" style={{ margin: 0 }}>
-                      {(() => {
-                        const originalDateStr = liveData?.gameData?.datetime?.originalDate;
-                        const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
-                        const original = originalDateStr ? format(new Date(originalDateStr), 'yyyy-MM-dd') : null;
-                        const detailedState = liveData?.gameData?.status?.detailedState ?? '';
-                        const isPostponed = detailedState.includes('Postponed') && selected === original;
+                  {liveData?.gameData?.status?.abstractGameState !== 'Final' && (
+                    <div className="game-time-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <p className="game-time" style={{ margin: 0 }}>
+                        {(() => {
+                          const originalDateStr = liveData?.gameData?.datetime?.originalDate;
+                          const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
+                          const original = originalDateStr ? format(new Date(originalDateStr), 'yyyy-MM-dd') : null;
+                          const detailedState = liveData?.gameData?.status?.detailedState ?? '';
+                          const isPostponed = detailedState.includes('Postponed') && selected === original;
 
-                        const displayTime = isPostponed
-                          ? new Date(originalDateStr)
-                          : new Date(game.gameDate);
+                          const displayTime = isPostponed
+                            ? new Date(originalDateStr)
+                            : new Date(game.gameDate);
 
-                        const suffix = isPostponed
-                          ? ' (POSTPONED)'
-                          : /Delayed/i.test(detailedState)
-                          ? ' (DELAYED)'
-                          : '';
+                          const suffix = isPostponed
+                            ? ' (POSTPONED)'
+                            : /Delayed/i.test(detailedState)
+                            ? ' (DELAYED)'
+                            : '';
 
-                        return `${formatTime(displayTime)}${suffix}`;
-                      })()}
-                    </p>
-                    {liveData?.gameData?.status?.abstractGameState === 'Live' && (
-                      <div
-                        className="live-indicator"
-                        style={{
-                          width: '5px',
-                          height: '5px',
-                          borderRadius: '50%',
-                          backgroundColor: 'red',
-                        }}
-                      />
-                    )}
-                  </div>
+                          return `${formatTime(displayTime)}${suffix}`;
+                        })()}
+                      </p>
+                      {liveData?.gameData?.status?.abstractGameState === 'Live' && (
+                        <div
+                          className="live-indicator"
+                          style={{
+                            width: '5px',
+                            height: '5px',
+                            borderRadius: '50%',
+                            backgroundColor: 'red',
+                          }}
+                        />
+                      )}
+                    </div>
+                  )}
+
 
                   <div>
                     {isLive && hasGameStarted ? (
@@ -313,20 +284,20 @@ const MatchupCard = ({
                     )}
 
                     <button
-                      onClick={toggleGameData}
+                      onClick={() => toggleGameData(gamePk)}
                       style={{
-                        color: 'white',
+                        color: 'gray',
+                        padding: '0px',
                         background: 'none',
                         border: 'none',
-                        fontSize: '0.8rem',
+                        fontSize: '0.5rem',
                         cursor: 'pointer',
-                        marginTop: '5px',
                         marginBottom: '0px',
-                        transform: allExpanded ? 'rotate(270deg)' : 'rotate(90deg)',
+                        transform: expandedCards[gamePk] ? 'rotate(270deg)' : 'rotate(90deg)',
                         transition: 'transform 0.3s',
                         alignItems: 'center',
                       }}
-                      aria-label="Toggle All Stats"
+                      aria-label="Toggle Stats"
                     >
                       ▶
                     </button>
@@ -334,15 +305,16 @@ const MatchupCard = ({
                     <div
                       className="game-data-container stat-toggle-container"
                       style={{
-                        maxHeight: allExpanded ? '1000px' : '0px',
+                        maxHeight: expandedCards[gamePk] ? '1000px' : '0px',
                         overflow: 'hidden',
                         transition: 'max-height 0.7s ease, padding 0.5s ease, opacity 0.5s ease',
-                        padding: allExpanded ? '5px' : '0',
-                        marginTop: allExpanded ? '5px' : '0',
-                        marginBottom: allExpanded ? '12px' : '0',
-                        opacity: allExpanded ? 1 : 0,
+                        padding: expandedCards[gamePk] ? '5px' : '0',
+                        marginTop: expandedCards[gamePk] ? '5px' : '0',
+                        marginBottom: expandedCards[gamePk] ? '12px' : '0',
+                        opacity: expandedCards[gamePk] ? 1 : 0,
                       }}
                     >
+
                       <select
                         value={contentKey}
                         onChange={(e) => handleDataSelectWithAnchor(e.target.value, gamePk)}
