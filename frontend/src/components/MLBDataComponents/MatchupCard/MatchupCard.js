@@ -179,125 +179,134 @@ const MatchupCard = ({
     });
   };
 
-  return (
-    <div className="matchup-card fade-in">
-      <MLBDataNavbar
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        isCalendarOpen={isCalendarOpen}
-        setIsCalendarOpen={setIsCalendarOpen}
-        isTeamsMenuOpen={isTeamsMenuOpen}
-        setIsTeamsMenuOpen={setIsTeamsMenuOpen}
-        mlbTeams={mlbTeams}
-        selectedTeams={selectedTeams}
-        handleTeamChange={handleTeamChange}
-        handleSelectAll={handleSelectAll}
-        handleDeselectAll={handleDeselectAll}
-        teamsMenuRef={teamsMenuRef}
-      />
-      <div className="matchup-container">
-        {loading ? (
-          <div className="loading">
-            <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
-            <p>loading...</p>
-          </div>
-        ) : delayOver && visibleGames.length === 0 ? (
-          <p className="noGames" style={{ opacity: fadeIn ? 1 : 0, transition: 'opacity 0.5s ease-in' }}>
-            No games scheduled for this date.
-          </p>
-        ) : (
-          <>
-            {visibleGames.map((game) => {
-              const gamePk = game.gamePk;
-              const contentRef = (el) => {
-                if (el) contentRefs.current[gamePk] = el;
-              };
-              const cardRef = (el) => {
-                if (el) cardRefs.current[gamePk] = el;
-              };
+    return (
+      <div className="matchup-card fade-in">
+        <MLBDataNavbar
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          isCalendarOpen={isCalendarOpen}
+          setIsCalendarOpen={setIsCalendarOpen}
+          isTeamsMenuOpen={isTeamsMenuOpen}
+          setIsTeamsMenuOpen={setIsTeamsMenuOpen}
+          mlbTeams={mlbTeams}
+          selectedTeams={selectedTeams}
+          handleTeamChange={handleTeamChange}
+          handleSelectAll={handleSelectAll}
+          handleDeselectAll={handleDeselectAll}
+          teamsMenuRef={teamsMenuRef}
+        />
+        <div className="matchup-container">
+          {loading ? (
+            <div className="loading">
+              <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
+              <p>loading...</p>
+            </div>
+          ) : delayOver && visibleGames.length === 0 ? (
+            <p className="noGames" style={{ opacity: fadeIn ? 1 : 0, transition: 'opacity 0.5s ease-in' }}>
+              No games scheduled for this date.
+            </p>
+          ) : (
+            <>
+              {visibleGames.map((game) => {
+                const gamePk = game.gamePk;
+                const contentRef = (el) => {
+                  if (el) contentRefs.current[gamePk] = el;
+                };
+                const cardRef = (el) => {
+                  if (el) cardRefs.current[gamePk] = el;
+                };
 
-              const isExpanded = expandedGames[gamePk];
-              const contentStyle = {
-                maxHeight: isExpanded ? '1000px' : '0px',
-                overflow: 'hidden',
-                transition: 'max-height 0.7s ease, padding 0.5s ease, opacity 0.5s ease',
-                padding: isExpanded ? '5px' : '0',
-                marginTop: isExpanded ? '5px' : '0',
-                marginBottom: isExpanded ? '12px' : '0',
-                opacity: isExpanded ? 1 : 0,
-              };
+                const isExpanded = expandedGames[gamePk];
+                const contentStyle = {
+                  maxHeight: isExpanded ? '1000px' : '0px',
+                  overflow: 'hidden',
+                  transition: 'max-height 0.7s ease, padding 0.5s ease, opacity 0.5s ease',
+                  padding: isExpanded ? '5px' : '0',
+                  marginTop: isExpanded ? '5px' : '0',
+                  marginBottom: isExpanded ? '12px' : '0',
+                  opacity: isExpanded ? 1 : 0,
+                };
 
-              const liveData = liveGameData[gamePk];
-              const detailedState = liveData?.gameData?.status?.detailedState;
-              const isLive = liveData?.gameData?.status?.abstractGameState === 'Live';
-              const isPostponed = detailedState === 'Postponed: Rain';
-              const now = new Date();
-              const scheduledTime = new Date(game.gameDate);
-              const hasGameStarted = !isPostponed && now >= scheduledTime;
+                const liveData = liveGameData[gamePk];
+                const detailedState = liveData?.gameData?.status?.detailedState;
+                const isLive = liveData?.gameData?.status?.abstractGameState === 'Live';
+                const isPostponed = detailedState === 'Postponed: Rain';
+                const now = new Date();
+                const scheduledTime = new Date(game.gameDate);
+                const hasGameStarted = !isPostponed && now >= scheduledTime;
 
-              return (
-                <div
-                  className={`game-container ${
-                    selectedTeams.includes(game.teams.away.team.id) ||
-                    selectedTeams.includes(game.teams.home.team.id)
-                      ? 'fade-in'
-                      : 'fade-out'
-                  }`}
-                  key={gamePk}
-                  ref={cardRef}
-                >
-                  <div className="game-time-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <p className="game-time" style={{ margin: 0 }}>
-                      {(() => {
-                        const originalDateStr = liveData?.gameData?.datetime?.originalDate;
-                        const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
-                        const original = originalDateStr ? format(new Date(originalDateStr), 'yyyy-MM-dd') : null;
-                        const detailedState = liveData?.gameData?.status?.detailedState ?? '';
-                        const isPostponed = detailedState.includes('Postponed') && selected === original;
+                return (
+                  <div
+                    className={`game-container ${
+                      selectedTeams.includes(game.teams.away.team.id) ||
+                      selectedTeams.includes(game.teams.home.team.id)
+                        ? 'fade-in'
+                        : 'fade-out'
+                    }`}
+                    key={gamePk}
+                    ref={cardRef}
+                  >
+                    <div className="game-time-container" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <p className="game-time" style={{ margin: 0 }}>
+                        {(() => {
+                          const originalDateStr = liveData?.gameData?.datetime?.originalDate;
+                          const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
+                          const original = originalDateStr ? format(new Date(originalDateStr), 'yyyy-MM-dd') : null;
+                          const detailedState = liveData?.gameData?.status?.detailedState ?? '';
+                          const isPostponed = detailedState.includes('Postponed') && selected === original;
 
-                        const displayTime = isPostponed
-                          ? new Date(originalDateStr)
-                          : new Date(game.gameDate);
+                          const displayTime = isPostponed
+                            ? new Date(originalDateStr)
+                            : new Date(game.gameDate);
 
-                        const suffix = isPostponed
-                          ? ' (POSTPONED)'
-                          : /Delayed/i.test(detailedState)
-                          ? ' (DELAYED)'
-                          : '';
+                          const suffix = isPostponed
+                            ? ' (POSTPONED)'
+                            : /Delayed/i.test(detailedState)
+                            ? ' (DELAYED)'
+                            : '';
 
-                        return `${formatTime(displayTime)}${suffix}`;
-                      })()}
-                    </p>
-                    {isLive && (
-                      <div className="live-indicator" style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'red' }} />
-                    )}
-                  </div>
+                          return `${formatTime(displayTime)}${suffix}`;
+                        })()}
+                      </p>
+                      {isLive && (
+                        <div className="live-indicator" style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'red' }} />
+                      )}
+                    </div>
 
-                  <div>
-                    {isLive && hasGameStarted ? (
-                      <LiveScoreBug {...{ game, gamePk, handleStarClick, getTeamLogo, gameBackgroundColors, starredTeams, getTeamRecord, getTeamAbbreviation, liveData: liveData?.liveData }} />
-                    ) : (
-                      <BeforeAfterScoreBug {...{ game, gamePk, handleStarClick, getTeamLogo, gameBackgroundColors, starredTeams, getTeamRecord, getTeamAbbreviation, liveData }} />
-                    )}
+                    <div>
+                      {isLive && hasGameStarted ? (
+                        <LiveScoreBug {...{ game, gamePk, handleStarClick, getTeamLogo, gameBackgroundColors, starredTeams, getTeamRecord, getTeamAbbreviation, liveData: liveData?.liveData }} />
+                      ) : (
+                        <BeforeAfterScoreBug {...{ game, gamePk, handleStarClick, getTeamLogo, gameBackgroundColors, starredTeams, getTeamRecord, getTeamAbbreviation, liveData }} />
+                      )}
 
-                    <button
-                      onClick={() => toggleGameData(gamePk)}
-                      style={{
-                        color: 'white',
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                        marginBottom: '0px',
-                        marginLeft: '4px',
-                        transform: isExpanded ? 'rotate(270deg)' : 'rotate(90deg)',
-                        transition: 'transform 0.3s',
-                        alignItems: 'center',
-                      }}
-                      aria-label="Toggle Stats"
-                    >
-                      ▶
-                    </button>
+                      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}>
+                        <button
+                          onClick={() => toggleGameData(gamePk)}
+                          style={{
+                            color: 'white',
+                            background: 'none',
+                            border: 'none',
+                            fontSize: '0.5rem',
+                            cursor: 'pointer',
+                            margin: 0,
+                            padding: 0,
+                            transform: isExpanded ? 'rotate(270deg)' : 'rotate(90deg)',
+                            transition: 'transform 0.3s',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '12px',
+                            height: '10px',
+                            lineHeight: '1',
+                            overflow: 'hidden',
+                          }}
+                          aria-label="Toggle Stats"
+                        >
+                          ▶
+                        </button>
+                      </div>
+                    </div>
 
                     <div className="game-data-container stat-toggle-container" style={contentStyle}>
                       <select value={contentKey} onChange={(e) => handleDataSelectWithAnchor(e.target.value, gamePk)}>
@@ -356,14 +365,14 @@ const MatchupCard = ({
                       </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </>
-        )}
+                );
+              })}
+            </>
+          )}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
+
 
 export default MatchupCard;

@@ -18,7 +18,6 @@ const BeforeAfterScoreBug = ({
   const homeTeam = game.teams.home.team;
   const awayScore = gameNotStarted ? '-' : trueLiveData?.linescore?.teams?.away?.runs ?? '-';
   const homeScore = gameNotStarted ? '-' : trueLiveData?.linescore?.teams?.home?.runs ?? '-';
-  const gameFinal = game.status.abstractGameState === 'Final';
 
   const getStyles = (teamSide) => {
     if (typeof awayScore !== 'number' || typeof homeScore !== 'number') {
@@ -167,17 +166,16 @@ const BeforeAfterScoreBug = ({
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: 'auto auto auto',
-        gap: '4px',
-        paddingRight: '10px',
-        paddingLeft: '10px',
-        paddingTop: '10px',
-        paddingBottom: gameFinal ? '5px' : '0px',
+        padding: '5px 5px 0 5px',
       }}
     >
-      {renderTeamCell(awayTeam, awayScore, 'away')}
+      <div style={{ margin: '2px' }}>
+        {renderTeamCell(awayTeam, awayScore, 'away')}
+      </div>
 
       <div
         style={{
+          margin: '2px',
           border: '2px solid #555555',
           backgroundColor: 'rgba(70, 70, 70, 0.8)',
           opacity: 0.85,
@@ -188,23 +186,25 @@ const BeforeAfterScoreBug = ({
         {renderPitcherInfo(game.teams.away.team, game.teams.away.probablePitcher)}
       </div>
 
-      {renderTeamCell(homeTeam, homeScore, 'home')}
+      <div style={{ margin: '2px' }}>
+        {renderTeamCell(homeTeam, homeScore, 'home')}
+      </div>
 
       <div
         style={{
+          margin: '2px',
           border: '2px solid #555555',
           backgroundColor: 'rgba(70, 70, 70, 0.8)',
           opacity: 0.85,
           padding: '5px',
-          borderRadius: '0 0 6px 0', // ✅ bottom right corner
-
+          borderRadius: '0 0 6px 0',
         }}
       >
         {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}
       </div>
 
       {!gameNotStarted && (
-        <div style={{ gridColumn: '1 / span 2' }}>
+        <div style={{ gridColumn: '1 / span 2', margin: '2px' }}>
           <Scoreboard
             game={game}
             getTeamAbbreviation={getTeamAbbreviation}

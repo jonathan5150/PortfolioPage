@@ -36,8 +36,6 @@ const LiveScoreBug = ({
   const batter = liveData?.plays?.currentPlay?.matchup?.batter;
   const pitcher = liveData?.plays?.currentPlay?.matchup?.pitcher;
 
-  const isLiveGame = game.status.abstractGameState === 'Live';
-
   const allPlayers = {
     ...trueLiveData?.boxscore?.teams?.away?.players,
     ...trueLiveData?.boxscore?.teams?.home?.players,
@@ -55,13 +53,9 @@ const LiveScoreBug = ({
     const homeRuns = stats.homeRuns ?? 0;
 
     const parts = [];
-
-    // Always show at-bats/hits
     parts.push(`${hits} for ${atBats}`);
-
     if (rbi > 0) parts.push(`${rbi} RBI`);
     if (homeRuns > 0) parts.push(`${homeRuns} HR`);
-
     return parts.join(', ');
   };
 
@@ -71,13 +65,10 @@ const LiveScoreBug = ({
     if (!playerData || !playerData.stats?.pitching) return '';
     const stats = playerData.stats.pitching;
 
-    const ip = typeof stats.inningsPitched === 'number'
-      ? stats.inningsPitched.toFixed(1)
-      : stats.inningsPitched ?? '0.0';
     const earnedRuns = stats.earnedRuns ?? 0;
     const strikeOuts = stats.strikeOuts ?? 0;
 
-    return `IP ${ip}, ${earnedRuns} ER, ${strikeOuts} K`;
+    return `${earnedRuns} ER, ${strikeOuts} K`;
   };
 
   const formatName = (player) => {
@@ -85,17 +76,23 @@ const LiveScoreBug = ({
     const parts = player.fullName.split(' ');
     if (parts.length === 1) return parts[0];
     if (parts.length >= 3 && parts[parts.length - 1].includes('.')) {
-      return parts.slice(-2).join(' '); // handles "Gurriel Jr."
+      return parts.slice(-2).join(' ');
     }
     return parts.slice(-1)[0];
   };
+
+  const cellMargin = '2px';
 
   const renderTeamCell = (team, score, side) => {
     const abbr = getTeamAbbreviation(team.id);
     const record = getTeamRecord(team.id);
 
     return (
-      <div className="team-cell" style={{ display: 'flex', cursor: 'pointer' }} onClick={() => handleStarClick(gamePk, team.id)}>
+      <div
+        className="team-cell"
+        style={{ display: 'flex', cursor: 'pointer', margin: cellMargin }}
+        onClick={() => handleStarClick(gamePk, team.id)}
+      >
         <div
           className="team-info-container"
           style={{
@@ -140,17 +137,61 @@ const LiveScoreBug = ({
   };
 
   const renderPitchOutBox = () => (
-    <div className="pitch-out-container" style={{ width: '100%', height: '60px', display: 'flex', gap: '4px', justifyContent: 'space-between' }}>
-      <div style={{ flex: 1, height: '60px', border: '2px solid #555555', backgroundColor: 'rgba(70, 70, 70, 0.8)', opacity: 0.85, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+    <div
+      className="pitch-out-container"
+      style={{
+        display: 'flex',
+        margin: cellMargin,
+        boxSizing: 'border-box',
+        gap: '4px',
+      }}
+    >
+      {/* Pitch Count / Outs */}
+      <div
+        style={{
+          flex: 1,
+          height: '60px',
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          opacity: 0.85,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
         <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>{balls}-{strikes}</div>
         <div style={{ display: 'flex', gap: '4px' }}>
           {[0, 1, 2].map((i) => (
-            <div key={i} style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: i < outs ? 'gold' : 'transparent', border: '2px solid #555555' }} />
+            <div
+              key={i}
+              style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                backgroundColor: i < outs ? 'gold' : 'transparent',
+                border: '2px solid #555555',
+              }}
+            />
           ))}
         </div>
       </div>
 
-      <div style={{ flex: 1, height: '60px', border: '2px solid #555555', backgroundColor: 'rgba(70, 70, 70, 0.8)', borderRadius: '0 6px 0 0', opacity: 0.85, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      {/* Bases Display */}
+      <div
+        style={{
+          flex: 1,
+          height: '60px',
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          borderRadius: '0 6px 0 0',
+          opacity: 0.85,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
         <div style={{ position: 'relative', width: '50px', height: '50px' }}>
           <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translate(-50%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onSecond ? 'gold' : 'white' }} />
           <div style={{ position: 'absolute', bottom: -3, left: '95%', transform: 'translate(-100%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onFirst ? 'gold' : 'white' }} />
@@ -171,11 +212,7 @@ const LiveScoreBug = ({
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: '1fr 1fr',
-        gap: '4px',
-        paddingRight: '10px',
-        paddingLeft: '10px',
-        paddingTop: '10px',
-        paddingBottom: isLiveGame ? '5px' : '0px', // ← dynamic padding
+        padding: '5px 5px 0 5px',
       }}
     >
       {renderTeamCell(awayTeam, awayScore, 'away')}
@@ -183,6 +220,7 @@ const LiveScoreBug = ({
       {renderTeamCell(homeTeam, homeScore, 'home')}
 
       <div style={{
+        margin: cellMargin,
         border: '2px solid #555555',
         backgroundColor: 'rgba(70, 70, 70, 0.8)',
         opacity: 0.85,
@@ -195,9 +233,8 @@ const LiveScoreBug = ({
         lineHeight: '1.3',
         textAlign: 'left',
         paddingLeft: '14px',
-        borderRadius: '0 0 6px 0', // ✅ bottom right corner
+        borderRadius: '0 0 6px 0',
       }}>
-
         <div style={{ marginBottom: '4px' }}>
           {batter ? `${formatName(batter)} (${getBatterLine()})` : 'Batter: N/A'}
         </div>
@@ -206,7 +243,7 @@ const LiveScoreBug = ({
         </div>
       </div>
 
-      <div style={{ gridColumn: '1 / span 2' }}>
+      <div style={{ gridColumn: '1 / span 2', margin: cellMargin }}>
         <Scoreboard game={game} getTeamAbbreviation={getTeamAbbreviation} liveData={liveData} />
       </div>
     </div>
