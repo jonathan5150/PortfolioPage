@@ -90,11 +90,13 @@ const BeforeAfterScoreBug = ({
             justifyContent: 'space-between',
             border: `2px solid ${borderColor}`,
             backgroundColor,
-            borderRadius: side === 'away' ? '7px 0 0 0' : '0',
+            borderRadius: side === 'away' ? '3px 0 0 3px' : '0 3px 3px 0',
             padding: '5px 10px',
             opacity: 0.85,
+            flexDirection: side === 'home' ? 'row-reverse' : 'row', // 👈 Switch order for home
           }}
         >
+          {/* Logo */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <img
               src={getTeamLogo(team.name)}
@@ -114,6 +116,7 @@ const BeforeAfterScoreBug = ({
             )}
           </div>
 
+          {/* Abbreviation and Record */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}>
             <div
               className="abbreviation"
@@ -143,6 +146,7 @@ const BeforeAfterScoreBug = ({
             </div>
           </div>
 
+          {/* Score */}
           <div
             style={{
               fontWeight: 'bold',
@@ -173,20 +177,10 @@ const BeforeAfterScoreBug = ({
         marginRight: '3px',
       }}
     >
+      {/* Away Team Top Left */}
       {renderTeamCell(awayTeam, awayScore, 'away')}
 
-      <div
-        style={{
-          border: '2px solid #555555',
-          backgroundColor: 'rgba(70, 70, 70, 0.8)',
-          opacity: 0.85,
-          borderRadius: '0 7px 0 0',
-          padding: '5px',
-        }}
-      >
-        {renderPitcherInfo(game.teams.away.team, game.teams.away.probablePitcher)}
-      </div>
-
+      {/* Home Team Top Right */}
       {renderTeamCell(homeTeam, homeScore, 'home')}
 
       <div
@@ -194,12 +188,27 @@ const BeforeAfterScoreBug = ({
           border: '2px solid #555555',
           backgroundColor: 'rgba(70, 70, 70, 0.8)',
           opacity: 0.85,
+          borderRadius: '3px 0 0 3px',
           padding: '5px',
         }}
       >
         {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}
       </div>
 
+      {/* Home Pitcher Bottom Right */}
+      <div
+        style={{
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          opacity: 0.85,
+          borderRadius: '0 3px 3px 0',
+          padding: '5px',
+        }}
+      >
+        {renderPitcherInfo(game.teams.away.team, game.teams.away.probablePitcher)}
+      </div>
+
+      {/* Scoreboard Full Width */}
       <div style={{ gridColumn: '1 / span 2' }}>
         <Scoreboard
           game={game}

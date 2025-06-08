@@ -74,7 +74,7 @@
   margin-top: 0px;
   margin-left: auto;
   margin-right: auto;
-  border-radius: 0 0 7px 7px;
+  border-radius: 7px;
   padding: 5px;
 }
 
@@ -287,7 +287,7 @@ h3 {
 
 .pitcher-details {
   display: flex;
-  font-size: 13px;
+  font-size: 10px;
   flex-direction: column;  /* Stack lines vertically */
   justify-content: center; /* Vertically center in container */
   align-items: center;     /* Horizontally center text */
