@@ -153,7 +153,7 @@ const LiveScoreBug = ({
       <div style={{ flex: 1, height: '60px', border: '2px solid #555555', backgroundColor: 'rgba(70, 70, 70, 0.8)', borderRadius: '0 6px 0 0', opacity: 0.85, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ position: 'relative', width: '50px', height: '50px' }}>
           <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translate(-50%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onSecond ? 'gold' : 'white' }} />
-          <div style={{ position: 'absolute', bottom: -3, left: '97%', transform: 'translate(-100%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onFirst ? 'gold' : 'white' }} />
+          <div style={{ position: 'absolute', bottom: -3, left: '95%', transform: 'translate(-100%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onFirst ? 'gold' : 'white' }} />
           <div style={{ position: 'absolute', bottom: -3, left: 2, transform: 'rotate(45deg)', width: '16px', height: '16px', backgroundColor: onThird ? 'gold' : 'white' }} />
         </div>
         <div style={{ marginTop: '2px', marginBottom: '4px', marginRight: '2px', fontWeight: 'bold', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
