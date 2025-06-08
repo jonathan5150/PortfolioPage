@@ -89,12 +89,21 @@ const PlayerStats = ({
     return '–';
   };
 
-  const getGamesSinceColor = (since, perStat) => {
-    if (since === '–' || perStat === '–') return undefined;
+  const getGamesSinceColor = (since, perStat, statKey) => {
+    if (!['hits', 'rbi', 'homeRuns'].includes(statKey)) return undefined;
     const sinceNum = Number(since);
     const perStatNum = Number(perStat);
     if (isNaN(sinceNum) || isNaN(perStatNum)) return undefined;
     return sinceNum > perStatNum ? 'red' : undefined;
+  };
+
+  const getLast15Stats = (logs = [], statKey) => {
+    if (!Array.isArray(logs)) return 0;
+    const filtered = logs
+      .filter((log) => new Date(log.date) < new Date(game.gameDate))
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 15);
+    return filtered.reduce((sum, log) => sum + (parseInt(log[statKey]) || 0), 0);
   };
 
   const renderPlayerTable = (teamName, players, teamId) => {
@@ -124,7 +133,7 @@ const PlayerStats = ({
               const stats = player.seasonStats || {};
               const gp = stats.gamesPlayed || 0;
               const playerName = player.fullName || player.person?.fullName || '';
-              const logs = batterGameLogs[teamId]?.logs?.[playerName] || {};
+              const logs = batterGameLogs[teamId]?.logs?.[playerName] || [];
 
               const perStats = {
                 hits: renderGamesPerStat(stats.hits, gp),
@@ -144,6 +153,26 @@ const PlayerStats = ({
                 stolenBases: renderGamesSinceStat(logs, 'stolenBases'),
               };
 
+              const last15Totals = ['hits', 'rbi', 'baseOnBalls', 'strikeOuts', 'homeRuns', 'stolenBases'].reduce((acc, key) => {
+                acc[key] = getLast15Stats(logs, key);
+                return acc;
+              }, {});
+
+              const last15 = ['hits', 'rbi', 'baseOnBalls', 'strikeOuts', 'homeRuns', 'stolenBases'].reduce((acc, key) => {
+                const total = last15Totals[key];
+                const raw = 15 / total;
+                const perStat = total === 0 ? '–' : raw.toFixed(1).replace(/\.0$/, '');
+                acc[key] = perStat;
+                return acc;
+              }, {});
+
+              const last15Color = (key) => {
+                if (!['hits', 'rbi', 'homeRuns'].includes(key)) return undefined;
+                const last15Val = last15[key] === '–' ? NaN : parseFloat(last15[key]);
+                const seasonVal = perStats[key] === '–' ? NaN : parseFloat(perStats[key]);
+                if (isNaN(last15Val) || isNaN(seasonVal)) return undefined;
+                return last15Val <= seasonVal * 0.8 ? 'orange' : undefined;
+              };
               return (
                 <React.Fragment key={player.person?.id || index}>
                   <tr>
@@ -178,26 +207,39 @@ const PlayerStats = ({
                     <td>{stats.stolenBases ?? 0}</td>
                     <td>{stats.avg || ''}</td>
                   </tr>
-                  <tr style={{ fontStyle: 'italic', color: '#888' }}>
-                    <td style={{ textAlign: 'right', paddingRight: '5px' }}>GAMES PER STAT</td>
-                    <td></td>
-                    <td style={{ textAlign: 'center' }}>{perStats.hits}</td>
-                    <td style={{ textAlign: 'center' }}>{perStats.rbi}</td>
-                    <td style={{ textAlign: 'center' }}>{perStats.baseOnBalls}</td>
-                    <td style={{ textAlign: 'center' }}>{perStats.strikeOuts}</td>
-                    <td style={{ textAlign: 'center' }}>{perStats.homeRuns}</td>
-                    <td style={{ textAlign: 'center' }}>{perStats.stolenBases}</td>
-                    <td></td>
-                  </tr>
                   <tr style={{ fontStyle: 'italic', color: '#aaa' }}>
                     <td style={{ textAlign: 'right', paddingRight: '5px' }}>GAMES SINCE</td>
                     <td></td>
                     {Object.keys(sinceStats).map((key) => {
-                      const color = getGamesSinceColor(sinceStats[key], perStats[key]);
+                      const color = getGamesSinceColor(sinceStats[key], perStats[key], key);
                       return (
-                        <td key={key} style={{ textAlign: 'center', color: color }}>{sinceStats[key]}</td>
+                        <td key={key} style={{ textAlign: 'center', color }}>{sinceStats[key]}</td>
                       );
                     })}
+                    <td></td>
+                  </tr>
+                  <tr style={{ fontStyle: 'italic', color: '#888' }}>
+                    <td style={{ textAlign: 'right', paddingRight: '5px' }}>SEASON PER STAT</td>
+                    <td></td>
+                    {Object.values(perStats).map((val, i) => (
+                      <td key={i} style={{ textAlign: 'center' }}>{val}</td>
+                    ))}
+                    <td></td>
+                  </tr>
+                  <tr style={{ fontStyle: 'italic', color: '#ccc' }}>
+                    <td style={{ textAlign: 'right', paddingRight: '5px' }}>LAST 15 PER STAT</td>
+                    <td></td>
+                    {Object.keys(last15).map((key) => (
+                      <td key={key} style={{ textAlign: 'center', color: last15Color(key) }}>{last15[key]}</td>
+                    ))}
+                    <td></td>
+                  </tr>
+                  <tr style={{ fontStyle: 'italic', color: '#bbb' }}>
+                    <td style={{ textAlign: 'right', paddingRight: '5px' }}>LAST 15 TOTAL</td>
+                    <td></td>
+                    {Object.keys(last15Totals).map((key) => (
+                      <td key={key} style={{ textAlign: 'center' }}>{last15Totals[key]}</td>
+                    ))}
                     <td></td>
                   </tr>
                 </React.Fragment>
