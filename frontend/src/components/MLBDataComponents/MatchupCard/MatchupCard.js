@@ -50,9 +50,9 @@ const MatchupCard = ({
     return saved ? JSON.parse(saved) : {};
   });
 
-  const [allExpanded, setAllExpanded] = useState(() => {
-    const saved = Cookies.get('allExpanded');
-    return saved ? JSON.parse(saved) : false;
+  const [expandedGames, setExpandedGames] = useState(() => {
+    const saved = Cookies.get('expandedGames');
+    return saved ? JSON.parse(saved) : {};
   });
 
   const [pitcherLogs, setPitcherLogs] = useState({});
@@ -171,19 +171,11 @@ const MatchupCard = ({
     });
   };
 
-  const toggleGameData = () => {
-    const firstVisibleGamePk = visibleGames?.[0]?.gamePk;
-    const anchor = cardRefs.current[firstVisibleGamePk];
-    const prevY = anchor?.getBoundingClientRect().top;
-
-    const newState = !allExpanded;
-    setAllExpanded(newState);
-    Cookies.set('allExpanded', JSON.stringify(newState), { expires: 365 });
-
-    requestAnimationFrame(() => {
-      const newY = anchor?.getBoundingClientRect().top;
-      const deltaY = newY - prevY;
-      window.scrollBy({ top: deltaY });
+  const toggleGameData = (gamePk) => {
+    setExpandedGames((prev) => {
+      const updated = { ...prev, [gamePk]: !prev[gamePk] };
+      Cookies.set('expandedGames', JSON.stringify(updated), { expires: 365 });
+      return updated;
     });
   };
 
@@ -224,10 +216,15 @@ const MatchupCard = ({
                 if (el) cardRefs.current[gamePk] = el;
               };
 
+              const isExpanded = expandedGames[gamePk];
               const contentStyle = {
-                maxHeight: allExpanded ? 'none' : contentHeights[gamePk] || '0',
-                overflow: 'visible',
-                transition: 'max-height 1.2s ease'
+                maxHeight: isExpanded ? '1000px' : '0px',
+                overflow: 'hidden',
+                transition: 'max-height 0.7s ease, padding 0.5s ease, opacity 0.5s ease',
+                padding: isExpanded ? '5px' : '0',
+                marginTop: isExpanded ? '5px' : '0',
+                marginBottom: isExpanded ? '12px' : '0',
+                opacity: isExpanded ? 1 : 0,
               };
 
               const liveData = liveGameData[gamePk];
@@ -271,49 +268,20 @@ const MatchupCard = ({
                         return `${formatTime(displayTime)}${suffix}`;
                       })()}
                     </p>
-                    {liveData?.gameData?.status?.abstractGameState === 'Live' && (
-                      <div
-                        className="live-indicator"
-                        style={{
-                          width: '5px',
-                          height: '5px',
-                          borderRadius: '50%',
-                          backgroundColor: 'red',
-                        }}
-                      />
+                    {isLive && (
+                      <div className="live-indicator" style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: 'red' }} />
                     )}
                   </div>
 
                   <div>
                     {isLive && hasGameStarted ? (
-                      <LiveScoreBug
-                        game={game}
-                        gamePk={gamePk}
-                        handleStarClick={handleStarClick}
-                        getTeamLogo={getTeamLogo}
-                        gameBackgroundColors={gameBackgroundColors}
-                        starredTeams={starredTeams}
-                        getTeamRecord={getTeamRecord}
-                        getTeamAbbreviation={getTeamAbbreviation}
-                        liveData={liveData?.liveData}
-                      />
+                      <LiveScoreBug {...{ game, gamePk, handleStarClick, getTeamLogo, gameBackgroundColors, starredTeams, getTeamRecord, getTeamAbbreviation, liveData: liveData?.liveData }} />
                     ) : (
-                      <BeforeAfterScoreBug
-                        game={game}
-                        gamePk={gamePk}
-                        scheduledDate={game.gameDate}
-                        handleStarClick={handleStarClick}
-                        getTeamLogo={getTeamLogo}
-                        gameBackgroundColors={gameBackgroundColors}
-                        starredTeams={starredTeams}
-                        getTeamRecord={getTeamRecord}
-                        getTeamAbbreviation={getTeamAbbreviation}
-                        liveData={liveData}
-                      />
+                      <BeforeAfterScoreBug {...{ game, gamePk, handleStarClick, getTeamLogo, gameBackgroundColors, starredTeams, getTeamRecord, getTeamAbbreviation, liveData }} />
                     )}
 
                     <button
-                      onClick={toggleGameData}
+                      onClick={() => toggleGameData(gamePk)}
                       style={{
                         color: 'white',
                         background: 'none',
@@ -322,31 +290,17 @@ const MatchupCard = ({
                         cursor: 'pointer',
                         marginBottom: '0px',
                         marginLeft: '4px',
-                        transform: allExpanded ? 'rotate(270deg)' : 'rotate(90deg)',
+                        transform: isExpanded ? 'rotate(270deg)' : 'rotate(90deg)',
                         transition: 'transform 0.3s',
                         alignItems: 'center',
                       }}
-                      aria-label="Toggle All Stats"
+                      aria-label="Toggle Stats"
                     >
                       ▶
                     </button>
 
-                    <div
-                      className="game-data-container stat-toggle-container"
-                      style={{
-                        maxHeight: allExpanded ? '1000px' : '0px',
-                        overflow: 'hidden',
-                        transition: 'max-height 0.7s ease, padding 0.5s ease, opacity 0.5s ease',
-                        padding: allExpanded ? '5px' : '0',
-                        marginTop: allExpanded ? '5px' : '0',
-                        marginBottom: allExpanded ? '12px' : '0',
-                        opacity: allExpanded ? 1 : 0,
-                      }}
-                    >
-                      <select
-                        value={contentKey}
-                        onChange={(e) => handleDataSelectWithAnchor(e.target.value, gamePk)}
-                      >
+                    <div className="game-data-container stat-toggle-container" style={contentStyle}>
+                      <select value={contentKey} onChange={(e) => handleDataSelectWithAnchor(e.target.value, gamePk)}>
                         <option value="box-score">BOX SCORE</option>
                         <option value="team-history">TEAM W/L HISTORY</option>
                         <option value="player-stats">PLAYER SEASON STATS</option>
@@ -354,67 +308,49 @@ const MatchupCard = ({
                         <option value="pitcher-last-5">PITCHER GAME LOG</option>
                       </select>
 
-                      <div className="stat-section" style={contentStyle}>
+                      <div className="stat-section" style={{ maxHeight: contentHeights[gamePk] || '0', overflow: 'visible', transition: 'max-height 1.2s ease' }}>
                         <div ref={contentRef}>
-                          {contentKey === 'box-score' && (
-                            <div className="fade-in">
-                              <BoxScore liveData={liveData} />
-                            </div>
-                          )}
-                          {contentKey === 'team-history' && (
-                            <div className="fade-in">
-                              <TeamHistory game={game} />
-                            </div>
-                          )}
+                          {contentKey === 'box-score' && <BoxScore liveData={liveData} />}
+                          {contentKey === 'team-history' && <TeamHistory game={game} />}
                           {contentKey === 'player-stats' && (
-                            <div className="fade-in">
-                              <PlayerStats
-                                game={game}
-                                batterGameLogs={batterGameLogs}
-                                playerStatsSortConfig={playerStatsSortConfig}
-                                setPlayerStatsSortConfig={setPlayerStatsSortConfig}
-                                setContentKey={setContentKey}
-                                setSelectedPlayers={(teamId, playerName) => {
-                                  const updated = { ...JSON.parse(Cookies.get('selectedPlayers') || '{}'), [teamId]: playerName };
-                                  Cookies.set('selectedPlayers', JSON.stringify(updated), { expires: 365 });
-                                }}
-                              />
-                            </div>
+                            <PlayerStats
+                              game={game}
+                              batterGameLogs={batterGameLogs}
+                              playerStatsSortConfig={playerStatsSortConfig}
+                              setPlayerStatsSortConfig={setPlayerStatsSortConfig}
+                              setContentKey={setContentKey}
+                              setSelectedPlayers={(teamId, playerName) => {
+                                const updated = { ...JSON.parse(Cookies.get('selectedPlayers') || '{}'), [teamId]: playerName };
+                                Cookies.set('selectedPlayers', JSON.stringify(updated), { expires: 365 });
+                              }}
+                            />
                           )}
                           {contentKey === 'pitcher-last-5' && (
-                            <div className="fade-in">
-                              <PitcherLastFive
-                                game={game}
-                                awayGames={pitcherLogs[gamePk]?.away || []}
-                                homeGames={pitcherLogs[gamePk]?.home || []}
-                              />
-                            </div>
+                            <PitcherLastFive game={game} awayGames={pitcherLogs[gamePk]?.away || []} homeGames={pitcherLogs[gamePk]?.home || []} />
                           )}
                           {contentKey === 'batter-gamelog' &&
                             batterGameLogs[game.teams.away.team.id] &&
                             batterGameLogs[game.teams.home.team.id] && (
-                              <div className="fade-in">
-                                <BatterGamelog
-                                  teams={[
-                                    {
-                                      team: game.teams.away.team,
-                                      teamType: 'Away',
-                                      logs: batterGameLogs[game.teams.away.team.id]?.logs,
-                                      roster: batterGameLogs[game.teams.away.team.id]?.roster
-                                    },
-                                    {
-                                      team: game.teams.home.team,
-                                      teamType: 'Home',
-                                      logs: batterGameLogs[game.teams.home.team.id]?.logs,
-                                      roster: batterGameLogs[game.teams.home.team.id]?.roster
-                                    }
-                                  ]}
-                                  gameDate={game.gameDate}
-                                  getTeamAbbreviation={getTeamAbbreviation}
-                                  numGamesToShow={numGamesToShow}
-                                  setNumGamesToShow={setNumGamesToShow}
-                                />
-                              </div>
+                              <BatterGamelog
+                                teams={[
+                                  {
+                                    team: game.teams.away.team,
+                                    teamType: 'Away',
+                                    logs: batterGameLogs[game.teams.away.team.id]?.logs,
+                                    roster: batterGameLogs[game.teams.away.team.id]?.roster
+                                  },
+                                  {
+                                    team: game.teams.home.team,
+                                    teamType: 'Home',
+                                    logs: batterGameLogs[game.teams.home.team.id]?.logs,
+                                    roster: batterGameLogs[game.teams.home.team.id]?.roster
+                                  }
+                                ]}
+                                gameDate={game.gameDate}
+                                getTeamAbbreviation={getTeamAbbreviation}
+                                numGamesToShow={numGamesToShow}
+                                setNumGamesToShow={setNumGamesToShow}
+                              />
                             )}
                         </div>
                       </div>
