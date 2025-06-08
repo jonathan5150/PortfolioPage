@@ -13,11 +13,11 @@ const BeforeAfterScoreBug = ({
   liveData,
 }) => {
   const trueLiveData = liveData?.liveData ?? liveData;
-
+  const gameNotStarted = game.status.abstractGameState === 'Preview' || game.status.abstractGameState === 'Scheduled';
   const awayTeam = game.teams.away.team;
   const homeTeam = game.teams.home.team;
-  const awayScore = trueLiveData?.linescore?.teams?.away?.runs ?? '-';
-  const homeScore = trueLiveData?.linescore?.teams?.home?.runs ?? '-';
+  const awayScore = gameNotStarted ? '-' : trueLiveData?.linescore?.teams?.away?.runs ?? '-';
+  const homeScore = gameNotStarted ? '-' : trueLiveData?.linescore?.teams?.home?.runs ?? '-';
 
   const getStyles = (teamSide) => {
     if (typeof awayScore !== 'number' || typeof homeScore !== 'number') {
@@ -200,13 +200,15 @@ const BeforeAfterScoreBug = ({
         {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}
       </div>
 
-      <div style={{ gridColumn: '1 / span 2' }}>
-        <Scoreboard
-          game={game}
-          getTeamAbbreviation={getTeamAbbreviation}
-          liveData={trueLiveData}
-        />
-      </div>
+      {!gameNotStarted && (
+        <div style={{ gridColumn: '1 / span 2' }}>
+          <Scoreboard
+            game={game}
+            getTeamAbbreviation={getTeamAbbreviation}
+            liveData={trueLiveData}
+          />
+        </div>
+      )}
     </div>
   );
 };
