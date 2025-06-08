@@ -36,6 +36,8 @@ const LiveScoreBug = ({
   const batter = liveData?.plays?.currentPlay?.matchup?.batter;
   const pitcher = liveData?.plays?.currentPlay?.matchup?.pitcher;
 
+  const isLiveGame = game.status.abstractGameState === 'Live';
+
   const allPlayers = {
     ...trueLiveData?.boxscore?.teams?.away?.players,
     ...trueLiveData?.boxscore?.teams?.home?.players,
@@ -49,7 +51,6 @@ const LiveScoreBug = ({
 
     const hits = stats.hits ?? 0;
     const atBats = stats.atBats ?? 0;
-    const strikeOuts = stats.strikeOuts ?? 0;
     const rbi = stats.rbi ?? 0;
     const homeRuns = stats.homeRuns ?? 0;
 
@@ -58,7 +59,6 @@ const LiveScoreBug = ({
     // Always show at-bats/hits
     parts.push(`${hits} for ${atBats}`);
 
-    if (strikeOuts > 0) parts.push(`${strikeOuts} K`);
     if (rbi > 0) parts.push(`${rbi} RBI`);
     if (homeRuns > 0) parts.push(`${homeRuns} HR`);
 
@@ -106,7 +106,7 @@ const LiveScoreBug = ({
             justifyContent: 'space-between',
             border: '2px solid #555555',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            borderRadius: side === 'away' ? '7px 0 0 0' : '0',
+            borderRadius: side === 'away' ? '6px 0 0 0' : '0 0 0 6px',
             padding: '5px 10px',
             opacity: 0.85,
           }}
@@ -140,7 +140,7 @@ const LiveScoreBug = ({
   };
 
   const renderPitchOutBox = () => (
-    <div className="pitch-out-container" style={{ width: '100%', height: '60px', display: 'flex', gap: '5px', justifyContent: 'space-between' }}>
+    <div className="pitch-out-container" style={{ width: '100%', height: '60px', display: 'flex', gap: '4px', justifyContent: 'space-between' }}>
       <div style={{ flex: 1, height: '60px', border: '2px solid #555555', backgroundColor: 'rgba(70, 70, 70, 0.8)', opacity: 0.85, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>{balls}-{strikes}</div>
         <div style={{ display: 'flex', gap: '4px' }}>
@@ -150,7 +150,7 @@ const LiveScoreBug = ({
         </div>
       </div>
 
-      <div style={{ flex: 1, height: '60px', border: '2px solid #555555', backgroundColor: 'rgba(70, 70, 70, 0.8)', borderRadius: '0 7px 0 0', opacity: 0.85, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ flex: 1, height: '60px', border: '2px solid #555555', backgroundColor: 'rgba(70, 70, 70, 0.8)', borderRadius: '0 6px 0 0', opacity: 0.85, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
         <div style={{ position: 'relative', width: '50px', height: '50px' }}>
           <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translate(-50%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onSecond ? 'gold' : 'white' }} />
           <div style={{ position: 'absolute', bottom: -3, left: '97%', transform: 'translate(-100%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onFirst ? 'gold' : 'white' }} />
@@ -165,7 +165,19 @@ const LiveScoreBug = ({
   );
 
   return (
-    <div className="score-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '5px', paddingRight: '10px', paddingLeft: '10px', paddingTop: '10px' }}>
+    <div
+      className="score-grid"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gridTemplateRows: '1fr 1fr',
+        gap: '4px',
+        paddingRight: '10px',
+        paddingLeft: '10px',
+        paddingTop: '10px',
+        paddingBottom: isLiveGame ? '5px' : '0px', // ← dynamic padding
+      }}
+    >
       {renderTeamCell(awayTeam, awayScore, 'away')}
       {renderPitchOutBox()}
       {renderTeamCell(homeTeam, homeScore, 'home')}
@@ -183,7 +195,9 @@ const LiveScoreBug = ({
         lineHeight: '1.3',
         textAlign: 'left',
         paddingLeft: '14px',
+        borderRadius: '0 0 6px 0', // ✅ bottom right corner
       }}>
+
         <div style={{ marginBottom: '4px' }}>
           {batter ? `${formatName(batter)} (${getBatterLine()})` : 'Batter: N/A'}
         </div>

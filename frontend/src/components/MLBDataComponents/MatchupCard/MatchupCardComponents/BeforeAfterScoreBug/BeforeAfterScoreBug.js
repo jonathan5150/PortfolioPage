@@ -18,6 +18,7 @@ const BeforeAfterScoreBug = ({
   const homeTeam = game.teams.home.team;
   const awayScore = gameNotStarted ? '-' : trueLiveData?.linescore?.teams?.away?.runs ?? '-';
   const homeScore = gameNotStarted ? '-' : trueLiveData?.linescore?.teams?.home?.runs ?? '-';
+  const gameFinal = game.status.abstractGameState === 'Final';
 
   const getStyles = (teamSide) => {
     if (typeof awayScore !== 'number' || typeof homeScore !== 'number') {
@@ -90,7 +91,7 @@ const BeforeAfterScoreBug = ({
             justifyContent: 'space-between',
             border: `2px solid ${borderColor}`,
             backgroundColor,
-            borderRadius: side === 'away' ? '7px 0 0 0' : '0',
+            borderRadius: side === 'away' ? '6px 0 0 0' : '0 0 0 6px',
             padding: '5px 10px',
             opacity: 0.85,
           }}
@@ -166,11 +167,11 @@ const BeforeAfterScoreBug = ({
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: 'auto auto auto',
-        gap: '5px',
+        gap: '4px',
         paddingRight: '10px',
         paddingLeft: '10px',
         paddingTop: '10px',
-        marginRight: '3px',
+        paddingBottom: gameFinal ? '5px' : '0px',
       }}
     >
       {renderTeamCell(awayTeam, awayScore, 'away')}
@@ -180,7 +181,7 @@ const BeforeAfterScoreBug = ({
           border: '2px solid #555555',
           backgroundColor: 'rgba(70, 70, 70, 0.8)',
           opacity: 0.85,
-          borderRadius: '0 7px 0 0',
+          borderRadius: '0 6px 0 0',
           padding: '5px',
         }}
       >
@@ -195,6 +196,8 @@ const BeforeAfterScoreBug = ({
           backgroundColor: 'rgba(70, 70, 70, 0.8)',
           opacity: 0.85,
           padding: '5px',
+          borderRadius: '0 0 6px 0', // ✅ bottom right corner
+
         }}
       >
         {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}
