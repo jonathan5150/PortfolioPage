@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import Cookies from 'js-cookie';
+import React, { useState, useRef } from 'react';
 
-const BoxScore = ({ liveData }) => {
+const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }) => {
   const boxscore = liveData?.liveData?.boxscore;
   const away = boxscore?.teams?.away;
   const home = boxscore?.teams?.home;
@@ -23,14 +22,14 @@ const BoxScore = ({ liveData }) => {
     maxWidth: '100px',
   };
 
-  const [showing, setShowing] = useState(() => Cookies.get('boxScoreView') || 'away');
+  const [showing, setShowing] = useState(initialShowing);
   const touchStartX = useRef(null);
-
-  useEffect(() => {
-    Cookies.set('boxScoreView', showing, { expires: 365 });
-  }, [showing]);
-
   const dragDeltaX = useRef(0);
+
+  const handleSetShowing = (next) => {
+    setShowing(next);
+    if (onShowingChange) onShowingChange(next);
+  };
 
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
@@ -42,10 +41,10 @@ const BoxScore = ({ liveData }) => {
     dragDeltaX.current = currentX - touchStartX.current;
 
     if (dragDeltaX.current > 30 && showing === 'home') {
-      setShowing('away');
-      dragDeltaX.current = 0; // prevent flip-flop
+      handleSetShowing('away');
+      dragDeltaX.current = 0;
     } else if (dragDeltaX.current < -30 && showing === 'away') {
-      setShowing('home');
+      handleSetShowing('home');
       dragDeltaX.current = 0;
     }
   };
@@ -260,7 +259,7 @@ const BoxScore = ({ liveData }) => {
       }}
     >
       <button
-        onClick={() => setShowing((prev) => (prev === 'away' ? 'home' : 'away'))}
+        onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
         style={{
           position: 'absolute',
           fontSize: '0.6rem',

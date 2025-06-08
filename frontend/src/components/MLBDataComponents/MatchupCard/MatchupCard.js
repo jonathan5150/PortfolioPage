@@ -58,6 +58,7 @@ const MatchupCard = ({
   const [pitcherLogs, setPitcherLogs] = useState({});
   const contentRefs = useRef({});
   const cardRefs = useRef({});
+  const [boxScoreViews, setBoxScoreViews] = useState({});
 
   const updateContentHeight = (gamePk) => {
     const outer = document.querySelector(`[data-gamepk="${gamePk}"]`);
@@ -344,7 +345,14 @@ const MatchupCard = ({
                             animation: 'fadeIn 1.2s ease forwards',
                           }}
                         >
-                          {contentKey === 'box-score' && <BoxScore liveData={liveData} />}
+                          {contentKey === 'box-score' && <BoxScore
+                                                           liveData={liveData}
+                                                           gamePk={gamePk}
+                                                           initialShowing={boxScoreViews[gamePk] || 'away'}
+                                                           onShowingChange={(newView) =>
+                                                             setBoxScoreViews((prev) => ({ ...prev, [gamePk]: newView }))
+                                                           }
+                                                         />}
                           {contentKey === 'team-history' && <TeamHistory game={game} />}
                           {contentKey === 'player-stats' && (
                             <PlayerStats
