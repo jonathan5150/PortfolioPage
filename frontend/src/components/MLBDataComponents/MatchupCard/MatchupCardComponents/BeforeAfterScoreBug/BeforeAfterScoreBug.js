@@ -19,10 +19,6 @@ const BeforeAfterScoreBug = ({
   const awayScore = trueLiveData?.linescore?.teams?.away?.runs ?? '-';
   const homeScore = trueLiveData?.linescore?.teams?.home?.runs ?? '-';
 
-  const gameState = game.status?.abstractGameState; // 'Preview', 'Live', 'Final', etc.
-  const gameFinished = gameState === 'Final';
-  const gameNotStarted = gameState === 'Preview';
-
   const getStyles = (teamSide) => {
     if (typeof awayScore !== 'number' || typeof homeScore !== 'number') {
       return { borderColor: '#555555', backgroundColor: 'rgba(70, 70, 70, 0.8)' };
@@ -45,8 +41,8 @@ const BeforeAfterScoreBug = ({
 
     if (lost) {
       return {
-        borderColor: '#555555',
-        backgroundColor: 'rgba(70, 70, 70, 0.8)'
+        borderColor: 'rgba(139, 0, 0, 0.9)',
+        backgroundColor: 'rgba(139, 0, 0, 0.2)',
       };
     }
 
@@ -81,14 +77,7 @@ const BeforeAfterScoreBug = ({
     return (
       <div
         className="team-cell"
-        style={{
-          display: 'flex',
-          cursor: 'pointer',
-          overflow: 'hidden',      // ✅ This is what clips the image
-          width: '100%',
-          height: '50px',          // ✅ Matches .team-info-container
-          boxSizing: 'border-box',
-        }}
+        style={{ display: 'flex', cursor: 'pointer' }}
         onClick={() => handleStarClick(gamePk, team.id)}
       >
         <div
@@ -96,69 +85,41 @@ const BeforeAfterScoreBug = ({
           style={{
             width: '100%',
             height: '50px',
-            minHeight: '50px',
-            overflow: 'hidden',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: gameNotStarted ? 'space-evenly' : 'space-between',
+            justifyContent: 'space-between',
             border: `2px solid ${borderColor}`,
             backgroundColor,
-            borderRadius: side === 'away' ? '5px 0 0 5px' : '0 5px 5px 0',
+            borderRadius: side === 'away' ? '7px 0 0 0' : '0',
             padding: '5px 10px',
             opacity: 0.85,
-            flexDirection: side === 'home' ? 'row-reverse' : 'row',
-            boxSizing: 'border-box', // Ensure padding doesn't overflow
-            maxWidth: '100%',         // Enforce grid width limits
           }}
         >
-          {/* Logo */}
-          <div
-            style={{
-              position: 'relative',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: gameNotStarted ? 'center' : 'flex-start',
-              flex: gameNotStarted ? 1 : 'initial',
-            }}
-          >
-            <div
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <img
+              src={getTeamLogo(team.name)}
+              alt={`${team.name} logo`}
               style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
+                width: '37px',
+                height: '37px',
+                objectFit: 'contain',
+                userSelect: 'none',
+                WebkitUserDrag: 'none',
+                outline: 'none',
+                WebkitTapHighlightColor: 'transparent',
               }}
-            >
-              <img
-                src={getTeamLogo(team.name)}
-                alt={`${team.name} logo`}
-                style={{
-                  height: gameNotStarted ? '37px' : '30px',
-                  width: gameNotStarted ? '37px' : '30px',
-                  objectFit: 'cover',
-                  userSelect: 'none',
-                  WebkitUserDrag: 'none',
-                  outline: 'none',
-                  WebkitTapHighlightColor: 'transparent',
-                  display: 'block',
-                  position: 'relative', // Ensure it's positioned within team-cell
-                }}
-              />
-            </div>
+            />
             {starredTeams[gamePk] === team.id && (
               <div className="star-icon" style={{ position: 'absolute', top: '0', right: '-8px' }}>⭐</div>
             )}
           </div>
 
-          {/* Abbreviation and Record */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px', marginLeft: '20px', marginRight: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}>
             <div
               className="abbreviation"
               style={{
-                height: '20px',
+                height: '30px',
                 fontWeight: 'bold',
-                fontSize: '18px',
                 color: '#fff',
                 textAlign: 'center',
                 display: 'flex',
@@ -182,20 +143,17 @@ const BeforeAfterScoreBug = ({
             </div>
           </div>
 
-          {/* Score */}
-          {!gameNotStarted && (
-            <div
-              style={{
-                fontWeight: 'bold',
-                fontSize: '25px',
-                color: '#fff',
-                width: '30px',
-                textAlign: 'center',
-              }}
-            >
-              {score}
-            </div>
-          )}
+          <div
+            style={{
+              fontWeight: 'bold',
+              fontSize: '25px',
+              color: '#fff',
+              width: '30px',
+              textAlign: 'center',
+            }}
+          >
+            {score}
+          </div>
         </div>
       </div>
     );
@@ -207,57 +165,48 @@ const BeforeAfterScoreBug = ({
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: '2px',
+        gridTemplateRows: 'auto auto auto',
+        gap: '5px',
         paddingRight: '10px',
         paddingLeft: '10px',
         paddingTop: '10px',
+        marginRight: '3px',
       }}
     >
-      {/* Away Team Top Left */}
       {renderTeamCell(awayTeam, awayScore, 'away')}
 
-      {/* Home Team Top Right */}
+      <div
+        style={{
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          opacity: 0.85,
+          borderRadius: '0 7px 0 0',
+          padding: '5px',
+        }}
+      >
+        {renderPitcherInfo(game.teams.away.team, game.teams.away.probablePitcher)}
+      </div>
+
       {renderTeamCell(homeTeam, homeScore, 'home')}
 
-      {/* Hide Pitchers if game is finished */}
-      {!gameFinished && (
-        <>
-          <div
-            style={{
-              border: '2px solid #555555',
-              backgroundColor: 'rgba(70, 70, 70, 0.8)',
-              opacity: 0.85,
-              borderRadius: '5px 0 0 5px',
-              padding: '2px',
-            }}
-          >
-            {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}
-          </div>
+      <div
+        style={{
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          opacity: 0.85,
+          padding: '5px',
+        }}
+      >
+        {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}
+      </div>
 
-          <div
-            style={{
-              border: '2px solid #555555',
-              backgroundColor: 'rgba(70, 70, 70, 0.8)',
-              opacity: 0.85,
-              borderRadius: '0 5px 5px 0',
-              padding: '2px',
-            }}
-          >
-            {renderPitcherInfo(game.teams.away.team, game.teams.away.probablePitcher)}
-          </div>
-        </>
-      )}
-
-      {/* Show scoreboard only if game has started and not finished */}
-      {!gameNotStarted && !gameFinished && (
-        <div style={{ gridColumn: '1 / span 2' }}>
-          <Scoreboard
-            game={game}
-            getTeamAbbreviation={getTeamAbbreviation}
-            liveData={trueLiveData}
-          />
-        </div>
-      )}
+      <div style={{ gridColumn: '1 / span 2' }}>
+        <Scoreboard
+          game={game}
+          getTeamAbbreviation={getTeamAbbreviation}
+          liveData={trueLiveData}
+        />
+      </div>
     </div>
   );
 };

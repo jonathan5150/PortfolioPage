@@ -30,7 +30,7 @@
   background-color: rgba(41, 41, 41, 0.85);
   border: 1.5px solid #555555;
   border-radius: 6px;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
   width: 95%;
@@ -74,7 +74,7 @@
   margin-top: 0px;
   margin-left: auto;
   margin-right: auto;
-  border-radius: 5px;
+  border-radius: 0 0 7px 7px;
   padding: 5px;
 }
 
@@ -287,7 +287,7 @@ h3 {
 
 .pitcher-details {
   display: flex;
-  font-size: 10px;
+  font-size: 13px;
   flex-direction: column;  /* Stack lines vertically */
   justify-content: center; /* Vertically center in container */
   align-items: center;     /* Horizontally center text */
@@ -381,7 +381,7 @@ select:focus {
 }
 
 .abbreviation {
-  font-size: 18px;
+  font-size: 20px;
   width: 40px;
   height: 55px;
   display: flex;
