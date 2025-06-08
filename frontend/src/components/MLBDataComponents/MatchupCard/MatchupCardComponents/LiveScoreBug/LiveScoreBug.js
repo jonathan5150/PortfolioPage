@@ -154,7 +154,7 @@ const LiveScoreBug = ({
         <div style={{ position: 'relative', width: '50px', height: '50px' }}>
           <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translate(-50%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onSecond ? 'gold' : 'white' }} />
           <div style={{ position: 'absolute', bottom: -3, left: '95%', transform: 'translate(-100%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onFirst ? 'gold' : 'white' }} />
-          <div style={{ position: 'absolute', bottom: -3, left: 2, transform: 'rotate(45deg)', width: '16px', height: '16px', backgroundColor: onThird ? 'gold' : 'white' }} />
+          <div style={{ position: 'absolute', bottom: -3, left: 3, transform: 'rotate(45deg)', width: '16px', height: '16px', backgroundColor: onThird ? 'gold' : 'white' }} />
         </div>
         <div style={{ marginTop: '2px', marginBottom: '4px', marginRight: '2px', fontWeight: 'bold', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ fontSize: '6px', marginRight: '2px' }}>{inningArrow}</span>
