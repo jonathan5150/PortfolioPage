@@ -1,13 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import Cookies from 'js-cookie';
 
 const BoxScore = ({ liveData }) => {
   const boxscore = liveData?.liveData?.boxscore;
-
   const away = boxscore?.teams?.away;
   const home = boxscore?.teams?.home;
 
-  const lineupUnavailable =
-    !away?.battingOrder?.length || !home?.battingOrder?.length;
+  const lineupUnavailable = !away?.battingOrder?.length || !home?.battingOrder?.length;
 
   const formatIP = (ip) => (typeof ip === 'number' ? ip.toFixed(1) : ip);
 
@@ -22,6 +21,37 @@ const BoxScore = ({ liveData }) => {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     maxWidth: '100px',
+  };
+
+  const [showing, setShowing] = useState(() => Cookies.get('boxScoreView') || 'away');
+  const touchStartX = useRef(null);
+
+  useEffect(() => {
+    Cookies.set('boxScoreView', showing, { expires: 365 });
+  }, [showing]);
+
+  const dragDeltaX = useRef(0);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    dragDeltaX.current = 0;
+  };
+
+  const handleTouchMove = (e) => {
+    const currentX = e.touches[0].clientX;
+    dragDeltaX.current = currentX - touchStartX.current;
+
+    if (dragDeltaX.current > 30 && showing === 'home') {
+      setShowing('away');
+      dragDeltaX.current = 0; // prevent flip-flop
+    } else if (dragDeltaX.current < -30 && showing === 'away') {
+      setShowing('home');
+      dragDeltaX.current = 0;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    dragDeltaX.current = 0;
   };
 
   if (!away || !home || lineupUnavailable) {
@@ -219,9 +249,47 @@ const BoxScore = ({ liveData }) => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {renderTeam(away, 'Away')}
-      {renderTeam(home, 'Home')}
+    <div
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        height: '100%',
+      }}
+    >
+      <button
+        onClick={() => setShowing((prev) => (prev === 'away' ? 'home' : 'away'))}
+        style={{
+          position: 'absolute',
+          fontSize: '0.7rem',
+          top: '6px',
+          right: '1rem',
+          background: 'rgba(0,0,0,0.0)',
+          color: 'white',
+          transform: showing === 'away' ? 'rotate(0deg)' : 'rotate(180deg)',
+          transition: 'transform 0.3s',
+          border: 'none',
+          padding: '4px 8px',
+          cursor: 'pointer',
+          zIndex: 1,
+        }}
+      >
+        ▶
+      </button>
+
+      <div
+        style={{
+          display: 'flex',
+          width: '200%',
+          transform: showing === 'away' ? 'translateX(0%)' : 'translateX(-50%)',
+          transition: 'transform 0.4s ease',
+        }}
+      >
+        <div style={{ width: '100%' }}>{renderTeam(away, 'Away')}</div>
+        <div style={{ width: '100%' }}>{renderTeam(home, 'Home')}</div>
+      </div>
     </div>
   );
 };
