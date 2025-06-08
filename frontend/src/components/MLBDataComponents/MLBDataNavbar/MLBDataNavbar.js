@@ -19,7 +19,7 @@ const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCal
 const MLBDataNavbar = ({ selectedDate, setSelectedDate, isCalendarOpen, setIsCalendarOpen, isTeamsMenuOpen, setIsTeamsMenuOpen, mlbTeams, selectedTeams, handleTeamChange, handleSelectAll, handleDeselectAll, teamsMenuRef }) => {
   return (
     <div className="mlbDataNavbar">
-      <h2>MLB DATA PROJECT</h2>
+      <h2>MLB STATS PROJECT</h2>
       <div className="controls">
         <TeamsButton onClick={() => setIsTeamsMenuOpen(!isTeamsMenuOpen)} isOpen={isTeamsMenuOpen} setIsCalendarOpen={setIsCalendarOpen} />
         {isTeamsMenuOpen && (

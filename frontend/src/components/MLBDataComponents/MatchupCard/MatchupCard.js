@@ -40,9 +40,9 @@ const MatchupCard = ({
   const [fadeIn, setFadeIn] = useState(false);
   const [numGamesToShow, setNumGamesToShow] = useState(5);
 
-  const [contentKey, setContentKey] = useState(() => {
-    const saved = Cookies.get('contentKey');
-    return saved || 'team-history';
+  const [contentKeys, setContentKeys] = useState(() => {
+    const saved = Cookies.get('contentKeys');
+    return saved ? JSON.parse(saved) : {};
   });
 
   const [starredTeams, setStarredTeams] = useState(() => {
@@ -74,7 +74,7 @@ const MatchupCard = ({
       });
     }, 10);
     return () => clearTimeout(timeout);
-  }, [contentKey, visibleGames, batterGameLogs, numGamesToShow]);
+  }, [contentKeys, visibleGames, batterGameLogs, numGamesToShow]);
 
   useEffect(() => {
     const fetchPitcherGameLog = async (playerId, getTeamAbbreviation, beforeDate) => {
@@ -142,14 +142,15 @@ const MatchupCard = ({
     }
   }, [loading]);
 
-  const handleDataSelectWithAnchor = (dataType, gamePk) => {
+  const handleDataSelectWithAnchor = (newKey, gamePk) => {
     const anchor = cardRefs.current[gamePk];
     const prevY = anchor?.getBoundingClientRect().top;
 
-    if (dataType !== contentKey) {
-      setContentKey(dataType);
-      Cookies.set('contentKey', dataType, { expires: 365 });
-    }
+    setContentKeys((prev) => {
+      const updated = { ...prev, [gamePk]: newKey };
+      Cookies.set('contentKeys', JSON.stringify(updated), { expires: 365 });
+      return updated;
+    });
 
     requestAnimationFrame(() => {
       const newY = anchor?.getBoundingClientRect().top;
@@ -212,6 +213,8 @@ const MatchupCard = ({
                 const cardRef = (el) => {
                   if (el) cardRefs.current[gamePk] = el;
                 };
+
+                const contentKey = contentKeys[gamePk] || 'team-history';
 
                 const isExpanded = expandedGames[gamePk];
                 const contentStyle = {
@@ -349,7 +352,6 @@ const MatchupCard = ({
                               batterGameLogs={batterGameLogs}
                               playerStatsSortConfig={playerStatsSortConfig}
                               setPlayerStatsSortConfig={setPlayerStatsSortConfig}
-                              setContentKey={setContentKey}
                               setSelectedPlayers={(teamId, playerName) => {
                                 const updated = {
                                   ...JSON.parse(Cookies.get('selectedPlayers') || '{}'),
