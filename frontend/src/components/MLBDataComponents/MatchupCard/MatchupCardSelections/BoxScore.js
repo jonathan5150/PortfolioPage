@@ -263,7 +263,7 @@ const BoxScore = ({ liveData }) => {
         onClick={() => setShowing((prev) => (prev === 'away' ? 'home' : 'away'))}
         style={{
           position: 'absolute',
-          fontSize: '0.7rem',
+          fontSize: '0.6rem',
           top: '6px',
           right: '1rem',
           background: 'rgba(0,0,0,0.0)',

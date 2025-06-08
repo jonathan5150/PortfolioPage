@@ -56,17 +56,14 @@ const MatchupCard = ({
   });
 
   const [pitcherLogs, setPitcherLogs] = useState({});
-  const [contentHeights, setContentHeights] = useState({});
   const contentRefs = useRef({});
   const cardRefs = useRef({});
 
   const updateContentHeight = (gamePk) => {
-    const ref = contentRefs.current[gamePk];
-    if (ref) {
-      setContentHeights((prev) => ({
-        ...prev,
-        [gamePk]: ref.scrollHeight + 'px'
-      }));
+    const outer = document.querySelector(`[data-gamepk="${gamePk}"]`);
+    const inner = contentRefs.current[gamePk];
+    if (outer && inner) {
+      outer.style.height = `${inner.offsetHeight}px`;
     }
   };
 
@@ -292,7 +289,7 @@ const MatchupCard = ({
                             margin: '1px 0 0 0',
                             padding: 0,
                             transform: isExpanded ? 'rotate(270deg)' : 'rotate(90deg)',
-                            transition: 'transform 0.3s',
+                            transition: 'transform 0.5s',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -317,8 +314,33 @@ const MatchupCard = ({
                         <option value="pitcher-last-5">PITCHER GAME LOG</option>
                       </select>
 
-                      <div className="stat-section" style={{ maxHeight: contentHeights[gamePk] || '0', overflow: 'visible', transition: 'max-height 1.2s ease' }}>
-                        <div ref={contentRef}>
+                      <div
+                        className="stat-section"
+                        data-gamepk={gamePk}
+                        ref={(el) => {
+                          if (el && contentRefs.current[gamePk]) {
+                            const inner = contentRefs.current[gamePk];
+                            const height = inner.offsetHeight;
+                            el.style.height = `${height}px`;
+                            el.style.transition = 'height 0.7s ease';
+                            requestAnimationFrame(() => {
+                              el.style.height = `${height}px`;
+                            });
+                          }
+                        }}
+                        style={{
+                          overflow: 'hidden',
+                          transition: 'height 0.7s ease',
+                        }}
+                      >
+                        <div
+                          ref={contentRef}
+                          key={contentKey}
+                          style={{
+                            opacity: 0,
+                            animation: 'fadeIn 1.2s ease forwards',
+                          }}
+                        >
                           {contentKey === 'box-score' && <BoxScore liveData={liveData} />}
                           {contentKey === 'team-history' && <TeamHistory game={game} />}
                           {contentKey === 'player-stats' && (
@@ -329,13 +351,20 @@ const MatchupCard = ({
                               setPlayerStatsSortConfig={setPlayerStatsSortConfig}
                               setContentKey={setContentKey}
                               setSelectedPlayers={(teamId, playerName) => {
-                                const updated = { ...JSON.parse(Cookies.get('selectedPlayers') || '{}'), [teamId]: playerName };
+                                const updated = {
+                                  ...JSON.parse(Cookies.get('selectedPlayers') || '{}'),
+                                  [teamId]: playerName
+                                };
                                 Cookies.set('selectedPlayers', JSON.stringify(updated), { expires: 365 });
                               }}
                             />
                           )}
                           {contentKey === 'pitcher-last-5' && (
-                            <PitcherLastFive game={game} awayGames={pitcherLogs[gamePk]?.away || []} homeGames={pitcherLogs[gamePk]?.home || []} />
+                            <PitcherLastFive
+                              game={game}
+                              awayGames={pitcherLogs[gamePk]?.away || []}
+                              homeGames={pitcherLogs[gamePk]?.home || []}
+                            />
                           )}
                           {contentKey === 'batter-gamelog' &&
                             batterGameLogs[game.teams.away.team.id] &&
@@ -346,14 +375,14 @@ const MatchupCard = ({
                                     team: game.teams.away.team,
                                     teamType: 'Away',
                                     logs: batterGameLogs[game.teams.away.team.id]?.logs,
-                                    roster: batterGameLogs[game.teams.away.team.id]?.roster
+                                    roster: batterGameLogs[game.teams.away.team.id]?.roster,
                                   },
                                   {
                                     team: game.teams.home.team,
                                     teamType: 'Home',
                                     logs: batterGameLogs[game.teams.home.team.id]?.logs,
-                                    roster: batterGameLogs[game.teams.home.team.id]?.roster
-                                  }
+                                    roster: batterGameLogs[game.teams.home.team.id]?.roster,
+                                  },
                                 ]}
                                 gameDate={game.gameDate}
                                 getTeamAbbreviation={getTeamAbbreviation}
@@ -364,6 +393,7 @@ const MatchupCard = ({
                         </div>
                       </div>
                     </div>
+
                   </div>
                 );
               })}
