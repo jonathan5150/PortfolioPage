@@ -7,7 +7,7 @@ const teamPrimaryColors = {
   'Atlanta Braves': 'rgb(35, 48, 115)',
   'Baltimore Orioles': 'rgb(223, 70, 1)',
   'Boston Red Sox': 'rgb(189, 48, 57)',
-  'Chicago White Sox': 'rgb(255, 255, 255)', // pure white
+  'Chicago White Sox': 'rgb(160, 160, 160)',
   'Chicago Cubs': 'rgb(14, 51, 134)',
   'Cincinnati Reds': 'rgb(179, 0, 0)',
   'Cleveland Guardians': 'rgb(12, 35, 64)',
