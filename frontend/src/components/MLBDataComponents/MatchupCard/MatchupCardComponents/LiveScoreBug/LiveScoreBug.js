@@ -24,7 +24,7 @@ const teamPrimaryColors = {
   'Athletics': 'rgb(0, 56, 49)',
   'Philadelphia Phillies': 'rgb(232, 24, 40)',
   'Pittsburgh Pirates': 'rgb(253, 184, 39)',
-  'San Diego Padres': 'rgb(33, 53, 63)',
+  'San Diego Padres': 'rgb(255, 196, 37)',
   'San Francisco Giants': 'rgb(253, 90, 30)',
   'Seattle Mariners': 'rgb(0, 92, 92)',
   'St. Louis Cardinals': 'rgb(196, 30, 58)',

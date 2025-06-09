@@ -169,6 +169,7 @@
   color: inherit;
   user-select: none;
   margin: 0; /* Remove margin to prevent shifting */
+  z-index: 3;
 }
 
 .custom-datepicker-input .arrow {
@@ -601,7 +602,7 @@ select:focus {
   box-shadow: 1px 2px 2px 0px black;
   border: 1px solid black;
   font-size: 15pt;
-  padding: 2px 5px;
+  padding: 4px 8px;
 }
 
 .teams-button {
