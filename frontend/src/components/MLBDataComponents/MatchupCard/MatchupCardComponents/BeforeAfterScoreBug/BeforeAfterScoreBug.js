@@ -21,7 +21,7 @@ const BeforeAfterScoreBug = ({
 
   const getStyles = (teamSide) => {
     if (typeof awayScore !== 'number' || typeof homeScore !== 'number') {
-      return { borderColor: '#555555', backgroundColor: 'rgba(70, 70, 70, 0.8)' };
+      return { status: 'neutral' };
     }
 
     const won =
@@ -32,24 +32,10 @@ const BeforeAfterScoreBug = ({
       (teamSide === 'away' && awayScore < homeScore) ||
       (teamSide === 'home' && homeScore < awayScore);
 
-    if (won) {
-      return {
-        borderColor: 'rgba(0, 128, 0, 0.6)',
-        backgroundColor: 'rgba(0, 128, 0, 0.1)',
-      };
-    }
+    if (won) return { status: 'won' };
+    if (lost) return { status: 'lost' };
 
-    if (lost) {
-      return {
-        borderColor: 'rgba(139, 0, 0, 0.9)',
-        backgroundColor: 'rgba(139, 0, 0, 0.2)',
-      };
-    }
-
-    return {
-      borderColor: '#555555',
-      backgroundColor: 'rgba(70, 70, 70, 0.8)',
-    };
+    return { status: 'neutral' };
   };
 
   const renderPitcherInfo = (team, pitcher) => (
@@ -72,14 +58,47 @@ const BeforeAfterScoreBug = ({
   const renderTeamCell = (team, score, side) => {
     const abbr = getTeamAbbreviation(team.id);
     const record = getTeamRecord(team.id);
-    const { borderColor, backgroundColor } = getStyles(side);
+    const { status } = getStyles(side);
+
+  const gradientColor =
+    status === 'won' ? 'rgba(0, 128, 0, 0.9)' :
+    status === 'lost' ? 'rgba(139, 0, 0, 0.9)' :
+    null;
 
     return (
       <div
         className="team-cell"
-        style={{ display: 'flex', cursor: 'pointer' }}
+        style={{ display: 'flex', cursor: 'pointer', position: 'relative' }}
         onClick={() => handleStarClick(gamePk, team.id)}
       >
+        {/* Gradient Overlay */}
+        {(status === 'won' || status === 'lost') && (
+          <>
+            {(status === 'won' || status === 'lost') && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  bottom: 0,
+                  right: 0,
+                  left: 0,
+                  background: `
+                    linear-gradient(to right, ${gradientColor}, transparent 3%),
+                    linear-gradient(to left, ${gradientColor}, transparent 3%),
+                    linear-gradient(to bottom, ${gradientColor}, transparent 7%),
+                    linear-gradient(to top, ${gradientColor}, transparent 7%)
+                  `,
+                  backgroundBlendMode: 'screen',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                  borderRadius: side === 'away' ? '6px 0 0 0' : '0 0 0 6px',
+                }}
+              />
+            )}
+          </>
+        )}
+
+
         <div
           className="team-info-container"
           style={{
@@ -88,11 +107,13 @@ const BeforeAfterScoreBug = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            border: `2px solid ${borderColor}`,
-            backgroundColor,
+            border: '2px solid rgb(85, 85, 85)',
+            backgroundColor: 'rgba(70, 70, 70, 0.8)',
             borderRadius: side === 'away' ? '6px 0 0 0' : '0 0 0 6px',
             padding: '5px 10px',
             opacity: 0.85,
+            position: 'relative',
+            zIndex: 2,
           }}
         >
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
