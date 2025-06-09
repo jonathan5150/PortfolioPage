@@ -1,6 +1,40 @@
 import React from 'react';
 import Scoreboard from '../Scoreboard';
 
+// Official primary colors for each MLB team
+const teamPrimaryColors = {
+  'Arizona Diamondbacks': 'rgb(167, 25, 48)',
+  'Atlanta Braves': 'rgb(35, 48, 115)',
+  'Baltimore Orioles': 'rgb(223, 70, 1)',
+  'Boston Red Sox': 'rgb(189, 48, 57)',
+  'Chicago White Sox': 'rgb(255, 255, 255)', // pure white
+  'Chicago Cubs': 'rgb(14, 51, 134)',
+  'Cincinnati Reds': 'rgb(179, 0, 0)',
+  'Cleveland Guardians': 'rgb(12, 35, 64)',
+  'Colorado Rockies': 'rgb(51, 0, 111)',
+  'Detroit Tigers': 'rgb(12, 35, 64)',
+  'Houston Astros': 'rgb(0, 45, 98)',
+  'Kansas City Royals': 'rgb(0, 70, 135)',
+  'Los Angeles Angels': 'rgb(200, 16, 46)',
+  'Los Angeles Dodgers': 'rgb(0, 90, 156)',
+  'Miami Marlins': 'rgb(0, 163, 224)',
+  'Milwaukee Brewers': 'rgb(19, 41, 75)',
+  'Minnesota Twins': 'rgb(0, 43, 92)',
+  'New York Yankees': 'rgb(12, 35, 64)',
+  'New York Mets': 'rgb(0, 45, 114)',
+  'Athletics': 'rgb(0, 56, 49)',
+  'Philadelphia Phillies': 'rgb(232, 24, 40)',
+  'Pittsburgh Pirates': 'rgb(253, 184, 39)',
+  'San Diego Padres': 'rgb(33, 53, 63)',
+  'San Francisco Giants': 'rgb(253, 90, 30)',
+  'Seattle Mariners': 'rgb(0, 92, 92)',
+  'St. Louis Cardinals': 'rgb(196, 30, 58)',
+  'Tampa Bay Rays': 'rgb(9, 44, 92)',
+  'Texas Rangers': 'rgb(0, 50, 120)',
+  'Toronto Blue Jays': 'rgb(19, 74, 142)',
+  'Washington Nationals': 'rgb(171, 0, 3)',
+};
+
 const BeforeAfterScoreBug = ({
   game,
   gamePk,
@@ -18,25 +52,6 @@ const BeforeAfterScoreBug = ({
   const homeTeam = game.teams.home.team;
   const awayScore = gameNotStarted ? '-' : trueLiveData?.linescore?.teams?.away?.runs ?? '-';
   const homeScore = gameNotStarted ? '-' : trueLiveData?.linescore?.teams?.home?.runs ?? '-';
-
-  const getStyles = (teamSide) => {
-    if (typeof awayScore !== 'number' || typeof homeScore !== 'number') {
-      return { status: 'neutral' };
-    }
-
-    const won =
-      (teamSide === 'away' && awayScore > homeScore) ||
-      (teamSide === 'home' && homeScore > awayScore);
-
-    const lost =
-      (teamSide === 'away' && awayScore < homeScore) ||
-      (teamSide === 'home' && homeScore < awayScore);
-
-    if (won) return { status: 'won' };
-    if (lost) return { status: 'lost' };
-
-    return { status: 'neutral' };
-  };
 
   const renderPitcherInfo = (team, pitcher) => (
     <div className="pitcher-details">
@@ -58,12 +73,9 @@ const BeforeAfterScoreBug = ({
   const renderTeamCell = (team, score, side) => {
     const abbr = getTeamAbbreviation(team.id);
     const record = getTeamRecord(team.id);
-    const { status } = getStyles(side);
+    const teamName = team.name;
 
-  const gradientColor =
-    status === 'won' ? 'rgba(0, 128, 0, 0.9)' :
-    status === 'lost' ? 'rgba(139, 0, 0, 0.9)' :
-    null;
+    const gradientColor = teamPrimaryColors[teamName] || null;
 
     return (
       <div
@@ -71,33 +83,22 @@ const BeforeAfterScoreBug = ({
         style={{ display: 'flex', cursor: 'pointer', position: 'relative' }}
         onClick={() => handleStarClick(gamePk, team.id)}
       >
-        {/* Gradient Overlay */}
-        {(status === 'won' || status === 'lost') && (
-          <>
-            {(status === 'won' || status === 'lost') && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  bottom: 0,
-                  right: 0,
-                  left: 0,
-                  background: `
-                    linear-gradient(to right, ${gradientColor}, transparent 3%),
-                    linear-gradient(to left, ${gradientColor}, transparent 3%),
-                    linear-gradient(to bottom, ${gradientColor}, transparent 7%),
-                    linear-gradient(to top, ${gradientColor}, transparent 7%)
-                  `,
-                  backgroundBlendMode: 'screen',
-                  pointerEvents: 'none',
-                  zIndex: 1,
-                  borderRadius: side === 'away' ? '6px 0 0 0' : '0 0 0 6px',
-                }}
-              />
-            )}
-          </>
+        {gradientColor && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              right: 0,
+              left: 0,
+              background: `linear-gradient(to left, ${gradientColor}, transparent 90%)`,
+              backgroundBlendMode: 'screen',
+              pointerEvents: 'none',
+              zIndex: 1,
+              borderRadius: side === 'away' ? '6px 0 0 0' : '0 0 0 6px',
+            }}
+          />
         )}
-
 
         <div
           className="team-info-container"
@@ -118,7 +119,7 @@ const BeforeAfterScoreBug = ({
         >
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <img
-              src={getTeamLogo(team.name)}
+              src={getTeamLogo(teamName)}
               alt={`${team.name} logo`}
               style={{
                 width: '37px',
@@ -204,7 +205,7 @@ const BeforeAfterScoreBug = ({
           padding: '5px',
         }}
       >
-        {renderPitcherInfo(game.teams.away.team, game.teams.away.probablePitcher)}
+        {renderPitcherInfo(awayTeam, game.teams.away.probablePitcher)}
       </div>
 
       <div style={{ margin: '2px' }}>
@@ -221,7 +222,7 @@ const BeforeAfterScoreBug = ({
           borderRadius: '0 0 6px 0',
         }}
       >
-        {renderPitcherInfo(game.teams.home.team, game.teams.home.probablePitcher)}
+        {renderPitcherInfo(homeTeam, game.teams.home.probablePitcher)}
       </div>
 
       {!gameNotStarted && (
