@@ -186,6 +186,10 @@ function MLBData() {
     return () => clearInterval(intervalId);
   }, [todayGames]);
 
+  useEffect(() => {
+    Cookies.set('userPicks', JSON.stringify(userPicks), { expires: 30 });
+  }, [userPicks]);
+
   const formatTime = (dateTime) => {
     const date = new Date(dateTime);
     return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
