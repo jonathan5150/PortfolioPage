@@ -6,7 +6,7 @@ import atw3 from '../assets/images/atw3.png';
 function AlongTheWay() {
   return (
     <div className="ScrollableContainer">
-        <div className="AlongTheWay">
+        <div className="defaultParagraph">
 
             <p>This is "Along The Way", the capstone project I created along with a small group of
             peers in order to graduate from the LaunchCode Coding Bootcamp based in St. Louis, MO.

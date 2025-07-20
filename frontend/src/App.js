@@ -7,6 +7,7 @@ import ExcelProject from './pages/ExcelProject';
 import AlongTheWay from './pages/AlongTheWay';
 import SportsDataProject from './pages/SportsDataProject';
 import Contact from './pages/Contact';
+import HerbicideCalculator from './pages/HerbicideCalculator';
 import MLBData from './pages/MLBData/MLBData';
 import Header from './components/PortfolioComponents/Header';
 
@@ -21,7 +22,16 @@ function App() {
 
 function Main() {
   const location = useLocation();
-  const headerPaths = ['/', '/home', '/resume', '/excelproject', '/alongtheway', '/sportsdataproject', '/contact'];
+  const headerPaths = [
+    '/',
+    '/home',
+    '/resume',
+    '/excelproject',
+    '/alongtheway',
+    '/sportsdataproject',
+    '/contact',
+    '/herbicidecalculator' // Add this line
+  ];
 
   return (
     <div className="App">
@@ -34,6 +44,7 @@ function Main() {
           <Route path="/resume" element={<Resume />} />
           <Route path="/excelproject" element={<ExcelProject />} />
           <Route path="/alongtheway" element={<AlongTheWay />} />
+          <Route path="/herbicidecalculator" element={<HerbicideCalculator />} />
           <Route path="/sportsdataproject" element={<SportsDataProject />} />
           <Route path="/contact" element={<Contact />} />
         </Routes>

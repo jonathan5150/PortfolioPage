@@ -55,7 +55,7 @@ footer {
 
 .content {
     position: absolute;
-    margin-top: 60px; /* Adjust margin to the height of your navbar */
+    margin-top: 90px; /* Adjust margin to the height of your navbar */
 }
 
 .homeParagraph {
@@ -63,7 +63,7 @@ footer {
   font-size: 14pt;
 }
 
-.otherParagraph {
+.defaultParagraph {
     font-size: 16px;
     font-family: 'DM Sans', sans-serif;
     font-weight: 400;
@@ -277,6 +277,14 @@ ul {
   overflow-y: auto; /* Allow vertical overflow */
 }
 
+.HerbicideCalculator {
+  display: flex;
+  flex-direction: column; /* Stack images vertically */
+  align-items: center;
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
 .AlongTheWay {
   display: flex;
   flex-direction: column; /* Stack images vertically */
@@ -289,6 +297,7 @@ ul {
 }
 
 .excel-container p {
+  margin-top: 15px;
   padding-left: 18px;
   padding-right: 18px;
 }
@@ -308,7 +317,7 @@ ul {
 
 .image {
   margin-top: 15px;
-  max-width: 90%; /* Set maximum width for the images */
+  max-width: 99%; /* Set maximum width for the images */
   width: auto; /* Allow images to adjust width proportionally */
   margin-bottom: 5px; /* Add margin between images */
   border: 1px solid black;
@@ -475,7 +484,7 @@ ul {
   transition: transform 0.3s ease; /* Ensure smooth transition */
 }
 
-.mlbLinkButton {
+.Link {
   -webkit-user-select: none; /* Safari */
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
@@ -497,14 +506,14 @@ ul {
   /* Additional styles for better visibility */
   color: black; /* Text color */
   width: 85%; /* Set width to 85% of the viewport */
-  max-width: 300px; /* Optionally set a maximum width */
+  max-width: 400px; /* Optionally set a maximum width */
   box-sizing: border-box; /* Ensure padding and border are included in width calculation */
   display: block; /* Make it a block element to take full width */
   margin-left: auto; /* Center the button horizontally */
   margin-right: auto;
 }
 
-.mlbLinkButton:hover {
+.Link:hover {
   background-color: rgba(51, 95, 166, 0.9); /* Lighter transparent blue on hover */
   border: 2px solid black; /* Ensure border is transparent */
 }

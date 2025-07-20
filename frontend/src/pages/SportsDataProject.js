@@ -4,7 +4,7 @@ function SportsDataProject() {
 
   return (
     <div className="SportsDataProject">
-      <p className="otherParagraph">
+      <p className="defaultParagraph">
         This is where my current project is being built. I have a
         lot of friends interested in sports data and they've mentioned to me how difficult it is to
         find a webpage that has all the statistics they want to see in one place. So I figured I'd try to
@@ -12,9 +12,9 @@ function SportsDataProject() {
         storing that information in a database, and manipulating it.
       </p>
 
-      <div className="MLBLink">
+      <div>
         <Link to="/MLBData">
-          <button className="mlbLinkButton">
+          <button className="Link">
           LINK TO MLB DATA PROJECT
           </button>
         </Link>
