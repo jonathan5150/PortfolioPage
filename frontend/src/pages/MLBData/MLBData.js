@@ -187,7 +187,7 @@ function MLBData() {
   }, [todayGames]);
 
   useEffect(() => {
-    Cookies.set('userPicks', JSON.stringify(userPicks), { expires: 30 });
+    Cookies.set('userPicks', JSON.stringify(userPicks), { expires: 365 });
   }, [userPicks]);
 
   const formatTime = (dateTime) => {

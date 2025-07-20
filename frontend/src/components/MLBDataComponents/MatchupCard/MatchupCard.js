@@ -410,7 +410,32 @@ const MatchupCard = ({
             </>
           )}
         </div>
+        <div
+          style={{
+            padding: '4px',
+            border: '1px solid #555555',
+            borderRadius: '8px',
+            backgroundColor: 'rgba(41, 41, 41, 0.85)',
+            display: 'inline-block',
+            marginBottom: '15px'
+          }}
+        >
+          <div
+            style={{
+              padding: '6px 12px',
+              border: '2px solid rgb(85, 85, 85)',
+              borderRadius: '6px',
+              backgroundColor: 'rgba(70, 70, 70, 0.8)',
+              color: 'white',
+              fontSize: '12px',
+              textAlign: 'center',
+            }}
+          >
+            Games Displayed: {visibleGames.length}/{Object.keys(liveGameData).length}
+          </div>
+        </div>
       </div>
+
     );
   };
 
