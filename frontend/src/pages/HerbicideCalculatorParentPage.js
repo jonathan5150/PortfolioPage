@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-function HerbicideCalculator() {
+function HerbicideCalculatorParentPage() {
   return (
     <div className="ScrollableContainer">
       <div className="defaultParagraph">
@@ -13,7 +13,7 @@ function HerbicideCalculator() {
       </div>
 
       <div>
-        <Link to="/MLBData">
+        <Link to="/herbicidecalculator">
           <button className="Link">
             LINK TO HERBICIDE CALCULATOR
           </button>
@@ -23,4 +23,4 @@ function HerbicideCalculator() {
   );
 }
 
-export default HerbicideCalculator;
+export default HerbicideCalculatorParentPage;
