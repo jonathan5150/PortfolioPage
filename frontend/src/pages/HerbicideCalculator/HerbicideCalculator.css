@@ -1,0 +1,30 @@
+h1 {
+  font-size: 27px;
+}
+
+.HerbicideCalculatorPage {
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  background-color: black; /* ensures black is shown while image fades in */
+}
+
+.HerbicideCalculatorPage.fade-in {
+  opacity: 1;
+}
+
+.dark-box {
+  background-color: rgba(50, 50, 50, 0.95);
+  border-radius: 12px;
+  padding: 15px;
+  margin: 10px;
+  max-width: 100%;
+  text-align: center;
+}
+
+.dark-box:first-of-type {
+  max-width: 75%;
+  margin: 10px auto;
+  padding: 10px 10px; /* ← custom padding just for the first box */
+}
+
+

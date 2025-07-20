@@ -54,8 +54,8 @@ footer {
 }
 
 .content {
-    position: absolute;
-    margin-top: 90px; /* Adjust margin to the height of your navbar */
+  position: absolute;
+  width: 100%;
 }
 
 .homeParagraph {

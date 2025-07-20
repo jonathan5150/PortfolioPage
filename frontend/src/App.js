@@ -31,14 +31,19 @@ function Main() {
     '/alongtheway',
     '/sportsdataproject',
     '/contact',
-    '/herbicidecalculatorparentpage' // Add this line
+    '/herbicidecalculatorparentpage'
   ];
+
+  const hasHeader = headerPaths.includes(location.pathname);
 
   return (
     <div className="App">
-      {headerPaths.includes(location.pathname) && <Header />}
+      {hasHeader && <Header />}
       <div className="bg"></div>
-      <div className="content">
+      <div
+        className="content"
+        style={{ marginTop: hasHeader ? '90px' : '0px' }}
+      >
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
@@ -51,11 +56,12 @@ function Main() {
           <Route path="/herbicidecalculator" element={<HerbicideCalculator />} />
         </Routes>
       </div>
-        <Routes>
-            <Route path="/mlbdata" element={<MLBData />} />
-        </Routes>
+      <Routes>
+        <Route path="/mlbdata" element={<MLBData />} />
+      </Routes>
     </div>
   );
 }
+
 
 export default App;
