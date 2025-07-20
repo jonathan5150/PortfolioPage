@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import './HerbicideCalculator.css';
 
 function HerbicideCalculator() {
-  const [herbicideLiters, setHerbicideLiters] = useState('');
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
@@ -10,12 +9,6 @@ function HerbicideCalculator() {
     img.src = '/images/zebra-plant-bg.jpg';
     img.onload = () => setIsLoaded(true);
   }, []);
-
-  const handleChange = (e) => {
-    setHerbicideLiters(e.target.value);
-  };
-
-  const waterGallons = herbicideLiters ? (herbicideLiters / 2).toFixed(2) : '';
 
   if (!isLoaded) {
     return (
@@ -51,37 +44,116 @@ function HerbicideCalculator() {
       </div>
 
       {/* Sprayer Info Row */}
-      <div className="dark-box">
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '50px' }}>
-          <div>
-            <h3>Backpack Sprayer</h3>
-            <p>3 gallons</p>
+      <div className="dark-box" style={{ position: 'relative', paddingTop: '40px' }}>
+        {/* Step Header */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '30px',
+            lineHeight: '30px',
+            backgroundColor: 'rgba(100, 100, 100, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px'
+          }}
+        >
+          Step 1: Select Sprayer Type
+        </div>
+
+        {/* Sprayer Options */}
+        <div style={{ display: 'flex', width: '100%', marginTop: '8px', gap: '10px' }}>
+          <div
+            style={{
+              width: '50%',
+              backgroundColor: 'rgba(200, 200, 200, 0.2)',
+              padding: '15px',
+              borderRadius: '6px',
+              boxSizing: 'border-box',
+              textAlign: 'center'
+            }}
+          >
+            <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>Backpack Sprayer</p>
+            <p style={{ margin: 0, fontSize: '12px' }}>5 gallons</p>
           </div>
-          <div>
-            <h3>Tank Sprayer</h3>
-            <p>25 gallons</p>
+          <div
+            style={{
+              width: '50%',
+              backgroundColor: 'rgba(200, 200, 200, 0.2)',
+              padding: '15px',
+              borderRadius: '6px',
+              boxSizing: 'border-box',
+              textAlign: 'center'
+            }}
+          >
+            <p style={{ margin: 0, fontSize: '14px', fontWeight: 'bold' }}>Tank Sprayer</p>
+            <p style={{ margin: 0, fontSize: '12px' }}>25 gallons</p>
           </div>
         </div>
       </div>
 
       {/* Input Row */}
-      <div className="dark-box" style={{ marginTop: '20px' }}>
-        <label htmlFor="herbicide-input"><strong>Herbicide Amount (Liters):</strong></label>
-        <br />
-        <input
-          id="herbicide-input"
-          type="number"
-          value={herbicideLiters}
-          onChange={handleChange}
-          placeholder="Enter amount in liters"
-          style={{ marginTop: '10px', padding: '8px', width: '200px' }}
-        />
+      <div className="dark-box" style={{ position: 'relative', marginTop: '20px', paddingTop: '40px' }}>
+        {/* Step Header */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '30px',
+            lineHeight: '30px',
+            backgroundColor: 'rgba(100, 100, 100, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px'
+          }}
+        >
+          Step 2: Select Herbicide
+        </div>
+
+        <label htmlFor="herbicide-input"><strong>Roundup</strong></label>
       </div>
 
       {/* Water Needed Row */}
-      <div className="dark-box" style={{ marginTop: '20px' }}>
-        <h4>Water Needed:</h4>
-        <p>{waterGallons ? `${waterGallons} gallons` : '-'}</p>
+      <div className="dark-box" style={{ position: 'relative', marginTop: '20px', paddingTop: '40px' }}>
+        {/* Step Header */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '30px',
+            lineHeight: '30px',
+            backgroundColor: 'rgba(100, 100, 100, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            borderTopLeftRadius: '12px',
+            borderTopRightRadius: '12px'
+          }}
+        >
+          RESULT
+        </div>
+
+        <label>
+          <strong>
+            4 Liters
+          </strong>
+        </label>
       </div>
     </div>
   );

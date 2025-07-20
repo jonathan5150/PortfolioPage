@@ -50,10 +50,10 @@ function Main() {
           <Route path="/resume" element={<Resume />} />
           <Route path="/excelproject" element={<ExcelProject />} />
           <Route path="/alongtheway" element={<AlongTheWay />} />
+          <Route path="/herbicidecalculator" element={<HerbicideCalculator />} />
           <Route path="/herbicidecalculatorparentpage" element={<HerbicideCalculatorParentPage />} />
           <Route path="/sportsdataproject" element={<SportsDataProject />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/herbicidecalculator" element={<HerbicideCalculator />} />
         </Routes>
       </div>
       <Routes>
