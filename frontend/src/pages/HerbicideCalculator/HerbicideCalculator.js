@@ -67,7 +67,7 @@ function HerbicideCalculator() {
               boxSizing: 'border-box',
               textAlign: 'center',
               cursor: 'pointer',
-              border: selectedSprayer === 'backpack' ? '2px solid white' : '2px solid transparent',
+              border: selectedSprayer === 'backpack' ? '2px solid #9c9c9c' : '2px solid transparent',
               transition: 'border 0.3s',
             }}
           >
@@ -84,7 +84,7 @@ function HerbicideCalculator() {
               boxSizing: 'border-box',
               textAlign: 'center',
               cursor: 'pointer',
-              border: selectedSprayer === 'tank' ? '2px solid white' : '2px solid transparent',
+              border: selectedSprayer === 'tank' ? '2px solid #9c9c9c' : '2px solid transparent',
               transition: 'border 0.3s',
             }}
           >
@@ -113,7 +113,7 @@ function HerbicideCalculator() {
             overflow: 'hidden',
             alignItems: 'center',
             cursor: 'pointer',
-            border: selectedHerbicide === 'roundup' ? '2px solid white' : '2px solid transparent',
+            border: selectedHerbicide === 'roundup' ? '2px solid #9c9c9c' : '2px solid transparent',
             transition: 'border 0.3s',
           }}
         >
@@ -163,7 +163,7 @@ function HerbicideCalculator() {
             overflow: 'hidden',
             alignItems: 'center',
             cursor: 'pointer',
-            border: selectedHerbicide === 'glysophate' ? '2px solid white' : '2px solid transparent',
+            border: selectedHerbicide === 'glysophate' ? '2px solid #9c9c9c' : '2px solid transparent',
             transition: 'border 0.3s',
           }}
         >

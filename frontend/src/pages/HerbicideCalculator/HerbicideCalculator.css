@@ -13,6 +13,7 @@ h1 {
 }
 
 .dark-box {
+  border: 1px solid gray;
   background-color: rgba(50, 50, 50, 0.85); /* reduced opacity to allow blur effect */
   border-radius: 12px;
   padding: 15px;
