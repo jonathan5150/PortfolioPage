@@ -100,7 +100,7 @@ function HerbicideCalculator() {
       </div>
 
       {/* Herbicide */}
-      <div className="dark-box" style={{ position: 'relative', marginTop: '20px', paddingTop: '40px' }}>
+      <div className="dark-box" style={{ position: 'relative', marginTop: '12px', paddingTop: '40px' }}>
         <div className="section-header">Step 2: Select Herbicide</div>
         <div style={{ display: 'flex', marginTop: '3px', fontWeight: 'bold', fontSize: '14px' }}>
           <div style={{ width: '50%', textAlign: 'center', fontSize: '12px' }}>Product</div>
@@ -158,7 +158,7 @@ function HerbicideCalculator() {
       </div>
 
       {/* Result Section with animation */}
-      <div className="dark-box" style={{ position: 'relative', marginTop: '40px', paddingTop: '40px' }}>
+      <div className="dark-box" style={{ position: 'relative', marginTop: '14px', paddingTop: '40px' }}>
         <div className="section-header">RESULT</div>
 
         {/* Wrapper that animates height */}
