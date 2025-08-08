@@ -58,6 +58,50 @@ footer {
   width: 100%;
 }
 
+.navbar-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 15px;
+  margin-left: 30px;
+
+  /* Fade out bottom using a mask */
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.logo-container {
+  position: relative;
+  display: inline-block;
+}
+
+.logo-text-overlay {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+  position: absolute;
+  width: 100%;
+  top: 85%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 2.4rem;
+  pointer-events: none;
+  text-shadow: 4px 4px 4px black;
+  padding: 6px 12px;
+  background-color: rgba(0, 0, 0, 0.3); /* semi-transparent dark background */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px); /* for Safari */
+  border: 1.5px solid white;
+  border-radius: 14px;
+  max-width: 75%;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .homeParagraph {
   text-align: center;
   font-size: 14pt;

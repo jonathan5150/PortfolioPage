@@ -19,8 +19,15 @@ const CustomInput = React.forwardRef(({ value, onClick, isCalendarOpen, setIsCal
 const MLBDataNavbar = ({ selectedDate, setSelectedDate, isCalendarOpen, setIsCalendarOpen, isTeamsMenuOpen, setIsTeamsMenuOpen, mlbTeams, selectedTeams, handleTeamChange, handleSelectAll, handleDeselectAll, teamsMenuRef }) => {
   return (
     <div className="mlbDataNavbar">
-      <h2>MLB STATS PROJECT</h2>
-      <div className="controls">
+        <div className="logo-container">
+          <img
+            src="/images/MLBStatsWizardLogo3.png"
+            alt="MLB Stats Wizard Logo"
+            className="navbar-logo flicker"
+          />
+          <div className="logo-text-overlay">MLB Stats Wizard</div>
+        </div>
+        <div className="controls">
         <TeamsButton onClick={() => setIsTeamsMenuOpen(!isTeamsMenuOpen)} isOpen={isTeamsMenuOpen} setIsCalendarOpen={setIsCalendarOpen} />
         {isTeamsMenuOpen && (
           <div ref={teamsMenuRef}>
