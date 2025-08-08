@@ -202,7 +202,7 @@ const MatchupCard = ({
             </div>
           ) : delayOver && visibleGames.length === 0 ? (
             <p className="noGames" style={{ opacity: fadeIn ? 1 : 0, transition: 'opacity 0.5s ease-in' }}>
-              No games scheduled for this date.
+              Either no teams are selected or no games are scheduled for this date.
             </p>
           ) : (
             <>

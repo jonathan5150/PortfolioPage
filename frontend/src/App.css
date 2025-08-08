@@ -198,6 +198,10 @@ ul {
     opacity: 1;
 }
 
+.noGames {
+    max-width: 82%;
+}
+
 .menu {
     position: absolute;
     margin-right: -15px; /* Change margin-left to margin-right */
