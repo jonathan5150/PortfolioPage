@@ -5,6 +5,12 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
   const away = boxscore?.teams?.away;
   const home = boxscore?.teams?.home;
 
+  // Log to inspect the full boxscore structure
+  console.log('Live Data:', liveData);
+  console.log('Boxscore:', boxscore);
+  console.log('Away Team:', away);
+  console.log('Home Team:', home);
+
   const lineupUnavailable = !away?.battingOrder?.length || !home?.battingOrder?.length;
 
   const formatIP = (ip) => (typeof ip === 'number' ? ip.toFixed(1) : ip);
@@ -64,7 +70,45 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
   const renderTeam = (teamData, label) => {
     const players = teamData?.players || {};
     const battingOrder = teamData?.battingOrder || [];
+    const bench = teamData?.bench || []; // Get bench players
+    const batterIdsFromAPI = teamData?.batters || []; // Get batters from the API
     const pitcherIdsInOrder = teamData?.pitchers || [];
+
+    const displayedPlayers = new Set();
+    const renderPlayer = (id, forceRender = false) => {
+      // Skip rendering if the player has already been displayed, unless forceRender (battingOrder players)
+      if (displayedPlayers.has(id) && !forceRender) return null;
+
+      const player = players[`ID${id}`];
+      const playerStats = player?.stats?.batting;
+      const playerName = player?.person?.fullName || '—';
+      const playerPos = player?.position?.abbreviation || '—';
+
+      // Check if the player has relevant stats, skip if zero and the player isn't part of the original lineup
+      if (
+        !forceRender && // Don't skip players in battingOrder
+        (!playerStats?.atBats && !playerStats?.runs && !playerStats?.hits && !playerStats?.rbi && !playerStats?.baseOnBalls && !playerStats?.strikeOuts && !playerStats?.homeRuns)
+      ) {
+        return null;
+      }
+
+      // Mark this player as displayed
+      displayedPlayers.add(id);
+
+      return (
+        <tr key={id}>
+          <td style={{ ...cellStyle, textAlign: 'left' }}>{playerName}</td>
+          <td>{playerPos}</td>
+          <td>{playerStats?.atBats ?? 0}</td>
+          <td>{playerStats?.runs ?? 0}</td>
+          <td>{playerStats?.hits ?? 0}</td>
+          <td>{playerStats?.rbi ?? 0}</td>
+          <td>{playerStats?.baseOnBalls ?? 0}</td>
+          <td>{playerStats?.strikeOuts ?? 0}</td>
+          <td>{playerStats?.homeRuns ?? 0}</td>
+        </tr>
+      );
+    };
 
     const allBatters = Object.values(players).filter(p => p?.stats?.batting);
     const batterTotals = allBatters.reduce(
@@ -134,55 +178,15 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
             </tr>
           </thead>
           <tbody>
-            {battingOrder.map((id, i) => {
-              const starter = players[`ID${id}`];
-              const starterStats = starter?.stats?.batting;
-              const starterName = starter?.person?.fullName || '—';
-              const starterPos = starter?.position?.abbreviation || '—';
+            {/* Always render battingOrder players */}
+            {battingOrder.map((id) => renderPlayer(id, true))}
 
-              const subs = Object.values(players).filter(
-                (p) =>
-                  p?.stats?.batting &&
-                  p.battingOrder === id &&
-                  p.person?.id !== starter?.person?.id
-              );
+            {/* Add bench players only if they haven't already been displayed */}
+            {bench.map((id) => renderPlayer(id))}
 
-              return (
-                <React.Fragment key={id}>
-                  {starterStats && (
-                    <tr>
-                      <td style={{ ...cellStyle, textAlign: 'left' }}>{starterName}</td>
-                      <td>{starterPos}</td>
-                      <td>{starterStats.atBats ?? 0}</td>
-                      <td>{starterStats.runs ?? 0}</td>
-                      <td>{starterStats.hits ?? 0}</td>
-                      <td>{starterStats.rbi ?? 0}</td>
-                      <td>{starterStats.baseOnBalls ?? 0}</td>
-                      <td>{starterStats.strikeOuts ?? 0}</td>
-                      <td>{starterStats.homeRuns ?? 0}</td>
-                    </tr>
-                  )}
-                  {subs.map((sub, j) => {
-                    const s = sub.stats.batting;
-                    return (
-                      <tr key={`sub-${i}-${j}`}>
-                        <td style={{ ...cellStyle, textAlign: 'left', fontStyle: 'italic' }}>
-                          — {sub.person?.fullName}
-                        </td>
-                        <td>{sub.position?.abbreviation || '—'}</td>
-                        <td>{s.atBats ?? 0}</td>
-                        <td>{s.runs ?? 0}</td>
-                        <td>{s.hits ?? 0}</td>
-                        <td>{s.rbi ?? 0}</td>
-                        <td>{s.baseOnBalls ?? 0}</td>
-                        <td>{s.strikeOuts ?? 0}</td>
-                        <td>{s.homeRuns ?? 0}</td>
-                      </tr>
-                    );
-                  })}
-                </React.Fragment>
-              );
-            })}
+            {/* Add any additional batters not in battingOrder or bench */}
+            {batterIdsFromAPI.map((id) => renderPlayer(id))}
+
             <tr style={{ fontWeight: 'bold', borderTop: '1px solid #ccc' }}>
               <td style={{ textAlign: 'left' }}>Total</td>
               <td>—</td>
@@ -212,7 +216,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
           </thead>
           <tbody>
             {pitchers.map((p, i) => {
-              const pitching = p.stats.pitching;
+              const pitching = p.stats?.pitching;
               const name = p.person?.fullName || '—';
               const ip = parseInningsPitched(pitching.inningsPitched);
               const h = pitching.hits ?? 0;
