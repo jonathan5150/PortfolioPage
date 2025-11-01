@@ -1,6 +1,135 @@
 import { format, subDays } from 'date-fns';
 import { throttleAsyncTasks } from '../../../utils/concurrency';
 
+/** Normalize MLB gameType (default to regular) */
+const getGameType = (game) => (game?.gameType ? String(game.gameType) : 'R');
+
+/** Merge two hitting stat lines (regular & postseason) into one */
+const mergeHittingStats = (a = {}, b = {}) => {
+  const sum = (k) => (Number(a[k] || 0) + Number(b[k] || 0));
+  const merged = {
+    gamesPlayed: sum('gamesPlayed'),
+    hits: sum('hits'),
+    rbi: sum('rbi'),
+    baseOnBalls: sum('baseOnBalls'),
+    strikeOuts: sum('strikeOuts'),
+    homeRuns: sum('homeRuns'),
+    stolenBases: sum('stolenBases'),
+    atBats: sum('atBats'),
+    runs: sum('runs'),
+  };
+  if (merged.atBats > 0) {
+    const avg = merged.hits / merged.atBats;
+    merged.avg = avg.toFixed(3).replace(/^0(?=\.)/, '');
+  } else {
+    merged.avg = '';
+  }
+  return merged;
+};
+
+/** Fetch a single hitter season stat line for a specific gameType (R or P) */
+const fetchHitterSeason = async (playerId, gameType) => {
+  const url =
+    `https://statsapi.mlb.com/api/v1/people/${playerId}` +
+    `?hydrate=stats(group=[hitting],type=[season],season=2025,gameType=[${gameType}])`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat || {};
+};
+
+/** Public: combined regular+postseason hitter stats */
+const fetchHitterStatsCombined = async (playerId) => {
+  try {
+    const [reg, post] = await Promise.all([
+      fetchHitterSeason(playerId, 'R'),
+      fetchHitterSeason(playerId, 'P'),
+    ]);
+    return mergeHittingStats(reg, post);
+  } catch {
+    return {};
+  }
+};
+
+/** Pitcher season stats scoped by gameType (kept separate for per-gameType display) */
+const fetchPitcherData = async (pitcherId, gameType = 'R') => {
+  if (!pitcherId)
+    return { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
+  const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}` +
+              `?hydrate=stats(group=[pitching],type=[season],season=2025,gameType=[${gameType}])`;
+  const response = await fetch(url);
+  const data = await response.json();
+  const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
+  const pitchHand = data.people?.[0]?.pitchHand?.code;
+  return stats
+    ? { ...stats, pitchHand }
+    : { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
+};
+
+/** Pitcher "last five" starts across Regular + ALL postseason rounds (F,D,L,W), with fallbacks */
+const fetchPitcherLastFiveStarts = async (pitcherId, gameDate, getTeamAbbreviation) => {
+  if (!pitcherId) return [];
+  const beforeDay = new Date(gameDate).toISOString().split('T')[0];
+
+  const fetchLogs = async (gameTypeParam) => {
+    const url =
+      `https://statsapi.mlb.com/api/v1/people/${pitcherId}/stats` +
+      `?stats=gameLog&group=pitching&season=2025&gameType=${gameTypeParam}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data?.stats?.[0]?.splits || [];
+  };
+
+  try {
+    // Primary: explicit round codes to capture all postseason logs
+    let splits = await fetchLogs('R,F,D,L,W');
+
+    // Fallbacks: some environments accept P; last resort R only
+    if (!Array.isArray(splits) || splits.length === 0) splits = await fetchLogs('R,P');
+    if (!Array.isArray(splits) || splits.length === 0) splits = await fetchLogs('R');
+
+    // strictly BEFORE current game to avoid including the same-day start
+    const prior = (splits || [])
+      .filter(g => g.date < beforeDay)
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const starts = prior.filter(g => (g.stat?.gamesStarted ?? 0) > 0);
+    const rows = (starts.length >= 5 ? starts : prior).slice(0, 10);
+
+    return rows.map((g) => {
+      // Robust team result resolution:
+      // 1) Explicit flags if present
+      // 2) Pitcher decision as fallback
+      // 3) If we still can't tell, infer from scores when available
+      let teamRes = '';
+
+      if (g.isWin === true) teamRes = 'W';
+      else if (g.isLoss === true) teamRes = 'L';
+      else if (g.stat?.decision === 'W' || g.stat?.decision === 'L') teamRes = g.stat.decision;
+      else if (typeof g.isWin === 'boolean') teamRes = g.isWin ? 'W' : 'L';
+      else if (g.team?.score != null && g.opponent?.score != null) {
+        teamRes = g.team.score > g.opponent.score ? 'W' : 'L';
+      }
+
+      const isPostseason = ['F', 'D', 'L', 'W', 'P'].includes(g.gameType);
+
+      return {
+        date: g.date,
+        opponent: getTeamAbbreviation?.(g.opponent?.id) || 'N/A',
+        inningsPitched: g.stat?.inningsPitched ?? 'N/A',
+        hits: g.stat?.hits ?? 'N/A',
+        earnedRuns: g.stat?.earnedRuns ?? 'N/A',
+        walks: g.stat?.baseOnBalls ?? 'N/A',
+        strikeouts: g.stat?.strikeOuts ?? 'N/A',
+        result: teamRes,   // ← now reliably "W" or "L"
+        isPostseason,
+      };
+    });
+  } catch (e) {
+    console.warn('fetchPitcherLastFiveStarts failed', e);
+    return [];
+  }
+};
+
 export const fetchGameData = async ({
   selectedDate,
   getTeamAbbreviation,
@@ -8,39 +137,48 @@ export const fetchGameData = async ({
   setTodayGames,
   setVisibleGames,
   setBatterGameLogs,
-  setLiveGameData, // ✅ added
+  setLiveGameData,
   setLoading,
 }) => {
   setLoading(true);
   try {
     const formatDate = (date) => format(date, 'yyyy-MM-dd');
     const todayFormatted = formatDate(selectedDate);
-    const url = `https://statsapi.mlb.com/api/v1/schedule?sportId=1&hydrate=probablePitcher,lineups,person,stats(group=[hitting],type=[season],season=2025)&startDate=${todayFormatted}&endDate=${todayFormatted}`;
+
+    // Broad hydrate; we'll overwrite hitter seasonStats with combined R+P anyway
+    const url =
+      `https://statsapi.mlb.com/api/v1/schedule` +
+      `?sportId=1` +
+      `&hydrate=probablePitcher,lineups,person,` +
+      `stats(group=[hitting],type=[season],season=2025,gameType=[R,P])` +
+      `&startDate=${todayFormatted}&endDate=${todayFormatted}`;
+
     const response = await fetch(url);
     const data = await response.json();
 
-    const fetchPitcherData = async (pitcherId) => {
-      if (!pitcherId) return { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
-      const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}?hydrate=stats(group=[pitching],type=[season])`;
-      const response = await fetch(url);
+    /** Last 20 (kept from your code) */
+    const fetchLastTwentyGames = async (teamId, selectedDate) => {
+      const startDate = format(subDays(new Date(selectedDate), 30), 'yyyy-MM-dd');
+      const endDate = format(subDays(new Date(selectedDate), 1), 'yyyy-MM-dd');
+      const response = await fetch(
+        `https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${startDate}&endDate=${endDate}&teamId=${teamId}`
+      );
       const data = await response.json();
-      const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
-      const pitchHand = data.people?.[0]?.pitchHand?.code;
-      return stats ? { ...stats, pitchHand } : { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
+      const games = data.dates?.flatMap((date) => date.games) || [];
+      return games
+        .filter((game) => ['Final', 'Completed Early'].includes(game.status.detailedState))
+        .slice(-14);
     };
 
-    const fetchHitterStats = async (playerId) => {
-      try {
-        const url = `https://statsapi.mlb.com/api/v1/people/${playerId}?hydrate=stats(group=[hitting],type=[season],season=2025)`;
-        const res = await fetch(url);
-        const data = await res.json();
-        return data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat || {};
-      } catch {
-        return {};
-      }
-    };
-
-    const fetchBatterLogsForTeam = async (teamId, teamName, gameDate, getTeamAbbreviation) => {
+    /**
+     * Team-level: preload combined season stats and logs (R+P) for every batter.
+     */
+    const fetchBatterLogsForTeam = async (
+      teamId,
+      teamName,
+      gameDate,
+      getTeamAbbreviation
+    ) => {
       const logs = {};
       const filteredRoster = [];
 
@@ -54,13 +192,34 @@ export const fetchGameData = async ({
         const playerIds = batters.map((b) => b.person.id);
         const idString = playerIds.join(',');
 
-        const seasonUrl = `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2025)`;
-        const seasonRes = await fetch(seasonUrl);
-        const seasonData = await seasonRes.json();
+        // Pull both seasons in bulk for hitters
+        const [seasonResR, seasonResP] = await Promise.all([
+          fetch(
+            `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2025,gameType=[R])`
+          ),
+          fetch(
+            `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2025,gameType=[P])`
+          ),
+        ]);
+
+        const [seasonDataR, seasonDataP] = await Promise.all([
+          seasonResR.json(),
+          seasonResP.json(),
+        ]);
+
+        const mapFrom = (people) => {
+          const m = {};
+          for (const person of people?.people || []) {
+            m[person.id] = person.stats?.[0]?.splits?.[0]?.stat || {};
+          }
+          return m;
+        };
+        const mapR = mapFrom(seasonDataR);
+        const mapP = mapFrom(seasonDataP);
 
         const seasonStatsMap = {};
-        for (const person of seasonData.people || []) {
-          seasonStatsMap[person.id] = person.stats?.[0]?.splits?.[0]?.stat || {};
+        for (const pid of playerIds) {
+          seasonStatsMap[pid] = mergeHittingStats(mapR[pid], mapP[pid]);
         }
 
         const beforeDay = new Date(gameDate).toISOString().split('T')[0];
@@ -69,7 +228,10 @@ export const fetchGameData = async ({
           const fullName = batter.person.fullName;
           const playerId = batter.person.id;
 
-          const logUrl = `https://statsapi.mlb.com/api/v1/people/${playerId}/stats?stats=gameLog&group=hitting&season=2025`;
+          // Logs across regular + postseason
+          const logUrl =
+            `https://statsapi.mlb.com/api/v1/people/${playerId}/stats` +
+            `?stats=gameLog&group=hitting&season=2025&gameType=R,P`;
 
           try {
             const logRes = await fetch(logUrl);
@@ -77,31 +239,33 @@ export const fetchGameData = async ({
             const splits = logData.stats?.[0]?.splits || [];
 
             const filtered = splits
-              .filter(game => game.date < beforeDay)
+              .filter((game) => game.date < beforeDay)
               .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            if (filtered.length > 0) {
-              logs[fullName] = filtered.map((game) => ({
-                date: game.date,
-                opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
-                avg: game.stat?.avg ?? 'N/A',
-                hits: game.stat?.hits ?? 'N/A',
-                rbi: game.stat?.rbi ?? 'N/A',
-                homeRuns: game.stat?.homeRuns ?? 'N/A',
-                stolenBases: game.stat?.stolenBases ?? 'N/A',
-                atBats: game.stat?.atBats ?? 'N/A',
-                runs: game.stat?.runs ?? 'N/A',
-                baseOnBalls: game.stat?.baseOnBalls ?? 'N/A',
-                strikeOuts: game.stat?.strikeOuts ?? 'N/A',
-              }));
+            logs[fullName] = filtered.map((game) => ({
+              date: game.date,
+              opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
+              avg: game.stat?.avg ?? 'N/A',
+              hits: game.stat?.hits ?? 'N/A',
+              rbi: game.stat?.rbi ?? 'N/A',
+              homeRuns: game.stat?.homeRuns ?? 'N/A',
+              stolenBases: game.stat?.stolenBases ?? 'N/A',
+              atBats: game.stat?.atBats ?? 'N/A',
+              runs: game.stat?.runs ?? 'N/A',
+              baseOnBalls: game.stat?.baseOnBalls ?? 'N/A',
+              strikeOuts: game.stat?.strikeOuts ?? 'N/A',
+            }));
 
-              filteredRoster.push({
-                ...batter,
-                seasonStats: seasonStatsMap[playerId] || {},
-              });
-            }
+            filteredRoster.push({
+              ...batter,
+              seasonStats: seasonStatsMap[playerId] || {},
+            });
           } catch (err) {
             console.warn(`Failed to load logs for ${fullName}:`, err);
+            filteredRoster.push({
+              ...batter,
+              seasonStats: seasonStatsMap[playerId] || {},
+            });
           }
         });
 
@@ -113,67 +277,94 @@ export const fetchGameData = async ({
       return { logs, roster: filteredRoster };
     };
 
-    const fetchLastTwentyGames = async (teamId, selectedDate) => {
-      const startDate = format(subDays(new Date(selectedDate), 30), 'yyyy-MM-dd');
-      const endDate = format(subDays(new Date(selectedDate), 1), 'yyyy-MM-dd');
-      const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${startDate}&endDate=${endDate}&teamId=${teamId}`);
-      const data = await response.json();
-      const games = data.dates?.flatMap(date => date.games) || [];
-      return games.filter(game => ['Final', 'Completed Early'].includes(game.status.detailedState)).slice(-14);//14 is max limit before hitting weird formatting issue in postseason
-    };
+    // Build enriched games (hitters combined R+P; pitchers augmented with lastFiveStarts R+P)
+    const games = await Promise.all(
+      (data.dates || []).map(async (gameDay) => {
+        return {
+          ...gameDay,
+          games: await Promise.all(
+            gameDay.games.map(async (game) => {
+              const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
+              const gameData = await fetch(liveGameUrl).then((res) => res.json());
+              const gameType = getGameType(game);
 
-    const games = await Promise.all((data.dates || []).map(async (gameDay) => {
-      return {
-        ...gameDay,
-        games: await Promise.all(gameDay.games.map(async (game) => {
-          const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
-          const gameData = await fetch(liveGameUrl).then(res => res.json());
+              const awayPitcherId = game.teams.away.probablePitcher?.id;
+              const homePitcherId = game.teams.home.probablePitcher?.id;
 
-          const awayPitcherStats = await fetchPitcherData(game.teams.away.probablePitcher?.id);
-          const homePitcherStats = await fetchPitcherData(game.teams.home.probablePitcher?.id);
+              const awayPitcherStats = await fetchPitcherData(awayPitcherId, gameType);
+              const homePitcherStats = await fetchPitcherData(homePitcherId, gameType);
 
-          const awayLastTwentyGames = await fetchLastTwentyGames(game.teams.away.team.id, selectedDate);
-          const homeLastTwentyGames = await fetchLastTwentyGames(game.teams.home.team.id, selectedDate);
+              // Attach last 5 starts (R + all postseason rounds)
+              const awayLastFiveStarts = await fetchPitcherLastFiveStarts(
+                awayPitcherId,
+                game.gameDate,
+                getTeamAbbreviation
+              );
+              const homeLastFiveStarts = await fetchPitcherLastFiveStarts(
+                homePitcherId,
+                game.gameDate,
+                getTeamAbbreviation
+              );
 
-          if (game.lineups?.awayPlayers) {
-            game.lineups.awayPlayers = await Promise.all(
-              game.lineups.awayPlayers.map(async (player) => {
-                const stats = await fetchHitterStats(player.id);
-                return { ...player, seasonStats: stats };
-              })
-            );
-          }
+              const awayLastTwentyGames = await fetchLastTwentyGames(
+                game.teams.away.team.id,
+                selectedDate
+              );
+              const homeLastTwentyGames = await fetchLastTwentyGames(
+                game.teams.home.team.id,
+                selectedDate
+              );
 
-          if (game.lineups?.homePlayers) {
-            game.lineups.homePlayers = await Promise.all(
-              game.lineups.homePlayers.map(async (player) => {
-                const stats = await fetchHitterStats(player.id);
-                return { ...player, seasonStats: stats };
-              })
-            );
-          }
-
-          return {
-            ...game,
-            liveData: gameData,
-            teams: {
-              ...game.teams,
-              away: {
-                ...game.teams.away,
-                probablePitcher: { ...game.teams.away.probablePitcher, ...awayPitcherStats },
-                lastTwentyGames: awayLastTwentyGames
-              },
-              home: {
-                ...game.teams.home,
-                probablePitcher: { ...game.teams.home.probablePitcher, ...homePitcherStats },
-                lastTwentyGames: homeLastTwentyGames
+              // Overwrite lineup players' seasonStats with combined R+P
+              if (game.lineups?.awayPlayers) {
+                game.lineups.awayPlayers = await Promise.all(
+                  game.lineups.awayPlayers.map(async (player) => {
+                    const stats = await fetchHitterStatsCombined(player.id);
+                    return { ...player, seasonStats: stats };
+                  })
+                );
               }
-            }
-          };
-        }))
-      };
-    }));
+              if (game.lineups?.homePlayers) {
+                game.lineups.homePlayers = await Promise.all(
+                  game.lineups.homePlayers.map(async (player) => {
+                    const stats = await fetchHitterStatsCombined(player.id);
+                    return { ...player, seasonStats: stats };
+                  })
+                );
+              }
 
+              return {
+                ...game,
+                liveData: gameData,
+                teams: {
+                  ...game.teams,
+                  away: {
+                    ...game.teams.away,
+                    probablePitcher: {
+                      ...game.teams.away.probablePitcher,
+                      ...awayPitcherStats,
+                      lastFiveStarts: awayLastFiveStarts,
+                    },
+                    lastTwentyGames: awayLastTwentyGames,
+                  },
+                  home: {
+                    ...game.teams.home,
+                    probablePitcher: {
+                      ...game.teams.home.probablePitcher,
+                      ...homePitcherStats,
+                      lastFiveStarts: homeLastFiveStarts,
+                    },
+                    lastTwentyGames: homeLastTwentyGames,
+                  },
+                },
+              };
+            })
+          ),
+        };
+      })
+    );
+
+    // Background colors
     const backgroundColors = {};
     games.forEach((gameDay) => {
       gameDay.games.forEach((game) => {
@@ -201,17 +392,18 @@ export const fetchGameData = async ({
 
         backgroundColors[gamePk] = {
           away: getTeamBackgroundColor(game.teams.away.team.id),
-          home: getTeamBackgroundColor(game.teams.home.team.id)
+          home: getTeamBackgroundColor(game.teams.home.team.id),
         };
       });
     });
 
+    // Sorts
     games.forEach((gameDay) => {
       gameDay.games.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
     });
 
     const sortedGames = games
-      .flatMap(date => date.games)
+      .flatMap((date) => date.games)
       .sort((a, b) => {
         const getEffectiveDate = (game) => {
           const detailedState = game.liveData?.gameData?.status?.detailedState;
@@ -229,18 +421,19 @@ export const fetchGameData = async ({
     setGameBackgroundColors(backgroundColors);
     setTodayGames(games);
     setVisibleGames(sortedGames);
-    // Extract liveGameData from enriched game objects
+
+    // liveGameData map
     const liveGameDataMap = {};
     for (const gameDay of games) {
       for (const game of gameDay.games) {
         liveGameDataMap[game.gamePk] = game.liveData;
       }
     }
-    setLiveGameData(liveGameDataMap); // ✅ now it's in sync with setTodayGames
+    setLiveGameData(liveGameDataMap);
 
-    setLoading(false); // ✅ Allow UI to render immediately
+    setLoading(false);
 
-    // 🔄 Fetch batter logs in background
+    // 🔄 Combined-season batter logs preload (R+P)
     (async () => {
       const batterLogs = {};
       const teamFetchTasks = [];
@@ -268,7 +461,6 @@ export const fetchGameData = async ({
       await Promise.all(teamFetchTasks);
       setBatterGameLogs(batterLogs);
     })();
-
   } catch (error) {
     console.error('Error fetching game data:', error);
     setLoading(false);

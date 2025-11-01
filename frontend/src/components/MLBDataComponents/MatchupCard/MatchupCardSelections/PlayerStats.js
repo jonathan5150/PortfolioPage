@@ -17,6 +17,9 @@ const PlayerStats = ({
   const awayRoster = batterGameLogs[awayTeamId]?.roster || [];
   const homeRoster = batterGameLogs[homeTeamId]?.roster || [];
 
+  // Postseason awareness: MLB schedule uses gameType 'R' for regular, 'P' (or round codes) for postseason
+  const isPostseason = (game?.gameType && game.gameType !== 'R');
+
   const [selectedTeam, setSelectedTeam] = useState(() => {
     const cookie = Cookies.get('playerStatsTeam');
     const parsed = parseInt(cookie);
@@ -77,6 +80,7 @@ const PlayerStats = ({
     if (!gamesPlayed || !stat || stat === 0) return '–';
     const value = (gamesPlayed / stat).toFixed(1);
     return value.endsWith('.0') ? value.slice(0, -2) : value;
+    // (Note: this is actually "games per event"; keep if you like that wording.)
   };
 
   const renderGamesSinceStat = (logs = [], statKey) => {
@@ -107,7 +111,14 @@ const PlayerStats = ({
   };
 
   const renderPlayerTable = (teamName, players, teamId) => {
-    const filteredPlayers = players.filter(p => (p.seasonStats?.gamesPlayed || 0) >= 20);
+    // 🔧 Lower GP threshold in postseason so the table isn't empty
+    const minGP = isPostseason ? 1 : 20;
+    let filteredPlayers = players.filter(p => (p.seasonStats?.gamesPlayed || 0) >= minGP);
+
+    // If still empty (very early in postseason), show everyone with any stat row
+    if (filteredPlayers.length === 0) {
+      filteredPlayers = players.filter(p => p.seasonStats);
+    }
     const sortedPlayers = sortPlayers(filteredPlayers);
 
     return (
@@ -133,7 +144,7 @@ const PlayerStats = ({
               const stats = player.seasonStats || {};
               const gp = stats.gamesPlayed || 0;
               const playerName = player.fullName || player.person?.fullName || '';
-              const logs = batterGameLogs[teamId]?.logs?.[playerName] || [];
+              const logs = batterGameLogs?.[teamId]?.logs?.[playerName] || [];
 
               const perStats = {
                 hits: renderGamesPerStat(stats.hits, gp),
@@ -173,6 +184,7 @@ const PlayerStats = ({
                 if (isNaN(last15Val) || isNaN(seasonVal)) return undefined;
                 return last15Val <= seasonVal * 0.8 ? 'orange' : undefined;
               };
+
               return (
                 <React.Fragment key={player.person?.id || index}>
                   <tr>
@@ -181,8 +193,12 @@ const PlayerStats = ({
                         setContentKey('batter-gamelog');
                         setSelectedPlayers(teamId, playerName);
                         setTimeout(() => {
-                          const dropdown = document.querySelector(`select[value="${playerName}"]`);
-                          if (dropdown) dropdown.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          const dropdowns = document.querySelectorAll('select');
+                          dropdowns.forEach((el) => {
+                            if (el.value === playerName) {
+                              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
+                          });
                         }, 50);
                       }}
                       style={{
@@ -245,6 +261,11 @@ const PlayerStats = ({
                 </React.Fragment>
               );
             })}
+            {sortedPlayers.length === 0 && (
+              <tr><td colSpan={9} style={{ textAlign: 'center', padding: '6px 0', color: '#aaa' }}>
+                No player stats available.
+              </td></tr>
+            )}
           </tbody>
         </table>
       </div>
