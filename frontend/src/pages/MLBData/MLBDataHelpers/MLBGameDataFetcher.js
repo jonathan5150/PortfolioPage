@@ -119,7 +119,7 @@ export const fetchGameData = async ({
       const response = await fetch(`https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${startDate}&endDate=${endDate}&teamId=${teamId}`);
       const data = await response.json();
       const games = data.dates?.flatMap(date => date.games) || [];
-      return games.filter(game => ['Final', 'Completed Early'].includes(game.status.detailedState)).slice(-20);
+      return games.filter(game => ['Final', 'Completed Early'].includes(game.status.detailedState)).slice(-14);//14 is max limit before hitting weird formatting issue in postseason
     };
 
     const games = await Promise.all((data.dates || []).map(async (gameDay) => {
