@@ -31,7 +31,7 @@ const mergeHittingStats = (a = {}, b = {}) => {
 const fetchHitterSeason = async (playerId, gameType) => {
   const url =
     `https://statsapi.mlb.com/api/v1/people/${playerId}` +
-    `?hydrate=stats(group=[hitting],type=[season],season=2025,gameType=[${gameType}])`;
+    `?hydrate=stats(group=[hitting],type=[season],season=2026,gameType=[${gameType}])`;
   const res = await fetch(url);
   const data = await res.json();
   return data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat || {};
@@ -55,7 +55,7 @@ const fetchPitcherData = async (pitcherId, gameType = 'R') => {
   if (!pitcherId)
     return { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
   const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}` +
-              `?hydrate=stats(group=[pitching],type=[season],season=2025,gameType=[${gameType}])`;
+              `?hydrate=stats(group=[pitching],type=[season],season=2026,gameType=[${gameType}])`;
   const response = await fetch(url);
   const data = await response.json();
   const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
@@ -73,7 +73,7 @@ const fetchPitcherLastFiveStarts = async (pitcherId, gameDate, getTeamAbbreviati
   const fetchLogs = async (gameTypeParam) => {
     const url =
       `https://statsapi.mlb.com/api/v1/people/${pitcherId}/stats` +
-      `?stats=gameLog&group=pitching&season=2025&gameType=${gameTypeParam}`;
+      `?stats=gameLog&group=pitching&season=2026&gameType=${gameTypeParam}`;
     const res = await fetch(url);
     const data = await res.json();
     return data?.stats?.[0]?.splits || [];
@@ -150,7 +150,7 @@ export const fetchGameData = async ({
       `https://statsapi.mlb.com/api/v1/schedule` +
       `?sportId=1` +
       `&hydrate=probablePitcher,lineups,person,` +
-      `stats(group=[hitting],type=[season],season=2025,gameType=[R,P])` +
+      `stats(group=[hitting],type=[season],season=2026,gameType=[R,P])` +
       `&startDate=${todayFormatted}&endDate=${todayFormatted}`;
 
     const response = await fetch(url);
@@ -195,10 +195,10 @@ export const fetchGameData = async ({
         // Pull both seasons in bulk for hitters
         const [seasonResR, seasonResP] = await Promise.all([
           fetch(
-            `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2025,gameType=[R])`
+            `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2026,gameType=[R])`
           ),
           fetch(
-            `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2025,gameType=[P])`
+            `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2026,gameType=[P])`
           ),
         ]);
 
@@ -231,7 +231,7 @@ export const fetchGameData = async ({
           // Logs across regular + postseason
           const logUrl =
             `https://statsapi.mlb.com/api/v1/people/${playerId}/stats` +
-            `?stats=gameLog&group=hitting&season=2025&gameType=R,P`;
+            `?stats=gameLog&group=hitting&season=2026&gameType=R,P`;
 
           try {
             const logRes = await fetch(logUrl);
