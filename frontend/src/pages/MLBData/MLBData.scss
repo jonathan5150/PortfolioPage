@@ -478,8 +478,9 @@ select:focus {
 }
 
 .last-twenty-column {
+  flex: 0 0 20%;   /* 🔑 no grow, fixed 20% width */
+  max-width: 20%;
   min-width: 60px;
-  flex: 1 0 20%;
   padding: 3px 6px;
   text-align: center;
   box-sizing: border-box;
@@ -499,6 +500,8 @@ select:focus {
 .team-row {
   display: flex;
   flex-wrap: nowrap;
+  width: 100%;
+  justify-content: flex-end; /* 🔑 THIS is the missing piece */
 }
 
 .scroll-wrapper {

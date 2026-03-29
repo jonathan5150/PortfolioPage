@@ -166,8 +166,12 @@ export const fetchGameData = async ({
       const data = await response.json();
       const games = data.dates?.flatMap((date) => date.games) || [];
       return games
-        .filter((game) => ['Final', 'Completed Early'].includes(game.status.detailedState))
-        .slice(-14);
+          .filter(
+            (game) =>
+              game.gameType === 'R' &&
+              ['Final', 'Completed Early'].includes(game.status.detailedState)
+          )
+          .slice(-20);
     };
 
     /**
