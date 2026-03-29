@@ -80,8 +80,7 @@ const BeforeAfterScoreBug = ({
     return (
       <div
         className="team-cell"
-        style={{ display: 'flex', cursor: 'pointer', position: 'relative' }}
-        onClick={() => handleStarClick(gamePk, team.id)}
+        style={{ display: 'flex', cursor: 'default', position: 'relative' }}
       >
         {gradientColor && (
           <div
@@ -131,9 +130,6 @@ const BeforeAfterScoreBug = ({
                 WebkitTapHighlightColor: 'transparent',
               }}
             />
-            {starredTeams[gamePk] === team.id && (
-              <div className="star-icon" style={{ position: 'absolute', top: '0', right: '-8px' }}>⭐</div>
-            )}
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}>

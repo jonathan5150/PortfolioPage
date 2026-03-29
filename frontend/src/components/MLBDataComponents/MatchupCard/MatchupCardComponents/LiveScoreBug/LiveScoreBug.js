@@ -126,7 +126,6 @@ const LiveScoreBug = ({
       <div
         className="team-cell"
         style={{ display: 'flex', cursor: 'pointer', position: 'relative', margin: cellMargin }}
-        onClick={() => handleStarClick(gamePk, team.id)}
       >
         {color && (
           <div
@@ -176,9 +175,6 @@ const LiveScoreBug = ({
                 WebkitTapHighlightColor: 'transparent',
               }}
             />
-            {starredTeams[gamePk] === team.id && (
-              <div className="star-icon" style={{ position: 'absolute', top: '0', right: '-8px' }}>⭐</div>
-            )}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}>
             <div className="abbreviation" style={{ height: '30px', fontWeight: 'bold', color: '#fff', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{abbr}</div>
