@@ -1786,28 +1786,37 @@ select:focus {
      cursor: grabbing;
    }
 
+   .last-twenty {
+     width: 100%;
+     overflow: hidden;
+   }
+
+   .games-container {
+     overflow-x: auto;
+     cursor: grab;
+     box-sizing: border-box;
+   }
+
+   .games-container:active {
+     cursor: grabbing;
+   }
+
    .games-track {
      display: inline-flex;
      flex-direction: column;
      width: max-content;
      min-width: 100%;
-     box-sizing: border-box;
    }
 
    .team-row {
      display: flex;
      flex-wrap: nowrap;
-     justify-content: flex-end;
      width: 100%;
+     justify-content: flex-end;
    }
 
    .last-twenty-column {
-     flex: 0 0 57.8px;
-     width: 57.8px;
-     min-width: 57.8px;
-     max-width: 57.8px;
      padding: 3px 4px;
-     margin-right: 2.3px;
      box-sizing: border-box;
      text-align: center;
      font-size: 11px;
@@ -1827,6 +1836,8 @@ select:focus {
      outline: 1.5px solid #555555;
      border-radius: 3px;
      padding: 1px 3px;
+     width: 100%;
+     box-sizing: border-box;
    }
 
    .team-cell {

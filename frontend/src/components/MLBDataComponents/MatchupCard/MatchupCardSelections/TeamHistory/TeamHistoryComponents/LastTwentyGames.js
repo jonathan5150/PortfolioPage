@@ -1,25 +1,82 @@
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
+
+const VISIBLE_COLUMNS = 6;
 
 const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
   const containerRef = useRef(null);
+  const trackRef = useRef(null);
+
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [startScrollLeft, setStartScrollLeft] = useState(0);
+  const [columnWidth, setColumnWidth] = useState(60);
 
-  useLayoutEffect(() => {
+  const scrollToRight = useCallback(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const resetToRight = () => {
-      el.scrollLeft = Math.max(0, el.scrollWidth - el.clientWidth);
+    el.scrollLeft = el.scrollWidth - el.clientWidth;
+  }, []);
+
+  const updateColumnWidth = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const availableWidth = el.clientWidth;
+    const nextWidth = Math.floor(availableWidth / VISIBLE_COLUMNS);
+
+    setColumnWidth(Math.max(nextWidth, 1));
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    const track = trackRef.current;
+    if (!el || !track) return;
+
+    updateColumnWidth();
+    scrollToRight();
+
+    const raf1 = requestAnimationFrame(() => {
+      updateColumnWidth();
+      scrollToRight();
+    });
+
+    const raf2 = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        updateColumnWidth();
+        scrollToRight();
+      });
+    });
+
+    let resizeObserver;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        updateColumnWidth();
+        scrollToRight();
+      });
+      resizeObserver.observe(el);
+      resizeObserver.observe(track);
+    }
+
+    const handleResize = () => {
+      updateColumnWidth();
+      scrollToRight();
     };
 
-    resetToRight();
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('load', handleResize);
+    window.addEventListener('pageshow', handleResize);
 
-    const raf = requestAnimationFrame(resetToRight);
-    return () => cancelAnimationFrame(raf);
-  }, [awayGames, homeGames]);
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('load', handleResize);
+      window.removeEventListener('pageshow', handleResize);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, [awayGames, homeGames, scrollToRight, updateColumnWidth]);
 
   const handleMouseDown = (e) => {
     const el = containerRef.current;
@@ -42,6 +99,13 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
     el.scrollLeft = startScrollLeft - walk;
   };
 
+  const columnStyle = {
+    flex: `0 0 ${columnWidth}px`,
+    width: `${columnWidth}px`,
+    minWidth: `${columnWidth}px`,
+    maxWidth: `${columnWidth}px`,
+  };
+
   const renderRow = (games, selectedTeamId) =>
     games.slice(0, 20).map((game, index) => {
       const awayScore = game.teams.away.score;
@@ -56,7 +120,11 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
         : 'rgba(255, 0, 0, 0.1)';
 
       return (
-        <div key={index} className="last-twenty-column">
+        <div
+          key={`${game.gamePk ?? game.gameDate ?? index}-${index}`}
+          className="last-twenty-column"
+          style={columnStyle}
+        >
           <div className="last-twenty-row date">
             {format(new Date(game.gameDate), 'M/d')}
           </div>
@@ -85,7 +153,7 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
         onMouseUp={stopDragging}
         onMouseMove={handleMouseMove}
       >
-        <div className="games-track">
+        <div className="games-track" ref={trackRef}>
           <div className="team-row">{renderRow(awayGames, awayTeamId)}</div>
           <div className="team-row">{renderRow(homeGames, homeTeamId)}</div>
         </div>
