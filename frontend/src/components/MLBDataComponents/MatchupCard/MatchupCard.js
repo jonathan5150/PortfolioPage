@@ -248,7 +248,6 @@ const MatchupCard = ({
                           getTeamLogo,
                           gameBackgroundColors,
                           starredTeams,
-                          getTeamRecord,
                           getTeamAbbreviation,
                           liveData: liveData?.liveData,
                         }}
@@ -262,7 +261,6 @@ const MatchupCard = ({
                           getTeamLogo,
                           gameBackgroundColors,
                           starredTeams,
-                          getTeamRecord,
                           getTeamAbbreviation,
                           liveData,
                         }}

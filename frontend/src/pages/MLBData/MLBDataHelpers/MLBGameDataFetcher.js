@@ -6,7 +6,8 @@ const getGameType = (game) => (game?.gameType ? String(game.gameType) : 'R');
 
 /** Merge two hitting stat lines (regular & postseason) into one */
 const mergeHittingStats = (a = {}, b = {}) => {
-  const sum = (k) => (Number(a[k] || 0) + Number(b[k] || 0));
+  const sum = (k) => Number(a[k] || 0) + Number(b[k] || 0);
+
   const merged = {
     gamesPlayed: sum('gamesPlayed'),
     hits: sum('hits'),
@@ -18,13 +19,63 @@ const mergeHittingStats = (a = {}, b = {}) => {
     atBats: sum('atBats'),
     runs: sum('runs'),
   };
+
   if (merged.atBats > 0) {
     const avg = merged.hits / merged.atBats;
     merged.avg = avg.toFixed(3).replace(/^0(?=\.)/, '');
   } else {
     merged.avg = '';
   }
+
   return merged;
+};
+
+/** Format a record object into W-L */
+const formatRecord = (record) => {
+  if (!record) return '0-0';
+
+  const wins = Number(record.wins ?? 0);
+  const losses = Number(record.losses ?? 0);
+
+  return `${wins}-${losses}`;
+};
+
+/**
+ * Get the team's record BEFORE the scheduled game.
+ *
+ * For completed games, the schedule object's leagueRecord is often postgame,
+ * so we subtract the result of that game to get the pregame record.
+ */
+const getPregameRecordFromScheduledGame = (team, opponent, game) => {
+  const leagueRecord = team?.leagueRecord;
+  if (!leagueRecord) return '0-0';
+
+  let wins = Number(leagueRecord.wins ?? 0);
+  let losses = Number(leagueRecord.losses ?? 0);
+
+  const detailedState = game?.status?.detailedState ?? '';
+  const isFinalLike =
+    detailedState === 'Final' ||
+    detailedState === 'Completed Early' ||
+    detailedState === 'Game Over';
+
+  const teamScore = Number(team?.score);
+  const opponentScore = Number(opponent?.score);
+
+  const hasValidScores =
+    Number.isFinite(teamScore) &&
+    Number.isFinite(opponentScore) &&
+    teamScore !== opponentScore;
+
+  if (isFinalLike && hasValidScores) {
+    if (teamScore > opponentScore) {
+      wins -= 1;
+    } else {
+      losses -= 1;
+    }
+  }
+
+  return `${Math.max(0, wins)}-${Math.max(0, losses)}`;
 };
 
 /** Fetch a single hitter season stat line for a specific gameType (R or P) */
@@ -32,6 +83,7 @@ const fetchHitterSeason = async (playerId, gameType) => {
   const url =
     `https://statsapi.mlb.com/api/v1/people/${playerId}` +
     `?hydrate=stats(group=[hitting],type=[season],season=2026,gameType=[${gameType}])`;
+
   const res = await fetch(url);
   const data = await res.json();
   return data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat || {};
@@ -52,17 +104,32 @@ const fetchHitterStatsCombined = async (playerId) => {
 
 /** Pitcher season stats scoped by gameType (kept separate for per-gameType display) */
 const fetchPitcherData = async (pitcherId, gameType = 'R') => {
-  if (!pitcherId)
-    return { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
-  const url = `https://statsapi.mlb.com/api/v1/people/${pitcherId}` +
-              `?hydrate=stats(group=[pitching],type=[season],season=2026,gameType=[${gameType}])`;
+  if (!pitcherId) {
+    return {
+      era: 'N/A',
+      inningsPitched: 'N/A',
+      gamesPlayed: 'N/A',
+      pitchHand: 'N/A',
+    };
+  }
+
+  const url =
+    `https://statsapi.mlb.com/api/v1/people/${pitcherId}` +
+    `?hydrate=stats(group=[pitching],type=[season],season=2026,gameType=[${gameType}])`;
+
   const response = await fetch(url);
   const data = await response.json();
   const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
   const pitchHand = data.people?.[0]?.pitchHand?.code;
+
   return stats
     ? { ...stats, pitchHand }
-    : { era: 'N/A', inningsPitched: 'N/A', gamesPlayed: 'N/A', pitchHand: 'N/A' };
+    : {
+        era: 'N/A',
+        inningsPitched: 'N/A',
+        gamesPlayed: 'N/A',
+        pitchHand: 'N/A',
+      };
 };
 
 /** Pitcher "last five" starts across Regular + ALL postseason rounds (F,D,L,W), with fallbacks */
@@ -89,17 +156,13 @@ const fetchPitcherLastFiveStarts = async (pitcherId, gameDate, getTeamAbbreviati
 
     // strictly BEFORE current game to avoid including the same-day start
     const prior = (splits || [])
-      .filter(g => g.date < beforeDay)
+      .filter((g) => g.date < beforeDay)
       .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    const starts = prior.filter(g => (g.stat?.gamesStarted ?? 0) > 0);
+    const starts = prior.filter((g) => (g.stat?.gamesStarted ?? 0) > 0);
     const rows = (starts.length >= 5 ? starts : prior).slice(0, 10);
 
     return rows.map((g) => {
-      // Robust team result resolution:
-      // 1) Explicit flags if present
-      // 2) Pitcher decision as fallback
-      // 3) If we still can't tell, infer from scores when available
       let teamRes = '';
 
       if (g.isWin === true) teamRes = 'W';
@@ -120,7 +183,7 @@ const fetchPitcherLastFiveStarts = async (pitcherId, gameDate, getTeamAbbreviati
         earnedRuns: g.stat?.earnedRuns ?? 'N/A',
         walks: g.stat?.baseOnBalls ?? 'N/A',
         strikeouts: g.stat?.strikeOuts ?? 'N/A',
-        result: teamRes,   // ← now reliably "W" or "L"
+        result: teamRes,
         isPostseason,
       };
     });
@@ -141,11 +204,11 @@ export const fetchGameData = async ({
   setLoading,
 }) => {
   setLoading(true);
+
   try {
     const formatDate = (date) => format(date, 'yyyy-MM-dd');
     const todayFormatted = formatDate(selectedDate);
 
-    // Broad hydrate; we'll overwrite hitter seasonStats with combined R+P anyway
     const url =
       `https://statsapi.mlb.com/api/v1/schedule` +
       `?sportId=1` +
@@ -156,22 +219,25 @@ export const fetchGameData = async ({
     const response = await fetch(url);
     const data = await response.json();
 
-    /** Last 20 (kept from your code) */
-    const fetchLastTwentyGames = async (teamId, selectedDate) => {
-      const startDate = format(subDays(new Date(selectedDate), 30), 'yyyy-MM-dd');
-      const endDate = format(subDays(new Date(selectedDate), 1), 'yyyy-MM-dd');
-      const response = await fetch(
+    /** Last 20 */
+    const fetchLastTwentyGames = async (teamId, selectedDateValue) => {
+      const startDate = format(subDays(new Date(selectedDateValue), 30), 'yyyy-MM-dd');
+      const endDate = format(subDays(new Date(selectedDateValue), 1), 'yyyy-MM-dd');
+
+      const gamesResponse = await fetch(
         `https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${startDate}&endDate=${endDate}&teamId=${teamId}`
       );
-      const data = await response.json();
-      const games = data.dates?.flatMap((date) => date.games) || [];
+
+      const gamesData = await gamesResponse.json();
+      const games = gamesData.dates?.flatMap((date) => date.games) || [];
+
       return games
-          .filter(
-            (game) =>
-              game.gameType === 'R' &&
-              ['Final', 'Completed Early'].includes(game.status.detailedState)
-          )
-          .slice(-20);
+        .filter(
+          (game) =>
+            game.gameType === 'R' &&
+            ['Final', 'Completed Early'].includes(game.status.detailedState)
+        )
+        .slice(-20);
     };
 
     /**
@@ -181,22 +247,22 @@ export const fetchGameData = async ({
       teamId,
       teamName,
       gameDate,
-      getTeamAbbreviation
+      getTeamAbbreviationFn
     ) => {
       const logs = {};
       const filteredRoster = [];
 
       try {
         const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster/40Man`);
-        const data = await res.json();
-        const batters = data.roster.filter(
+        const rosterData = await res.json();
+
+        const batters = rosterData.roster.filter(
           (b) => b.position?.abbreviation !== 'P' && b.person?.id
         );
 
         const playerIds = batters.map((b) => b.person.id);
         const idString = playerIds.join(',');
 
-        // Pull both seasons in bulk for hitters
         const [seasonResR, seasonResP] = await Promise.all([
           fetch(
             `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2026,gameType=[R])`
@@ -218,6 +284,7 @@ export const fetchGameData = async ({
           }
           return m;
         };
+
         const mapR = mapFrom(seasonDataR);
         const mapP = mapFrom(seasonDataP);
 
@@ -232,7 +299,6 @@ export const fetchGameData = async ({
           const fullName = batter.person.fullName;
           const playerId = batter.person.id;
 
-          // Logs across regular + postseason
           const logUrl =
             `https://statsapi.mlb.com/api/v1/people/${playerId}/stats` +
             `?stats=gameLog&group=hitting&season=2026&gameType=R,P`;
@@ -248,7 +314,7 @@ export const fetchGameData = async ({
 
             logs[fullName] = filtered.map((game) => ({
               date: game.date,
-              opponent: getTeamAbbreviation(game.opponent?.id) || 'N/A',
+              opponent: getTeamAbbreviationFn(game.opponent?.id) || 'N/A',
               avg: game.stat?.avg ?? 'N/A',
               hits: game.stat?.hits ?? 'N/A',
               rbi: game.stat?.rbi ?? 'N/A',
@@ -281,7 +347,6 @@ export const fetchGameData = async ({
       return { logs, roster: filteredRoster };
     };
 
-    // Build enriched games (hitters combined R+P; pitchers augmented with lastFiveStarts R+P)
     const games = await Promise.all(
       (data.dates || []).map(async (gameDay) => {
         return {
@@ -298,12 +363,12 @@ export const fetchGameData = async ({
               const awayPitcherStats = await fetchPitcherData(awayPitcherId, gameType);
               const homePitcherStats = await fetchPitcherData(homePitcherId, gameType);
 
-              // Attach last 5 starts (R + all postseason rounds)
               const awayLastFiveStarts = await fetchPitcherLastFiveStarts(
                 awayPitcherId,
                 game.gameDate,
                 getTeamAbbreviation
               );
+
               const homeLastFiveStarts = await fetchPitcherLastFiveStarts(
                 homePitcherId,
                 game.gameDate,
@@ -314,12 +379,12 @@ export const fetchGameData = async ({
                 game.teams.away.team.id,
                 selectedDate
               );
+
               const homeLastTwentyGames = await fetchLastTwentyGames(
                 game.teams.home.team.id,
                 selectedDate
               );
 
-              // Overwrite lineup players' seasonStats with combined R+P
               if (game.lineups?.awayPlayers) {
                 game.lineups.awayPlayers = await Promise.all(
                   game.lineups.awayPlayers.map(async (player) => {
@@ -328,6 +393,7 @@ export const fetchGameData = async ({
                   })
                 );
               }
+
               if (game.lineups?.homePlayers) {
                 game.lineups.homePlayers = await Promise.all(
                   game.lineups.homePlayers.map(async (player) => {
@@ -337,6 +403,18 @@ export const fetchGameData = async ({
                 );
               }
 
+              const awayPregameRecord = getPregameRecordFromScheduledGame(
+                game.teams.away,
+                game.teams.home,
+                game
+              );
+
+              const homePregameRecord = getPregameRecordFromScheduledGame(
+                game.teams.home,
+                game.teams.away,
+                game
+              );
+
               return {
                 ...game,
                 liveData: gameData,
@@ -344,6 +422,9 @@ export const fetchGameData = async ({
                   ...game.teams,
                   away: {
                     ...game.teams.away,
+                    currentRecord: formatRecord(game.teams.away.leagueRecord),
+                    pregameRecord: awayPregameRecord,
+                    displayRecord: awayPregameRecord,
                     probablePitcher: {
                       ...game.teams.away.probablePitcher,
                       ...awayPitcherStats,
@@ -353,6 +434,9 @@ export const fetchGameData = async ({
                   },
                   home: {
                     ...game.teams.home,
+                    currentRecord: formatRecord(game.teams.home.leagueRecord),
+                    pregameRecord: homePregameRecord,
+                    displayRecord: homePregameRecord,
                     probablePitcher: {
                       ...game.teams.home.probablePitcher,
                       ...homePitcherStats,
@@ -368,29 +452,34 @@ export const fetchGameData = async ({
       })
     );
 
-    // Background colors
     const backgroundColors = {};
     games.forEach((gameDay) => {
       gameDay.games.forEach((game) => {
         const gamePk = game.gamePk;
-        const gameData = game.liveData;
-        const statusCode = gameData?.gameData?.status?.statusCode;
+        const currentGameData = game.liveData;
+        const statusCode = currentGameData?.gameData?.status?.statusCode;
 
         const getTeamBackgroundColor = (teamId) => {
           const isFinished = ['F', 'O'].includes(statusCode);
           if (!statusCode || !isFinished) return 'rgba(85, 85, 85, 1)';
 
-          const homeScore = gameData.liveData.linescore.teams.home.runs;
-          const awayScore = gameData.liveData.linescore.teams.away.runs;
-          const homeId = gameData.liveData.boxscore.teams.home.team.id;
-          const awayId = gameData.liveData.boxscore.teams.away.team.id;
+          const homeScore = currentGameData.liveData.linescore.teams.home.runs;
+          const awayScore = currentGameData.liveData.linescore.teams.away.runs;
+          const homeId = currentGameData.liveData.boxscore.teams.home.team.id;
+          const awayId = currentGameData.liveData.boxscore.teams.away.team.id;
 
           if (teamId === homeId) {
-            return homeScore > awayScore ? 'rgba(0, 155, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+            return homeScore > awayScore
+              ? 'rgba(0, 155, 0, 0.3)'
+              : 'rgba(255, 0, 0, 0.3)';
           }
+
           if (teamId === awayId) {
-            return awayScore > homeScore ? 'rgba(0, 155, 0, 0.3)' : 'rgba(255, 0, 0, 0.3)';
+            return awayScore > homeScore
+              ? 'rgba(0, 155, 0, 0.3)'
+              : 'rgba(255, 0, 0, 0.3)';
           }
+
           return 'rgba(50, 50, 50, 0.9)';
         };
 
@@ -401,43 +490,41 @@ export const fetchGameData = async ({
       });
     });
 
-    // Sorts
     games.forEach((gameDay) => {
       gameDay.games.sort((a, b) => new Date(a.gameDate) - new Date(b.gameDate));
     });
 
-    const sortedGames = games
-      .flatMap((date) => date.games)
-      .sort((a, b) => {
-        const getEffectiveDate = (game) => {
-          const detailedState = game.liveData?.gameData?.status?.detailedState;
-          const originalDate = game.liveData?.gameData?.datetime?.originalDate;
-          const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
-          const original = originalDate ? format(new Date(originalDate), 'yyyy-MM-dd') : null;
-          if (detailedState?.includes('Postponed') && selected === original) {
-            return new Date(originalDate);
-          }
-          return new Date(game.gameDate);
-        };
-        return getEffectiveDate(a) - getEffectiveDate(b);
-      });
+    const sortedGames = games.flatMap((date) => date.games).sort((a, b) => {
+      const getEffectiveDate = (game) => {
+        const detailedState = game.liveData?.gameData?.status?.detailedState;
+        const originalDate = game.liveData?.gameData?.datetime?.originalDate;
+        const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
+        const original = originalDate ? format(new Date(originalDate), 'yyyy-MM-dd') : null;
+
+        if (detailedState?.includes('Postponed') && selected === original) {
+          return new Date(originalDate);
+        }
+
+        return new Date(game.gameDate);
+      };
+
+      return getEffectiveDate(a) - getEffectiveDate(b);
+    });
 
     setGameBackgroundColors(backgroundColors);
     setTodayGames(games);
     setVisibleGames(sortedGames);
 
-    // liveGameData map
     const liveGameDataMap = {};
     for (const gameDay of games) {
       for (const game of gameDay.games) {
         liveGameDataMap[game.gamePk] = game.liveData;
       }
     }
-    setLiveGameData(liveGameDataMap);
 
+    setLiveGameData(liveGameDataMap);
     setLoading(false);
 
-    // 🔄 Combined-season batter logs preload (R+P)
     (async () => {
       const batterLogs = {};
       const teamFetchTasks = [];

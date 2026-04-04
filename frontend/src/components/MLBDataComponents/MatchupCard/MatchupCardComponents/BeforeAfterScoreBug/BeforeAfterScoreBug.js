@@ -22,7 +22,7 @@ const teamPrimaryColors = {
   'Minnesota Twins': 'rgb(0, 43, 92)',
   'New York Yankees': 'rgb(12, 35, 64)',
   'New York Mets': 'rgb(0, 45, 114)',
-  'Athletics': 'rgb(0, 56, 49)',
+  Athletics: 'rgb(0, 56, 49)',
   'Philadelphia Phillies': 'rgb(232, 24, 40)',
   'Pittsburgh Pirates': 'rgb(253, 184, 39)',
   'San Diego Padres': 'rgb(255, 196, 37)',
@@ -43,15 +43,24 @@ const BeforeAfterScoreBug = ({
   gameBackgroundColors,
   starredTeams,
   getTeamAbbreviation,
-  getTeamRecord,
   liveData,
 }) => {
   const trueLiveData = liveData?.liveData ?? liveData;
-  const gameNotStarted = game.status.abstractGameState === 'Preview' || game.status.abstractGameState === 'Scheduled';
+
+  const gameNotStarted =
+    game.status.abstractGameState === 'Preview' ||
+    game.status.abstractGameState === 'Scheduled';
+
   const awayTeam = game.teams.away.team;
   const homeTeam = game.teams.home.team;
-  const awayScore = gameNotStarted ? '-' : trueLiveData?.linescore?.teams?.away?.runs ?? '-';
-  const homeScore = gameNotStarted ? '-' : trueLiveData?.linescore?.teams?.home?.runs ?? '-';
+
+  const awayScore = gameNotStarted
+    ? '-'
+    : trueLiveData?.linescore?.teams?.away?.runs ?? '-';
+
+  const homeScore = gameNotStarted
+    ? '-'
+    : trueLiveData?.linescore?.teams?.home?.runs ?? '-';
 
   const renderPitcherInfo = (team, pitcher) => (
     <div className="pitcher-details">
@@ -65,16 +74,16 @@ const BeforeAfterScoreBug = ({
           </div>
         </>
       ) : (
-        <span><b>P:</b> N/A</span>
+        <span>
+          <b>P:</b> N/A
+        </span>
       )}
     </div>
   );
 
-  const renderTeamCell = (team, score, side) => {
+  const renderTeamCell = (team, score, side, record) => {
     const abbr = getTeamAbbreviation(team.id);
-    const record = getTeamRecord(team.id);
     const teamName = team.name;
-
     const gradientColor = teamPrimaryColors[teamName] || null;
 
     return (
@@ -132,7 +141,9 @@ const BeforeAfterScoreBug = ({
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}
+          >
             <div
               className="abbreviation"
               style={{
@@ -147,6 +158,7 @@ const BeforeAfterScoreBug = ({
             >
               {abbr}
             </div>
+
             <div
               style={{
                 fontSize: '11px',
@@ -157,7 +169,7 @@ const BeforeAfterScoreBug = ({
                 alignItems: 'center',
               }}
             >
-              {record}
+              {record || '0-0'}
             </div>
           </div>
 
@@ -177,6 +189,9 @@ const BeforeAfterScoreBug = ({
     );
   };
 
+  const awayRecord = game.teams.away.displayRecord || game.teams.away.pregameRecord || '0-0';
+  const homeRecord = game.teams.home.displayRecord || game.teams.home.pregameRecord || '0-0';
+
   return (
     <div
       className="score-grid"
@@ -188,7 +203,7 @@ const BeforeAfterScoreBug = ({
       }}
     >
       <div style={{ margin: '2px' }}>
-        {renderTeamCell(awayTeam, awayScore, 'away')}
+        {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
       </div>
 
       <div
@@ -205,7 +220,7 @@ const BeforeAfterScoreBug = ({
       </div>
 
       <div style={{ margin: '2px' }}>
-        {renderTeamCell(homeTeam, homeScore, 'home')}
+        {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
       </div>
 
       <div

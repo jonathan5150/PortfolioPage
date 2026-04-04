@@ -21,7 +21,7 @@ const teamPrimaryColors = {
   'Minnesota Twins': 'rgb(0, 43, 92)',
   'New York Yankees': 'rgb(12, 35, 64)',
   'New York Mets': 'rgb(0, 45, 114)',
-  'Athletics': 'rgb(0, 56, 49)',
+  Athletics: 'rgb(0, 56, 49)',
   'Philadelphia Phillies': 'rgb(232, 24, 40)',
   'Pittsburgh Pirates': 'rgb(253, 184, 39)',
   'San Diego Padres': 'rgb(255, 196, 37)',
@@ -42,7 +42,6 @@ const LiveScoreBug = ({
   gameBackgroundColors,
   starredTeams,
   getTeamAbbreviation,
-  getTeamRecord,
   liveData,
 }) => {
   const trueLiveData = liveData?.liveData ?? liveData;
@@ -116,9 +115,11 @@ const LiveScoreBug = ({
 
   const cellMargin = '2px';
 
-  const renderTeamCell = (team, score, side) => {
+  const awayRecord = game.teams.away.displayRecord || game.teams.away.pregameRecord || '0-0';
+  const homeRecord = game.teams.home.displayRecord || game.teams.home.pregameRecord || '0-0';
+
+  const renderTeamCell = (team, score, side, record) => {
     const abbr = getTeamAbbreviation(team.id);
-    const record = getTeamRecord(team.id);
     const teamName = team.name;
     const color = teamPrimaryColors[teamName];
 
@@ -176,45 +177,154 @@ const LiveScoreBug = ({
               }}
             />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}>
-            <div className="abbreviation" style={{ height: '30px', fontWeight: 'bold', color: '#fff', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{abbr}</div>
-            <div style={{ fontSize: '11px', color: '#ccc', lineHeight: '12px', width: '60px', textAlign: 'center' }}>{record}</div>
+
+          <div
+            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}
+          >
+            <div
+              className="abbreviation"
+              style={{
+                height: '30px',
+                fontWeight: 'bold',
+                color: '#fff',
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {abbr}
+            </div>
+
+            <div
+              style={{
+                fontSize: '11px',
+                color: '#ccc',
+                lineHeight: '12px',
+                width: '60px',
+                textAlign: 'center',
+              }}
+            >
+              {record || '0-0'}
+            </div>
           </div>
-          <div style={{ fontWeight: 'bold', fontSize: '25px', color: '#fff', width: '30px', textAlign: 'center' }}>{score}</div>
+
+          <div
+            style={{
+              fontWeight: 'bold',
+              fontSize: '25px',
+              color: '#fff',
+              width: '30px',
+              textAlign: 'center',
+            }}
+          >
+            {score}
+          </div>
         </div>
       </div>
     );
   };
 
   const renderPitchOutBox = () => (
-    <div className="pitch-out-container" style={{ display: 'flex', margin: cellMargin, boxSizing: 'border-box', gap: '4px' }}>
-      <div style={{
-        flex: 1, height: '60px', border: '2px solid #555555',
-        backgroundColor: 'rgba(70, 70, 70, 0.8)', opacity: 0.85,
-        display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-      }}>
-        <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>{balls}-{strikes}</div>
+    <div
+      className="pitch-out-container"
+      style={{ display: 'flex', margin: cellMargin, boxSizing: 'border-box', gap: '4px' }}
+    >
+      <div
+        style={{
+          flex: 1,
+          height: '60px',
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          opacity: 0.85,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
+          {balls}-{strikes}
+        </div>
+
         <div style={{ display: 'flex', gap: '4px' }}>
           {[0, 1, 2].map((i) => (
-            <div key={i} style={{
-              width: '10px', height: '10px', borderRadius: '50%',
-              backgroundColor: i < outs ? 'gold' : 'transparent', border: '2px solid #555555',
-            }} />
+            <div
+              key={i}
+              style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                backgroundColor: i < outs ? 'gold' : 'transparent',
+                border: '2px solid #555555',
+              }}
+            />
           ))}
         </div>
       </div>
-      <div style={{
-        flex: 1, height: '60px', border: '2px solid #555555',
-        backgroundColor: 'rgba(70, 70, 70, 0.8)', borderRadius: '0 6px 0 0',
-        opacity: 0.85, display: 'flex', flexDirection: 'column',
-        justifyContent: 'center', alignItems: 'center',
-      }}>
+
+      <div
+        style={{
+          flex: 1,
+          height: '60px',
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          borderRadius: '0 6px 0 0',
+          opacity: 0.85,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
         <div style={{ position: 'relative', width: '50px', height: '50px' }}>
-          <div style={{ position: 'absolute', top: '10px', left: '50%', transform: 'translate(-50%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onSecond ? 'gold' : 'white' }} />
-          <div style={{ position: 'absolute', bottom: -3, left: '95%', transform: 'translate(-100%, 0) rotate(45deg)', width: '16px', height: '16px', backgroundColor: onFirst ? 'gold' : 'white' }} />
-          <div style={{ position: 'absolute', bottom: -3, left: 3, transform: 'rotate(45deg)', width: '16px', height: '16px', backgroundColor: onThird ? 'gold' : 'white' }} />
+          <div
+            style={{
+              position: 'absolute',
+              top: '10px',
+              left: '50%',
+              transform: 'translate(-50%, 0) rotate(45deg)',
+              width: '16px',
+              height: '16px',
+              backgroundColor: onSecond ? 'gold' : 'white',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              bottom: -3,
+              left: '95%',
+              transform: 'translate(-100%, 0) rotate(45deg)',
+              width: '16px',
+              height: '16px',
+              backgroundColor: onFirst ? 'gold' : 'white',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              bottom: -3,
+              left: 3,
+              transform: 'rotate(45deg)',
+              width: '16px',
+              height: '16px',
+              backgroundColor: onThird ? 'gold' : 'white',
+            }}
+          />
         </div>
-        <div style={{ marginTop: '2px', marginBottom: '4px', marginRight: '2px', fontWeight: 'bold', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+        <div
+          style={{
+            marginTop: '2px',
+            marginBottom: '4px',
+            marginRight: '2px',
+            fontWeight: 'bold',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           <span style={{ fontSize: '6px', marginRight: '2px' }}>{inningArrow}</span>
           <span style={{ fontSize: '13px' }}>{inning}</span>
         </div>
@@ -223,17 +333,37 @@ const LiveScoreBug = ({
   );
 
   return (
-    <div className="score-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', padding: '5px 5px 0 5px' }}>
-      {renderTeamCell(awayTeam, awayScore, 'away')}
+    <div
+      className="score-grid"
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gridTemplateRows: '1fr 1fr',
+        padding: '5px 5px 0 5px',
+      }}
+    >
+      {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
       {renderPitchOutBox()}
-      {renderTeamCell(homeTeam, homeScore, 'home')}
-      <div style={{
-        margin: cellMargin, border: '2px solid #555555',
-        backgroundColor: 'rgba(70, 70, 70, 0.8)', opacity: 0.85,
-        fontSize: '11px', color: 'white', padding: '6px 8px',
-        display: 'flex', flexDirection: 'column', justifyContent: 'center',
-        lineHeight: '1.3', textAlign: 'left', paddingLeft: '14px', borderRadius: '0 0 6px 0',
-      }}>
+      {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
+
+      <div
+        style={{
+          margin: cellMargin,
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          opacity: 0.85,
+          fontSize: '11px',
+          color: 'white',
+          padding: '6px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          lineHeight: '1.3',
+          textAlign: 'left',
+          paddingLeft: '14px',
+          borderRadius: '0 0 6px 0',
+        }}
+      >
         <div style={{ marginBottom: '4px' }}>
           {batter ? `${formatName(batter)} (${getBatterLine()})` : 'Batter: N/A'}
         </div>
@@ -241,8 +371,13 @@ const LiveScoreBug = ({
           {pitcher ? `${formatName(pitcher)} (${getPitcherLine()})` : 'Pitcher: N/A'}
         </div>
       </div>
+
       <div style={{ gridColumn: '1 / span 2', margin: cellMargin }}>
-        <Scoreboard game={game} getTeamAbbreviation={getTeamAbbreviation} liveData={liveData} />
+        <Scoreboard
+          game={game}
+          getTeamAbbreviation={getTeamAbbreviation}
+          liveData={liveData}
+        />
       </div>
     </div>
   );
