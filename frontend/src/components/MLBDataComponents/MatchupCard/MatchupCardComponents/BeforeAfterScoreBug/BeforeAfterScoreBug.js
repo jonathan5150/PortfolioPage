@@ -3,36 +3,36 @@ import Scoreboard from '../Scoreboard';
 
 // Official primary colors for each MLB team
 const teamPrimaryColors = {
-  'Arizona Diamondbacks': 'rgb(167, 25, 48)',
-  'Atlanta Braves': 'rgb(35, 48, 115)',
-  'Baltimore Orioles': 'rgb(223, 70, 1)',
-  'Boston Red Sox': 'rgb(189, 48, 57)',
-  'Chicago White Sox': 'rgb(160, 160, 160)',
-  'Chicago Cubs': 'rgb(14, 51, 134)',
-  'Cincinnati Reds': 'rgb(179, 0, 0)',
-  'Cleveland Guardians': 'rgb(12, 35, 64)',
-  'Colorado Rockies': 'rgb(51, 0, 111)',
-  'Detroit Tigers': 'rgb(12, 35, 64)',
-  'Houston Astros': 'rgb(0, 45, 98)',
-  'Kansas City Royals': 'rgb(0, 70, 135)',
-  'Los Angeles Angels': 'rgb(200, 16, 46)',
-  'Los Angeles Dodgers': 'rgb(0, 90, 156)',
-  'Miami Marlins': 'rgb(0, 163, 224)',
-  'Milwaukee Brewers': 'rgb(19, 41, 75)',
-  'Minnesota Twins': 'rgb(0, 43, 92)',
-  'New York Yankees': 'rgb(12, 35, 64)',
-  'New York Mets': 'rgb(0, 45, 114)',
-  Athletics: 'rgb(0, 56, 49)',
-  'Philadelphia Phillies': 'rgb(232, 24, 40)',
-  'Pittsburgh Pirates': 'rgb(253, 184, 39)',
-  'San Diego Padres': 'rgb(255, 196, 37)',
-  'San Francisco Giants': 'rgb(253, 90, 30)',
-  'Seattle Mariners': 'rgb(0, 92, 92)',
-  'St. Louis Cardinals': 'rgb(196, 30, 58)',
-  'Tampa Bay Rays': 'rgb(9, 44, 92)',
-  'Texas Rangers': 'rgb(0, 50, 120)',
-  'Toronto Blue Jays': 'rgb(19, 74, 142)',
-  'Washington Nationals': 'rgb(171, 0, 3)',
+  'Arizona Diamondbacks': 'rgba(167, 25, 48, 0.6)',
+  'Atlanta Braves': 'rgba(35, 48, 115, 0.6)',
+  'Baltimore Orioles': 'rgba(223, 70, 1, 0.6)',
+  'Boston Red Sox': 'rgba(189, 48, 57, 0.6)',
+  'Chicago White Sox': 'rgba(160, 160, 160, 0.6)',
+  'Chicago Cubs': 'rgba(14, 51, 134, 0.6)',
+  'Cincinnati Reds': 'rgba(179, 0, 0, 0.6)',
+  'Cleveland Guardians': 'rgba(12, 35, 64, 0.6)',
+  'Colorado Rockies': 'rgba(51, 0, 111, 0.6)',
+  'Detroit Tigers': 'rgba(12, 35, 64, 0.6)',
+  'Houston Astros': 'rgba(0, 45, 98, 0.6)',
+  'Kansas City Royals': 'rgba(0, 70, 135, 0.6)',
+  'Los Angeles Angels': 'rgba(200, 16, 46, 0.6)',
+  'Los Angeles Dodgers': 'rgba(0, 90, 156, 0.6)',
+  'Miami Marlins': 'rgba(0, 163, 224, 0.6)',
+  'Milwaukee Brewers': 'rgba(19, 41, 75, 0.6)',
+  'Minnesota Twins': 'rgba(0, 43, 92, 0.6)',
+  'New York Yankees': 'rgba(12, 35, 64, 0.6)',
+  'New York Mets': 'rgba(0, 45, 114, 0.6)',
+  Athletics: 'rgba(0, 56, 49, 0.6)',
+  'Philadelphia Phillies': 'rgba(232, 24, 40, 0.6)',
+  'Pittsburgh Pirates': 'rgba(253, 184, 39, 0.6)',
+  'San Diego Padres': 'rgba(255, 196, 37, 0.6)',
+  'San Francisco Giants': 'rgba(253, 90, 30, 0.6)',
+  'Seattle Mariners': 'rgba(0, 92, 92, 0.6)',
+  'St. Louis Cardinals': 'rgba(196, 30, 58, 0.6)',
+  'Tampa Bay Rays': 'rgba(9, 44, 92, 0.6)',
+  'Texas Rangers': 'rgba(0, 50, 120, 0.6)',
+  'Toronto Blue Jays': 'rgba(19, 74, 142, 0.6)',
+  'Washington Nationals': 'rgba(171, 0, 3, 0.6)',
 };
 
 const BeforeAfterScoreBug = ({
@@ -99,7 +99,9 @@ const BeforeAfterScoreBug = ({
               bottom: 0,
               right: 0,
               left: 0,
-              background: `linear-gradient(to left, ${gradientColor}, transparent 90%)`,
+              background: side === 'home'
+                 ? `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`
+                 : `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`,
               backgroundBlendMode: 'screen',
               pointerEvents: 'none',
               zIndex: 1,
@@ -118,7 +120,7 @@ const BeforeAfterScoreBug = ({
             justifyContent: 'space-between',
             border: '2px solid rgb(85, 85, 85)',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            borderRadius: side === 'away' ? '6px 0 0 0' : '0 0 0 6px',
+            borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
             padding: '5px 10px',
             opacity: 0.85,
             position: 'relative',
@@ -208,19 +210,23 @@ const BeforeAfterScoreBug = ({
 
       <div
         style={{
+            margin: '2px'
+        }}>
+
+        {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
+      </div>
+
+      <div
+        style={{
           margin: '2px',
           border: '2px solid #555555',
           backgroundColor: 'rgba(70, 70, 70, 0.8)',
           opacity: 0.85,
-          borderRadius: '0 6px 0 0',
+          borderRadius: '0 0 0 6px',
           padding: '5px',
         }}
       >
         {renderPitcherInfo(awayTeam, game.teams.away.probablePitcher)}
-      </div>
-
-      <div style={{ margin: '2px' }}>
-        {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
       </div>
 
       <div
