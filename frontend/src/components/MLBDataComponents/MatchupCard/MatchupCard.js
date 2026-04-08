@@ -215,49 +215,61 @@ const MatchupCard = ({
                       gap: '8px',
                       overflow: 'hidden',
                       maxHeight: showGameTime ? '24px' : '0px',
-                      opacity: showGameTime ? 1 : 0,
                       marginBottom: '2px',
-                      transition: 'max-height 0.5s ease, opacity 0.4s ease',
+                      transition: 'max-height 0.5s ease',
                     }}
                   >
-                    <p className="game-time" style={{ margin: 0, whiteSpace: 'nowrap' }}>
-                      {(() => {
-                        const originalDateStr = liveData?.gameData?.datetime?.originalDate;
-                        const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
-                        const original = originalDateStr
-                          ? format(new Date(originalDateStr), 'yyyy-MM-dd')
-                          : null;
-                        const detailedState =
-                          liveData?.gameData?.status?.detailedState ?? '';
-                        const isPostponedForDisplay =
-                          detailedState.includes('Postponed') && selected === original;
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        opacity: showGameTime ? 1 : 0,
+                        whiteSpace: 'nowrap',
+                        transition: showGameTime
+                          ? 'opacity 0.5s ease 0.2s'
+                          : 'opacity 0.3s ease'
+                      }}
+                    >
+                      <p className="game-time" style={{ margin: 0, whiteSpace: 'nowrap' }}>
+                        {(() => {
+                          const originalDateStr = liveData?.gameData?.datetime?.originalDate;
+                          const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
+                          const original = originalDateStr
+                            ? format(new Date(originalDateStr), 'yyyy-MM-dd')
+                            : null;
+                          const detailedState =
+                            liveData?.gameData?.status?.detailedState ?? '';
+                          const isPostponedForDisplay =
+                            detailedState.includes('Postponed') && selected === original;
 
-                        const displayTime = isPostponedForDisplay
-                          ? new Date(originalDateStr)
-                          : new Date(game.gameDate);
+                          const displayTime = isPostponedForDisplay
+                            ? new Date(originalDateStr)
+                            : new Date(game.gameDate);
 
-                        const suffix = isPostponedForDisplay
-                          ? ' (POSTPONED)'
-                          : /Delayed/i.test(detailedState)
-                          ? ' (DELAYED)'
-                          : '';
+                          const suffix = isPostponedForDisplay
+                            ? ' (POSTPONED)'
+                            : /Delayed/i.test(detailedState)
+                            ? ' (DELAYED)'
+                            : '';
 
-                        return `${formatTime(displayTime)}${suffix}`;
-                      })()}
-                    </p>
+                          return `${formatTime(displayTime)}${suffix}`;
+                        })()}
+                      </p>
 
-                    {isLive && (
-                      <div
-                        className="live-indicator"
-                        style={{
-                          width: '5px',
-                          height: '5px',
-                          borderRadius: '50%',
-                          backgroundColor: 'red',
-                          flexShrink: 0,
-                        }}
-                      />
-                    )}
+                      {isLive && (
+                        <div
+                          className="live-indicator"
+                          style={{
+                            width: '5px',
+                            height: '5px',
+                            borderRadius: '50%',
+                            backgroundColor: 'red',
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+                    </div>
                   </div>
 
                   <div>

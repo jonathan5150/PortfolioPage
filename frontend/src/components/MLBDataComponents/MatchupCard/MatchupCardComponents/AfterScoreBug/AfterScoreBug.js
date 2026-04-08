@@ -201,11 +201,15 @@ const AfterScoreBug = ({
       <div
         style={{
           gridColumn: '1 / span 2',
-          margin: showScoreboard && !gameNotStarted ? '2px' : '0px',
+          margin: showScoreboard && !gameNotStarted ? '0px' : '0px',
           overflow: 'hidden',
+          paddingLeft: showScoreboard && !gameNotStarted ? '2px' : '5px',
+          paddingRight: showScoreboard && !gameNotStarted ? '2px' : '5px',
+          paddingTop: showScoreboard && !gameNotStarted ? '2px' : '5px',
+          paddingBottom: showScoreboard && !gameNotStarted ? '3px' : '0px',
           maxHeight: showScoreboard && !gameNotStarted ? '120px' : '0px',
           opacity: showScoreboard && !gameNotStarted ? 1 : 0,
-          transition: 'max-height 0.6s ease, opacity 0.45s ease',
+          transition: 'max-height 0.6s ease, opacity 0.45s ease, padding 0.4s ease',
         }}
       >
         <Scoreboard
