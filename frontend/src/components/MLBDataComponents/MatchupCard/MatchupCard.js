@@ -6,7 +6,8 @@ import PlayerStats from './MatchupCardSelections/PlayerStats';
 import PitcherLastFive from './MatchupCardSelections/PitcherLastFive';
 import BatterGamelog from './MatchupCardSelections/BatterGamelog';
 import BoxScore from './MatchupCardSelections/BoxScore';
-import BeforeAfterScoreBug from './MatchupCardComponents/BeforeAfterScoreBug/BeforeAfterScoreBug';
+import BeforeScoreBug from './MatchupCardComponents/BeforeScoreBug/BeforeScoreBug';
+import AfterScoreBug from './MatchupCardComponents/AfterScoreBug/AfterScoreBug';
 import LiveScoreBug from './MatchupCardComponents/LiveScoreBug/LiveScoreBug';
 import { format } from 'date-fns';
 
@@ -179,12 +180,21 @@ const MatchupCard = ({
               };
 
               const liveData = liveGameData[gamePk];
-              const detailedState = liveData?.gameData?.status?.detailedState;
-              const isLive = liveData?.gameData?.status?.abstractGameState === 'Live';
-              const isPostponed = detailedState === 'Postponed: Rain';
+              const detailedState = liveData?.gameData?.status?.detailedState ?? '';
+              const abstractGameState = liveData?.gameData?.status?.abstractGameState ?? '';
+
+              const isLive = abstractGameState === 'Live';
+              const isFinal =
+                abstractGameState === 'Final' ||
+                detailedState === 'Final' ||
+                detailedState === 'Completed Early' ||
+                detailedState === 'Game Over';
+
+              const isPostponed = detailedState.includes('Postponed');
               const now = new Date();
               const scheduledTime = new Date(game.gameDate);
               const hasGameStarted = !isPostponed && now >= scheduledTime;
+              const showGameTime = !isFinal || isExpanded;
 
               return (
                 <div
@@ -199,24 +209,34 @@ const MatchupCard = ({
                 >
                   <div
                     className="game-time-container"
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      overflow: 'hidden',
+                      maxHeight: showGameTime ? '24px' : '0px',
+                      opacity: showGameTime ? 1 : 0,
+                      marginBottom: '2px',
+                      transition: 'max-height 0.5s ease, opacity 0.4s ease',
+                    }}
                   >
-                    <p className="game-time" style={{ margin: 0 }}>
+                    <p className="game-time" style={{ margin: 0, whiteSpace: 'nowrap' }}>
                       {(() => {
                         const originalDateStr = liveData?.gameData?.datetime?.originalDate;
                         const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
                         const original = originalDateStr
                           ? format(new Date(originalDateStr), 'yyyy-MM-dd')
                           : null;
-                        const detailedState = liveData?.gameData?.status?.detailedState ?? '';
-                        const isPostponed =
+                        const detailedState =
+                          liveData?.gameData?.status?.detailedState ?? '';
+                        const isPostponedForDisplay =
                           detailedState.includes('Postponed') && selected === original;
 
-                        const displayTime = isPostponed
+                        const displayTime = isPostponedForDisplay
                           ? new Date(originalDateStr)
                           : new Date(game.gameDate);
 
-                        const suffix = isPostponed
+                        const suffix = isPostponedForDisplay
                           ? ' (POSTPONED)'
                           : /Delayed/i.test(detailedState)
                           ? ' (DELAYED)'
@@ -225,6 +245,7 @@ const MatchupCard = ({
                         return `${formatTime(displayTime)}${suffix}`;
                       })()}
                     </p>
+
                     {isLive && (
                       <div
                         className="live-indicator"
@@ -233,6 +254,7 @@ const MatchupCard = ({
                           height: '5px',
                           borderRadius: '50%',
                           backgroundColor: 'red',
+                          flexShrink: 0,
                         }}
                       />
                     )}
@@ -252,8 +274,22 @@ const MatchupCard = ({
                           liveData: liveData?.liveData,
                         }}
                       />
+                    ) : isFinal ? (
+                      <AfterScoreBug
+                        {...{
+                          game,
+                          gamePk,
+                          handleStarClick,
+                          getTeamLogo,
+                          gameBackgroundColors,
+                          starredTeams,
+                          getTeamAbbreviation,
+                          liveData,
+                          showScoreboard: !!isExpanded,
+                        }}
+                      />
                     ) : (
-                      <BeforeAfterScoreBug
+                      <BeforeScoreBug
                         {...{
                           game,
                           gamePk,
@@ -268,7 +304,7 @@ const MatchupCard = ({
                     )}
 
                     <div
-                      style={{ display: 'flex', justifyContent: 'center', marginTop: '2px' }}
+                      style={{ display: 'flex', justifyContent: 'center', marginTop: '0px' }}
                     >
                       <button
                         onClick={() => toggleGameData(gamePk)}
@@ -329,7 +365,7 @@ const MatchupCard = ({
                       style={{
                         overflow: 'hidden',
                         transition: 'height 0.7s ease',
-                        marginBottom: '5px', // ✅ added bottom spacing
+                        marginBottom: '5px',
                       }}
                     >
                       <div

@@ -35,7 +35,7 @@ const teamPrimaryColors = {
   'Washington Nationals': 'rgba(171, 0, 3, 0.6)',
 };
 
-const BeforeAfterScoreBug = ({
+const AfterScoreBug = ({
   game,
   gamePk,
   handleStarClick,
@@ -44,6 +44,7 @@ const BeforeAfterScoreBug = ({
   starredTeams,
   getTeamAbbreviation,
   liveData,
+  showScoreboard = false,
 }) => {
   const trueLiveData = liveData?.liveData ?? liveData;
 
@@ -61,25 +62,6 @@ const BeforeAfterScoreBug = ({
   const homeScore = gameNotStarted
     ? '-'
     : trueLiveData?.linescore?.teams?.home?.runs ?? '-';
-
-  const renderPitcherInfo = (team, pitcher) => (
-    <div className="pitcher-details">
-      {pitcher?.fullName ? (
-        <>
-          <div>
-            <span style={{ fontWeight: 'bold' }}></span> {pitcher.fullName} ({pitcher.pitchHand})
-          </div>
-          <div>
-            <span style={{ fontWeight: 'bold' }}>ERA:</span> {pitcher.era}
-          </div>
-        </>
-      ) : (
-        <span>
-          <b>P:</b> N/A
-        </span>
-      )}
-    </div>
-  );
 
   const renderTeamCell = (team, score, side, record) => {
     const abbr = getTeamAbbreviation(team.id);
@@ -105,7 +87,7 @@ const BeforeAfterScoreBug = ({
               backgroundBlendMode: 'screen',
               pointerEvents: 'none',
               zIndex: 1,
-              borderRadius: side === 'away' ? '6px 0 0 0' : '0 0 0 6px',
+              borderRadius: side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0',
             }}
           />
         )}
@@ -120,7 +102,7 @@ const BeforeAfterScoreBug = ({
             justifyContent: 'space-between',
             border: '2px solid rgb(85, 85, 85)',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
-            borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
+            borderRadius: side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0',
             padding: '5px 10px',
             opacity: 0.85,
             position: 'relative',
@@ -210,49 +192,30 @@ const BeforeAfterScoreBug = ({
 
       <div
         style={{
-            margin: '2px'
-        }}>
-
+          margin: '2px'
+        }}
+      >
         {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
       </div>
 
       <div
         style={{
-          margin: '2px',
-          border: '2px solid #555555',
-          backgroundColor: 'rgba(70, 70, 70, 0.8)',
-          opacity: 0.85,
-          borderRadius: '0 0 0 6px',
-          padding: '5px',
+          gridColumn: '1 / span 2',
+          margin: showScoreboard && !gameNotStarted ? '2px' : '0px',
+          overflow: 'hidden',
+          maxHeight: showScoreboard && !gameNotStarted ? '120px' : '0px',
+          opacity: showScoreboard && !gameNotStarted ? 1 : 0,
+          transition: 'max-height 0.6s ease, opacity 0.45s ease',
         }}
       >
-        {renderPitcherInfo(awayTeam, game.teams.away.probablePitcher)}
+        <Scoreboard
+          game={game}
+          getTeamAbbreviation={getTeamAbbreviation}
+          liveData={trueLiveData}
+        />
       </div>
-
-      <div
-        style={{
-          margin: '2px',
-          border: '2px solid #555555',
-          backgroundColor: 'rgba(70, 70, 70, 0.8)',
-          opacity: 0.85,
-          padding: '5px',
-          borderRadius: '0 0 6px 0',
-        }}
-      >
-        {renderPitcherInfo(homeTeam, game.teams.home.probablePitcher)}
-      </div>
-
-      {!gameNotStarted && (
-        <div style={{ gridColumn: '1 / span 2', margin: '2px' }}>
-          <Scoreboard
-            game={game}
-            getTeamAbbreviation={getTeamAbbreviation}
-            liveData={trueLiveData}
-          />
-        </div>
-      )}
     </div>
   );
 };
 
-export default BeforeAfterScoreBug;
+export default AfterScoreBug;
