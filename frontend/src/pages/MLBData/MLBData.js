@@ -14,7 +14,7 @@ function MLBData() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isTeamsMenuOpen, setIsTeamsMenuOpen] = useState(false);
-  const [selectedTeams, setSelectedTeams] = useState([]);
+  const [selectedTeams, setSelectedTeams] = useState(null);
   const [visibleGames, setVisibleGames] = useState([]);
   const [liveGameData, setLiveGameData] = useState({});
   const [gameBackgroundColors, setGameBackgroundColors] = useState({});
@@ -137,6 +137,8 @@ function MLBData() {
   }, [selectedDate, getTeamAbbreviation]);
 
   useEffect(() => {
+    if (!Array.isArray(selectedTeams)) return;
+
     const selectedDateStr = format(new Date(selectedDate), 'yyyy-MM-dd');
 
     const getEffectiveDate = (game) => {
@@ -150,10 +152,11 @@ function MLBData() {
       return new Date(game.gameDate);
     };
 
-    const filtered = todayGames.flatMap(date =>
-      date.games.filter(game =>
-        selectedTeams.includes(game.teams.away.team.id) ||
-        selectedTeams.includes(game.teams.home.team.id)
+    const filtered = todayGames.flatMap((date) =>
+      date.games.filter(
+        (game) =>
+          selectedTeams.includes(game.teams.away.team.id) ||
+          selectedTeams.includes(game.teams.home.team.id)
       )
     );
 
@@ -227,7 +230,7 @@ function MLBData() {
 
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
-      {loading ? (
+      {loading || selectedTeams === null ? (
         <div className="loading">
           <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
           <p>loading...</p>

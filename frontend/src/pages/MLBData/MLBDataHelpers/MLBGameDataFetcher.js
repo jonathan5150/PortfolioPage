@@ -198,7 +198,6 @@ export const fetchGameData = async ({
   getTeamAbbreviation,
   setGameBackgroundColors,
   setTodayGames,
-  setVisibleGames,
   setBatterGameLogs,
   setLiveGameData,
   setLoading,
@@ -513,7 +512,6 @@ export const fetchGameData = async ({
 
     setGameBackgroundColors(backgroundColors);
     setTodayGames(games);
-    setVisibleGames(sortedGames);
 
     const liveGameDataMap = {};
     for (const gameDay of games) {
