@@ -1,4 +1,12 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  memo,
+  useRef,
+  useLayoutEffect,
+} from 'react';
 import MLBDataNavbar from '../MLBDataNavbar/MLBDataNavbar';
 import Cookies from 'js-cookie';
 import TeamHistory from './MatchupCardSelections/TeamHistory/TeamHistory';
@@ -10,6 +18,496 @@ import BeforeScoreBug from './MatchupCardComponents/BeforeScoreBug/BeforeScoreBu
 import AfterScoreBug from './MatchupCardComponents/AfterScoreBug/AfterScoreBug';
 import LiveScoreBug from './MatchupCardComponents/LiveScoreBug/LiveScoreBug';
 import { format } from 'date-fns';
+
+const STAT_OPTIONS = [
+  { value: 'box-score', label: 'BOX SCORE' },
+  { value: 'team-history', label: 'TEAM W/L HISTORY' },
+  { value: 'player-stats', label: 'PLAYER SEASON STATS' },
+  { value: 'batter-gamelog', label: 'PLAYER GAME LOG' },
+  { value: 'pitcher-last-5', label: 'PITCHER GAME LOG' },
+];
+
+const GameCard = memo(function GameCard({
+  game,
+  selectedDate,
+  formatTime,
+  getTeamLogo,
+  getTeamAbbreviation,
+  liveData,
+  gameBackgroundColors,
+  batterGameLogs,
+  playerStatsSortConfig,
+  setPlayerStatsSortConfig,
+}) {
+  const gamePk = game.gamePk;
+
+  const [contentKey, setContentKey] = useState(() => {
+    const saved = Cookies.get('contentKeys');
+    if (!saved) return 'team-history';
+
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed?.[gamePk] || 'team-history';
+    } catch {
+      return 'team-history';
+    }
+  });
+
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = Cookies.get('expandedGames');
+    if (!saved) return false;
+
+    try {
+      const parsed = JSON.parse(saved);
+      return !!parsed?.[gamePk];
+    } catch {
+      return false;
+    }
+  });
+
+  const [boxScoreView, setBoxScoreView] = useState(() => {
+    const saved = Cookies.get('boxScoreViews');
+    if (!saved) return 'away';
+
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed?.[gamePk] || 'away';
+    } catch {
+      return 'away';
+    }
+  });
+
+  const [numGamesToShow, setNumGamesToShow] = useState(() => {
+    const saved = Cookies.get('numGamesToShowByGame');
+    if (!saved) return 5;
+
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed?.[gamePk] || 5;
+    } catch {
+      return 5;
+    }
+  });
+
+  const contentInnerRef = useRef(null);
+  const [animatedHeight, setAnimatedHeight] = useState(isExpanded ? 'auto' : '0px');
+
+  const handleContentChange = useCallback(
+    (newKey) => {
+      setContentKey(newKey);
+
+      try {
+        const existing = JSON.parse(Cookies.get('contentKeys') || '{}');
+        Cookies.set(
+          'contentKeys',
+          JSON.stringify({
+            ...existing,
+            [gamePk]: newKey,
+          }),
+          { expires: 365 }
+        );
+      } catch {
+        Cookies.set('contentKeys', JSON.stringify({ [gamePk]: newKey }), {
+          expires: 365,
+        });
+      }
+    },
+    [gamePk]
+  );
+
+  const toggleGameData = useCallback(() => {
+    const nextExpanded = !isExpanded;
+    setIsExpanded(nextExpanded);
+
+    try {
+      const existing = JSON.parse(Cookies.get('expandedGames') || '{}');
+      Cookies.set(
+        'expandedGames',
+        JSON.stringify({
+          ...existing,
+          [gamePk]: nextExpanded,
+        }),
+        { expires: 365 }
+      );
+    } catch {
+      Cookies.set('expandedGames', JSON.stringify({ [gamePk]: nextExpanded }), {
+        expires: 365,
+      });
+    }
+  }, [gamePk, isExpanded]);
+
+  const handleBoxScoreViewChange = useCallback(
+    (newView) => {
+      setBoxScoreView(newView);
+
+      try {
+        const existing = JSON.parse(Cookies.get('boxScoreViews') || '{}');
+        Cookies.set(
+          'boxScoreViews',
+          JSON.stringify({
+            ...existing,
+            [gamePk]: newView,
+          }),
+          { expires: 365 }
+        );
+      } catch {
+        Cookies.set('boxScoreViews', JSON.stringify({ [gamePk]: newView }), {
+          expires: 365,
+        });
+      }
+    },
+    [gamePk]
+  );
+
+  const handleNumGamesToShowChange = useCallback(
+    (valueOrUpdater) => {
+      setNumGamesToShow((prev) => {
+        const nextValue =
+          typeof valueOrUpdater === 'function'
+            ? valueOrUpdater(prev)
+            : valueOrUpdater;
+
+        try {
+          const existing = JSON.parse(Cookies.get('numGamesToShowByGame') || '{}');
+          Cookies.set(
+            'numGamesToShowByGame',
+            JSON.stringify({
+              ...existing,
+              [gamePk]: nextValue,
+            }),
+            { expires: 365 }
+          );
+        } catch {
+          Cookies.set(
+            'numGamesToShowByGame',
+            JSON.stringify({ [gamePk]: nextValue }),
+            { expires: 365 }
+          );
+        }
+
+        return nextValue;
+      });
+    },
+    [gamePk]
+  );
+
+  const detailedState = liveData?.gameData?.status?.detailedState ?? '';
+  const abstractGameState = liveData?.gameData?.status?.abstractGameState ?? '';
+
+  const isLive = abstractGameState === 'Live';
+  const isFinal =
+    abstractGameState === 'Final' ||
+    detailedState === 'Final' ||
+    detailedState === 'Completed Early' ||
+    detailedState === 'Game Over';
+
+  const isPostponed = detailedState.includes('Postponed');
+  const now = new Date();
+  const scheduledTime = new Date(game.gameDate);
+  const hasGameStarted = !isPostponed && now >= scheduledTime;
+  const showGameTime = !isFinal || isExpanded;
+
+  const awayTeamId = game.teams.away.team.id;
+  const homeTeamId = game.teams.home.team.id;
+
+  const awayBatterData = batterGameLogs?.[awayTeamId];
+  const homeBatterData = batterGameLogs?.[homeTeamId];
+
+  const statContent = useMemo(() => {
+    switch (contentKey) {
+      case 'box-score':
+        return (
+          <BoxScore
+            liveData={liveData}
+            gamePk={gamePk}
+            initialShowing={boxScoreView}
+            onShowingChange={handleBoxScoreViewChange}
+          />
+        );
+
+      case 'team-history':
+        return <TeamHistory game={game} />;
+
+      case 'player-stats':
+        return (
+          <PlayerStats
+            game={game}
+            batterGameLogs={batterGameLogs}
+            playerStatsSortConfig={playerStatsSortConfig}
+            setPlayerStatsSortConfig={setPlayerStatsSortConfig}
+            setSelectedPlayers={(teamId, playerName) => {
+              const updated = {
+                ...JSON.parse(Cookies.get('selectedPlayers') || '{}'),
+                [teamId]: playerName,
+              };
+              Cookies.set('selectedPlayers', JSON.stringify(updated), {
+                expires: 365,
+              });
+            }}
+          />
+        );
+
+      case 'pitcher-last-5':
+        return (
+          <PitcherLastFive
+            game={game}
+            awayGames={game.teams.away.probablePitcher?.lastFiveStarts || []}
+            homeGames={game.teams.home.probablePitcher?.lastFiveStarts || []}
+          />
+        );
+
+      case 'batter-gamelog':
+        if (!awayBatterData || !homeBatterData) return null;
+
+        return (
+          <BatterGamelog
+            teams={[
+              {
+                team: game.teams.away.team,
+                teamType: 'Away',
+                logs: awayBatterData.logs,
+                roster: awayBatterData.roster,
+              },
+              {
+                team: game.teams.home.team,
+                teamType: 'Home',
+                logs: homeBatterData.logs,
+                roster: homeBatterData.roster,
+              },
+            ]}
+            gameDate={game.gameDate}
+            getTeamAbbreviation={getTeamAbbreviation}
+            numGamesToShow={numGamesToShow}
+            setNumGamesToShow={handleNumGamesToShowChange}
+          />
+        );
+
+      default:
+        return <TeamHistory game={game} />;
+    }
+  }, [
+    batterGameLogs,
+    boxScoreView,
+    contentKey,
+    game,
+    gamePk,
+    getTeamAbbreviation,
+    handleBoxScoreViewChange,
+    homeBatterData,
+    awayBatterData,
+    liveData,
+    numGamesToShow,
+    playerStatsSortConfig,
+    setPlayerStatsSortConfig,
+    handleNumGamesToShowChange,
+  ]);
+
+  useLayoutEffect(() => {
+    const inner = contentInnerRef.current;
+    if (!inner) return;
+
+    if (!isExpanded) {
+      setAnimatedHeight((prev) => {
+        if (prev === 'auto') {
+          return `${inner.scrollHeight}px`;
+        }
+        return prev;
+      });
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setAnimatedHeight('0px');
+        });
+      });
+
+      return;
+    }
+
+    const nextHeight = `${inner.scrollHeight}px`;
+    setAnimatedHeight(nextHeight);
+  }, [isExpanded, contentKey, numGamesToShow, boxScoreView, statContent]);
+
+  const handleHeightTransitionEnd = useCallback(() => {
+    if (isExpanded) {
+      setAnimatedHeight('auto');
+    }
+  }, [isExpanded]);
+
+  return (
+    <div className="game-container">
+      <div
+        className="game-time-container"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          overflow: 'hidden',
+          maxHeight: showGameTime ? '24px' : '0px',
+          marginBottom: '2px',
+          opacity: showGameTime ? 1 : 0,
+          transition: 'opacity 0.35s ease, max-height 0.35s ease',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <p className="game-time" style={{ margin: 0, whiteSpace: 'nowrap' }}>
+            {(() => {
+              const originalDateStr = liveData?.gameData?.datetime?.originalDate;
+              const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
+              const original = originalDateStr
+                ? format(new Date(originalDateStr), 'yyyy-MM-dd')
+                : null;
+
+              const isPostponedForDisplay =
+                detailedState.includes('Postponed') && selected === original;
+
+              const displayTime = isPostponedForDisplay
+                ? new Date(originalDateStr)
+                : new Date(game.gameDate);
+
+              const suffix = isPostponedForDisplay
+                ? ' (POSTPONED)'
+                : /Delayed/i.test(detailedState)
+                ? ' (DELAYED)'
+                : '';
+
+              return `${formatTime(displayTime)}${suffix}`;
+            })()}
+          </p>
+
+          {isLive && (
+            <div
+              className="live-indicator"
+              style={{
+                width: '5px',
+                height: '5px',
+                borderRadius: '50%',
+                backgroundColor: 'red',
+                flexShrink: 0,
+              }}
+            />
+          )}
+        </div>
+      </div>
+
+      <div>
+        {isLive && hasGameStarted ? (
+          <LiveScoreBug
+            game={game}
+            gamePk={gamePk}
+            getTeamLogo={getTeamLogo}
+            gameBackgroundColors={gameBackgroundColors}
+            getTeamAbbreviation={getTeamAbbreviation}
+            liveData={liveData?.liveData}
+          />
+        ) : isFinal ? (
+          <AfterScoreBug
+            game={game}
+            gamePk={gamePk}
+            getTeamLogo={getTeamLogo}
+            gameBackgroundColors={gameBackgroundColors}
+            getTeamAbbreviation={getTeamAbbreviation}
+            liveData={liveData}
+            showScoreboard={isExpanded}
+          />
+        ) : (
+          <BeforeScoreBug
+            game={game}
+            gamePk={gamePk}
+            getTeamLogo={getTeamLogo}
+            gameBackgroundColors={gameBackgroundColors}
+            getTeamAbbreviation={getTeamAbbreviation}
+            liveData={liveData}
+          />
+        )}
+
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0px' }}>
+          <button
+            onClick={toggleGameData}
+            style={{
+              color: 'white',
+              background: 'none',
+              border: 'none',
+              fontSize: '0.6rem',
+              cursor: 'pointer',
+              margin: '1px 0 0 0',
+              padding: 0,
+              transform: isExpanded ? 'rotate(270deg)' : 'rotate(90deg)',
+              transition: 'transform 0.3s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: '12px',
+              height: '12px',
+              lineHeight: '1',
+              overflow: 'hidden',
+            }}
+            aria-label="Toggle Stats"
+          >
+            ▶
+          </button>
+        </div>
+      </div>
+
+      <div
+        className="game-data-container stat-toggle-container"
+        onTransitionEnd={(e) => {
+          if (e.propertyName === 'height') {
+            handleHeightTransitionEnd();
+          }
+        }}
+        style={{
+          overflow: 'hidden',
+          height: isExpanded ? animatedHeight : '0px',
+          opacity: isExpanded ? 1 : 0,
+          transform: isExpanded ? 'translateY(0)' : 'translateY(-6px)',
+          padding: isExpanded ? '5px' : '0 5px',
+          marginTop: isExpanded ? '5px' : '0',
+          marginBottom: isExpanded ? '12px' : '0',
+          pointerEvents: isExpanded ? 'auto' : 'none',
+          transition:
+            'height 0.35s ease, opacity 0.25s ease, transform 0.25s ease, padding 0.25s ease, margin 0.25s ease',
+          willChange: 'height, opacity, transform',
+        }}
+      >
+        <div ref={contentInnerRef}>
+          <select
+            value={contentKey}
+            onChange={(e) => handleContentChange(e.target.value)}
+          >
+            {STAT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+
+          <div
+            className="stat-section"
+            style={{
+              marginBottom: '5px',
+            }}
+          >
+            <div
+              style={{
+                opacity: isExpanded ? 1 : 0,
+                transition: 'opacity 0.2s ease',
+              }}
+            >
+              {statContent}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 const MatchupCard = ({
   loading,
@@ -35,47 +533,10 @@ const MatchupCard = ({
   gameBackgroundColors,
   batterGameLogs,
   playerStatsSortConfig,
-  setPlayerStatsSortConfig
+  setPlayerStatsSortConfig,
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
-  const [numGamesToShow, setNumGamesToShow] = useState(5);
-
-  const [contentKeys, setContentKeys] = useState(() => {
-    const saved = Cookies.get('contentKeys');
-    return saved ? JSON.parse(saved) : {};
-  });
-
-  const [starredTeams, setStarredTeams] = useState(() => {
-    const saved = Cookies.get('starredTeams');
-    return saved ? JSON.parse(saved) : {};
-  });
-
-  const [expandedGames, setExpandedGames] = useState(() => {
-    const saved = Cookies.get('expandedGames');
-    return saved ? JSON.parse(saved) : {};
-  });
-
-  const contentRefs = useRef({});
-  const cardRefs = useRef({});
-  const [boxScoreViews, setBoxScoreViews] = useState({});
-
-  const updateContentHeight = (gamePk) => {
-    const outer = document.querySelector(`[data-gamepk="${gamePk}"]`);
-    const inner = contentRefs.current[gamePk];
-    if (outer && inner) {
-      outer.style.height = `${inner.offsetHeight}px`;
-    }
-  };
-
-  useLayoutEffect(() => {
-    const timeout = setTimeout(() => {
-      visibleGames.forEach((game) => {
-        updateContentHeight(game.gamePk);
-      });
-    }, 10);
-    return () => clearTimeout(timeout);
-  }, [contentKeys, visibleGames, batterGameLogs, numGamesToShow]);
 
   useEffect(() => {
     if (!loading) {
@@ -83,48 +544,13 @@ const MatchupCard = ({
         setDelayOver(true);
         setFadeIn(true);
       }, 2000);
+
       return () => clearTimeout(timer);
-    } else {
-      setDelayOver(false);
-      setFadeIn(false);
     }
+
+    setDelayOver(false);
+    setFadeIn(false);
   }, [loading]);
-
-  const handleDataSelectWithAnchor = (newKey, gamePk) => {
-    const anchor = cardRefs.current[gamePk];
-    const prevY = anchor?.getBoundingClientRect().top;
-
-    setContentKeys((prev) => {
-      const updated = { ...prev, [gamePk]: newKey };
-      Cookies.set('contentKeys', JSON.stringify(updated), { expires: 365 });
-      return updated;
-    });
-
-    requestAnimationFrame(() => {
-      const newY = anchor?.getBoundingClientRect().top;
-      const deltaY = newY - prevY;
-      window.scrollBy({ top: deltaY });
-    });
-  };
-
-  const handleStarClick = (gamePk, teamId) => {
-    setStarredTeams((prev) => {
-      const updated =
-        prev[gamePk] === teamId
-          ? { ...prev, [gamePk]: undefined }
-          : { ...prev, [gamePk]: teamId };
-      Cookies.set('starredTeams', JSON.stringify(updated), { expires: 365 });
-      return updated;
-    });
-  };
-
-  const toggleGameData = (gamePk) => {
-    setExpandedGames((prev) => {
-      const updated = { ...prev, [gamePk]: !prev[gamePk] };
-      Cookies.set('expandedGames', JSON.stringify(updated), { expires: 365 });
-      return updated;
-    });
-  };
 
   return (
     <div className="matchup-card fade-in">
@@ -142,6 +568,7 @@ const MatchupCard = ({
         handleDeselectAll={handleDeselectAll}
         teamsMenuRef={teamsMenuRef}
       />
+
       <div className="matchup-container">
         {loading ? (
           <div className="loading">
@@ -151,320 +578,30 @@ const MatchupCard = ({
         ) : delayOver && visibleGames.length === 0 ? (
           <p
             className="noGames"
-            style={{ opacity: fadeIn ? 1 : 0, transition: 'opacity 0.5s ease-in' }}
+            style={{ opacity: fadeIn ? 1 : 0, transition: 'opacity 0.7s ease-in' }}
           >
             Either no teams are selected or no games are scheduled for this date.
           </p>
         ) : (
-          <>
-            {visibleGames.map((game) => {
-              const gamePk = game.gamePk;
-              const contentRef = (el) => {
-                if (el) contentRefs.current[gamePk] = el;
-              };
-              const cardRef = (el) => {
-                if (el) cardRefs.current[gamePk] = el;
-              };
-
-              const contentKey = contentKeys[gamePk] || 'team-history';
-
-              const isExpanded = expandedGames[gamePk];
-              const contentStyle = {
-                maxHeight: isExpanded ? '1000px' : '0px',
-                overflow: 'hidden',
-                transition: 'max-height 0.7s ease, padding 0.5s ease, opacity 0.5s ease',
-                padding: isExpanded ? '5px' : '0',
-                marginTop: isExpanded ? '5px' : '0',
-                marginBottom: isExpanded ? '12px' : '0',
-                opacity: isExpanded ? 1 : 0,
-              };
-
-              const liveData = liveGameData[gamePk];
-              const detailedState = liveData?.gameData?.status?.detailedState ?? '';
-              const abstractGameState = liveData?.gameData?.status?.abstractGameState ?? '';
-
-              const isLive = abstractGameState === 'Live';
-              const isFinal =
-                abstractGameState === 'Final' ||
-                detailedState === 'Final' ||
-                detailedState === 'Completed Early' ||
-                detailedState === 'Game Over';
-
-              const isPostponed = detailedState.includes('Postponed');
-              const now = new Date();
-              const scheduledTime = new Date(game.gameDate);
-              const hasGameStarted = !isPostponed && now >= scheduledTime;
-              const showGameTime = !isFinal || isExpanded;
-
-              return (
-                <div
-                  className={`game-container ${
-                    selectedTeams.includes(game.teams.away.team.id) ||
-                    selectedTeams.includes(game.teams.home.team.id)
-                      ? 'fade-in'
-                      : 'fade-out'
-                  }`}
-                  key={gamePk}
-                  ref={cardRef}
-                >
-                  <div
-                    className="game-time-container"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      overflow: 'hidden',
-                      maxHeight: showGameTime ? '24px' : '0px',
-                      marginBottom: '2px',
-                      transition: 'max-height 0.5s ease',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        opacity: showGameTime ? 1 : 0,
-                        whiteSpace: 'nowrap',
-                        transition: showGameTime
-                          ? 'opacity 0.5s ease 0.2s'
-                          : 'opacity 0.3s ease'
-                      }}
-                    >
-                      <p className="game-time" style={{ margin: 0, whiteSpace: 'nowrap' }}>
-                        {(() => {
-                          const originalDateStr = liveData?.gameData?.datetime?.originalDate;
-                          const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
-                          const original = originalDateStr
-                            ? format(new Date(originalDateStr), 'yyyy-MM-dd')
-                            : null;
-                          const detailedState =
-                            liveData?.gameData?.status?.detailedState ?? '';
-                          const isPostponedForDisplay =
-                            detailedState.includes('Postponed') && selected === original;
-
-                          const displayTime = isPostponedForDisplay
-                            ? new Date(originalDateStr)
-                            : new Date(game.gameDate);
-
-                          const suffix = isPostponedForDisplay
-                            ? ' (POSTPONED)'
-                            : /Delayed/i.test(detailedState)
-                            ? ' (DELAYED)'
-                            : '';
-
-                          return `${formatTime(displayTime)}${suffix}`;
-                        })()}
-                      </p>
-
-                      {isLive && (
-                        <div
-                          className="live-indicator"
-                          style={{
-                            width: '5px',
-                            height: '5px',
-                            borderRadius: '50%',
-                            backgroundColor: 'red',
-                            flexShrink: 0,
-                          }}
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    {isLive && hasGameStarted ? (
-                      <LiveScoreBug
-                        {...{
-                          game,
-                          gamePk,
-                          handleStarClick,
-                          getTeamLogo,
-                          gameBackgroundColors,
-                          starredTeams,
-                          getTeamAbbreviation,
-                          liveData: liveData?.liveData,
-                        }}
-                      />
-                    ) : isFinal ? (
-                      <AfterScoreBug
-                        {...{
-                          game,
-                          gamePk,
-                          handleStarClick,
-                          getTeamLogo,
-                          gameBackgroundColors,
-                          starredTeams,
-                          getTeamAbbreviation,
-                          liveData,
-                          showScoreboard: !!isExpanded,
-                        }}
-                      />
-                    ) : (
-                      <BeforeScoreBug
-                        {...{
-                          game,
-                          gamePk,
-                          handleStarClick,
-                          getTeamLogo,
-                          gameBackgroundColors,
-                          starredTeams,
-                          getTeamAbbreviation,
-                          liveData,
-                        }}
-                      />
-                    )}
-
-                    <div
-                      style={{ display: 'flex', justifyContent: 'center', marginTop: '0px' }}
-                    >
-                      <button
-                        onClick={() => toggleGameData(gamePk)}
-                        style={{
-                          color: 'white',
-                          background: 'none',
-                          border: 'none',
-                          fontSize: '0.6rem',
-                          cursor: 'pointer',
-                          margin: '1px 0 0 0',
-                          padding: 0,
-                          transform: isExpanded ? 'rotate(270deg)' : 'rotate(90deg)',
-                          transition: 'transform 0.5s',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          width: '12px',
-                          height: '12px',
-                          lineHeight: '1',
-                          overflow: 'hidden',
-                        }}
-                        aria-label="Toggle Stats"
-                      >
-                        ▶
-                      </button>
-                    </div>
-                  </div>
-
-                  <div
-                    className="game-data-container stat-toggle-container"
-                    style={contentStyle}
-                  >
-                    <select
-                      value={contentKey}
-                      onChange={(e) => handleDataSelectWithAnchor(e.target.value, gamePk)}
-                    >
-                      <option value="box-score">BOX SCORE</option>
-                      <option value="team-history">TEAM W/L HISTORY</option>
-                      <option value="player-stats">PLAYER SEASON STATS</option>
-                      <option value="batter-gamelog">PLAYER GAME LOG</option>
-                      <option value="pitcher-last-5">PITCHER GAME LOG</option>
-                    </select>
-
-                    <div
-                      className="stat-section"
-                      data-gamepk={gamePk}
-                      ref={(el) => {
-                        if (el && contentRefs.current[gamePk]) {
-                          const inner = contentRefs.current[gamePk];
-                          const height = inner.offsetHeight;
-                          el.style.height = `${height}px`;
-                          el.style.transition = 'height 0.7s ease';
-                          requestAnimationFrame(() => {
-                            el.style.height = `${height}px`;
-                          });
-                        }
-                      }}
-                      style={{
-                        overflow: 'hidden',
-                        transition: 'height 0.7s ease',
-                        marginBottom: '5px',
-                      }}
-                    >
-                      <div
-                        ref={contentRef}
-                        key={contentKey}
-                        style={{
-                          opacity: 0,
-                          animation: 'fadeIn 1.2s ease forwards',
-                        }}
-                      >
-                        {contentKey === 'box-score' && (
-                          <BoxScore
-                            liveData={liveData}
-                            gamePk={gamePk}
-                            initialShowing={boxScoreViews[gamePk] || 'away'}
-                            onShowingChange={(newView) =>
-                              setBoxScoreViews((prev) => ({
-                                ...prev,
-                                [gamePk]: newView,
-                              }))
-                            }
-                          />
-                        )}
-                        {contentKey === 'team-history' && <TeamHistory game={game} />}
-                        {contentKey === 'player-stats' && (
-                          <PlayerStats
-                            game={game}
-                            batterGameLogs={batterGameLogs}
-                            playerStatsSortConfig={playerStatsSortConfig}
-                            setPlayerStatsSortConfig={setPlayerStatsSortConfig}
-                            setSelectedPlayers={(teamId, playerName) => {
-                              const updated = {
-                                ...JSON.parse(Cookies.get('selectedPlayers') || '{}'),
-                                [teamId]: playerName,
-                              };
-                              Cookies.set('selectedPlayers', JSON.stringify(updated), {
-                                expires: 365,
-                              });
-                            }}
-                          />
-                        )}
-                        {contentKey === 'pitcher-last-5' && (
-                          <PitcherLastFive
-                            game={game}
-                            awayGames={
-                              game.teams.away.probablePitcher?.lastFiveStarts || []
-                            }
-                            homeGames={
-                              game.teams.home.probablePitcher?.lastFiveStarts || []
-                            }
-                          />
-                        )}
-                        {contentKey === 'batter-gamelog' &&
-                          batterGameLogs[game.teams.away.team.id] &&
-                          batterGameLogs[game.teams.home.team.id] && (
-                            <BatterGamelog
-                              teams={[
-                                {
-                                  team: game.teams.away.team,
-                                  teamType: 'Away',
-                                  logs: batterGameLogs[game.teams.away.team.id]?.logs,
-                                  roster:
-                                    batterGameLogs[game.teams.away.team.id]?.roster,
-                                },
-                                {
-                                  team: game.teams.home.team,
-                                  teamType: 'Home',
-                                  logs: batterGameLogs[game.teams.home.team.id]?.logs,
-                                  roster:
-                                    batterGameLogs[game.teams.home.team.id]?.roster,
-                                },
-                              ]}
-                              gameDate={game.gameDate}
-                              getTeamAbbreviation={getTeamAbbreviation}
-                              numGamesToShow={numGamesToShow}
-                              setNumGamesToShow={setNumGamesToShow}
-                            />
-                          )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </>
+          visibleGames.map((game) => (
+            <GameCard
+              key={game.gamePk}
+              game={game}
+              selectedDate={selectedDate}
+              formatTime={formatTime}
+              getTeamLogo={getTeamLogo}
+              getTeamRecord={getTeamRecord}
+              getTeamAbbreviation={getTeamAbbreviation}
+              liveData={liveGameData[game.gamePk]}
+              gameBackgroundColors={gameBackgroundColors}
+              batterGameLogs={batterGameLogs}
+              playerStatsSortConfig={playerStatsSortConfig}
+              setPlayerStatsSortConfig={setPlayerStatsSortConfig}
+            />
+          ))
         )}
       </div>
+
       <div
         style={{
           padding: '4px',
