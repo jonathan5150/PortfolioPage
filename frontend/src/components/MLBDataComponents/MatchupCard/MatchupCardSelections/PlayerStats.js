@@ -241,11 +241,11 @@ const PlayerStats = ({
         style={{
           position: 'absolute',
           fontSize: '0.6rem',
-          top: '8px',
+          top: '6px',
           right: '1rem',
           background: 'rgba(0,0,0,0.0)',
           color: 'white',
-          transform: showing === 'away' ? 'rotate(0deg)' : 'rotate(180deg)',
+          transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
           transition: 'transform 0.3s',
           border: 'none',
           padding: '4px 8px',

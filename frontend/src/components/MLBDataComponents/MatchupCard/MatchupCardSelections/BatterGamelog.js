@@ -140,6 +140,11 @@ const BatterGamelog = ({
             style={{ marginBottom: '10px', padding: '4px', width: '100%' }}
           >
             {[...roster]
+              .filter((player) => {
+                const playerName = player.person.fullName;
+                const games = logs[playerName];
+                return games && games.length > 0;
+              })
               .sort((a, b) => {
                 const aLast = a.person.fullName.split(' ').slice(-1)[0];
                 const bLast = b.person.fullName.split(' ').slice(-1)[0];
@@ -221,12 +226,12 @@ const BatterGamelog = ({
         onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
         style={{
           position: 'absolute',
-          top: '9px',
+          top: '5px',
           fontSize: '0.6rem',
           right: '4rem',
           background: 'rgba(0,0,0,0.0)',
           color: 'white',
-          transform: showing === 'away' ? 'rotate(0deg)' : 'rotate(180deg)',
+          transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
           transition: 'transform 0.3s',
           border: 'none',
           padding: '4px 8px',

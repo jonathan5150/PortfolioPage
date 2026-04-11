@@ -90,11 +90,36 @@ const GameCard = memo(function GameCard({
   });
 
   const contentInnerRef = useRef(null);
+  const resizeObserverRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const isTransitioningRef = useRef(false);
   const [animatedHeight, setAnimatedHeight] = useState(isExpanded ? 'auto' : '0px');
+
+  const measureInnerHeight = useCallback(() => {
+    const inner = contentInnerRef.current;
+    if (!inner) return 0;
+    return inner.scrollHeight;
+  }, []);
 
   const handleContentChange = useCallback(
     (newKey) => {
-      setContentKey(newKey);
+      const inner = contentInnerRef.current;
+
+      if (inner && isExpanded) {
+        const currentHeight =
+          animatedHeight === 'auto'
+            ? inner.scrollHeight
+            : parseFloat(animatedHeight) || inner.scrollHeight;
+
+        setAnimatedHeight(`${currentHeight}px`);
+        isTransitioningRef.current = true;
+
+        requestAnimationFrame(() => {
+          setContentKey(newKey);
+        });
+      } else {
+        setContentKey(newKey);
+      }
 
       try {
         const existing = JSON.parse(Cookies.get('contentKeys') || '{}');
@@ -112,7 +137,7 @@ const GameCard = memo(function GameCard({
         });
       }
     },
-    [gamePk]
+    [gamePk, isExpanded, animatedHeight]
   );
 
   const toggleGameData = useCallback(() => {
@@ -306,16 +331,21 @@ const GameCard = memo(function GameCard({
     const inner = contentInnerRef.current;
     if (!inner) return;
 
-    if (!isExpanded) {
-      setAnimatedHeight((prev) => {
-        if (prev === 'auto') {
-          return `${inner.scrollHeight}px`;
-        }
-        return prev;
-      });
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
 
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
+    if (!isExpanded) {
+      const currentHeight =
+        animatedHeight === 'auto'
+          ? inner.scrollHeight
+          : parseFloat(animatedHeight) || inner.scrollHeight;
+
+      setAnimatedHeight(`${currentHeight}px`);
+
+      animationFrameRef.current = requestAnimationFrame(() => {
+        animationFrameRef.current = requestAnimationFrame(() => {
           setAnimatedHeight('0px');
         });
       });
@@ -323,14 +353,70 @@ const GameCard = memo(function GameCard({
       return;
     }
 
-    const nextHeight = `${inner.scrollHeight}px`;
+    const nextHeight = `${measureInnerHeight()}px`;
     setAnimatedHeight(nextHeight);
-  }, [isExpanded, contentKey, numGamesToShow, boxScoreView, statContent]);
+    isTransitioningRef.current = true;
+  }, [isExpanded, contentKey, numGamesToShow, boxScoreView, statContent, animatedHeight, measureInnerHeight]);
 
-  const handleHeightTransitionEnd = useCallback(() => {
+  useEffect(() => {
+    const inner = contentInnerRef.current;
+    if (!inner || !isExpanded) return;
+
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
+    }
+
+    resizeObserverRef.current = new ResizeObserver(() => {
+      const currentInner = contentInnerRef.current;
+      if (!currentInner || !isExpanded) return;
+
+      const nextHeight = `${currentInner.scrollHeight}px`;
+
+      if (animatedHeight === 'auto') {
+        setAnimatedHeight(nextHeight);
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (isExpanded) {
+              isTransitioningRef.current = true;
+            }
+          });
+        });
+      } else {
+        setAnimatedHeight(nextHeight);
+        isTransitioningRef.current = true;
+      }
+    });
+
+    resizeObserverRef.current.observe(inner);
+
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+    };
+  }, [isExpanded, animatedHeight]);
+
+  useEffect(() => {
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
+  const handleHeightTransitionEnd = useCallback((e) => {
+    if (e.propertyName !== 'height') return;
+
     if (isExpanded) {
       setAnimatedHeight('auto');
     }
+
+    isTransitioningRef.current = false;
   }, [isExpanded]);
 
   return (
@@ -457,11 +543,7 @@ const GameCard = memo(function GameCard({
 
       <div
         className="game-data-container stat-toggle-container"
-        onTransitionEnd={(e) => {
-          if (e.propertyName === 'height') {
-            handleHeightTransitionEnd();
-          }
-        }}
+        onTransitionEnd={handleHeightTransitionEnd}
         style={{
           overflow: 'hidden',
           height: isExpanded ? animatedHeight : '0px',
