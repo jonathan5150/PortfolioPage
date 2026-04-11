@@ -111,12 +111,13 @@ const BatterGamelog = ({
               left: '50%',
               transform: 'translateX(-50%)',
               textAlign: 'center',
+              width: '65%',
             }}
           >
             <h3>{team.name}</h3>
           </div>
 
-          <div style={{ position: 'absolute', right: 0 }}>
+          <div style={{ position: 'absolute', right: 0, marginTop: '-3px' }}>
             <select
               value={numGamesToShow}
               onChange={(e) => {
