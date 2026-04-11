@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import Scoreboard from '../Scoreboard';
 
 const teamPrimaryColors = {
@@ -40,13 +40,52 @@ const LiveScoreBug = ({
   handleStarClick,
   getTeamLogo,
   gameBackgroundColors,
-  starredTeams,
+  selectedStarTeamId,
   getTeamAbbreviation,
   liveData,
   showScoreboard = false,
   onToggleStats,
 }) => {
   const trueLiveData = liveData?.liveData ?? liveData;
+
+  const longPressTimerRef = useRef(null);
+  const longPressTriggeredRef = useRef(false);
+
+  const clearLongPress = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  const startLongPress = useCallback(
+    (e, teamId) => {
+      e.stopPropagation(); // 🔥 THIS IS THE FIX
+      clearLongPress();
+      longPressTriggeredRef.current = false;
+
+      longPressTimerRef.current = setTimeout(() => {
+        handleStarClick?.(teamId);
+        longPressTriggeredRef.current = true;
+        longPressTimerRef.current = null;
+      }, 1000);
+    },
+    [clearLongPress, handleStarClick]
+  );
+
+  const suppressClickAfterLongPress = useCallback((e) => {
+    if (longPressTriggeredRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      longPressTriggeredRef.current = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearLongPress();
+    };
+  }, [clearLongPress]);
 
   const awayTeam = game.teams.away.team;
   const homeTeam = game.teams.home.team;
@@ -124,10 +163,19 @@ const LiveScoreBug = ({
     const abbr = getTeamAbbreviation(team.id);
     const teamName = team.name;
     const color = teamPrimaryColors[teamName];
+    const isStarred = selectedStarTeamId === team.id;
 
     return (
       <div
         className="team-cell"
+          onPointerDown={(e) => startLongPress(e, team.id)}
+          onPointerUp={(e) => {
+            e.stopPropagation();
+            clearLongPress();
+          }}
+          onPointerLeave={clearLongPress}
+          onPointerCancel={clearLongPress}
+          onContextMenu={(e) => e.preventDefault()}
         style={{ display: 'flex', cursor: 'pointer', position: 'relative', margin: cellMargin }}
       >
         {color && (
@@ -158,7 +206,7 @@ const LiveScoreBug = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            border: '2px solid #555555',
+            border: isStarred ? '2px solid #c49410' : '2px solid rgb(85, 85, 85)',
             backgroundColor: 'rgba(70, 70, 70, 0.8)',
             borderRadius: side === 'away' ? '0 6px 0 0' : '6px 0 0 0',
             padding: '5px 10px',
@@ -342,6 +390,7 @@ const LiveScoreBug = ({
     <div
       className="score-grid"
       onClick={onToggleStats}
+      onClickCapture={suppressClickAfterLongPress}
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',

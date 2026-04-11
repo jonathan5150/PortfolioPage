@@ -53,6 +53,45 @@ const GameCard = memo(function GameCard({
     }
   });
 
+  const [selectedStarTeamId, setSelectedStarTeamId] = useState(() => {
+    const saved = Cookies.get('selectedStarTeamByGame');
+    if (!saved) return null;
+
+    try {
+      const parsed = JSON.parse(saved);
+      return parsed?.[gamePk] ?? null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleStarClick = useCallback(
+    (teamId) => {
+      setSelectedStarTeamId((prevSelectedTeamId) => {
+        const nextSelectedTeamId = prevSelectedTeamId === teamId ? null : teamId;
+
+        let existing = {};
+        try {
+          existing = JSON.parse(Cookies.get('selectedStarTeamByGame') || '{}');
+        } catch {
+          existing = {};
+        }
+
+        const nextCookieValue = {
+          ...existing,
+          [gamePk]: nextSelectedTeamId,
+        };
+
+        Cookies.set('selectedStarTeamByGame', JSON.stringify(nextCookieValue), {
+          expires: 365,
+        });
+
+        return nextSelectedTeamId;
+      });
+    },
+    [gamePk]
+  );
+
   const [isExpanded, setIsExpanded] = useState(false);
 
   const [boxScoreView, setBoxScoreView] = useState(() => {
@@ -404,6 +443,8 @@ const GameCard = memo(function GameCard({
             liveData={liveData?.liveData}
             showScoreboard={isExpanded}
             onToggleStats={toggleGameData}
+            handleStarClick={handleStarClick}
+            selectedStarTeamId={selectedStarTeamId}
           />
         ) : isFinal ? (
           <AfterScoreBug
@@ -415,6 +456,8 @@ const GameCard = memo(function GameCard({
             liveData={liveData}
             showScoreboard={isExpanded}
             onToggleStats={toggleGameData}
+            handleStarClick={handleStarClick}
+            selectedStarTeamId={selectedStarTeamId}
           />
         ) : (
             <BeforeScoreBug
@@ -425,6 +468,8 @@ const GameCard = memo(function GameCard({
               getTeamAbbreviation={getTeamAbbreviation}
               liveData={liveData}
               onToggleStats={toggleGameData}
+              handleStarClick={handleStarClick}
+              selectedStarTeamId={selectedStarTeamId}
             />
         )}
       </div>
