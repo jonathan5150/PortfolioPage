@@ -33,7 +33,7 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
       {(!Array.isArray(games) || games.length === 0) ? (
         <p style={{ margin: 0 }}>No recent starts found.</p>
       ) : (
-        <table style={{ fontSize: '13px', width: '100%', tableLayout: 'fixed' }}>
+        <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed' }}>
           <thead>
             <tr>
               <th style={{ width: '18%' }}>DATE</th>
@@ -55,7 +55,6 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
               const resChar = computeRes(g);
 
               const resultStyle = {
-                fontWeight: 'bold',
                 color:
                   resChar === 'W'
                     ? 'rgba(0, 155, 0, 0.6)'

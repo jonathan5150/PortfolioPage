@@ -159,7 +159,7 @@ const BatterGamelog = ({
         {playerGames.length === 0 ? (
           <p>No recent games found for {selectedPlayer}.</p>
         ) : (
-          <table style={{ fontSize: '13px', width: '100%', tableLayout: 'fixed' }}>
+          <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed' }}>
             <thead>
               <tr>
                 <th style={{ width: '12%' }}>DATE</th>
@@ -221,8 +221,8 @@ const BatterGamelog = ({
         onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
         style={{
           position: 'absolute',
-          fontSize: '0.6rem',
           top: '9px',
+          fontSize: '0.6rem',
           right: '4rem',
           background: 'rgba(0,0,0,0.0)',
           color: 'white',

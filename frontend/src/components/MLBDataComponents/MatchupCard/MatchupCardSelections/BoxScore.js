@@ -162,11 +162,10 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
       <div style={{ width: '100%' }}>
         <h3 style={{ textAlign: 'center' }}>{teamData?.team?.name || label}</h3>
 
-        <h3 style={{ fontSize: '12px', width: '100%', margin: '0px', display: 'block' }}>Batters</h3>
         <table style={{ width: '100%', fontSize: '12px' }}>
           <thead>
             <tr>
-              <th style={{ textAlign: 'left', width: '30%' }}>Player</th>
+              <th style={{ textAlign: 'left', width: '30%' }}></th>
               <th style={{ width: '8.75%' }}>POS</th>
               <th style={{ width: '8.75%' }}>AB</th>
               <th style={{ width: '8.75%' }}>R</th>
@@ -267,7 +266,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
         style={{
           position: 'absolute',
           fontSize: '0.6rem',
-          top: '6px',
+          top: '8px',
           right: '1rem',
           background: 'rgba(0,0,0,0.0)',
           color: 'white',

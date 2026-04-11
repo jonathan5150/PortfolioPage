@@ -99,7 +99,7 @@ const PlayerStats = ({
     return (
       <span
         style={{
-          fontSize: '10px',
+          fontSize: '0.6rem',
           verticalAlign: 'middle',
           marginLeft: '2px',
           position: 'relative',
@@ -137,6 +137,7 @@ const PlayerStats = ({
           style={{
             fontSize: '12px',
             marginBottom: '3px',
+            paddingRight: '10px',
             width: '100%',
             tableLayout: 'fixed',
             cursor: 'pointer'
@@ -190,7 +191,6 @@ const PlayerStats = ({
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
                       textAlign: 'left',
-                      paddingLeft: '5px',
                       userSelect: 'none'
                     }}
                   >
