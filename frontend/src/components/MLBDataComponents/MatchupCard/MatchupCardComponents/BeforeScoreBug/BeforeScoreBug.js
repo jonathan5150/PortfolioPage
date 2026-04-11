@@ -59,12 +59,19 @@ const BeforeScoreBug = ({
 
   const startLongPress = useCallback(
     (e, teamId) => {
-      e.stopPropagation(); // 🔥 THIS IS THE FIX
+      e.preventDefault();
+      e.stopPropagation();
+
       clearLongPress();
       longPressTriggeredRef.current = false;
 
       longPressTimerRef.current = setTimeout(() => {
         handleStarClick?.(teamId);
+
+        if (navigator.vibrate) {
+          navigator.vibrate(35);
+        }
+
         longPressTriggeredRef.current = true;
         longPressTimerRef.current = null;
       }, 1000);
@@ -130,13 +137,14 @@ const BeforeScoreBug = ({
       <div
         className="team-cell"
         onPointerDown={(e) => startLongPress(e, team.id)}
-          onPointerUp={(e) => {
-            e.stopPropagation();
-            clearLongPress();
-          }}
-          onPointerLeave={clearLongPress}
-          onPointerCancel={clearLongPress}
-          onContextMenu={(e) => e.preventDefault()}
+        onPointerUp={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          clearLongPress();
+        }}
+        onPointerLeave={clearLongPress}
+        onPointerCancel={clearLongPress}
+        onContextMenu={(e) => e.preventDefault()}
         style={{
           display: 'flex',
           cursor: 'default',
@@ -144,6 +152,8 @@ const BeforeScoreBug = ({
           userSelect: 'none',
           WebkitUserSelect: 'none',
           WebkitTapHighlightColor: 'transparent',
+          WebkitTouchCallout: 'none',
+          touchAction: 'manipulation',
           outline: 'none',
         }}
       >
