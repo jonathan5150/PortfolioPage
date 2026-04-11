@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Cookies from 'js-cookie';
 
 const PlayerStats = ({
@@ -19,16 +19,43 @@ const PlayerStats = ({
 
   const isPostseason = game?.gameType && game.gameType !== 'R';
 
-  const [selectedTeam, setSelectedTeam] = useState(() => {
+  const [showing, setShowing] = useState(() => {
     const cookie = Cookies.get('playerStatsTeam');
-    const parsed = parseInt(cookie);
-    if (parsed === awayTeamId || parsed === homeTeamId) return parsed;
-    return awayTeamId;
+    return cookie === 'home' ? 'home' : 'away';
   });
 
+  const touchStartX = useRef(null);
+  const dragDeltaX = useRef(0);
+
   useEffect(() => {
-    Cookies.set('playerStatsTeam', selectedTeam, { expires: 7 });
-  }, [selectedTeam]);
+    Cookies.set('playerStatsTeam', showing, { expires: 7 });
+  }, [showing]);
+
+  const handleSetShowing = (next) => {
+    setShowing(next);
+  };
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    dragDeltaX.current = 0;
+  };
+
+  const handleTouchMove = (e) => {
+    const currentX = e.touches[0].clientX;
+    dragDeltaX.current = currentX - touchStartX.current;
+
+    if (dragDeltaX.current > 30 && showing === 'home') {
+      handleSetShowing('away');
+      dragDeltaX.current = 0;
+    } else if (dragDeltaX.current < -30 && showing === 'away') {
+      handleSetShowing('home');
+      dragDeltaX.current = 0;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    dragDeltaX.current = 0;
+  };
 
   const sortConfig = useMemo(() => {
     return playerStatsSortConfig || { key: 'gamesPlayed', direction: 'desc' };
@@ -84,13 +111,11 @@ const PlayerStats = ({
     );
   };
 
-  const renderPlayerTable = (teamName, players, teamId) => {
-
+  const renderPlayerTable = (teamName, players) => {
     let filteredPlayers = players.filter(
       (p) => (p.seasonStats?.gamesPlayed || 0) >= (isPostseason ? 1 : 20)
     );
 
-    // fallback: still enforce > 0 GP
     if (filteredPlayers.length === 0) {
       filteredPlayers = players.filter(
         (p) => (p.seasonStats?.gamesPlayed || 0) > 0
@@ -104,8 +129,10 @@ const PlayerStats = ({
         className="lineup noselect"
         tabIndex={-1}
         draggable={false}
-        style={{ marginBottom: '3px' }}
+        style={{ marginBottom: '3px', width: '100%', flexShrink: 0 }}
       >
+        <h3 style={{ textAlign: 'center' }}>{teamName}</h3>
+
         <table
           style={{
             fontSize: '12px',
@@ -198,27 +225,53 @@ const PlayerStats = ({
   };
 
   return (
-    <div className="player-stats">
+    <div
+      className="player-stats"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{
+        position: 'relative',
+        overflow: 'hidden',
+        width: '100%',
+      }}
+    >
+      <button
+        onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
+        style={{
+          position: 'absolute',
+          fontSize: '0.6rem',
+          top: '8px',
+          right: '1rem',
+          background: 'rgba(0,0,0,0.0)',
+          color: 'white',
+          transform: showing === 'away' ? 'rotate(0deg)' : 'rotate(180deg)',
+          transition: 'transform 0.3s',
+          border: 'none',
+          padding: '4px 8px',
+          cursor: 'pointer',
+          zIndex: 1,
+        }}
+        aria-label="Toggle Team"
+      >
+        ▶
+      </button>
+
       <div
         style={{
-          fontSize: '7px',
           display: 'flex',
-          justifyContent: 'center',
-          marginBottom: '5px'
+          width: '200%',
+          transform: showing === 'away' ? 'translateX(0%)' : 'translateX(-50%)',
+          transition: 'transform 0.4s ease',
         }}
       >
-        <select
-          id="team-select"
-          value={selectedTeam}
-          onChange={(e) => setSelectedTeam(parseInt(e.target.value))}
-        >
-          <option value={awayTeamId}>{awayTeamName}</option>
-          <option value={homeTeamId}>{homeTeamName}</option>
-        </select>
+        <div style={{ width: '100%' }}>
+          {renderPlayerTable(awayTeamName, awayRoster)}
+        </div>
+        <div style={{ width: '100%' }}>
+          {renderPlayerTable(homeTeamName, homeRoster)}
+        </div>
       </div>
-
-      {selectedTeam === awayTeamId && renderPlayerTable(awayTeamName, awayRoster, awayTeamId)}
-      {selectedTeam === homeTeamId && renderPlayerTable(homeTeamName, homeRoster, homeTeamId)}
     </div>
   );
 };
