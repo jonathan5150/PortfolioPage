@@ -185,6 +185,7 @@ const LiveScoreBug = ({
           cursor: 'default',
           position: 'relative',
           userSelect: 'none',
+          margin: '2px',
           WebkitUserSelect: 'none',
           WebkitTapHighlightColor: 'transparent',
           WebkitTouchCallout: 'none',
