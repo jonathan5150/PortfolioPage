@@ -53,17 +53,7 @@ const GameCard = memo(function GameCard({
     }
   });
 
-  const [isExpanded, setIsExpanded] = useState(() => {
-    const saved = Cookies.get('expandedGames');
-    if (!saved) return false;
-
-    try {
-      const parsed = JSON.parse(saved);
-      return !!parsed?.[gamePk];
-    } catch {
-      return false;
-    }
-  });
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const [boxScoreView, setBoxScoreView] = useState(() => {
     const saved = Cookies.get('boxScoreViews');
@@ -141,25 +131,8 @@ const GameCard = memo(function GameCard({
   );
 
   const toggleGameData = useCallback(() => {
-    const nextExpanded = !isExpanded;
-    setIsExpanded(nextExpanded);
-
-    try {
-      const existing = JSON.parse(Cookies.get('expandedGames') || '{}');
-      Cookies.set(
-        'expandedGames',
-        JSON.stringify({
-          ...existing,
-          [gamePk]: nextExpanded,
-        }),
-        { expires: 365 }
-      );
-    } catch {
-      Cookies.set('expandedGames', JSON.stringify({ [gamePk]: nextExpanded }), {
-        expires: 365,
-      });
-    }
-  }, [gamePk, isExpanded]);
+    setIsExpanded((prev) => !prev);
+  }, []);
 
   const handleBoxScoreViewChange = useCallback(
     (newView) => {
@@ -444,7 +417,6 @@ const GameCard = memo(function GameCard({
             onToggleStats={toggleGameData}
           />
         ) : (
-          <div onClick={toggleGameData} style={{ cursor: 'pointer' }}>
             <BeforeScoreBug
               game={game}
               gamePk={gamePk}
@@ -452,8 +424,8 @@ const GameCard = memo(function GameCard({
               gameBackgroundColors={gameBackgroundColors}
               getTeamAbbreviation={getTeamAbbreviation}
               liveData={liveData}
+              onToggleStats={toggleGameData}
             />
-          </div>
         )}
       </div>
 
@@ -475,22 +447,24 @@ const GameCard = memo(function GameCard({
         }}
       >
         <div ref={contentInnerRef}>
+
           <select
             value={contentKey}
             onChange={(e) => handleContentChange(e.target.value)}
           >
             {STAT_OPTIONS.map((option) => (
+                <div>
               <option key={option.value} value={option.value}>
                 {option.label}
+
               </option>
+              </div>
             ))}
           </select>
 
           <div
             className="stat-section"
-            style={{
-              marginBottom: '0px',
-            }}
+
           >
             <div
               style={{

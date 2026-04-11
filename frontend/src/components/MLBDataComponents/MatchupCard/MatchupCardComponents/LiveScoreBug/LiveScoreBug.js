@@ -341,23 +341,28 @@ const LiveScoreBug = ({
   return (
     <div
       className="score-grid"
+      onClick={onToggleStats}
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: '1fr 1fr auto',
         padding: '5px 5px 0 5px',
+        cursor: 'pointer',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        outline: 'none',
       }}
     >
-      <div onClick={onToggleStats} style={{ cursor: 'pointer' }}>
+      <div>
         {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
       </div>
 
-      <div onClick={onToggleStats} style={{ cursor: 'pointer' }}>
+      <div>
         {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
       </div>
 
       <div
-        onClick={onToggleStats}
         style={{
           margin: cellMargin,
           border: '2px solid #555555',
@@ -373,7 +378,6 @@ const LiveScoreBug = ({
           textAlign: 'left',
           paddingLeft: '14px',
           borderRadius: '0 0 0 6px',
-          cursor: 'pointer',
         }}
       >
         <div style={{ marginBottom: '4px' }}>
@@ -384,7 +388,7 @@ const LiveScoreBug = ({
         </div>
       </div>
 
-      <div onClick={onToggleStats} style={{ cursor: 'pointer' }}>
+      <div>
         {renderPitchOutBox()}
       </div>
 

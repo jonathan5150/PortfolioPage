@@ -131,8 +131,36 @@ const PlayerStats = ({
         draggable={false}
         style={{ marginBottom: '3px', width: '100%', flexShrink: 0 }}
       >
-        <h3 style={{ textAlign: 'center' }}>{teamName}</h3>
+        <h3
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    margin: '0',
+                  }}
+                >
+                  {teamName}
 
+                  <button
+                    onClick={() =>
+                      handleSetShowing(showing === 'away' ? 'home' : 'away')
+                    }
+                    style={{
+                      position: 'absolute',
+                      right: '0.5rem',
+                      fontSize: '0.6rem',
+                      background: 'transparent',
+                      color: 'white',
+                      transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
+                      transition: 'transform 0.3s',
+                      border: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ▶
+                  </button>
+                </h3>
         <table
           style={{
             fontSize: '12px',
@@ -236,26 +264,6 @@ const PlayerStats = ({
         width: '100%',
       }}
     >
-      <button
-        onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
-        style={{
-          position: 'absolute',
-          fontSize: '0.6rem',
-          top: '6px',
-          right: '1rem',
-          background: 'rgba(0,0,0,0.0)',
-          color: 'white',
-          transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
-          transition: 'transform 0.3s',
-          border: 'none',
-          padding: '4px 8px',
-          cursor: 'pointer',
-          zIndex: 1,
-        }}
-        aria-label="Toggle Team"
-      >
-        ▶
-      </button>
 
       <div
         style={{

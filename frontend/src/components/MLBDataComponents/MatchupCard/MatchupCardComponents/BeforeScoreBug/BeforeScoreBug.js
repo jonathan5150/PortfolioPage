@@ -43,6 +43,7 @@ const BeforeScoreBug = ({
   starredTeams,
   getTeamAbbreviation,
   liveData,
+  onToggleStats,
 }) => {
   const trueLiveData = liveData?.liveData ?? liveData;
 
@@ -88,7 +89,15 @@ const BeforeScoreBug = ({
     return (
       <div
         className="team-cell"
-        style={{ display: 'flex', cursor: 'default', position: 'relative' }}
+        style={{
+          display: 'flex',
+          cursor: 'default',
+          position: 'relative',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          outline: 'none',
+        }}
       >
         {gradientColor && (
           <div
@@ -98,9 +107,10 @@ const BeforeScoreBug = ({
               bottom: 0,
               right: 0,
               left: 0,
-              background: side === 'home'
-                 ? `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`
-                 : `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`,
+              background:
+                side === 'home'
+                  ? `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`
+                  : `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`,
               backgroundBlendMode: 'screen',
               pointerEvents: 'none',
               zIndex: 1,
@@ -124,6 +134,10 @@ const BeforeScoreBug = ({
             opacity: 0.85,
             position: 'relative',
             zIndex: 2,
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            outline: 'none',
           }}
         >
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -196,22 +210,24 @@ const BeforeScoreBug = ({
   return (
     <div
       className="score-grid"
+      onClick={onToggleStats}
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: 'auto auto auto',
         marginBottom: '1px',
+        cursor: 'pointer',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        outline: 'none',
       }}
     >
       <div style={{ margin: '2px' }}>
         {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
       </div>
 
-      <div
-        style={{
-            margin: '2px'
-        }}>
-
+      <div style={{ margin: '2px' }}>
         {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
       </div>
 

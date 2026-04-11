@@ -104,7 +104,7 @@ const BatterGamelog = ({
 
     return (
       <div style={{ width: '100%', flexShrink: 0 }}>
-        <div style={{ position: 'relative', marginBottom: '10px', height: '30px' }}>
+        <div style={{ position: 'relative', marginBottom: '0px', height: '30px' }}>
           <div
             style={{
               position: 'absolute',
@@ -114,7 +114,36 @@ const BatterGamelog = ({
               width: '65%',
             }}
           >
-            <h3>{team.name}</h3>
+            <h3
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                position: 'relative',
+                                margin: '0',
+                              }}
+                            >
+                              {team.name}
+
+                              <button
+                                onClick={() =>
+                                  handleSetShowing(showing === 'away' ? 'home' : 'away')
+                                }
+                                style={{
+                                  position: 'absolute',
+                                  right: '0.5rem',
+                                  fontSize: '0.6rem',
+                                  background: 'transparent',
+                                  color: 'white',
+                                  transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
+                                  transition: 'transform 0.3s',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                ▶
+                              </button>
+                            </h3>
           </div>
 
           <div style={{ position: 'absolute', right: 0, marginTop: '-3px' }}>
@@ -125,7 +154,7 @@ const BatterGamelog = ({
                 setNumGamesToShow(value);
                 Cookies.set('numGamesToShow', value, { expires: 365 });
               }}
-              style={{ padding: '4px' }}
+              style={{ padding: '0px' }}
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -138,7 +167,7 @@ const BatterGamelog = ({
           <select
             value={selectedPlayer}
             onChange={(e) => handleSelectChange(team.id, e.target.value)}
-            style={{ marginBottom: '10px', padding: '4px', width: '100%' }}
+            style={{ marginBottom: '5px', padding: '4px', width: '100%' }}
           >
             {[...roster]
               .filter((player) => {
@@ -223,26 +252,6 @@ const BatterGamelog = ({
         width: '100%',
       }}
     >
-      <button
-        onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
-        style={{
-          position: 'absolute',
-          top: '5px',
-          fontSize: '0.6rem',
-          right: '4rem',
-          background: 'rgba(0,0,0,0.0)',
-          color: 'white',
-          transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
-          transition: 'transform 0.3s',
-          border: 'none',
-          padding: '4px 8px',
-          cursor: 'pointer',
-          zIndex: 2,
-        }}
-        aria-label="Toggle Team"
-      >
-        ▶
-      </button>
 
       <div
         style={{

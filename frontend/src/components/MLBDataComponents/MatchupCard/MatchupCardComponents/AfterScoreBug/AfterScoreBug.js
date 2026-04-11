@@ -72,7 +72,15 @@ const AfterScoreBug = ({
     return (
       <div
         className="team-cell"
-        style={{ display: 'flex', cursor: 'default', position: 'relative' }}
+        style={{
+          display: 'flex',
+          cursor: 'default',
+          position: 'relative',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTapHighlightColor: 'transparent',
+          outline: 'none',
+        }}
       >
         {gradientColor && (
           <div
@@ -109,6 +117,10 @@ const AfterScoreBug = ({
             opacity: 0.85,
             position: 'relative',
             zIndex: 2,
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
+            outline: 'none',
           }}
         >
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -181,22 +193,34 @@ const AfterScoreBug = ({
   return (
     <div
       className="score-grid"
+      onClick={onToggleStats}
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: 'auto auto auto',
+        cursor: 'pointer',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        WebkitTapHighlightColor: 'transparent',
+        outline: 'none',
       }}
     >
       <div
-        style={{ margin: '2px', cursor: 'pointer' }}
-        onClick={onToggleStats}
+        style={{
+          margin: '2px',
+          WebkitTapHighlightColor: 'transparent',
+          outline: 'none',
+        }}
       >
         {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
       </div>
 
       <div
-        style={{ margin: '2px', cursor: 'pointer' }}
-        onClick={onToggleStats}
+        style={{
+          margin: '2px',
+          WebkitTapHighlightColor: 'transparent',
+          outline: 'none',
+        }}
       >
         {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
       </div>
