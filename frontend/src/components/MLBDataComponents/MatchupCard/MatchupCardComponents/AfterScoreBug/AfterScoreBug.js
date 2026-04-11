@@ -45,6 +45,7 @@ const AfterScoreBug = ({
   getTeamAbbreviation,
   liveData,
   showScoreboard = false,
+  onToggleStats,
 }) => {
   const trueLiveData = liveData?.liveData ?? liveData;
 
@@ -81,9 +82,10 @@ const AfterScoreBug = ({
               bottom: 0,
               right: 0,
               left: 0,
-              background: side === 'home'
-                 ? `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`
-                 : `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`,
+              background:
+                side === 'home'
+                  ? `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`
+                  : `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`,
               backgroundBlendMode: 'screen',
               pointerEvents: 'none',
               zIndex: 1,
@@ -183,17 +185,18 @@ const AfterScoreBug = ({
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: 'auto auto auto',
-        padding: '5px 5px 0 5px',
       }}
     >
-      <div style={{ margin: '2px' }}>
+      <div
+        style={{ margin: '2px', cursor: 'pointer' }}
+        onClick={onToggleStats}
+      >
         {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
       </div>
 
       <div
-        style={{
-          margin: '2px'
-        }}
+        style={{ margin: '2px', cursor: 'pointer' }}
+        onClick={onToggleStats}
       >
         {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
       </div>
@@ -201,11 +204,11 @@ const AfterScoreBug = ({
       <div
         style={{
           gridColumn: '1 / span 2',
-          margin: showScoreboard && !gameNotStarted ? '0px' : '0px',
+          margin: '0px',
           overflow: 'hidden',
           paddingLeft: showScoreboard && !gameNotStarted ? '2px' : '5px',
           paddingRight: showScoreboard && !gameNotStarted ? '2px' : '5px',
-          paddingTop: showScoreboard && !gameNotStarted ? '2px' : '5px',
+          paddingTop: showScoreboard && !gameNotStarted ? '2px' : '0px',
           paddingBottom: showScoreboard && !gameNotStarted ? '3px' : '0px',
           maxHeight: showScoreboard && !gameNotStarted ? '120px' : '0px',
           opacity: showScoreboard && !gameNotStarted ? 1 : 0,

@@ -35,6 +35,8 @@ const MLBDataNavbar = ({ selectedDate, setSelectedDate, isCalendarOpen, setIsCal
             />
           </div>
         )}
+        <gap>
+        </gap>
         <div className="custom-datepicker-input">
           <DatePicker
             selected={selectedDate}

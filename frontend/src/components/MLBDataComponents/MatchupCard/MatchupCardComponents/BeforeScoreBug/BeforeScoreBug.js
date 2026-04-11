@@ -200,7 +200,6 @@ const BeforeScoreBug = ({
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: 'auto auto auto',
-        padding: '5px 5px 0 5px',
       }}
     >
       <div style={{ margin: '2px' }}>
@@ -222,7 +221,7 @@ const BeforeScoreBug = ({
           backgroundColor: 'rgba(70, 70, 70, 0.8)',
           opacity: 0.85,
           borderRadius: '0 0 0 6px',
-          padding: '5px',
+          padding: '3px',
         }}
       >
         {renderPitcherInfo(awayTeam, game.teams.away.probablePitcher)}
@@ -234,7 +233,7 @@ const BeforeScoreBug = ({
           border: '2px solid #555555',
           backgroundColor: 'rgba(70, 70, 70, 0.8)',
           opacity: 0.85,
-          padding: '5px',
+          padding: '3px',
           borderRadius: '0 0 6px 0',
         }}
       >

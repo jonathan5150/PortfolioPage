@@ -43,30 +43,32 @@ const LiveScoreBug = ({
   starredTeams,
   getTeamAbbreviation,
   liveData,
+  showScoreboard = false,
+  onToggleStats,
 }) => {
   const trueLiveData = liveData?.liveData ?? liveData;
 
   const awayTeam = game.teams.away.team;
   const homeTeam = game.teams.home.team;
-  const awayScore = liveData?.linescore?.teams?.away?.runs ?? '-';
-  const homeScore = liveData?.linescore?.teams?.home?.runs ?? '-';
+  const awayScore = trueLiveData?.linescore?.teams?.away?.runs ?? '-';
+  const homeScore = trueLiveData?.linescore?.teams?.home?.runs ?? '-';
 
-  const count = liveData?.plays?.currentPlay?.count || {};
+  const count = trueLiveData?.plays?.currentPlay?.count || {};
   const balls = count.balls ?? 0;
   const strikes = count.strikes ?? 0;
   const outs = count.outs ?? 0;
 
-  const offense = liveData?.linescore?.offense || {};
+  const offense = trueLiveData?.linescore?.offense || {};
   const onFirst = !!offense.first;
   const onSecond = !!offense.second;
   const onThird = !!offense.third;
 
-  const inning = liveData?.linescore?.currentInning ?? '';
-  const isTopInning = liveData?.linescore?.isTopInning;
+  const inning = trueLiveData?.linescore?.currentInning ?? '';
+  const isTopInning = trueLiveData?.linescore?.isTopInning;
   const inningArrow = isTopInning ? '▲' : '▼';
 
-  const batter = liveData?.plays?.currentPlay?.matchup?.batter;
-  const pitcher = liveData?.plays?.currentPlay?.matchup?.pitcher;
+  const batter = trueLiveData?.plays?.currentPlay?.matchup?.batter;
+  const pitcher = trueLiveData?.plays?.currentPlay?.matchup?.pitcher;
 
   const allPlayers = {
     ...trueLiveData?.boxscore?.teams?.away?.players,
@@ -136,9 +138,10 @@ const LiveScoreBug = ({
               bottom: 0,
               right: 0,
               left: 0,
-              background: side === 'home'
-                ? `linear-gradient(to right, ${color} 25%, transparent), ${color}`
-                : `linear-gradient(to right, ${color} 25%, transparent), ${color}`,
+              background:
+                side === 'home'
+                  ? `linear-gradient(to right, ${color} 25%, transparent), ${color}`
+                  : `linear-gradient(to right, ${color} 25%, transparent), ${color}`,
               backgroundBlendMode: 'screen',
               pointerEvents: 'none',
               zIndex: 1,
@@ -243,6 +246,7 @@ const LiveScoreBug = ({
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
+          borderRadius: '0 0 0 0',
         }}
       >
         <div style={{ fontWeight: 'bold', color: '#fff', marginBottom: '4px' }}>
@@ -340,48 +344,67 @@ const LiveScoreBug = ({
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gridTemplateRows: '1fr 1fr',
+        gridTemplateRows: '1fr 1fr auto',
         padding: '5px 5px 0 5px',
       }}
     >
-      {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
-      {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
+      <div onClick={onToggleStats} style={{ cursor: 'pointer' }}>
+        {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
+      </div>
+
+      <div onClick={onToggleStats} style={{ cursor: 'pointer' }}>
+        {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
+      </div>
 
       <div
-              style={{
-                margin: cellMargin,
-                border: '2px solid #555555',
-                backgroundColor: 'rgba(70, 70, 70, 0.8)',
-                opacity: 0.85,
-                fontSize: '11px',
-                color: 'white',
-                padding: '6px 8px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                lineHeight: '1.3',
-                textAlign: 'left',
-                paddingLeft: '14px',
-                borderRadius: '0 0 0 6px',
-              }}
-            >
-              <div style={{ marginBottom: '4px' }}>
-                {batter ? `${formatName(batter)} (${getBatterLine()})` : 'Batter: N/A'}
-              </div>
-              <div>
-                {pitcher ? `${formatName(pitcher)} (${getPitcherLine()})` : 'Pitcher: N/A'}
-              </div>
-            </div>
+        onClick={onToggleStats}
+        style={{
+          margin: cellMargin,
+          border: '2px solid #555555',
+          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          opacity: 0.85,
+          fontSize: '11px',
+          color: 'white',
+          padding: '6px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          lineHeight: '1.3',
+          textAlign: 'left',
+          paddingLeft: '14px',
+          borderRadius: '0 0 0 6px',
+          cursor: 'pointer',
+        }}
+      >
+        <div style={{ marginBottom: '4px' }}>
+          {batter ? `${formatName(batter)} (${getBatterLine()})` : 'Batter: N/A'}
+        </div>
+        <div>
+          {pitcher ? `${formatName(pitcher)} (${getPitcherLine()})` : 'Pitcher: N/A'}
+        </div>
+      </div>
 
-      {renderPitchOutBox()}
+      <div onClick={onToggleStats} style={{ cursor: 'pointer' }}>
+        {renderPitchOutBox()}
+      </div>
 
-
-
-      <div style={{ gridColumn: '1 / span 2', margin: cellMargin }}>
+      <div
+        style={{
+          gridColumn: '1 / span 2',
+          overflow: 'hidden',
+          paddingLeft: showScoreboard ? '2px' : '5px',
+          paddingRight: showScoreboard ? '2px' : '5px',
+          paddingTop: showScoreboard ? '2px' : '1px',
+          paddingBottom: showScoreboard ? '4px' : '0',
+          maxHeight: showScoreboard ? '120px' : '0px',
+          opacity: showScoreboard ? 1 : 0,
+          transition: 'max-height 0.6s ease, opacity 0.45s ease, padding 0.4s ease',
+        }}
+      >
         <Scoreboard
           game={game}
           getTeamAbbreviation={getTeamAbbreviation}
-          liveData={liveData}
+          liveData={trueLiveData}
         />
       </div>
     </div>

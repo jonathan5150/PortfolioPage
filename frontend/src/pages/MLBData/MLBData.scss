@@ -258,6 +258,10 @@ h3 {
   flex-direction: column;
 }
 
+.score-grid {
+  padding: 5px 5px 1px 5px;
+}
+
 .column3 {
   width: 60%;
 }
@@ -287,7 +291,7 @@ h3 {
 
 .pitcher-details {
   display: flex;
-  font-size: 12px;
+  font-size: 11px;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -500,6 +504,8 @@ select:focus {
   width: 90%;
 }
 
+
+
 .games-container {
   overflow-x: auto;
   width: 100%;
@@ -569,6 +575,7 @@ select:focus {
   display: flex;
   justify-content: center;
   align-items: center;
+  gap: 6px;
 }
 
 .controls button {

@@ -17,7 +17,7 @@ import BoxScore from './MatchupCardSelections/BoxScore';
 import BeforeScoreBug from './MatchupCardComponents/BeforeScoreBug/BeforeScoreBug';
 import AfterScoreBug from './MatchupCardComponents/AfterScoreBug/AfterScoreBug';
 import LiveScoreBug from './MatchupCardComponents/LiveScoreBug/LiveScoreBug';
-import { format } from 'date-fns';
+//import { format } from 'date-fns';
 
 const STAT_OPTIONS = [
   { value: 'box-score', label: 'BOX SCORE' },
@@ -230,7 +230,6 @@ const GameCard = memo(function GameCard({
   const now = new Date();
   const scheduledTime = new Date(game.gameDate);
   const hasGameStarted = !isPostponed && now >= scheduledTime;
-  const showGameTime = !isFinal || isExpanded;
 
   const awayTeamId = game.teams.away.team.id;
   const homeTeamId = game.teams.home.team.id;
@@ -420,68 +419,7 @@ const GameCard = memo(function GameCard({
   }, [isExpanded]);
 
   return (
-    <div className="game-container">
-      <div
-        className="game-time-container"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          overflow: 'hidden',
-          maxHeight: showGameTime ? '24px' : '0px',
-          marginBottom: '2px',
-          opacity: showGameTime ? 1 : 0,
-          transition: 'opacity 0.35s ease, max-height 0.35s ease',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          <p className="game-time" style={{ margin: 0, whiteSpace: 'nowrap' }}>
-            {(() => {
-              const originalDateStr = liveData?.gameData?.datetime?.originalDate;
-              const selected = format(new Date(selectedDate), 'yyyy-MM-dd');
-              const original = originalDateStr
-                ? format(new Date(originalDateStr), 'yyyy-MM-dd')
-                : null;
-
-              const isPostponedForDisplay =
-                detailedState.includes('Postponed') && selected === original;
-
-              const displayTime = isPostponedForDisplay
-                ? new Date(originalDateStr)
-                : new Date(game.gameDate);
-
-              const suffix = isPostponedForDisplay
-                ? ' (POSTPONED)'
-                : /Delayed/i.test(detailedState)
-                ? ' (DELAYED)'
-                : '';
-
-              return `${formatTime(displayTime)}${suffix}`;
-            })()}
-          </p>
-
-          {isLive && (
-            <div
-              className="live-indicator"
-              style={{
-                width: '5px',
-                height: '5px',
-                borderRadius: '50%',
-                backgroundColor: 'red',
-                flexShrink: 0,
-              }}
-            />
-          )}
-        </div>
-      </div>
-
+    <div className="game-container" style={{ position: 'relative' }}>
       <div>
         {isLive && hasGameStarted ? (
           <LiveScoreBug
@@ -491,6 +429,8 @@ const GameCard = memo(function GameCard({
             gameBackgroundColors={gameBackgroundColors}
             getTeamAbbreviation={getTeamAbbreviation}
             liveData={liveData?.liveData}
+            showScoreboard={isExpanded}
+            onToggleStats={toggleGameData}
           />
         ) : isFinal ? (
           <AfterScoreBug
@@ -501,44 +441,20 @@ const GameCard = memo(function GameCard({
             getTeamAbbreviation={getTeamAbbreviation}
             liveData={liveData}
             showScoreboard={isExpanded}
+            onToggleStats={toggleGameData}
           />
         ) : (
-          <BeforeScoreBug
-            game={game}
-            gamePk={gamePk}
-            getTeamLogo={getTeamLogo}
-            gameBackgroundColors={gameBackgroundColors}
-            getTeamAbbreviation={getTeamAbbreviation}
-            liveData={liveData}
-          />
+          <div onClick={toggleGameData} style={{ cursor: 'pointer' }}>
+            <BeforeScoreBug
+              game={game}
+              gamePk={gamePk}
+              getTeamLogo={getTeamLogo}
+              gameBackgroundColors={gameBackgroundColors}
+              getTeamAbbreviation={getTeamAbbreviation}
+              liveData={liveData}
+            />
+          </div>
         )}
-
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0px' }}>
-          <button
-            onClick={toggleGameData}
-            style={{
-              color: 'white',
-              background: 'none',
-              border: 'none',
-              fontSize: '0.6rem',
-              cursor: 'pointer',
-              margin: '1px 0 0 0',
-              padding: 0,
-              transform: isExpanded ? 'rotate(270deg)' : 'rotate(90deg)',
-              transition: 'transform 0.3s ease',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              width: '12px',
-              height: '12px',
-              lineHeight: '1',
-              overflow: 'hidden',
-            }}
-            aria-label="Toggle Stats"
-          >
-            ▶
-          </button>
-        </div>
       </div>
 
       <div
@@ -550,8 +466,8 @@ const GameCard = memo(function GameCard({
           opacity: isExpanded ? 1 : 0,
           transform: isExpanded ? 'translateY(0)' : 'translateY(-6px)',
           padding: isExpanded ? '5px' : '0 5px',
-          marginTop: isExpanded ? '5px' : '0',
-          marginBottom: isExpanded ? '12px' : '0',
+          marginTop: isExpanded ? '0px' : '0',
+          marginBottom: isExpanded ? '7px' : '0',
           pointerEvents: isExpanded ? 'auto' : 'none',
           transition:
             'height 0.35s ease, opacity 0.25s ease, transform 0.25s ease, padding 0.25s ease, margin 0.25s ease',
@@ -573,7 +489,7 @@ const GameCard = memo(function GameCard({
           <div
             className="stat-section"
             style={{
-              marginBottom: '5px',
+              marginBottom: '0px',
             }}
           >
             <div
