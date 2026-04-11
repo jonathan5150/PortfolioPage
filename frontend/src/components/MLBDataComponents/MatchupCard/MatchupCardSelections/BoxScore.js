@@ -61,7 +61,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
 
   if (!away || !home || lineupUnavailable) {
     return (
-      <div style={{ padding: '1rem', textAlign: 'center', fontStyle: 'italic' }}>
+      <div style={{ padding: '5px', textAlign: 'center', fontStyle: 'italic' }}>
         Lineup not yet available
       </div>
     );

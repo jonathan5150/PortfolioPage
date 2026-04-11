@@ -104,7 +104,8 @@ const BatterGamelog = ({
 
     return (
       <div style={{ width: '100%', flexShrink: 0 }}>
-        <div style={{ position: 'relative', marginBottom: '0px', height: '30px' }}>
+        <div style={{
+        position: 'relative', marginBottom: '0px', height: '30px' }}>
           <div
             style={{
               position: 'absolute',
@@ -146,7 +147,7 @@ const BatterGamelog = ({
                             </h3>
           </div>
 
-          <div style={{ position: 'absolute', right: 0, marginTop: '-3px' }}>
+          <div style={{ position: 'absolute', right: 0 }}>
             <select
               value={numGamesToShow}
               onChange={(e) => {
@@ -154,7 +155,7 @@ const BatterGamelog = ({
                 setNumGamesToShow(value);
                 Cookies.set('numGamesToShow', value, { expires: 365 });
               }}
-              style={{ padding: '0px' }}
+              style={{ height: '25.4px', padding: '0px' }}
             >
               <option value={5}>5</option>
               <option value={10}>10</option>

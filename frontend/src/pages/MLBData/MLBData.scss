@@ -338,9 +338,9 @@ h3 {
 
 select {
   width: auto;
-  max-width: 97.5%;
+  max-width: 100%;
   padding: 4px;
-  margin: 4px;
+  margin: 0px;
   font-size: 14px;
   font-family: 'DM Sans', sans-serif;
   font-weight: 400;
@@ -522,10 +522,10 @@ select:focus {
 }
 
 .last-twenty-column {
-  flex: 0 0 60px;
-  width: 60px;
-  min-width: 60px;
-  max-width: 60px;
+  flex: 0 0 64px;
+  width: 77px;
+  min-width: 64px;
+  margin-left: 1.2px;
   padding: 3px 4px;
   box-sizing: border-box;
   font-size: 11px;

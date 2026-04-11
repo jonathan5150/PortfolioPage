@@ -17,7 +17,6 @@ import BoxScore from './MatchupCardSelections/BoxScore';
 import BeforeScoreBug from './MatchupCardComponents/BeforeScoreBug/BeforeScoreBug';
 import AfterScoreBug from './MatchupCardComponents/AfterScoreBug/AfterScoreBug';
 import LiveScoreBug from './MatchupCardComponents/LiveScoreBug/LiveScoreBug';
-//import { format } from 'date-fns';
 
 const STAT_OPTIONS = [
   { value: 'box-score', label: 'BOX SCORE' },
@@ -26,6 +25,41 @@ const STAT_OPTIONS = [
   { value: 'batter-gamelog', label: 'PLAYER GAME LOG' },
   { value: 'pitcher-last-5', label: 'PITCHER GAME LOG' },
 ];
+
+const saveContentKeyCookie = (gamePk, newKey) => {
+  try {
+    const existing = JSON.parse(Cookies.get('contentKeys') || '{}');
+    Cookies.set(
+      'contentKeys',
+      JSON.stringify({
+        ...existing,
+        [gamePk]: newKey,
+      }),
+      { expires: 365 }
+    );
+  } catch {
+    Cookies.set('contentKeys', JSON.stringify({ [gamePk]: newKey }), {
+      expires: 365,
+    });
+  }
+};
+
+const controlButtonStyle = {
+  padding: '4px 10px',
+  borderRadius: '6px',
+  border: '1px solid #555',
+  background: 'rgba(60, 60, 60, 0.9)',
+  color: 'white',
+  fontSize: '0.7rem',
+  cursor: 'pointer',
+  height: '30px',
+  whiteSpace: 'nowrap',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontFamily: 'DM Sans, sans-serif',
+  fontWeight: 500,
+};
 
 const GameCard = memo(function GameCard({
   game,
@@ -38,6 +72,10 @@ const GameCard = memo(function GameCard({
   batterGameLogs,
   playerStatsSortConfig,
   setPlayerStatsSortConfig,
+  syncCommand,
+  onSetAllToThisCard,
+  onOpenAllToThisCard,
+  onCloseAllCards,
 }) {
   const gamePk = game.gamePk;
 
@@ -122,6 +160,7 @@ const GameCard = memo(function GameCard({
   const resizeObserverRef = useRef(null);
   const animationFrameRef = useRef(null);
   const isTransitioningRef = useRef(false);
+  const lastHandledSyncNonceRef = useRef(null);
   const [animatedHeight, setAnimatedHeight] = useState(isExpanded ? 'auto' : '0px');
 
   const measureInnerHeight = useCallback(() => {
@@ -150,21 +189,7 @@ const GameCard = memo(function GameCard({
         setContentKey(newKey);
       }
 
-      try {
-        const existing = JSON.parse(Cookies.get('contentKeys') || '{}');
-        Cookies.set(
-          'contentKeys',
-          JSON.stringify({
-            ...existing,
-            [gamePk]: newKey,
-          }),
-          { expires: 365 }
-        );
-      } catch {
-        Cookies.set('contentKeys', JSON.stringify({ [gamePk]: newKey }), {
-          expires: 365,
-        });
-      }
+      saveContentKeyCookie(gamePk, newKey);
     },
     [gamePk, isExpanded, animatedHeight]
   );
@@ -227,6 +252,28 @@ const GameCard = memo(function GameCard({
     },
     [gamePk]
   );
+
+  useEffect(() => {
+    if (!syncCommand?.nonce) return;
+    if (lastHandledSyncNonceRef.current === syncCommand.nonce) return;
+
+    lastHandledSyncNonceRef.current = syncCommand.nonce;
+
+    if (syncCommand.type === 'set-all') {
+      if (syncCommand.sourceGamePk !== gamePk) {
+        handleContentChange(syncCommand.contentKey);
+      }
+    }
+
+    if (syncCommand.type === 'open-all') {
+      handleContentChange(syncCommand.contentKey);
+      setIsExpanded(true);
+    }
+
+    if (syncCommand.type === 'close-all') {
+      setIsExpanded(false);
+    }
+  }, [syncCommand, gamePk, handleContentChange]);
 
   const detailedState = liveData?.gameData?.status?.detailedState ?? '';
   const abstractGameState = liveData?.gameData?.status?.abstractGameState ?? '';
@@ -460,17 +507,17 @@ const GameCard = memo(function GameCard({
             selectedStarTeamId={selectedStarTeamId}
           />
         ) : (
-            <BeforeScoreBug
-              game={game}
-              gamePk={gamePk}
-              getTeamLogo={getTeamLogo}
-              gameBackgroundColors={gameBackgroundColors}
-              getTeamAbbreviation={getTeamAbbreviation}
-              liveData={liveData}
-              onToggleStats={toggleGameData}
-              handleStarClick={handleStarClick}
-              selectedStarTeamId={selectedStarTeamId}
-            />
+          <BeforeScoreBug
+            game={game}
+            gamePk={gamePk}
+            getTeamLogo={getTeamLogo}
+            gameBackgroundColors={gameBackgroundColors}
+            getTeamAbbreviation={getTeamAbbreviation}
+            liveData={liveData}
+            onToggleStats={toggleGameData}
+            handleStarClick={handleStarClick}
+            selectedStarTeamId={selectedStarTeamId}
+          />
         )}
       </div>
 
@@ -492,25 +539,91 @@ const GameCard = memo(function GameCard({
         }}
       >
         <div ref={contentInnerRef}>
-
-          <select
-            value={contentKey}
-            onChange={(e) => handleContentChange(e.target.value)}
-          >
-            {STAT_OPTIONS.map((option) => (
-                <div>
-              <option key={option.value} value={option.value}>
-                {option.label}
-
-              </option>
-              </div>
-            ))}
-          </select>
-
           <div
-            className="stat-section"
-
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '10px',
+              marginBottom: '6px',
+              width: '100%',
+            }}
           >
+<div style={{ position: 'relative', flex: '0 0 47%', maxWidth: '50%' }}>
+            <select
+              value={contentKey}
+              onChange={(e) => handleContentChange(e.target.value)}
+              style={{
+                width: '100%',
+                height: '30px',
+                borderRadius: '6px',
+                border: '1px solid #555',
+                background: 'rgba(60, 60, 60, 0.9)',
+                color: 'white',
+                fontSize: '0.7rem',
+                fontFamily: 'DM Sans, sans-serif',
+                fontWeight: 500,
+                paddingRight: '0px', // space for arrow
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                MozAppearance: 'none',
+              }}
+            >
+              {STAT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <span
+              style={{
+                position: 'absolute',
+                right: '14px',   // 👈 THIS is your "margin from right edge"
+                top: '50%',
+                transform: 'translateY(-50%)',
+                pointerEvents: 'none',
+                fontSize: '0.6rem',
+                color: 'white',
+              }}
+            >
+              ▼
+            </span>
+</div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                marginLeft: 'auto',
+              }}
+            >
+              <button
+                type="button"
+                style={controlButtonStyle}
+                onClick={() => onSetAllToThisCard(gamePk, contentKey)}
+              >
+                SET
+              </button>
+
+              <button
+                type="button"
+                style={controlButtonStyle}
+                onClick={() => onOpenAllToThisCard(gamePk, contentKey)}
+              >
+                OPEN
+              </button>
+
+              <button
+                type="button"
+                style={controlButtonStyle}
+                onClick={onCloseAllCards}
+              >
+                CLOSE
+              </button>
+            </div>
+          </div>
+
+          <div className="stat-section">
             <div
               style={{
                 opacity: isExpanded ? 1 : 0,
@@ -554,6 +667,7 @@ const MatchupCard = ({
 }) => {
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
+  const [syncCommand, setSyncCommand] = useState(null);
 
   useEffect(() => {
     if (!loading) {
@@ -568,6 +682,31 @@ const MatchupCard = ({
     setDelayOver(false);
     setFadeIn(false);
   }, [loading]);
+
+  const handleSetAllToThisCard = useCallback((sourceGamePk, contentKey) => {
+    setSyncCommand({
+      type: 'set-all',
+      sourceGamePk,
+      contentKey,
+      nonce: Date.now(),
+    });
+  }, []);
+
+  const handleOpenAllToThisCard = useCallback((sourceGamePk, contentKey) => {
+    setSyncCommand({
+      type: 'open-all',
+      sourceGamePk,
+      contentKey,
+      nonce: Date.now(),
+    });
+  }, []);
+
+  const handleCloseAllCards = useCallback(() => {
+    setSyncCommand({
+      type: 'close-all',
+      nonce: Date.now(),
+    });
+  }, []);
 
   return (
     <div className="matchup-card fade-in">
@@ -614,6 +753,10 @@ const MatchupCard = ({
               batterGameLogs={batterGameLogs}
               playerStatsSortConfig={playerStatsSortConfig}
               setPlayerStatsSortConfig={setPlayerStatsSortConfig}
+              syncCommand={syncCommand}
+              onSetAllToThisCard={handleSetAllToThisCard}
+              onOpenAllToThisCard={handleOpenAllToThisCard}
+              onCloseAllCards={handleCloseAllCards}
             />
           ))
         )}
