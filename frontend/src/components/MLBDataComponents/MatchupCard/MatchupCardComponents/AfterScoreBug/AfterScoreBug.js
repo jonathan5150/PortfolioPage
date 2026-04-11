@@ -70,10 +70,6 @@ const AfterScoreBug = ({
       longPressTimerRef.current = setTimeout(() => {
         handleStarClick?.(teamId);
 
-        if (navigator.vibrate) {
-          navigator.vibrate(35);
-        }
-
         longPressTriggeredRef.current = true;
         longPressTimerRef.current = null;
       }, 1000);

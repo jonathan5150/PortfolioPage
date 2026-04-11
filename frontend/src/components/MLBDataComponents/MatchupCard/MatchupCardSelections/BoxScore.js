@@ -185,6 +185,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
               transition: 'transform 0.3s',
               border: 'none',
               cursor: 'pointer',
+              marginBottom: '1px',
             }}
           >
             ▶

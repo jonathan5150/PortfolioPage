@@ -21,7 +21,7 @@ import LiveScoreBug from './MatchupCardComponents/LiveScoreBug/LiveScoreBug';
 const STAT_OPTIONS = [
   { value: 'box-score', label: 'BOX SCORE' },
   { value: 'team-history', label: 'TEAM W/L HISTORY' },
-  { value: 'player-stats', label: 'PLAYER SEASON STATS' },
+  { value: 'player-stats', label: 'PLAYER STATS' },
   { value: 'batter-gamelog', label: 'PLAYER GAME LOG' },
   { value: 'pitcher-last-5', label: 'PITCHER GAME LOG' },
 ];
@@ -544,12 +544,11 @@ const GameCard = memo(function GameCard({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              gap: '10px',
               marginBottom: '6px',
               width: '100%',
             }}
           >
-<div style={{ position: 'relative', flex: '0 0 47%', maxWidth: '50%' }}>
+<div style={{ position: 'relative', flex: '0 0 48%', maxWidth: '60%' }}>
             <select
               value={contentKey}
               onChange={(e) => handleContentChange(e.target.value)}
@@ -578,7 +577,7 @@ const GameCard = memo(function GameCard({
             <span
               style={{
                 position: 'absolute',
-                right: '14px',   // 👈 THIS is your "margin from right edge"
+                right: '10px',   // 👈 THIS is your "margin from right edge"
                 top: '50%',
                 transform: 'translateY(-50%)',
                 pointerEvents: 'none',
@@ -592,14 +591,15 @@ const GameCard = memo(function GameCard({
             <div
               style={{
                 display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                marginLeft: 'auto',
+                flex: '0 0 48%',
+                maxWidth: '50%',
+                gap: '6px',
+                minWidth: 0, // 🔥 prevents overflow
               }}
             >
               <button
                 type="button"
-                style={controlButtonStyle}
+                style={{ ...controlButtonStyle, flex: 1, minWidth: 0 }}
                 onClick={() => onSetAllToThisCard(gamePk, contentKey)}
               >
                 SET
@@ -607,7 +607,7 @@ const GameCard = memo(function GameCard({
 
               <button
                 type="button"
-                style={controlButtonStyle}
+                style={{ ...controlButtonStyle, flex: 1, minWidth: 0 }}
                 onClick={() => onOpenAllToThisCard(gamePk, contentKey)}
               >
                 OPEN
@@ -615,7 +615,7 @@ const GameCard = memo(function GameCard({
 
               <button
                 type="button"
-                style={controlButtonStyle}
+                style={{ ...controlButtonStyle, flex: 1, minWidth: 0 }}
                 onClick={onCloseAllCards}
               >
                 CLOSE

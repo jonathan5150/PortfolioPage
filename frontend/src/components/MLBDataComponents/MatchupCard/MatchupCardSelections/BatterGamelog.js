@@ -104,64 +104,66 @@ const BatterGamelog = ({
 
     return (
       <div style={{ width: '100%', flexShrink: 0 }}>
-        <div style={{
-        position: 'relative', marginBottom: '0px', height: '30px' }}>
-          <div
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr auto',
+            alignItems: 'center',
+            columnGap: '8px',
+            marginBottom: '6px',
+            width: '100%',
+          }}
+        >
+          <h3
             style={{
-              position: 'absolute',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              textAlign: 'center',
-              width: '65%',
+              margin: 0,
+              height: '100%',
+              display: 'flex',
+              padding: '0',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              lineHeight: 1,
             }}
           >
-            <h3
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                position: 'relative',
-                                margin: '0',
-                              }}
-                            >
-                              {team.name}
+            {team.name}
 
-                              <button
-                                onClick={() =>
-                                  handleSetShowing(showing === 'away' ? 'home' : 'away')
-                                }
-                                style={{
-                                  position: 'absolute',
-                                  right: '0.5rem',
-                                  fontSize: '0.6rem',
-                                  background: 'transparent',
-                                  color: 'white',
-                                  transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
-                                  transition: 'transform 0.3s',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                }}
-                              >
-                                ▶
-                              </button>
-                            </h3>
-          </div>
-
-          <div style={{ position: 'absolute', right: 0 }}>
-            <select
-              value={numGamesToShow}
-              onChange={(e) => {
-                const value = parseInt(e.target.value, 10);
-                setNumGamesToShow(value);
-                Cookies.set('numGamesToShow', value, { expires: 365 });
+            <button
+              onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
+              style={{
+                position: 'absolute',
+                right: '0.5rem',
+                marginBottom: '-12px',
+                transform: `translateY(-50%) ${showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)'}`,
+                fontSize: '0.6rem',
+                background: 'transparent',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
               }}
-              style={{ height: '25.4px', padding: '0px' }}
             >
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-            </select>
-          </div>
+              ▶
+            </button>
+          </h3>
+
+          <select
+            value={numGamesToShow}
+            onChange={(e) => {
+              const value = parseInt(e.target.value, 10);
+              setNumGamesToShow(value);
+              Cookies.set('numGamesToShow', value, { expires: 365 });
+            }}
+            style={{
+              height: '100%',
+              margin: 0,
+              padding: '0',
+              boxSizing: 'border-box',
+            }}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+          </select>
         </div>
 
         {roster.length > 0 && (

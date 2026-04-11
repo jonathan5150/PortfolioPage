@@ -156,6 +156,7 @@ const PlayerStats = ({
                       transition: 'transform 0.3s',
                       border: 'none',
                       cursor: 'pointer',
+                      marginBottom: '1px',
                     }}
                   >
                     ▶
@@ -164,7 +165,8 @@ const PlayerStats = ({
         <table
           style={{
             fontSize: '12px',
-            marginBottom: '3px',
+            marginBottom: '0px',
+            marginTop: '5px',
             paddingRight: '10px',
             width: '100%',
             tableLayout: 'fixed',
