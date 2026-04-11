@@ -104,6 +104,11 @@ const BeforeScoreBug = ({
     ? '-'
     : trueLiveData?.linescore?.teams?.home?.runs ?? '-';
 
+  const formattedStartTime = new Date(game.gameDate).toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
   const renderPitcherInfo = (team, pitcher) => (
     <div className="pitcher-details">
       {pitcher?.fullName ? (
@@ -276,8 +281,36 @@ const BeforeScoreBug = ({
         WebkitUserSelect: 'none',
         WebkitTapHighlightColor: 'transparent',
         outline: 'none',
+        position: 'relative',
+        paddingTop: '15px',
       }}
     >
+      <div
+        style={{
+          position: 'absolute',
+          top: '0',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1,
+          minWidth: '12px',
+          height: '12px',
+          padding: '3px 10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '9px',
+          color: 'white',
+          borderTopLeftRadius: '0px',
+          borderTopRightRadius: '0px',
+          borderBottomLeftRadius: '12px',
+          borderBottomRightRadius: '12px',
+          lineHeight: 1,
+          pointerEvents: 'none',
+        }}
+      >
+        {formattedStartTime}
+      </div>
+
       <div style={{ margin: '2px' }}>
         {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
       </div>
