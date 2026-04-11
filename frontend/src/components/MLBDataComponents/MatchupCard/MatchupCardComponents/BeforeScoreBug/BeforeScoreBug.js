@@ -200,6 +200,7 @@ const BeforeScoreBug = ({
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gridTemplateRows: 'auto auto auto',
+        marginBottom: '1px',
       }}
     >
       <div style={{ margin: '2px' }}>
