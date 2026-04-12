@@ -10,9 +10,9 @@ const containerStyle = {
 
 const headerRowStyle = {
   display: 'grid',
-  gridTemplateColumns: '1fr auto 1fr',
+  gridTemplateColumns: '1fr 40px 70px 40px 1fr',
   alignItems: 'center',
-  columnGap: '10px',
+  columnGap: '8px',
   padding: '8px 10px',
   background: 'rgba(255, 255, 255, 0.05)',
   borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
@@ -33,6 +33,16 @@ const centerLabelStyle = {
   fontSize: '0.65rem',
   fontWeight: 700,
   letterSpacing: '0.06em',
+  textAlign: 'center',
+};
+
+const rankHeaderStyle = {
+  color: 'rgba(255,255,255,0.58)',
+  fontSize: '0.58rem',
+  fontWeight: 600,
+  textAlign: 'center',
+  justifySelf: 'center',
+  width: '100%',
 };
 
 const sectionTitleStyle = {
@@ -48,9 +58,9 @@ const sectionTitleStyle = {
 
 const rowStyle = {
   display: 'grid',
-  gridTemplateColumns: '1fr auto 1fr',
+  gridTemplateColumns: '1fr 40px 70px 40px 1fr',
   alignItems: 'center',
-  columnGap: '10px',
+  columnGap: '8px',
   minHeight: '25px',
   padding: '0 10px',
   borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
@@ -63,12 +73,22 @@ const sideValueBaseStyle = {
   padding: '6px 0',
 };
 
+const rankBaseStyle = {
+  color: 'rgba(255,255,255,0.7)',
+  fontSize: '0.63rem',
+  fontWeight: 600,
+  justifySelf: 'stretch',
+  width: '100%',
+  padding: '6px 0',
+  fontVariantNumeric: 'tabular-nums',
+};
+
 const labelStyle = {
   color: 'rgba(255,255,255,0.78)',
   fontSize: '0.7rem',
   fontWeight: 600,
-  whiteSpace: 'nowrap',
   textAlign: 'center',
+  width: '100%',
 };
 
 const loadingStyle = {
@@ -79,7 +99,16 @@ const loadingStyle = {
 };
 
 const getNumber = (value) => {
-  if (value == null || value === '' || value === 'N/A') return null;
+  if (
+    value == null ||
+    value === '' ||
+    value === 'N/A' ||
+    value === '—' ||
+    Number.isNaN(Number(String(value).replace('%', '').trim()))
+  ) {
+    return null;
+  }
+
   const parsed = Number(String(value).replace('%', '').trim());
   return Number.isFinite(parsed) ? parsed : null;
 };
@@ -111,6 +140,17 @@ const formatPct = (value) => {
   }
 
   return num.toFixed(3).replace(/^0(?=\.)/, '');
+};
+
+const formatRank = (value) => {
+  const num = getNumber(value);
+  if (num == null) return '—';
+  return `#${num}`;
+};
+
+const getRankNumberFromDisplay = (rankDisplay) => {
+  if (!rankDisplay || rankDisplay === '—') return null;
+  return getNumber(String(rankDisplay).replace('#', ''));
 };
 
 const getRecordPieces = (recordString) => {
@@ -151,14 +191,62 @@ const getSideStyle = (winner, side, align) => ({
   textAlign: align,
   color:
     winner === side
-      ? '#d6b85f'
+      ? '#b59841'
       : winner === 'tie'
       ? 'rgba(255,255,255,0.92)'
       : '#fff',
   fontWeight: winner === side ? 700 : 500,
 });
 
-const buildRows = (awayTeam, homeTeam, standingsMap) => {
+const getRankColor = (rankDisplay) => {
+  const rankNum = getRankNumberFromDisplay(rankDisplay);
+
+  if (rankNum == null) return 'rgba(255,255,255,0.7)';
+  if (rankNum <= 10) return '#b59841';
+  if (rankNum >= 20) return '#9c4848';
+  return 'rgba(255,255,255,0.7)';
+};
+
+const getRankStyle = (rankDisplay) => {
+  const rankNum = getRankNumberFromDisplay(rankDisplay);
+
+  return {
+    ...rankBaseStyle,
+    paddingRight: '4px',
+    color: getRankColor(rankDisplay),
+    fontWeight: rankNum != null && (rankNum <= 10 || rankNum >= 20) ? 700 : 600,
+  };
+};
+
+const createRankMap = (items, statKey, lowerIsBetter = false) => {
+  const values = items
+    .map((item) => ({
+      teamId: item.teamId,
+      value: getNumber(item[statKey]),
+    }))
+    .filter((item) => item.value != null);
+
+  values.sort((a, b) => {
+    if (lowerIsBetter) return a.value - b.value;
+    return b.value - a.value;
+  });
+
+  const rankMap = {};
+  let currentRank = 0;
+  let previousValue = null;
+
+  values.forEach((item, index) => {
+    if (previousValue === null || item.value !== previousValue) {
+      currentRank = index + 1;
+      previousValue = item.value;
+    }
+    rankMap[item.teamId] = currentRank;
+  });
+
+  return rankMap;
+};
+
+const buildRows = (awayTeam, homeTeam, standingsMap, rankMaps) => {
   const awayStanding = standingsMap[awayTeam.id] || {};
   const homeStanding = standingsMap[homeTeam.id] || {};
 
@@ -183,6 +271,17 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       homeDisplay: formatInteger(homeHitting.runs),
       awayCompare: awayHitting.runs,
       homeCompare: homeHitting.runs,
+      awayRank: formatRank(rankMaps.runs?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.runs?.[homeTeam.id]),
+    },
+    {
+      label: 'HITS',
+      awayDisplay: formatInteger(awayHitting.hits),
+      homeDisplay: formatInteger(homeHitting.hits),
+      awayCompare: awayHitting.hits,
+      homeCompare: homeHitting.hits,
+      awayRank: formatRank(rankMaps.hits?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.hits?.[homeTeam.id]),
     },
     {
       label: 'HR',
@@ -190,6 +289,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       homeDisplay: formatInteger(homeHitting.homeRuns),
       awayCompare: awayHitting.homeRuns,
       homeCompare: homeHitting.homeRuns,
+      awayRank: formatRank(rankMaps.homeRuns?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.homeRuns?.[homeTeam.id]),
     },
     {
       label: 'RBI',
@@ -197,6 +298,17 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       homeDisplay: formatInteger(homeHitting.rbi),
       awayCompare: awayHitting.rbi,
       homeCompare: homeHitting.rbi,
+      awayRank: formatRank(rankMaps.rbi?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.rbi?.[homeTeam.id]),
+    },
+    {
+      label: 'SB',
+      awayDisplay: formatInteger(awayHitting.stolenBases),
+      homeDisplay: formatInteger(homeHitting.stolenBases),
+      awayCompare: awayHitting.stolenBases,
+      homeCompare: homeHitting.stolenBases,
+      awayRank: formatRank(rankMaps.stolenBases?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.stolenBases?.[homeTeam.id]),
     },
     {
       label: 'AVG',
@@ -204,6 +316,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       homeDisplay: formatRate3(homeHitting.avg),
       awayCompare: awayHitting.avg,
       homeCompare: homeHitting.avg,
+      awayRank: formatRank(rankMaps.avg?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.avg?.[homeTeam.id]),
     },
     {
       label: 'OPS',
@@ -211,6 +325,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       homeDisplay: formatRate3(homeHitting.ops),
       awayCompare: awayHitting.ops,
       homeCompare: homeHitting.ops,
+      awayRank: formatRank(rankMaps.ops?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.ops?.[homeTeam.id]),
     },
     {
       section: 'PITCHING',
@@ -220,6 +336,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       awayCompare: awayPitching.era,
       homeCompare: homePitching.era,
       lowerIsBetter: true,
+      awayRank: formatRank(rankMaps.era?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.era?.[homeTeam.id]),
     },
     {
       label: 'WHIP',
@@ -228,6 +346,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       awayCompare: awayPitching.whip,
       homeCompare: homePitching.whip,
       lowerIsBetter: true,
+      awayRank: formatRank(rankMaps.whip?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.whip?.[homeTeam.id]),
     },
     {
       label: 'SO',
@@ -235,6 +355,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       homeDisplay: formatInteger(homePitching.strikeOuts),
       awayCompare: awayPitching.strikeOuts,
       homeCompare: homePitching.strikeOuts,
+      awayRank: formatRank(rankMaps.strikeOuts?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.strikeOuts?.[homeTeam.id]),
     },
     {
       label: 'B/AVG',
@@ -243,6 +365,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       awayCompare: awayPitching.avg,
       homeCompare: homePitching.avg,
       lowerIsBetter: true,
+      awayRank: formatRank(rankMaps.pitchingAvg?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.pitchingAvg?.[homeTeam.id]),
     },
     {
       section: 'STANDINGS',
@@ -251,6 +375,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       homeDisplay: homeRecordString,
       awayCompare: awayRecord.pct,
       homeCompare: homeRecord.pct,
+      awayRank: formatRank(rankMaps.recordPct?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.recordPct?.[homeTeam.id]),
     },
     {
       label: 'WIN %',
@@ -258,6 +384,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       homeDisplay: formatPct(homeRecord.pct),
       awayCompare: awayRecord.pct,
       homeCompare: homeRecord.pct,
+      awayRank: formatRank(rankMaps.recordPct?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.recordPct?.[homeTeam.id]),
     },
     {
       label: 'DIV',
@@ -268,6 +396,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       awayCompare: awayStanding.divisionRank,
       homeCompare: homeStanding.divisionRank,
       lowerIsBetter: true,
+      awayRank: formatRank(rankMaps.divisionRank?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.divisionRank?.[homeTeam.id]),
     },
     {
       label: 'GB',
@@ -276,6 +406,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap) => {
       awayCompare: awayStanding.gamesBack,
       homeCompare: homeStanding.gamesBack,
       lowerIsBetter: true,
+      awayRank: formatRank(rankMaps.gamesBack?.[awayTeam.id]),
+      homeRank: formatRank(rankMaps.gamesBack?.[homeTeam.id]),
     },
   ];
 };
@@ -287,6 +419,7 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
     homeHitting: null,
     homePitching: null,
     standingsMap: {},
+    rankMaps: {},
   });
 
   const [loading, setLoading] = useState(true);
@@ -327,6 +460,7 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
           homeHittingData,
           homePitchingData,
           standingsData,
+          teamsData,
         ] = await Promise.all([
           fetchJson(
             `https://statsapi.mlb.com/api/v1/teams/${awayTeamId}/stats?stats=season&group=hitting&season=${season}`
@@ -343,18 +477,75 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
           fetchJson(
             `https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=${season}&standingsTypes=regularSeason`
           ),
+          fetchJson(`https://statsapi.mlb.com/api/v1/teams?sportId=1&season=${season}`),
         ]);
 
         const standingsMap = {};
+        const standingsRankInput = [];
+
         (standingsData?.records || []).forEach((recordGroup) => {
           (recordGroup?.teamRecords || []).forEach((record) => {
-            standingsMap[record.team.id] = {
-              divisionRank:
-                record.divisionRank != null ? Number(record.divisionRank) : null,
-              gamesBack: record.gamesBack === '-' ? 0 : Number(record.gamesBack),
+            const teamId = record.team.id;
+            const divisionRank =
+              record.divisionRank != null ? Number(record.divisionRank) : null;
+            const gamesBack = record.gamesBack === '-' ? 0 : Number(record.gamesBack);
+            const pct =
+              typeof record.winningPercentage === 'string'
+                ? Number(`0${record.winningPercentage}`)
+                : null;
+
+            standingsMap[teamId] = {
+              divisionRank,
+              gamesBack,
+              pct,
             };
+
+            standingsRankInput.push({
+              teamId,
+              pct,
+              divisionRank,
+              gamesBack,
+            });
           });
         });
+
+        const allTeamIds = (teamsData?.teams || []).map((team) => team.id);
+
+        const [allHittingStats, allPitchingStats] = await Promise.all([
+          Promise.all(
+            allTeamIds.map(async (teamId) => {
+              const data = await fetchJson(
+                `https://statsapi.mlb.com/api/v1/teams/${teamId}/stats?stats=season&group=hitting&season=${season}`
+              );
+              return { teamId, ...getTeamStatSplit(data) };
+            })
+          ),
+          Promise.all(
+            allTeamIds.map(async (teamId) => {
+              const data = await fetchJson(
+                `https://statsapi.mlb.com/api/v1/teams/${teamId}/stats?stats=season&group=pitching&season=${season}`
+              );
+              return { teamId, ...getTeamStatSplit(data) };
+            })
+          ),
+        ]);
+
+        const rankMaps = {
+          runs: createRankMap(allHittingStats, 'runs'),
+          hits: createRankMap(allHittingStats, 'hits'),
+          homeRuns: createRankMap(allHittingStats, 'homeRuns'),
+          rbi: createRankMap(allHittingStats, 'rbi'),
+          stolenBases: createRankMap(allHittingStats, 'stolenBases'),
+          avg: createRankMap(allHittingStats, 'avg'),
+          ops: createRankMap(allHittingStats, 'ops'),
+          era: createRankMap(allPitchingStats, 'era', true),
+          whip: createRankMap(allPitchingStats, 'whip', true),
+          strikeOuts: createRankMap(allPitchingStats, 'strikeOuts'),
+          pitchingAvg: createRankMap(allPitchingStats, 'avg', true),
+          recordPct: createRankMap(standingsRankInput, 'pct'),
+          divisionRank: createRankMap(standingsRankInput, 'divisionRank', true),
+          gamesBack: createRankMap(standingsRankInput, 'gamesBack', true),
+        };
 
         if (!isActive) return;
 
@@ -364,6 +555,7 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
           homeHitting: getTeamStatSplit(homeHittingData),
           homePitching: getTeamStatSplit(homePitchingData),
           standingsMap,
+          rankMaps,
         });
       } catch (error) {
         console.error('Failed to load TeamsMatchup data:', error);
@@ -376,6 +568,7 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
           homeHitting: {},
           homePitching: {},
           standingsMap: {},
+          rankMaps: {},
         });
       } finally {
         if (isActive) {
@@ -416,8 +609,8 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
   );
 
   const rows = useMemo(
-    () => buildRows(awayTeam, homeTeam, teamStats.standingsMap),
-    [awayTeam, homeTeam, teamStats.standingsMap]
+    () => buildRows(awayTeam, homeTeam, teamStats.standingsMap, teamStats.rankMaps),
+    [awayTeam, homeTeam, teamStats.standingsMap, teamStats.rankMaps]
   );
 
   if (loading) {
@@ -432,7 +625,9 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
     <div style={containerStyle}>
       <div style={headerRowStyle}>
         <div style={{ ...teamNameStyle, textAlign: 'left' }}>{awayTeamName}</div>
-        <div style={centerLabelStyle}>MATCHUP</div>
+        <div style={rankHeaderStyle}></div>
+        <div style={centerLabelStyle}>vs</div>
+        <div style={rankHeaderStyle}></div>
         <div style={{ ...teamNameStyle, textAlign: 'right' }}>{homeTeamName}</div>
       </div>
 
@@ -457,7 +652,9 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
               }}
             >
               <div style={getSideStyle(winner, 'away', 'left')}>{row.awayDisplay}</div>
+              <div style={getRankStyle(row.awayRank)}>{row.awayRank}</div>
               <div style={labelStyle}>{row.label}</div>
+              <div style={getRankStyle(row.homeRank)}>{row.homeRank}</div>
               <div style={getSideStyle(winner, 'home', 'right')}>{row.homeDisplay}</div>
             </div>
           </React.Fragment>
