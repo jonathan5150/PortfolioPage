@@ -21,7 +21,7 @@ import TeamsMatchup from './MatchupCardSelections/TeamsMatchup';
 
 const STAT_OPTIONS = [
   { value: 'box-score', label: 'BOX SCORE' },
-  { value: 'teams-matchup', label: 'TEAM MATCHUP' },
+  { value: 'teams-matchup', label: 'TEAM STATS' },
   { value: 'team-history', label: 'TEAM W/L HISTORY' },
   { value: 'player-stats', label: 'SEASON STATS' },
   { value: 'batter-gamelog', label: 'PLAYER GAME LOG' },

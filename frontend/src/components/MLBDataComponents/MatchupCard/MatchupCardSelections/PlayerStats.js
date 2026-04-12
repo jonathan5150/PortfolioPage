@@ -85,6 +85,19 @@ const PlayerStats = ({
     });
   };
 
+  const fadedBackgroundStyle = (teamColor) => ({
+    position: 'absolute',
+    inset: 0,
+    zIndex: 1,
+    pointerEvents: 'none',
+    background: `
+      linear-gradient(to right, ${teamColor} 25%, transparent),
+      ${teamColor}
+    `,
+    backgroundBlendMode: 'screen',
+    opacity: 0.2,
+  });
+
   const handleSort = (key) => {
     setPlayerStatsSortConfig((prev) => {
       if (prev.key === key) {
@@ -132,35 +145,9 @@ const PlayerStats = ({
         draggable={false}
         style={{ marginBottom: '3px', width: '100%', flexShrink: 0 }}
       >
-        <div
-          style={{
-            position: 'relative',
-            borderRadius: '4px',
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              backgroundColor: 'rgba(70, 70, 70, 0.8)',
-              zIndex: 0,
-            }}
-          />
-
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: `linear-gradient(to right,
-                ${teamPrimaryColors[teamName]} 25%, transparent),
-                ${teamPrimaryColors[teamName]}`,
-              backgroundBlendMode: 'screen',
-              zIndex: 1,
-              opacity: 0.4,
-            }}
-          />
-
+        <div style={{ position: 'relative', borderRadius: 4, overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(70,70,70,1)', zIndex: 0 }} />
+          <div style={fadedBackgroundStyle(teamPrimaryColors[teamName])} />
           <h3
             style={{
               margin: 0,

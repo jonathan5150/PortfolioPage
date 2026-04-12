@@ -132,7 +132,7 @@ const AfterScoreBug = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             border: isStarred ? '2px solid #c49410' : '2px solid rgb(85, 85, 85)',
-            backgroundColor: 'rgba(70, 70, 70, 0.8)',
+            backgroundColor: 'rgba(70, 70, 70, 1)',
             borderRadius: side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0',
             padding: '5px 10px',
             opacity: 0.85,
@@ -151,6 +151,7 @@ const AfterScoreBug = ({
               style={{
                 width: '37px',
                 height: '37px',
+                filter: 'saturate(0.8)',
                 objectFit: 'contain',
                 userSelect: 'none',
                 WebkitUserDrag: 'none',

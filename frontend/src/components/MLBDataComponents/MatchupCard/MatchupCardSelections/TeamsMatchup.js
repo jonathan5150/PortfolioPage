@@ -30,14 +30,14 @@ const rowStyle = {
 };
 
 const sideValueBaseStyle = {
-  color: '#fff',
+  color: 'white',
   fontSize: '0.7rem',
   fontWeight: 500,
   padding: '1px 0',
 };
 
 const rankBaseStyle = {
-  color: 'rgba(255,255,255,0.7)',
+  color: 'white',
   fontSize: '0.6rem',
   fontWeight: 600,
   justifySelf: 'stretch',
@@ -47,7 +47,7 @@ const rankBaseStyle = {
 };
 
 const labelStyle = {
-  color: 'rgba(255,255,255,0.78)',
+  color: 'white',
   fontSize: '0.7rem',
   fontWeight: 600,
   textAlign: 'center',
@@ -156,18 +156,18 @@ const getSideStyle = (winner, side, align) => ({
     winner === side
       ? '#b59841'
       : winner === 'tie'
-      ? 'rgba(255,255,255,0.92)'
-      : '#fff',
+      ? 'white'
+      : 'white',
   fontWeight: winner === side ? 700 : 500,
 });
 
 const getRankColor = (rankDisplay) => {
   const rankNum = getRankNumberFromDisplay(rankDisplay);
 
-  if (rankNum == null) return 'rgba(255,255,255,0.7)';
-  if (rankNum <= 10) return '#b59841';
-  if (rankNum >= 20) return '#9c4848';
-  return 'rgba(255,255,255,0.7)';
+  if (rankNum == null) return 'white';
+  if (rankNum <= 5) return '#b59841';
+  if (rankNum >= 25) return '#9c4848';
+  return 'white';
 };
 
 const getRankStyle = (rankDisplay) => {

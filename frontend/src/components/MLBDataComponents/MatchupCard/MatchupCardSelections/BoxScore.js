@@ -67,6 +67,19 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
     );
   }
 
+  const fadedBackgroundStyle = (teamColor) => ({
+    position: 'absolute',
+    inset: 0,
+    zIndex: 1,
+    pointerEvents: 'none',
+    background: `
+      linear-gradient(to right, ${teamColor} 25%, transparent),
+      ${teamColor}
+    `,
+    backgroundBlendMode: 'screen',
+    opacity: 0.2,
+  });
+
   const renderTeam = (teamData, label) => {
     const players = teamData?.players || {};
     const battingOrder = teamData?.battingOrder || [];
@@ -167,35 +180,9 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
 
     return (
       <div style={{ width: '100%' }}>
-        <div
-          style={{
-            position: 'relative',
-            borderRadius: '4px',
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              backgroundColor: 'rgba(70, 70, 70, 0.8)',
-              zIndex: 0,
-            }}
-          />
-
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: `linear-gradient(to right,
-                ${teamPrimaryColors[teamName]} 25%, transparent),
-                ${teamPrimaryColors[teamName]}`,
-              backgroundBlendMode: 'screen',
-              zIndex: 1,
-              opacity: 0.4,
-            }}
-          />
-
+        <div style={{ position: 'relative', borderRadius: 4, overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(70,70,70,1)', zIndex: 0 }} />
+          <div style={fadedBackgroundStyle(teamPrimaryColors[teamName])} />
           <h3
             style={{
               margin: 0,
@@ -211,11 +198,8 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
             }}
           >
             {teamName}
-
             <button
-              onClick={() =>
-                handleSetShowing(showing === 'away' ? 'home' : 'away')
-              }
+              onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
               style={{
                 position: 'absolute',
                 right: '0.5rem',
@@ -271,7 +255,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
           style={{
             width: '98%',
             height: '1px',
-            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            backgroundColor: 'rgba(70, 70, 70, 1)',
             margin: '6px auto',
           }}
         />

@@ -190,7 +190,7 @@ const LiveScoreBug = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             border: isStarred ? '2px solid #c49410' : '2px solid rgb(85, 85, 85)',
-            backgroundColor: 'rgba(70, 70, 70, 0.8)',
+            backgroundColor: 'rgba(70, 70, 70, 1)',
             borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
             padding: '5px 10px',
             opacity: 0.85,
@@ -292,7 +292,7 @@ const LiveScoreBug = ({
                 width: '10px',
                 height: '10px',
                 borderRadius: '50%',
-                backgroundColor: i < outs ? 'gold' : 'transparent',
+                backgroundColor: i < outs ? '#b59841' : 'transparent',
                 border: '2px solid #555555',
               }}
             />
@@ -323,7 +323,7 @@ const LiveScoreBug = ({
               transform: 'translate(-50%, 0) rotate(45deg)',
               width: '16px',
               height: '16px',
-              backgroundColor: onSecond ? 'gold' : 'white',
+              backgroundColor: onSecond ? '#b59841' : 'white',
             }}
           />
           <div
@@ -334,7 +334,7 @@ const LiveScoreBug = ({
               transform: 'translate(-100%, 0) rotate(45deg)',
               width: '16px',
               height: '16px',
-              backgroundColor: onFirst ? 'gold' : 'white',
+              backgroundColor: onFirst ? '#b59841' : 'white',
             }}
           />
           <div
@@ -345,7 +345,7 @@ const LiveScoreBug = ({
               transform: 'rotate(45deg)',
               width: '16px',
               height: '16px',
-              backgroundColor: onThird ? 'gold' : 'white',
+              backgroundColor: onThird ? '#b59841' : 'white',
             }}
           />
         </div>

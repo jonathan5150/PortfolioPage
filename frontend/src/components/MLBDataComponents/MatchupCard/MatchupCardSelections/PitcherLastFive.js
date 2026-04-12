@@ -1,6 +1,20 @@
 import React from 'react';
 import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
+// Helper for faded background overlay
+const fadedBackgroundStyle = (teamColor) => ({
+  position: 'absolute',
+  inset: 0,
+  zIndex: 1,
+  pointerEvents: 'none',
+  background: `
+    linear-gradient(to right, ${teamColor} 25%, transparent),
+    ${teamColor}
+  `,
+  backgroundBlendMode: 'screen',
+  opacity: 0.2,
+});
+
 const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
   const computeRes = (g) => {
     let r = String(g?.result ?? '').trim().toUpperCase();
@@ -41,24 +55,11 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundColor: 'rgba(70, 70, 70, 0.8)',
+            backgroundColor: 'rgba(70,70,70,1)',
             zIndex: 0,
           }}
         />
-
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: `linear-gradient(to right,
-              ${teamPrimaryColors[teamName]} 25%, transparent),
-              ${teamPrimaryColors[teamName]}`,
-            backgroundBlendMode: 'screen',
-            zIndex: 1,
-            opacity: 0.4,
-          }}
-        />
-
+        <div style={fadedBackgroundStyle(teamPrimaryColors[teamName])} />
         <h3
           style={{
             margin: 0,
@@ -105,7 +106,7 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
               const resultStyle = {
                 color:
                   resChar === 'W'
-                    ? 'rgba(0, 155, 0, 0.6)'
+                    ? '#b59841'
                     : 'rgba(255, 0, 0, 0.6)',
                 whiteSpace: 'nowrap',
                 textAlign: 'center',
