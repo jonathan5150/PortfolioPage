@@ -220,7 +220,7 @@ export const fetchGameData = async ({
 
     /** Last 20 */
     const fetchLastTwentyGames = async (teamId, selectedDateValue) => {
-      const startDate = format(subDays(new Date(selectedDateValue), 30), 'yyyy-MM-dd');
+      const startDate = format(subDays(new Date(selectedDateValue), 180), 'yyyy-MM-dd');
       const endDate = format(subDays(new Date(selectedDateValue), 1), 'yyyy-MM-dd');
 
       const gamesResponse = await fetch(

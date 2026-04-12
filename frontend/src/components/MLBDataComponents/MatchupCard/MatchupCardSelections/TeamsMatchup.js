@@ -8,45 +8,8 @@ const containerStyle = {
   background: 'rgba(30, 30, 30, 0.55)',
 };
 
-const headerRowStyle = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 40px 70px 40px 1fr',
-  alignItems: 'center',
-  columnGap: '8px',
-  padding: '8px 10px',
-  background: 'rgba(255, 255, 255, 0.05)',
-  borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
-};
-
-const teamNameStyle = {
-  color: '#fff',
-  fontSize: '0.78rem',
-  fontWeight: 600,
-  lineHeight: 1.1,
-  whiteSpace: 'nowrap',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-};
-
-const centerLabelStyle = {
-  color: 'rgba(255,255,255,0.7)',
-  fontSize: '0.65rem',
-  fontWeight: 700,
-  letterSpacing: '0.06em',
-  textAlign: 'center',
-};
-
-const rankHeaderStyle = {
-  color: 'rgba(255,255,255,0.58)',
-  fontSize: '0.58rem',
-  fontWeight: 600,
-  textAlign: 'center',
-  justifySelf: 'center',
-  width: '100%',
-};
-
 const sectionTitleStyle = {
-  padding: '7px 10px',
+  padding: '6px 10px',
   background: 'rgba(255, 255, 255, 0.04)',
   color: 'rgba(255,255,255,0.8)',
   fontSize: '0.63rem',
@@ -60,9 +23,9 @@ const rowStyle = {
   display: 'grid',
   gridTemplateColumns: '1fr 40px 70px 40px 1fr',
   alignItems: 'center',
-  columnGap: '8px',
+  columnGap: '15px',
   minHeight: '25px',
-  padding: '0 10px',
+  padding: '0px 10px',
   borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
 };
 
@@ -70,16 +33,16 @@ const sideValueBaseStyle = {
   color: '#fff',
   fontSize: '0.7rem',
   fontWeight: 500,
-  padding: '6px 0',
+  padding: '1px 0',
 };
 
 const rankBaseStyle = {
   color: 'rgba(255,255,255,0.7)',
-  fontSize: '0.63rem',
+  fontSize: '0.6rem',
   fontWeight: 600,
   justifySelf: 'stretch',
   width: '100%',
-  padding: '6px 0',
+  padding: '1px 0',
   fontVariantNumeric: 'tabular-nums',
 };
 
@@ -95,7 +58,7 @@ const loadingStyle = {
   padding: '14px 10px',
   textAlign: 'center',
   color: 'rgba(255,255,255,0.8)',
-  fontSize: '0.78rem',
+  fontSize: '0.7rem',
 };
 
 const getNumber = (value) => {
@@ -208,13 +171,11 @@ const getRankColor = (rankDisplay) => {
 };
 
 const getRankStyle = (rankDisplay) => {
-  const rankNum = getRankNumberFromDisplay(rankDisplay);
 
   return {
     ...rankBaseStyle,
     paddingRight: '4px',
     color: getRankColor(rankDisplay),
-    fontWeight: rankNum != null && (rankNum <= 10 || rankNum >= 20) ? 700 : 600,
   };
 };
 
@@ -427,12 +388,6 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
   const awayTeamId = game?.teams?.away?.team?.id;
   const homeTeamId = game?.teams?.home?.team?.id;
 
-  const awayTeamName =
-    getTeamAbbreviation?.(awayTeamId) || game?.teams?.away?.team?.abbreviation || 'AWAY';
-
-  const homeTeamName =
-    getTeamAbbreviation?.(homeTeamId) || game?.teams?.home?.team?.abbreviation || 'HOME';
-
   useEffect(() => {
     let isActive = true;
 
@@ -623,13 +578,6 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
 
   return (
     <div style={containerStyle}>
-      <div style={headerRowStyle}>
-        <div style={{ ...teamNameStyle, textAlign: 'left' }}>{awayTeamName}</div>
-        <div style={rankHeaderStyle}></div>
-        <div style={centerLabelStyle}>vs</div>
-        <div style={rankHeaderStyle}></div>
-        <div style={{ ...teamNameStyle, textAlign: 'right' }}>{homeTeamName}</div>
-      </div>
 
       {rows.map((row, index) => {
         const winner = getComparisonWinner(

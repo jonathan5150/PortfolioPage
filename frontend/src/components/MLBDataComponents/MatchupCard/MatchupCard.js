@@ -83,13 +83,26 @@ const GameCard = memo(function GameCard({
 
   const [contentKey, setContentKey] = useState(() => {
     const saved = Cookies.get('contentKeys');
-    if (!saved) return 'team-history';
+
+    const detailedState = game?.status?.detailedState ?? liveData?.gameData?.status?.detailedState ?? '';
+    const abstractGameState = game?.status?.abstractGameState ?? liveData?.gameData?.status?.abstractGameState ?? '';
+
+    const isLive = abstractGameState === 'Live';
+    const isFinal =
+      abstractGameState === 'Final' ||
+      detailedState === 'Final' ||
+      detailedState === 'Completed Early' ||
+      detailedState === 'Game Over';
+
+    const defaultKey = isLive || isFinal ? 'box-score' : 'teams-matchup';
+
+    if (!saved) return defaultKey;
 
     try {
       const parsed = JSON.parse(saved);
-      return parsed?.[gamePk] || 'team-history';
+      return parsed?.[gamePk] || defaultKey;
     } catch {
-      return 'team-history';
+      return defaultKey;
     }
   });
 
