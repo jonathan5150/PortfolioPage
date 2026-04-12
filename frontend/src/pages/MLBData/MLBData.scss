@@ -166,6 +166,7 @@
   user-select: none;
   margin: 0;
   z-index: 3;
+  position: relative;
 }
 
 .custom-datepicker-input .arrow {
@@ -182,29 +183,76 @@
   transform: rotate(0deg);
 }
 
-.custom-datepicker-input .react-datepicker,
-.custom-datepicker-input .react-datepicker__header {
-  background-color: rgba(70, 70, 70, 0.95);
+/* wrapper around DatePicker */
+.datepicker-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  z-index: 20;
 }
 
+/* THIS is the actual popup layer */
+.react-datepicker-popper {
+  z-index: 5000 !important;
+}
+
+/* actual calendar body */
+.react-datepicker {
+  background-color: rgba(70, 70, 70, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* top header */
+.react-datepicker__header {
+  background-color: rgba(70, 70, 70, 0.95) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+}
+
+/* little triangle */
+.react-datepicker__triangle {
+  fill: rgba(70, 70, 70, 0.95) !important;
+  color: rgba(70, 70, 70, 0.95) !important;
+  stroke: rgba(255, 255, 255, 0.14) !important;
+}
+
+/* month container */
 .react-datepicker__month-container {
   border-radius: 5px;
   border: none;
+  background-color: transparent !important;
 }
 
-.custom-datepicker-input .react-datepicker__current-month,
-.custom-datepicker-input .react-datepicker__day,
-.custom-datepicker-input .react-datepicker__day-name,
-.custom-datepicker-input .react-datepicker-time__header {
-  color: white;
-  border: none;
+.react-datepicker__current-month,
+.react-datepicker__day,
+.react-datepicker__day-name,
+.react-datepicker__time-name,
+.react-datepicker-time__header,
+.react-datepicker__navigation-icon::before {
+  color: white !important;
   font-size: 18px;
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
 }
 
-.custom-datepicker-input .react-datepicker__day--today {
-  color: gold;
+.react-datepicker__day--today {
+  color: gold !important;
+}
+
+.react-datepicker__day:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  border-radius: 4px;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border-radius: 4px;
 }
 
 h2 {
@@ -571,6 +619,7 @@ select:focus {
   justify-content: center;
   align-items: center;
   gap: 6px;
+  position: relative; /* <-- added */
 }
 
 .controls button {
@@ -584,20 +633,60 @@ select:focus {
   font-size: 1.2em;
 }
 
+/* NEW: wrapper for proper anchoring */
+.teams-dropdown-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* NEW: actual dropdown positioning */
+.teams-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 1000;
+  min-width: 250px;
+}
+
+/* OPTIONAL but keeps consistency with datepicker */
+.datepicker-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* FIXED: removed floating positioning and anchored it */
 .teams-menu {
+  position: relative; /* changed from absolute */
   font-size: 18px;
   font-family: 'DM Sans', sans-serif;
   font-weight: 300;
-  position: absolute;
-  top: 17%;
-  left: 35%;
-  transform: translateX(-50%);
   background-color: rgba(70, 70, 70, 0.95);
   padding: 10px;
-  border: 0.01px solid white;
-  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
   z-index: 1000;
   width: 250px;
+
+  /* added for polish */
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* NEW: arrow notch like datepicker */
+.teams-menu::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 18px;
+  width: 12px;
+  height: 12px;
+  background-color: rgba(70, 70, 70, 0.95);
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  transform: rotate(45deg);
 }
 
 .menu-buttons {

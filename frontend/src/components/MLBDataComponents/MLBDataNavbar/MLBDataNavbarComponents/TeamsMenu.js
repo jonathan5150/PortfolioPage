@@ -4,10 +4,14 @@ const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onSelectAll, onDeselect
   return (
     <div className="teams-menu">
       <div className="menu-buttons">
-        <button type="button" className="select-button" onClick={onSelectAll}>ALL</button>
-        <button type="button" className="select-button" onClick={onDeselectAll}>NONE</button>
-
+        <button type="button" className="select-button" onClick={onSelectAll}>
+          ALL
+        </button>
+        <button type="button" className="select-button" onClick={onDeselectAll}>
+          NONE
+        </button>
       </div>
+
       <ul>
         {teams.map((team) => (
           <li key={team.id}>
