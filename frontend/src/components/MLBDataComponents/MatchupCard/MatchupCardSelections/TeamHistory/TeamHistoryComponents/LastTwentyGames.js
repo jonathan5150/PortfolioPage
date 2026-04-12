@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
+import teamPrimaryColors from '../../../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const VISIBLE_COLUMNS = 6;
 
@@ -28,6 +29,45 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
 
     setColumnWidth(Math.max(nextWidth, 1));
   }, []);
+
+  const dimColor = (color, alpha = 0.35) => {
+    if (!color) return `rgba(255, 255, 255, ${alpha})`;
+
+    if (color.startsWith('#')) {
+      let hex = color.replace('#', '');
+
+      if (hex.length === 3) {
+        hex = hex
+          .split('')
+          .map((char) => char + char)
+          .join('');
+      }
+
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    if (color.startsWith('rgb(')) {
+      const values = color.match(/\d+/g);
+      if (values && values.length >= 3) {
+        const [r, g, b] = values;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+    }
+
+    if (color.startsWith('rgba(')) {
+      const values = color.match(/[\d.]+/g);
+      if (values && values.length >= 3) {
+        const [r, g, b] = values;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+    }
+
+    return color;
+  };
 
   useEffect(() => {
     const el = containerRef.current;
@@ -115,9 +155,14 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
         (game.teams.away.team.id === selectedTeamId && awayScore > homeScore) ||
         (game.teams.home.team.id === selectedTeamId && homeScore > awayScore);
 
+      const selectedTeam =
+        game.teams.away.team.id === selectedTeamId
+          ? game.teams.away.team.name
+          : game.teams.home.team.name;
+
       const backgroundColor = isWinner
-        ? 'rgba(0, 255, 0, 0.1)'
-        : 'rgba(255, 0, 0, 0.1)';
+        ? dimColor(teamPrimaryColors[selectedTeam], 0.27)
+        : 'rgba(90, 90, 90, 0.7)';
 
       return (
         <div
