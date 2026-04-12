@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
+import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }) => {
   const boxscore = liveData?.liveData?.boxscore;
   const away = boxscore?.teams?.away;
   const home = boxscore?.teams?.home;
 
-  // Log to inspect the full boxscore structure
   console.log('Live Data:', liveData);
   console.log('Boxscore:', boxscore);
   console.log('Away Team:', away);
@@ -70,13 +70,13 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
   const renderTeam = (teamData, label) => {
     const players = teamData?.players || {};
     const battingOrder = teamData?.battingOrder || [];
-    const bench = teamData?.bench || []; // Get bench players
-    const batterIdsFromAPI = teamData?.batters || []; // Get batters from the API
+    const bench = teamData?.bench || [];
+    const batterIdsFromAPI = teamData?.batters || [];
     const pitcherIdsInOrder = teamData?.pitchers || [];
+    const teamName = teamData?.team?.name || label;
 
     const displayedPlayers = new Set();
     const renderPlayer = (id, forceRender = false) => {
-      // Skip rendering if the player has already been displayed, unless forceRender (battingOrder players)
       if (displayedPlayers.has(id) && !forceRender) return null;
 
       const player = players[`ID${id}`];
@@ -84,15 +84,19 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
       const playerName = player?.person?.fullName || '—';
       const playerPos = player?.position?.abbreviation || '—';
 
-      // Check if the player has relevant stats, skip if zero and the player isn't part of the original lineup
       if (
-        !forceRender && // Don't skip players in battingOrder
-        (!playerStats?.atBats && !playerStats?.runs && !playerStats?.hits && !playerStats?.rbi && !playerStats?.baseOnBalls && !playerStats?.strikeOuts && !playerStats?.homeRuns)
+        !forceRender &&
+        (!playerStats?.atBats &&
+          !playerStats?.runs &&
+          !playerStats?.hits &&
+          !playerStats?.rbi &&
+          !playerStats?.baseOnBalls &&
+          !playerStats?.strikeOuts &&
+          !playerStats?.homeRuns)
       ) {
         return null;
       }
 
-      // Mark this player as displayed
       displayedPlayers.add(id);
 
       return (
@@ -110,7 +114,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
       );
     };
 
-    const allBatters = Object.values(players).filter(p => p?.stats?.batting);
+    const allBatters = Object.values(players).filter((p) => p?.stats?.batting);
     const batterTotals = allBatters.reduce(
       (totals, p) => {
         const b = p.stats.batting;
@@ -155,44 +159,82 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
 
     const averageERA =
       pitcherTotals.ERAList.length > 0
-        ? (pitcherTotals.ERAList.reduce((sum, e) => sum + e, 0) / pitcherTotals.ERAList.length).toFixed(2)
+        ? (
+            pitcherTotals.ERAList.reduce((sum, e) => sum + e, 0) /
+            pitcherTotals.ERAList.length
+          ).toFixed(2)
         : '—';
 
     return (
       <div style={{ width: '100%' }}>
-        <h3
+        <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
             position: 'relative',
-            margin: '0',
+            borderRadius: '4px',
+            overflow: 'hidden',
           }}
         >
-          {teamData?.team?.name || label}
-
-          <button
-            onClick={() =>
-              handleSetShowing(showing === 'away' ? 'home' : 'away')
-            }
+          <div
             style={{
               position: 'absolute',
-              right: '0.5rem',
-              fontSize: '0.6rem',
-              background: 'transparent',
-              color: 'white',
-              transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
-              transition: 'transform 0.3s',
-              border: 'none',
-              cursor: 'pointer',
-              marginBottom: '1px',
+              inset: 0,
+              backgroundColor: 'rgba(70, 70, 70, 0.8)',
+              zIndex: 0,
+            }}
+          />
+
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: `linear-gradient(to right,
+                ${teamPrimaryColors[teamName]} 25%, transparent),
+                ${teamPrimaryColors[teamName]}`,
+              backgroundBlendMode: 'screen',
+              zIndex: 1,
+              opacity: 0.4,
+            }}
+          />
+
+          <h3
+            style={{
+              margin: 0,
+              display: 'flex',
+              padding: '4px 0',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              zIndex: 2,
+              fontWeight: 300,
+              lineHeight: 1,
+              color: '#fff',
             }}
           >
-            ▶
-          </button>
-        </h3>
+            {teamName}
 
-        <table style={{ width: '100%', fontSize: '12px' }}>
+            <button
+              onClick={() =>
+                handleSetShowing(showing === 'away' ? 'home' : 'away')
+              }
+              style={{
+                position: 'absolute',
+                right: '0.5rem',
+                fontSize: '0.6rem',
+                background: 'transparent',
+                color: 'gray',
+                transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
+                transition: 'transform 0.3s',
+                border: 'none',
+                cursor: 'pointer',
+                marginBottom: '1px',
+              }}
+            >
+              ▶
+            </button>
+          </h3>
+        </div>
+
+        <table style={{ margin: '5px 0 3px 0', width: '100%', fontSize: '12px' }}>
           <thead>
             <tr>
               <th style={{ textAlign: 'left', width: '30%' }}></th>
@@ -207,13 +249,8 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
             </tr>
           </thead>
           <tbody>
-            {/* Always render battingOrder players */}
             {battingOrder.map((id) => renderPlayer(id, true))}
-
-            {/* Add bench players only if they haven't already been displayed */}
             {bench.map((id) => renderPlayer(id))}
-
-            {/* Add any additional batters not in battingOrder or bench */}
             {batterIdsFromAPI.map((id) => renderPlayer(id))}
 
             <tr style={{ fontWeight: 'bold', borderTop: '1px solid #ccc' }}>
@@ -230,11 +267,19 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
           </tbody>
         </table>
 
-        <h3 style={{ fontSize: '12px', width: '100%', margin: '0px', display: 'block' }}>Pitchers</h3>
-        <table style={{ width: '100%', fontSize: '12px' }}>
+        <div
+          style={{
+            width: '98%',
+            height: '1px',
+            backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            margin: '6px auto',
+          }}
+        />
+
+        <table style={{ width: '100%', marginTop: '5px', fontSize: '12px' }}>
           <thead>
             <tr>
-              <th style={{ textAlign: 'left', width: '30%' }}>Name</th>
+              <th style={{ textAlign: 'left', width: '30%' }}></th>
               <th style={{ width: '11%' }}>IP</th>
               <th style={{ width: '11%' }}>H</th>
               <th style={{ width: '11%' }}>ER</th>
@@ -291,7 +336,6 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
         height: '100%',
       }}
     >
-
       <div
         style={{
           display: 'flex',

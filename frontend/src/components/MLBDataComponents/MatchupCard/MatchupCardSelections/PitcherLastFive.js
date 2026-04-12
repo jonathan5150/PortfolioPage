@@ -1,4 +1,5 @@
 import React from 'react';
+import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
   const computeRes = (g) => {
@@ -23,13 +24,60 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
     const os = Number(oppScore);
     if (!Number.isNaN(ts) && !Number.isNaN(os)) return ts > os ? 'W' : 'L';
 
-    // Default to "L" (red) if undetermined
     return 'L';
   };
 
-  const renderPitcherGames = (name, games) => (
+  const renderPitcherGames = (name, games, teamName) => (
     <div className="pitcher-block">
-      <h3 style={{ margin: '6px 0' }}>{name}</h3>
+      <div
+        style={{
+          position: 'relative',
+          borderRadius: '4px',
+          overflow: 'hidden',
+          margin: '6px 0',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: 'rgba(70, 70, 70, 0.8)',
+            zIndex: 0,
+          }}
+        />
+
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: `linear-gradient(to right,
+              ${teamPrimaryColors[teamName]} 25%, transparent),
+              ${teamPrimaryColors[teamName]}`,
+            backgroundBlendMode: 'screen',
+            zIndex: 1,
+            opacity: 0.4,
+          }}
+        />
+
+        <h3
+          style={{
+            margin: 0,
+            display: 'flex',
+            padding: '4px 0',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            zIndex: 2,
+            fontWeight: 300,
+            lineHeight: 1,
+            borderRadius: '4px',
+            color: '#fff',
+          }}
+        >
+          {name}
+        </h3>
+      </div>
+
       {(!Array.isArray(games) || games.length === 0) ? (
         <p style={{ margin: 0 }}>No recent starts found.</p>
       ) : (
@@ -58,7 +106,7 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
                 color:
                   resChar === 'W'
                     ? 'rgba(0, 155, 0, 0.6)'
-                    : 'rgba(255, 0, 0, 0.6)', // always red otherwise
+                    : 'rgba(255, 0, 0, 0.6)',
                 whiteSpace: 'nowrap',
                 textAlign: 'center',
               };
@@ -84,11 +132,13 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
 
   const awayName = game?.teams?.away?.probablePitcher?.fullName || 'Away Pitcher';
   const homeName = game?.teams?.home?.probablePitcher?.fullName || 'Home Pitcher';
+  const awayTeamName = game?.teams?.away?.team?.name || '';
+  const homeTeamName = game?.teams?.home?.team?.name || '';
 
   return (
     <div className="pitcher-last-five-wrapper">
-      {renderPitcherGames(awayName, awayGames)}
-      {renderPitcherGames(homeName, homeGames)}
+      {renderPitcherGames(awayName, awayGames, awayTeamName)}
+      {renderPitcherGames(homeName, homeGames, homeTeamName)}
     </div>
   );
 };

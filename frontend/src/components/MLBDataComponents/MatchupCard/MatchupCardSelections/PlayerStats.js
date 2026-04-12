@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Cookies from 'js-cookie';
+import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const PlayerStats = ({
   game,
@@ -131,37 +132,73 @@ const PlayerStats = ({
         draggable={false}
         style={{ marginBottom: '3px', width: '100%', flexShrink: 0 }}
       >
-        <h3
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative',
-                    margin: '0',
-                  }}
-                >
-                  {teamName}
+        <div
+          style={{
+            position: 'relative',
+            borderRadius: '4px',
+            overflow: 'hidden',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: 'rgba(70, 70, 70, 0.8)',
+              zIndex: 0,
+            }}
+          />
 
-                  <button
-                    onClick={() =>
-                      handleSetShowing(showing === 'away' ? 'home' : 'away')
-                    }
-                    style={{
-                      position: 'absolute',
-                      right: '0.5rem',
-                      fontSize: '0.6rem',
-                      background: 'transparent',
-                      color: 'white',
-                      transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
-                      transition: 'transform 0.3s',
-                      border: 'none',
-                      cursor: 'pointer',
-                      marginBottom: '1px',
-                    }}
-                  >
-                    ▶
-                  </button>
-                </h3>
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: `linear-gradient(to right,
+                ${teamPrimaryColors[teamName]} 25%, transparent),
+                ${teamPrimaryColors[teamName]}`,
+              backgroundBlendMode: 'screen',
+              zIndex: 1,
+              opacity: 0.4,
+            }}
+          />
+
+          <h3
+            style={{
+              margin: 0,
+              display: 'flex',
+              padding: '4px 0',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              zIndex: 2,
+              fontWeight: 400,
+              lineHeight: 1,
+              color: '#fff',
+            }}
+          >
+            {teamName}
+
+            <button
+              onClick={() =>
+                handleSetShowing(showing === 'away' ? 'home' : 'away')
+              }
+              style={{
+                position: 'absolute',
+                right: '0.5rem',
+                fontSize: '0.6rem',
+                background: 'transparent',
+                color: 'white',
+                transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
+                transition: 'transform 0.3s',
+                border: 'none',
+                cursor: 'pointer',
+                marginBottom: '1px',
+              }}
+            >
+              ▶
+            </button>
+          </h3>
+        </div>
+
         <table
           style={{
             fontSize: '12px',
@@ -266,7 +303,6 @@ const PlayerStats = ({
         width: '100%',
       }}
     >
-
       <div
         style={{
           display: 'flex',

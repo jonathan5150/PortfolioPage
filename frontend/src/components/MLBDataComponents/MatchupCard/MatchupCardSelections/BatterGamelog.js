@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Cookies from 'js-cookie';
+import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const BatterGamelog = ({
   teams = [],
@@ -114,37 +115,70 @@ const BatterGamelog = ({
             width: '100%',
           }}
         >
-          <h3
+          <div
             style={{
-              margin: 0,
-              height: '100%',
-              display: 'flex',
-              padding: '0',
-              alignItems: 'center',
-              justifyContent: 'center',
               position: 'relative',
-              lineHeight: 1,
+              borderRadius: '4px',
+              overflow: 'hidden',
             }}
           >
-            {team.name}
-
-            <button
-              onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
+            <div
               style={{
                 position: 'absolute',
-                right: '0.5rem',
-                marginBottom: '-12px',
-                transform: `translateY(-50%) ${showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)'}`,
-                fontSize: '0.6rem',
-                background: 'transparent',
-                color: 'white',
-                border: 'none',
-                cursor: 'pointer',
+                inset: 0,
+                backgroundColor: 'rgba(70, 70, 70, 0.8)',
+                zIndex: 0,
+              }}
+            />
+
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: `linear-gradient(to right,
+                  ${teamPrimaryColors[team.name]} 25%, transparent),
+                  ${teamPrimaryColors[team.name]}`,
+                backgroundBlendMode: 'screen',
+                zIndex: 1,
+                opacity: 0.4,
+              }}
+            />
+
+            <h3
+              style={{
+                margin: 0,
+                display: 'flex',
+                padding: '4px 0',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                zIndex: 2,
+                fontWeight: 300,
+                lineHeight: 1,
+                borderRadius: '4px',
+                color: '#fff',
               }}
             >
-              ▶
-            </button>
-          </h3>
+              {team.name}
+
+              <button
+                onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
+                style={{
+                  position: 'absolute',
+                  right: '0.5rem',
+                  marginBottom: '-12px',
+                  transform: `translateY(-50%) ${showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)'}`,
+                  fontSize: '0.6rem',
+                  background: 'transparent',
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                ▶
+              </button>
+            </h3>
+          </div>
 
           <select
             value={numGamesToShow}
@@ -255,7 +289,6 @@ const BatterGamelog = ({
         width: '100%',
       }}
     >
-
       <div
         style={{
           display: 'flex',
