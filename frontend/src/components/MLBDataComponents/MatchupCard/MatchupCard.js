@@ -17,11 +17,13 @@ import BoxScore from './MatchupCardSelections/BoxScore';
 import BeforeScoreBug from './MatchupCardComponents/BeforeScoreBug/BeforeScoreBug';
 import AfterScoreBug from './MatchupCardComponents/AfterScoreBug/AfterScoreBug';
 import LiveScoreBug from './MatchupCardComponents/LiveScoreBug/LiveScoreBug';
+import TeamsMatchup from './MatchupCardSelections/TeamsMatchup';
 
 const STAT_OPTIONS = [
   { value: 'box-score', label: 'BOX SCORE' },
+  { value: 'teams-matchup', label: 'TEAM MATCHUP' },
   { value: 'team-history', label: 'TEAM W/L HISTORY' },
-  { value: 'player-stats', label: 'PLAYER STATS' },
+  { value: 'player-stats', label: 'SEASON STATS' },
   { value: 'batter-gamelog', label: 'PLAYER GAME LOG' },
   { value: 'pitcher-last-5', label: 'PITCHER GAME LOG' },
 ];
@@ -310,7 +312,13 @@ const GameCard = memo(function GameCard({
 
       case 'team-history':
         return <TeamHistory game={game} />;
-
+      case 'teams-matchup':
+        return (
+          <TeamsMatchup
+            game={game}
+            getTeamAbbreviation={getTeamAbbreviation}
+          />
+        );
       case 'player-stats':
         return (
           <PlayerStats
