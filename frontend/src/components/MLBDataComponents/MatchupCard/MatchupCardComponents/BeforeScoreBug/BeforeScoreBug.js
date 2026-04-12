@@ -1,38 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-
-// Official primary colors for each MLB team
-const teamPrimaryColors = {
-  'Arizona Diamondbacks': 'rgba(167, 25, 48, 0.6)',
-  'Atlanta Braves': 'rgba(35, 48, 115, 0.6)',
-  'Baltimore Orioles': 'rgba(223, 70, 1, 0.6)',
-  'Boston Red Sox': 'rgba(189, 48, 57, 0.6)',
-  'Chicago White Sox': 'rgba(160, 160, 160, 0.6)',
-  'Chicago Cubs': 'rgba(14, 51, 134, 0.6)',
-  'Cincinnati Reds': 'rgba(179, 0, 0, 0.6)',
-  'Cleveland Guardians': 'rgba(12, 35, 64, 0.6)',
-  'Colorado Rockies': 'rgba(51, 0, 111, 0.6)',
-  'Detroit Tigers': 'rgba(12, 35, 64, 0.6)',
-  'Houston Astros': 'rgba(0, 45, 98, 0.6)',
-  'Kansas City Royals': 'rgba(0, 70, 135, 0.6)',
-  'Los Angeles Angels': 'rgba(200, 16, 46, 0.6)',
-  'Los Angeles Dodgers': 'rgba(0, 90, 156, 0.6)',
-  'Miami Marlins': 'rgba(0, 163, 224, 0.6)',
-  'Milwaukee Brewers': 'rgba(19, 41, 75, 0.6)',
-  'Minnesota Twins': 'rgba(0, 43, 92, 0.6)',
-  'New York Yankees': 'rgba(12, 35, 64, 0.6)',
-  'New York Mets': 'rgba(0, 45, 114, 0.6)',
-  Athletics: 'rgba(0, 56, 49, 0.6)',
-  'Philadelphia Phillies': 'rgba(232, 24, 40, 0.6)',
-  'Pittsburgh Pirates': 'rgba(253, 184, 39, 0.6)',
-  'San Diego Padres': 'rgba(255, 196, 37, 0.6)',
-  'San Francisco Giants': 'rgba(253, 90, 30, 0.6)',
-  'Seattle Mariners': 'rgba(0, 92, 92, 0.6)',
-  'St. Louis Cardinals': 'rgba(196, 30, 58, 0.6)',
-  'Tampa Bay Rays': 'rgba(9, 44, 92, 0.6)',
-  'Texas Rangers': 'rgba(0, 50, 120, 0.6)',
-  'Toronto Blue Jays': 'rgba(19, 74, 142, 0.6)',
-  'Washington Nationals': 'rgba(171, 0, 3, 0.6)',
-};
+import teamPrimaryColors from '../mlbUtils/teamPrimaryColors';
 
 const BeforeScoreBug = ({
   game,
