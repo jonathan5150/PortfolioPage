@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Cookies from 'js-cookie';
 import teamPrimaryColors, {
-  getFadedBackgroundStyle,
+  TEAM_SATURATION,
 } from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const BatterGamelog = ({
@@ -105,6 +105,7 @@ const BatterGamelog = ({
   const renderTeam = ({ team, teamType, logs = {}, roster = [] }) => {
     const selectedPlayer = selectedPlayers[team.id] || '';
     const playerGames = logs[selectedPlayer]?.slice(0, numGamesToShow) || [];
+    const teamColor = teamPrimaryColors[team.name];
 
     return (
       <div style={{ width: '100%', flexShrink: 0 }}>
@@ -125,15 +126,6 @@ const BatterGamelog = ({
               overflow: 'hidden',
             }}
           >
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                backgroundColor: 'rgba(70,70,70,1)',
-                zIndex: 0,
-              }}
-            />
-            <div style={getFadedBackgroundStyle(teamPrimaryColors[team.name])} />
             <h3
               style={{
                 margin: 0,
@@ -147,6 +139,11 @@ const BatterGamelog = ({
                 lineHeight: 1,
                 borderRadius: '4px',
                 color: '#fff',
+                background: teamColor
+                  ? `linear-gradient(to right, ${teamColor} 25%, transparent), ${teamColor}`
+                  : undefined,
+                backgroundBlendMode: teamColor ? 'screen' : undefined,
+                filter: teamColor ? `saturate(${TEAM_SATURATION})` : undefined,
               }}
             >
               {team.name}

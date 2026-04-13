@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Cookies from 'js-cookie';
 import teamPrimaryColors, {
-  getFadedBackgroundStyle,
+  TEAM_SATURATION,
 } from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const PlayerStats = ({
@@ -115,6 +115,8 @@ const PlayerStats = ({
   };
 
   const renderPlayerTable = (teamName, players) => {
+    const teamColor = teamPrimaryColors[teamName];
+
     let filteredPlayers = players.filter(
       (p) => (p.seasonStats?.gamesPlayed || 0) >= (isPostseason ? 1 : 20)
     );
@@ -135,8 +137,6 @@ const PlayerStats = ({
         style={{ marginBottom: '3px', width: '100%', flexShrink: 0 }}
       >
         <div style={{ position: 'relative', borderRadius: 4, overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(70,70,70,1)', zIndex: 0 }} />
-          <div style={getFadedBackgroundStyle(teamPrimaryColors[teamName])} />
           <h3
             style={{
               margin: 0,
@@ -149,6 +149,12 @@ const PlayerStats = ({
               fontWeight: 400,
               lineHeight: 1,
               color: '#fff',
+              borderRadius: '4px',
+              background: teamColor
+                ? `linear-gradient(to right, ${teamColor} 25%, transparent), ${teamColor}`
+                : undefined,
+              backgroundBlendMode: teamColor ? 'screen' : undefined,
+              filter: teamColor ? `saturate(${TEAM_SATURATION})` : undefined,
             }}
           >
             {teamName}

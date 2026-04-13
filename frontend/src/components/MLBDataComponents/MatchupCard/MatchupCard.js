@@ -78,6 +78,7 @@ const GameCard = memo(function GameCard({
   onSetAllToThisCard,
   onOpenAllToThisCard,
   onCloseAllCards,
+  suppressNextScoreGridToggleRef,
 }) {
   const gamePk = game.gamePk;
 
@@ -210,8 +211,13 @@ const GameCard = memo(function GameCard({
   );
 
   const toggleGameData = useCallback(() => {
+    if (suppressNextScoreGridToggleRef?.current) {
+      suppressNextScoreGridToggleRef.current = false;
+      return;
+    }
+
     setIsExpanded((prev) => !prev);
-  }, []);
+  }, [suppressNextScoreGridToggleRef]);
 
   const handleBoxScoreViewChange = useCallback(
     (newView) => {
@@ -569,53 +575,54 @@ const GameCard = memo(function GameCard({
               width: '100%',
             }}
           >
-<div style={{ position: 'relative', flex: '0 0 48%', maxWidth: '60%' }}>
-            <select
-              value={contentKey}
-              onChange={(e) => handleContentChange(e.target.value)}
-              style={{
-                width: '100%',
-                height: '30px',
-                borderRadius: '6px',
-                border: '1px solid #555',
-                background: 'rgba(60, 60, 60, 0.9)',
-                color: 'white',
-                fontSize: '0.7rem',
-                fontFamily: 'DM Sans, sans-serif',
-                fontWeight: 500,
-                paddingRight: '0px', // space for arrow
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                MozAppearance: 'none',
-              }}
-            >
-              {STAT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <span
-              style={{
-                position: 'absolute',
-                right: '10px',   // 👈 THIS is your "margin from right edge"
-                top: '50%',
-                transform: 'translateY(-50%)',
-                pointerEvents: 'none',
-                fontSize: '0.6rem',
-                color: 'white',
-              }}
-            >
-              ▼
-            </span>
-</div>
+            <div style={{ position: 'relative', flex: '0 0 48%', maxWidth: '60%' }}>
+              <select
+                value={contentKey}
+                onChange={(e) => handleContentChange(e.target.value)}
+                style={{
+                  width: '100%',
+                  height: '30px',
+                  borderRadius: '6px',
+                  border: '1px solid #555',
+                  background: 'rgba(60, 60, 60, 0.9)',
+                  color: 'white',
+                  fontSize: '0.7rem',
+                  fontFamily: 'DM Sans, sans-serif',
+                  fontWeight: 500,
+                  paddingRight: '0px',
+                  appearance: 'none',
+                  WebkitAppearance: 'none',
+                  MozAppearance: 'none',
+                }}
+              >
+                {STAT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <span
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  pointerEvents: 'none',
+                  fontSize: '0.6rem',
+                  color: 'white',
+                }}
+              >
+                ▼
+              </span>
+            </div>
+
             <div
               style={{
                 display: 'flex',
                 flex: '0 0 48%',
                 maxWidth: '50%',
                 gap: '6px',
-                minWidth: 0, // 🔥 prevents overflow
+                minWidth: 0,
               }}
             >
               <button
@@ -689,6 +696,7 @@ const MatchupCard = ({
   const [delayOver, setDelayOver] = useState(false);
   const [fadeIn, setFadeIn] = useState(false);
   const [syncCommand, setSyncCommand] = useState(null);
+  const suppressNextScoreGridToggleRef = useRef(false);
 
   useEffect(() => {
     if (!loading) {
@@ -729,6 +737,10 @@ const MatchupCard = ({
     });
   }, []);
 
+  const handleOutsideCloseSelectors = useCallback(() => {
+    suppressNextScoreGridToggleRef.current = true;
+  }, []);
+
   return (
     <div className="matchup-card fade-in">
       <MLBDataNavbar
@@ -744,6 +756,7 @@ const MatchupCard = ({
         handleSelectAll={handleSelectAll}
         handleDeselectAll={handleDeselectAll}
         teamsMenuRef={teamsMenuRef}
+        onOutsideCloseSelectors={handleOutsideCloseSelectors}
       />
 
       <div className="matchup-container">
@@ -778,6 +791,7 @@ const MatchupCard = ({
               onSetAllToThisCard={handleSetAllToThisCard}
               onOpenAllToThisCard={handleOpenAllToThisCard}
               onCloseAllCards={handleCloseAllCards}
+              suppressNextScoreGridToggleRef={suppressNextScoreGridToggleRef}
             />
           ))
         )}

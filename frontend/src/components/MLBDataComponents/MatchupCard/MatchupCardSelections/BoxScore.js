@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import teamPrimaryColors, {
-  getFadedBackgroundStyle,
+  TEAM_SATURATION,
 } from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }) => {
@@ -76,6 +76,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
     const batterIdsFromAPI = teamData?.batters || [];
     const pitcherIdsInOrder = teamData?.pitchers || [];
     const teamName = teamData?.team?.name || label;
+    const teamColor = teamPrimaryColors[teamName];
 
     const displayedPlayers = new Set();
     const renderPlayer = (id, forceRender = false) => {
@@ -170,8 +171,6 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
     return (
       <div style={{ width: '100%' }}>
         <div style={{ position: 'relative', borderRadius: 4, overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(70,70,70,1)', zIndex: 0 }} />
-          <div style={getFadedBackgroundStyle(teamPrimaryColors[teamName])} />
           <h3
             style={{
               margin: 0,
@@ -184,6 +183,12 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
               fontWeight: 300,
               lineHeight: 1,
               color: '#fff',
+              borderRadius: '4px',
+              background: teamColor
+                ? `linear-gradient(to right, ${teamColor} 25%, transparent), ${teamColor}`
+                : undefined,
+              backgroundBlendMode: teamColor ? 'screen' : undefined,
+              filter: teamColor ? `saturate(${TEAM_SATURATION})` : undefined,
             }}
           >
             {teamName}

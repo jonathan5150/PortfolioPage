@@ -5,18 +5,20 @@ const TEAM_OPACITY = 0.3;
 
 const rgba = (r, g, b) => `rgba(${r}, ${g}, ${b}, ${TEAM_OPACITY})`;
 
-export const getFadedBackgroundStyle = (teamColor) => ({
+export const getTeamBackgroundStyle = (teamColor) => ({
   position: 'absolute',
   inset: 0,
   zIndex: 1,
   pointerEvents: 'none',
-  border: `1px solid #555555`,
   borderRadius: '5px',
+
+  // ✅ EXACT SAME AS TEAM-CELL
   background: `
     linear-gradient(to right, ${teamColor} 25%, transparent),
     ${teamColor}
   `,
-  backgroundBlendMode: 'normal', // 👈 IMPORTANT (no more washed gray look)
+  backgroundBlendMode: 'screen',
+  filter: `saturate(${TEAM_SATURATION})`,
 });
 
 const teamPrimaryColors = {

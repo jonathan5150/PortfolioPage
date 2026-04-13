@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import teamPrimaryColors, {
-  getFadedBackgroundStyle,
+  TEAM_SATURATION,
 } from '../../../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const VISIBLE_COLUMNS = 6;
@@ -123,10 +123,7 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
           ? game.teams.away.team.name
           : game.teams.home.team.name;
 
-      const winnerStyle =
-        isWinner && teamPrimaryColors[selectedTeam]
-          ? getFadedBackgroundStyle(teamPrimaryColors[selectedTeam])
-          : null;
+      const winnerColor = isWinner ? teamPrimaryColors[selectedTeam] : null;
 
       return (
         <div
@@ -147,7 +144,20 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
               backgroundColor: isWinner ? 'transparent' : 'rgba(90, 90, 90, 0.7)',
             }}
           >
-            {winnerStyle && <div style={winnerStyle} />}
+            {winnerColor && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: `linear-gradient(to right, ${winnerColor} 25%, transparent), ${winnerColor}`,
+                  backgroundBlendMode: 'screen',
+                  filter: `saturate(${TEAM_SATURATION})`,
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                  borderRadius: '4px',
+                }}
+              />
+            )}
 
             <div
               className="last-twenty-row"

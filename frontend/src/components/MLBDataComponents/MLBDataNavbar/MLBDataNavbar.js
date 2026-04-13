@@ -17,24 +17,50 @@ const MLBDataNavbar = ({
   handleSelectAll,
   handleDeselectAll,
   teamsMenuRef,
+  onOutsideCloseSelectors,
 }) => {
   const calendarRef = React.useRef(null);
 
   React.useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+    const handleGlobalPointerDown = (event) => {
+      const clickedInsideCalendar =
+        calendarRef.current && calendarRef.current.contains(event.target);
+
+      const clickedInsideTeams =
+        teamsMenuRef.current && teamsMenuRef.current.contains(event.target);
+
+      let closedSomething = false;
+
+      if (isCalendarOpen && !clickedInsideCalendar) {
         setIsCalendarOpen(false);
+        closedSomething = true;
+      }
+
+      if (isTeamsMenuOpen && !clickedInsideTeams) {
+        setIsTeamsMenuOpen(false);
+        closedSomething = true;
+      }
+
+      if (closedSomething && !clickedInsideCalendar && !clickedInsideTeams) {
+        onOutsideCloseSelectors?.();
       }
     };
 
-    if (isCalendarOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+    if (isCalendarOpen || isTeamsMenuOpen) {
+      document.addEventListener('pointerdown', handleGlobalPointerDown, true);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('pointerdown', handleGlobalPointerDown, true);
     };
-  }, [isCalendarOpen, setIsCalendarOpen]);
+  }, [
+    isCalendarOpen,
+    isTeamsMenuOpen,
+    setIsCalendarOpen,
+    setIsTeamsMenuOpen,
+    teamsMenuRef,
+    onOutsideCloseSelectors,
+  ]);
 
   const formattedDate = selectedDate
     ? `${selectedDate.getMonth() + 1}/${selectedDate.getDate()}/${selectedDate.getFullYear()}`
