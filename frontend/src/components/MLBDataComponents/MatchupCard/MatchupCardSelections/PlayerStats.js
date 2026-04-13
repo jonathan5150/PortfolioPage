@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Cookies from 'js-cookie';
-import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
+import teamPrimaryColors, {
+  getFadedBackgroundStyle,
+} from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const PlayerStats = ({
   game,
@@ -85,19 +87,6 @@ const PlayerStats = ({
     });
   };
 
-  const fadedBackgroundStyle = (teamColor) => ({
-    position: 'absolute',
-    inset: 0,
-    zIndex: 1,
-    pointerEvents: 'none',
-    background: `
-      linear-gradient(to right, ${teamColor} 25%, transparent),
-      ${teamColor}
-    `,
-    backgroundBlendMode: 'screen',
-    opacity: 0.2,
-  });
-
   const handleSort = (key) => {
     setPlayerStatsSortConfig((prev) => {
       if (prev.key === key) {
@@ -147,7 +136,7 @@ const PlayerStats = ({
       >
         <div style={{ position: 'relative', borderRadius: 4, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(70,70,70,1)', zIndex: 0 }} />
-          <div style={fadedBackgroundStyle(teamPrimaryColors[teamName])} />
+          <div style={getFadedBackgroundStyle(teamPrimaryColors[teamName])} />
           <h3
             style={{
               margin: 0,

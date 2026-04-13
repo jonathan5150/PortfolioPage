@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
-import teamPrimaryColors from '../../../MatchupCardComponents/mlbUtils/teamPrimaryColors';
+import teamPrimaryColors, {
+  getFadedBackgroundStyle,
+} from '../../../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const VISIBLE_COLUMNS = 6;
 
@@ -29,45 +31,6 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
 
     setColumnWidth(Math.max(nextWidth, 1));
   }, []);
-
-  const dimColor = (color, alpha = 0.35) => {
-    if (!color) return `rgba(255, 255, 255, ${alpha})`;
-
-    if (color.startsWith('#')) {
-      let hex = color.replace('#', '');
-
-      if (hex.length === 3) {
-        hex = hex
-          .split('')
-          .map((char) => char + char)
-          .join('');
-      }
-
-      const r = parseInt(hex.slice(0, 2), 16);
-      const g = parseInt(hex.slice(2, 4), 16);
-      const b = parseInt(hex.slice(4, 6), 16);
-
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    }
-
-    if (color.startsWith('rgb(')) {
-      const values = color.match(/\d+/g);
-      if (values && values.length >= 3) {
-        const [r, g, b] = values;
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-      }
-    }
-
-    if (color.startsWith('rgba(')) {
-      const values = color.match(/[\d.]+/g);
-      if (values && values.length >= 3) {
-        const [r, g, b] = values;
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-      }
-    }
-
-    return color;
-  };
 
   useEffect(() => {
     const el = containerRef.current;
@@ -160,9 +123,10 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
           ? game.teams.away.team.name
           : game.teams.home.team.name;
 
-      const backgroundColor = isWinner
-        ? dimColor(teamPrimaryColors[selectedTeam], 0.27)
-        : 'rgba(90, 90, 90, 0.7)';
+      const winnerStyle =
+        isWinner && teamPrimaryColors[selectedTeam]
+          ? getFadedBackgroundStyle(teamPrimaryColors[selectedTeam])
+          : null;
 
       return (
         <div
@@ -174,12 +138,28 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
             {format(new Date(game.gameDate), 'M/d')}
           </div>
 
-          <div className="team-and-score-group" style={{ backgroundColor }}>
-            <div className="last-twenty-row">
+          <div
+            className="team-and-score-group"
+            style={{
+              position: 'relative',
+              overflow: 'hidden',
+              borderRadius: '4px',
+              backgroundColor: isWinner ? 'transparent' : 'rgba(90, 90, 90, 0.7)',
+            }}
+          >
+            {winnerStyle && <div style={winnerStyle} />}
+
+            <div
+              className="last-twenty-row"
+              style={{ position: 'relative', zIndex: 2 }}
+            >
               <div className="team-cell">{game.teams.away.team.abbreviation}</div>
               <div className="score-cell">{game.teams.away.score}</div>
             </div>
-            <div className="last-twenty-row">
+            <div
+              className="last-twenty-row"
+              style={{ position: 'relative', zIndex: 2 }}
+            >
               <div className="team-cell">{game.teams.home.team.abbreviation}</div>
               <div className="score-cell">{game.teams.home.score}</div>
             </div>

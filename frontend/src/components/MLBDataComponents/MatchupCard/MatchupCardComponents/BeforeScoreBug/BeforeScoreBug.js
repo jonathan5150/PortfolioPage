@@ -133,11 +133,8 @@ const BeforeScoreBug = ({
               bottom: 0,
               right: 0,
               left: 0,
-              background:
-                side === 'home'
-                  ? `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`
-                  : `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`,
-              backgroundBlendMode: 'screen',
+              background: `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`,
+              backgroundBlendMode: 'normal',
               pointerEvents: 'none',
               zIndex: 1,
               borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
@@ -154,10 +151,8 @@ const BeforeScoreBug = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             border: isStarred ? '2px solid #c49410' : '2px solid rgb(85, 85, 85)',
-            backgroundColor: 'rgba(70, 70, 70, 1)',
             borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
             padding: '5px 10px',
-            opacity: 0.85,
             position: 'relative',
             zIndex: 2,
             userSelect: 'none',
@@ -203,7 +198,7 @@ const BeforeScoreBug = ({
             <div
               style={{
                 fontSize: '11px',
-                color: '#ccc',
+                color: '#fff',
                 lineHeight: '12px',
                 width: '60px',
                 textAlign: 'center',
@@ -291,9 +286,9 @@ const BeforeScoreBug = ({
           margin: '2px',
           border: '2px solid #555555',
           backgroundColor: 'rgba(70, 70, 70, 1)',
-          opacity: 0.85,
           borderRadius: '0 0 0 6px',
           padding: '3px',
+          color: '#fff',
         }}
       >
         {renderPitcherInfo(awayTeam, game.teams.away.probablePitcher)}
@@ -303,10 +298,10 @@ const BeforeScoreBug = ({
         style={{
           margin: '2px',
           border: '2px solid #555555',
-          backgroundColor: 'rgba(70, 70, 70, 0.8)',
-          opacity: 0.85,
+          backgroundColor: 'rgba(70, 70, 70, 1)',
           padding: '3px',
           borderRadius: '0 0 6px 0',
+          color: '#fff',
         }}
       >
         {renderPitcherInfo(homeTeam, game.teams.home.probablePitcher)}

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import Scoreboard from '../Scoreboard';
-import teamPrimaryColors from '../mlbUtils/teamPrimaryColors';
+import teamPrimaryColors, { TEAM_SATURATION } from '../mlbUtils/teamPrimaryColors';
 
 const AfterScoreBug = ({
   game,
@@ -116,6 +116,7 @@ const AfterScoreBug = ({
                   ? `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`
                   : `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`,
               backgroundBlendMode: 'screen',
+              filter: `saturate(${TEAM_SATURATION})`, // ✅ correct placement
               pointerEvents: 'none',
               zIndex: 1,
               borderRadius: side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0',
@@ -132,10 +133,8 @@ const AfterScoreBug = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             border: isStarred ? '2px solid #c49410' : '2px solid rgb(85, 85, 85)',
-            backgroundColor: 'rgba(70, 70, 70, 1)',
             borderRadius: side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0',
             padding: '5px 10px',
-            opacity: 0.85,
             position: 'relative',
             zIndex: 2,
             userSelect: 'none',
@@ -151,7 +150,6 @@ const AfterScoreBug = ({
               style={{
                 width: '37px',
                 height: '37px',
-                filter: 'saturate(0.8)',
                 objectFit: 'contain',
                 userSelect: 'none',
                 WebkitUserDrag: 'none',
@@ -169,7 +167,6 @@ const AfterScoreBug = ({
               style={{
                 height: '30px',
                 fontWeight: 'bold',
-                color: '#fff',
                 textAlign: 'center',
                 display: 'flex',
                 alignItems: 'center',
@@ -182,7 +179,6 @@ const AfterScoreBug = ({
             <div
               style={{
                 fontSize: '11px',
-                color: '#ccc',
                 lineHeight: '12px',
                 width: '60px',
                 textAlign: 'center',
@@ -197,7 +193,6 @@ const AfterScoreBug = ({
             style={{
               fontWeight: 'bold',
               fontSize: '25px',
-              color: '#fff',
               width: '30px',
               textAlign: 'center',
             }}

@@ -1,19 +1,7 @@
 import React from 'react';
-import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
-
-// Helper for faded background overlay
-const fadedBackgroundStyle = (teamColor) => ({
-  position: 'absolute',
-  inset: 0,
-  zIndex: 1,
-  pointerEvents: 'none',
-  background: `
-    linear-gradient(to right, ${teamColor} 25%, transparent),
-    ${teamColor}
-  `,
-  backgroundBlendMode: 'screen',
-  opacity: 0.2,
-});
+import teamPrimaryColors, {
+  getFadedBackgroundStyle,
+} from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
   const computeRes = (g) => {
@@ -55,11 +43,10 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
           style={{
             position: 'absolute',
             inset: 0,
-            backgroundColor: 'rgba(70,70,70,1)',
             zIndex: 0,
           }}
         />
-        <div style={fadedBackgroundStyle(teamPrimaryColors[teamName])} />
+        <div style={getFadedBackgroundStyle(teamPrimaryColors[teamName])} />
         <h3
           style={{
             margin: 0,
@@ -72,7 +59,6 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
             fontWeight: 300,
             lineHeight: 1,
             borderRadius: '4px',
-            color: '#fff',
           }}
         >
           {name}

@@ -169,11 +169,8 @@ const LiveScoreBug = ({
               bottom: 0,
               right: 0,
               left: 0,
-              background:
-                side === 'home'
-                  ? `linear-gradient(to right, ${color} 25%, transparent), ${color}`
-                  : `linear-gradient(to right, ${color} 25%, transparent), ${color}`,
-              backgroundBlendMode: 'screen',
+              background: `linear-gradient(to right, ${color} 25%, transparent), ${color}`,
+              backgroundBlendMode: 'normal',
               pointerEvents: 'none',
               zIndex: 1,
               borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
@@ -190,10 +187,8 @@ const LiveScoreBug = ({
             alignItems: 'center',
             justifyContent: 'space-between',
             border: isStarred ? '2px solid #c49410' : '2px solid rgb(85, 85, 85)',
-            backgroundColor: 'rgba(70, 70, 70, 1)',
             borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
             padding: '5px 10px',
-            opacity: 0.85,
             position: 'relative',
             zIndex: 2,
           }}
@@ -235,7 +230,7 @@ const LiveScoreBug = ({
             <div
               style={{
                 fontSize: '11px',
-                color: '#ccc',
+                color: '#fff',
                 lineHeight: '12px',
                 width: '60px',
                 textAlign: 'center',
@@ -271,8 +266,7 @@ const LiveScoreBug = ({
           flex: 1,
           height: '60px',
           border: '2px solid #555555',
-          backgroundColor: 'rgba(70, 70, 70, 0.8)',
-          opacity: 0.85,
+          backgroundColor: 'rgba(70, 70, 70, 1)',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -305,9 +299,8 @@ const LiveScoreBug = ({
           flex: 1,
           height: '60px',
           border: '2px solid #555555',
-          backgroundColor: 'rgba(70, 70, 70, 0.8)',
+          backgroundColor: 'rgba(70, 70, 70, 1)',
           borderRadius: '0 0 6px 0',
-          opacity: 0.85,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
@@ -386,23 +379,19 @@ const LiveScoreBug = ({
         outline: 'none',
       }}
     >
-
-          <div>
-            {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
-          </div>
+      <div>
+        {renderTeamCell(awayTeam, awayScore, 'away', awayRecord)}
+      </div>
 
       <div>
         {renderTeamCell(homeTeam, homeScore, 'home', homeRecord)}
       </div>
 
-
-
       <div
         style={{
           margin: cellMargin,
           border: '2px solid #555555',
-          backgroundColor: 'rgba(70, 70, 70, 0.8)',
-          opacity: 0.85,
+          backgroundColor: 'rgba(70, 70, 70, 1)',
           fontSize: '11px',
           color: 'white',
           padding: '6px 8px',

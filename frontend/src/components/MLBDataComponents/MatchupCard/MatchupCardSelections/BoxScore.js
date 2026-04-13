@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
-import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
+import teamPrimaryColors, {
+  getFadedBackgroundStyle,
+} from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }) => {
   const boxscore = liveData?.liveData?.boxscore;
@@ -66,19 +68,6 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
       </div>
     );
   }
-
-  const fadedBackgroundStyle = (teamColor) => ({
-    position: 'absolute',
-    inset: 0,
-    zIndex: 1,
-    pointerEvents: 'none',
-    background: `
-      linear-gradient(to right, ${teamColor} 25%, transparent),
-      ${teamColor}
-    `,
-    backgroundBlendMode: 'screen',
-    opacity: 0.2,
-  });
 
   const renderTeam = (teamData, label) => {
     const players = teamData?.players || {};
@@ -182,7 +171,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
       <div style={{ width: '100%' }}>
         <div style={{ position: 'relative', borderRadius: 4, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(70,70,70,1)', zIndex: 0 }} />
-          <div style={fadedBackgroundStyle(teamPrimaryColors[teamName])} />
+          <div style={getFadedBackgroundStyle(teamPrimaryColors[teamName])} />
           <h3
             style={{
               margin: 0,
@@ -205,7 +194,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
                 right: '0.5rem',
                 fontSize: '0.6rem',
                 background: 'transparent',
-                color: 'gray',
+                color: 'white',
                 transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
                 transition: 'transform 0.3s',
                 border: 'none',

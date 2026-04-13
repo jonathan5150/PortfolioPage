@@ -1,21 +1,9 @@
 // frontend/src/components/MLBDataComponents/MatchupCard/MatchupCardSelections/BatterGamelog.js
 import React, { useEffect, useState, useRef } from 'react';
 import Cookies from 'js-cookie';
-import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
-
-// Helper for faded background overlay
-const fadedBackgroundStyle = (teamColor) => ({
-  position: 'absolute',
-  inset: 0,
-  zIndex: 1,
-  pointerEvents: 'none',
-  background: `
-    linear-gradient(to right, ${teamColor} 25%, transparent),
-    ${teamColor}
-  `,
-  backgroundBlendMode: 'screen',
-  opacity: 0.2,
-});
+import teamPrimaryColors, {
+  getFadedBackgroundStyle,
+} from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const BatterGamelog = ({
   teams = [],
@@ -145,7 +133,7 @@ const BatterGamelog = ({
                 zIndex: 0,
               }}
             />
-            <div style={fadedBackgroundStyle(teamPrimaryColors[team.name])} />
+            <div style={getFadedBackgroundStyle(teamPrimaryColors[team.name])} />
             <h3
               style={{
                 margin: 0,
