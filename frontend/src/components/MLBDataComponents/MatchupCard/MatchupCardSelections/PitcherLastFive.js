@@ -3,6 +3,51 @@ import teamPrimaryColors, {
   TEAM_SATURATION,
 } from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
+const viewportStyle = {
+  width: '100%',
+  border: '1px solid rgba(255, 255, 255, 0.12)',
+  borderRadius: '8px',
+  overflow: 'hidden',
+  background: 'rgba(30, 30, 30, 0.55)',
+};
+
+const containerStyle = {
+  width: '100%',
+  background: 'transparent',
+};
+
+const tableStyle = {
+  width: '100%',
+  fontSize: '12px',
+  borderCollapse: 'collapse',
+  tableLayout: 'fixed',
+};
+
+const thStyle = {
+  padding: '5px 6px',
+  fontSize: '0.63rem',
+  fontWeight: 600,
+  color: 'rgba(255,255,255,0.82)',
+  background: 'rgba(255,255,255,0.03)',
+  borderBottom: '1px solid rgba(255,255,255,0.08)',
+  textAlign: 'center',
+};
+
+const tdStyle = {
+  padding: '5px 6px',
+  color: 'white',
+  borderBottom: '1px solid rgba(255,255,255,0.06)',
+  textAlign: 'center',
+  fontSize: '0.7rem',
+};
+
+const cellStyle = {
+  ...tdStyle,
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+};
+
 const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
   const computeRes = (g) => {
     let r = String(g?.result ?? '').trim().toUpperCase();
@@ -20,7 +65,11 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
     const teamScore =
       g?.teamScore ?? g?.team_score ?? g?.team?.score ?? g?.for ?? g?.runsFor;
     const oppScore =
-      g?.oppScore ?? g?.opponentScore ?? g?.opponent?.score ?? g?.against ?? g?.runsAgainst;
+      g?.oppScore ??
+      g?.opponentScore ??
+      g?.opponent?.score ??
+      g?.against ??
+      g?.runsAgainst;
 
     const ts = Number(teamScore);
     const os = Number(oppScore);
@@ -29,19 +78,12 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
     return 'L';
   };
 
-  const renderPitcherGames = (name, games, teamName) => {
+  const renderPitcherGames = (name, games, teamName, isSecondPitcher = false) => {
     const teamColor = teamPrimaryColors[teamName];
 
     return (
-      <div className="pitcher-block">
-        <div
-          style={{
-            position: 'relative',
-            borderRadius: '4px',
-            overflow: 'hidden',
-            margin: '6px 0',
-          }}
-        >
+      <div style={{ ...containerStyle }}>
+        <div style={{ position: 'relative', overflow: 'hidden' }}>
           <h3
             style={{
               margin: 0,
@@ -53,8 +95,8 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
               zIndex: 2,
               fontWeight: 300,
               lineHeight: 1,
-              borderRadius: '4px',
               color: '#fff',
+              borderRadius: isSecondPitcher ? '0' : '8px 8px 0 0',
               background: teamColor
                 ? `linear-gradient(to right, ${teamColor} 25%, transparent), ${teamColor}`
                 : undefined,
@@ -67,19 +109,28 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
         </div>
 
         {!Array.isArray(games) || games.length === 0 ? (
-          <p style={{ margin: 0 }}>No recent starts found.</p>
+          <div
+            style={{
+              padding: '14px 10px',
+              textAlign: 'center',
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: '0.7rem',
+            }}
+          >
+            No recent starts found.
+          </div>
         ) : (
-          <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed' }}>
+          <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={{ width: '18%' }}>DATE</th>
-                <th style={{ width: '16%' }}>OPP</th>
-                <th style={{ width: '12%' }}>IP</th>
-                <th style={{ width: '12%' }}>H</th>
-                <th style={{ width: '12%' }}>ER</th>
-                <th style={{ width: '12%' }}>BB</th>
-                <th style={{ width: '12%' }}>K</th>
-                <th style={{ width: '10%' }}>RES</th>
+                <th style={{ ...thStyle, width: '18%' }}>DATE</th>
+                <th style={{ ...thStyle, width: '16%' }}>OPP</th>
+                <th style={{ ...thStyle, width: '12%' }}>IP</th>
+                <th style={{ ...thStyle, width: '12%' }}>H</th>
+                <th style={{ ...thStyle, width: '12%' }}>ER</th>
+                <th style={{ ...thStyle, width: '12%' }}>BB</th>
+                <th style={{ ...thStyle, width: '12%' }}>K</th>
+                <th style={{ ...thStyle, width: '10%' }}>RES</th>
               </tr>
             </thead>
             <tbody>
@@ -89,23 +140,33 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
                 const dateStr = mm && dd ? `${mm}/${dd}` : g?.date || '';
 
                 const resChar = computeRes(g);
+                const isLastRow = idx === games.length - 1;
 
-                const resultStyle = {
-                  color: resChar === 'W' ? '#b59841' : 'rgba(255, 0, 0, 0.6)',
-                  whiteSpace: 'nowrap',
-                  textAlign: 'center',
-                };
+                const rowTdStyle = isLastRow
+                  ? { ...tdStyle, borderBottom: 'none' }
+                  : tdStyle;
 
                 return (
                   <tr key={idx}>
-                    <td>{dateStr}</td>
-                    <td>{g?.opponent}</td>
-                    <td>{g?.inningsPitched}</td>
-                    <td>{g?.hits}</td>
-                    <td>{g?.earnedRuns}</td>
-                    <td>{g?.walks}</td>
-                    <td>{g?.strikeouts}</td>
-                    <td style={resultStyle}>{resChar}</td>
+                    <td style={rowTdStyle}>{dateStr}</td>
+                    <td style={{ ...cellStyle, borderBottom: rowTdStyle.borderBottom }}>
+                      {g?.opponent}
+                    </td>
+                    <td style={rowTdStyle}>{g?.inningsPitched}</td>
+                    <td style={rowTdStyle}>{g?.hits}</td>
+                    <td style={rowTdStyle}>{g?.earnedRuns}</td>
+                    <td style={rowTdStyle}>{g?.walks}</td>
+                    <td style={rowTdStyle}>{g?.strikeouts}</td>
+                    <td
+                      style={{
+                        ...rowTdStyle,
+                        color: resChar === 'W' ? '#b59841' : 'rgba(255, 0, 0, 0.6)',
+                        whiteSpace: 'nowrap',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {resChar}
+                    </td>
                   </tr>
                 );
               })}
@@ -122,9 +183,11 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
   const homeTeamName = game?.teams?.home?.team?.name || '';
 
   return (
-    <div className="pitcher-last-five-wrapper">
-      {renderPitcherGames(awayName, awayGames, awayTeamName)}
-      {renderPitcherGames(homeName, homeGames, homeTeamName)}
+    <div style={viewportStyle}>
+      <div className="pitcher-last-five-wrapper">
+        {renderPitcherGames(awayName, awayGames, awayTeamName, false)}
+        {renderPitcherGames(homeName, homeGames, homeTeamName, true)}
+      </div>
     </div>
   );
 };
