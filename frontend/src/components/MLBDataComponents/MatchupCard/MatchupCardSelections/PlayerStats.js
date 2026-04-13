@@ -4,13 +4,66 @@ import teamPrimaryColors, {
   TEAM_SATURATION,
 } from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
+const viewportStyle = {
+  width: '100%',
+  border: '1px solid rgba(255, 255, 255, 0.12)',
+  borderRadius: '8px',
+  overflow: 'hidden',
+  background: 'rgba(30, 30, 30, 0.55)',
+};
+
+const containerStyle = {
+  width: '100%',
+  background: 'transparent',
+};
+
+const tableStyle = {
+  width: '100%',
+  fontSize: '12px',
+  borderCollapse: 'collapse',
+  tableLayout: 'fixed',
+};
+
+const thStyle = {
+  padding: '5px 9px',
+  fontSize: '0.63rem',
+  fontWeight: 600,
+  color: 'rgba(255,255,255,0.82)',
+  background: 'rgba(255,255,255,0.03)',
+  borderBottom: '1px solid rgba(255,255,255,0.08)',
+  textAlign: 'center',
+};
+
+const tdStyle = {
+  padding: '5px 9px',
+  color: 'white',
+  borderBottom: '1px solid rgba(255,255,255,0.06)',
+  textAlign: 'center',
+  fontSize: '0.7rem',
+};
+
+const statHeaderStyle = {
+  ...thStyle,
+};
+
+const statHeaderInnerStyle = {
+  position: 'relative',
+  left: '-12px',
+};
+
+const statCellStyle = {
+  ...tdStyle,
+  position: 'relative',
+  left: '-12px',
+};
+
 const PlayerStats = ({
   game,
   batterGameLogs,
   playerStatsSortConfig,
   setPlayerStatsSortConfig,
   setContentKey,
-  setSelectedPlayers
+  setSelectedPlayers,
 }) => {
   const awayTeamId = game.teams.away.team.id;
   const homeTeamId = game.teams.home.team.id;
@@ -106,7 +159,7 @@ const PlayerStats = ({
           verticalAlign: 'middle',
           marginLeft: '2px',
           position: 'relative',
-          top: '-2px'
+          top: '-2px',
         }}
       >
         {sortConfig.direction === 'asc' ? '▲' : '▼'}
@@ -130,145 +183,111 @@ const PlayerStats = ({
     const sortedPlayers = sortPlayers(filteredPlayers);
 
     return (
-      <div
-        className="lineup noselect"
-        tabIndex={-1}
-        draggable={false}
-        style={{ marginBottom: '3px', width: '100%', flexShrink: 0 }}
-      >
-        <div style={{ position: 'relative', borderRadius: 4, overflow: 'hidden' }}>
-          <h3
-            style={{
-              margin: 0,
-              display: 'flex',
-              padding: '4px 0',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              zIndex: 2,
-              fontWeight: 400,
-              lineHeight: 1,
-              color: '#fff',
-              borderRadius: '4px',
-              background: teamColor
-                ? `linear-gradient(to right, ${teamColor} 25%, transparent), ${teamColor}`
-                : undefined,
-              backgroundBlendMode: teamColor ? 'screen' : undefined,
-              filter: teamColor ? `saturate(${TEAM_SATURATION})` : undefined,
-            }}
-          >
-            {teamName}
-
-            <button
-              onClick={() =>
-                handleSetShowing(showing === 'away' ? 'home' : 'away')
-              }
+      <div className="lineup noselect" style={{ width: '100%', flexShrink: 0 }}>
+        <div style={containerStyle}>
+          <div style={{ position: 'relative', overflow: 'hidden' }}>
+            <h3
               style={{
-                position: 'absolute',
-                right: '0.5rem',
-                fontSize: '0.6rem',
-                background: 'transparent',
-                color: 'white',
-                transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
-                transition: 'transform 0.3s',
-                border: 'none',
-                cursor: 'pointer',
-                marginBottom: '1px',
+                margin: 0,
+                display: 'flex',
+                padding: '4px 0',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                zIndex: 2,
+                fontWeight: 400,
+                lineHeight: 1,
+                color: '#fff',
+                borderRadius: '8px 8px 0 0',
+                background: teamColor
+                  ? `linear-gradient(to right, ${teamColor} 25%, transparent), ${teamColor}`
+                  : undefined,
+                backgroundBlendMode: teamColor ? 'screen' : undefined,
+                filter: teamColor ? `saturate(${TEAM_SATURATION})` : undefined,
               }}
             >
-              ▶
-            </button>
-          </h3>
-        </div>
+              {teamName}
 
-        <table
-          style={{
-            fontSize: '12px',
-            marginBottom: '0px',
-            marginTop: '5px',
-            paddingRight: '10px',
-            width: '100%',
-            tableLayout: 'fixed',
-            cursor: 'pointer'
-          }}
-        >
-          <thead>
-            <tr>
-              <th
-                style={{ width: '35%', textAlign: 'center', paddingLeft: '5px' }}
-                onClick={() => handleSort('fullName')}
+              <button
+                onClick={() =>
+                  handleSetShowing(showing === 'away' ? 'home' : 'away')
+                }
+                style={{
+                  position: 'absolute',
+                  right: '0.5rem',
+                  fontSize: '0.6rem',
+                  background: 'transparent',
+                  color: 'white',
+                  transform: showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)',
+                  transition: 'transform 0.3s',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
               >
-                NAME{renderArrow('fullName')}
-              </th>
-              <th style={{ width: '8%' }} onClick={() => handleSort('gamesPlayed')}>
-                GP{renderArrow('gamesPlayed')}
-              </th>
-              <th style={{ width: '8%' }} onClick={() => handleSort('hits')}>
-                H{renderArrow('hits')}
-              </th>
-              <th style={{ width: '8%' }} onClick={() => handleSort('rbi')}>
-                RBI{renderArrow('rbi')}
-              </th>
-              <th style={{ width: '8%' }} onClick={() => handleSort('baseOnBalls')}>
-                BB{renderArrow('baseOnBalls')}
-              </th>
-              <th style={{ width: '8%' }} onClick={() => handleSort('strikeOuts')}>
-                SO{renderArrow('strikeOuts')}
-              </th>
-              <th style={{ width: '8%' }} onClick={() => handleSort('homeRuns')}>
-                HR{renderArrow('homeRuns')}
-              </th>
-              <th style={{ width: '8%' }} onClick={() => handleSort('stolenBases')}>
-                SB{renderArrow('stolenBases')}
-              </th>
-              <th style={{ width: '8%' }} onClick={() => handleSort('avg')}>
-                AVG{renderArrow('avg')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedPlayers.map((player, index) => {
-              const stats = player.seasonStats || {};
-              const gp = stats.gamesPlayed || 0;
-              const playerName = player.fullName || player.person?.fullName || '';
+                ▶
+              </button>
+            </h3>
+          </div>
 
-              return (
-                <tr key={player.person?.id || index}>
-                  <td
-                    style={{
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      textAlign: 'left',
-                      userSelect: 'none'
-                    }}
-                  >
-                    {playerName || 'N/A'}
-                  </td>
-                  <td>{gp || ''}</td>
-                  <td>{stats.hits ?? 0}</td>
-                  <td>{stats.rbi ?? 0}</td>
-                  <td>{stats.baseOnBalls ?? 0}</td>
-                  <td>{stats.strikeOuts ?? 0}</td>
-                  <td>{stats.homeRuns ?? 0}</td>
-                  <td>{stats.stolenBases ?? 0}</td>
-                  <td>{stats.avg || ''}</td>
-                </tr>
-              );
-            })}
-
-            {sortedPlayers.length === 0 && (
+          <table style={tableStyle}>
+            <thead>
               <tr>
-                <td
-                  colSpan={9}
-                  style={{ textAlign: 'center', padding: '6px 0', color: '#aaa' }}
+                <th
+                  style={{ ...thStyle, width: '45%', textAlign: 'left', cursor: 'pointer' }}
+                  onClick={() => handleSort('fullName')}
                 >
-                  No player stats available.
-                </td>
+                  NAME{renderArrow('fullName')}
+                </th>
+
+                {[
+                  ['GP', 'gamesPlayed'],
+                  ['H', 'hits'],
+                  ['RBI', 'rbi'],
+                  ['BB', 'baseOnBalls'],
+                  ['SO', 'strikeOuts'],
+                  ['HR', 'homeRuns'],
+                  ['SB', 'stolenBases'],
+                  ['AVG', 'avg'],
+                ].map(([label, key]) => (
+                  <th
+                    key={key}
+                    style={{ ...statHeaderStyle, width: '6.875%', cursor: 'pointer' }}
+                    onClick={() => handleSort(key)}
+                  >
+                    <div style={statHeaderInnerStyle}>
+                      {label}
+                      {renderArrow(key)}
+                    </div>
+                  </th>
+                ))}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {sortedPlayers.map((player, index) => {
+                const stats = player.seasonStats || {};
+                const playerName =
+                  player.fullName || player.person?.fullName || '';
+
+                return (
+                  <tr key={player.person?.id || index}>
+                    <td style={{ ...tdStyle, textAlign: 'left' }}>
+                      {playerName || 'N/A'}
+                    </td>
+                    <td style={statCellStyle}>{stats.gamesPlayed || ''}</td>
+                    <td style={statCellStyle}>{stats.hits ?? 0}</td>
+                    <td style={statCellStyle}>{stats.rbi ?? 0}</td>
+                    <td style={statCellStyle}>{stats.baseOnBalls ?? 0}</td>
+                    <td style={statCellStyle}>{stats.strikeOuts ?? 0}</td>
+                    <td style={statCellStyle}>{stats.homeRuns ?? 0}</td>
+                    <td style={statCellStyle}>{stats.stolenBases ?? 0}</td>
+                    <td style={statCellStyle}>{stats.avg || ''}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   };
@@ -279,25 +298,26 @@ const PlayerStats = ({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        width: '100%',
-      }}
+      style={{ position: 'relative', height: '100%' }}
     >
-      <div
-        style={{
-          display: 'flex',
-          width: '200%',
-          transform: showing === 'away' ? 'translateX(0%)' : 'translateX(-50%)',
-          transition: 'transform 0.4s ease',
-        }}
-      >
-        <div style={{ width: '100%' }}>
-          {renderPlayerTable(awayTeamName, awayRoster)}
-        </div>
-        <div style={{ width: '100%' }}>
-          {renderPlayerTable(homeTeamName, homeRoster)}
+      <div style={viewportStyle}>
+        <div
+          style={{
+            display: 'flex',
+            width: '200%',
+            transform:
+              showing === 'away'
+                ? 'translateX(0%)'
+                : 'translateX(-50%)',
+            transition: 'transform 0.4s ease',
+          }}
+        >
+          <div style={{ flex: '0 0 50%' }}>
+            {renderPlayerTable(awayTeamName, awayRoster)}
+          </div>
+          <div style={{ flex: '0 0 50%' }}>
+            {renderPlayerTable(homeTeamName, homeRoster)}
+          </div>
         </div>
       </div>
     </div>
