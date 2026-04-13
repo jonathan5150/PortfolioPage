@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import Scoreboard from '../Scoreboard';
-import teamPrimaryColors, { TEAM_SATURATION } from '../mlbUtils/teamPrimaryColors';
+import teamPrimaryColors, {
+  getTeamBackgroundStyle,
+} from '../mlbUtils/teamPrimaryColors';
 
 const AfterScoreBug = ({
   game,
@@ -36,7 +38,6 @@ const AfterScoreBug = ({
 
       longPressTimerRef.current = setTimeout(() => {
         handleStarClick?.(teamId);
-
         longPressTriggeredRef.current = true;
         longPressTimerRef.current = null;
       }, 1000);
@@ -76,8 +77,8 @@ const AfterScoreBug = ({
   const renderTeamCell = (team, score, side, record) => {
     const abbr = getTeamAbbreviation(team.id);
     const teamName = team.name;
-    const gradientColor = teamPrimaryColors[teamName] || null;
     const isStarred = selectedStarTeamId === team.id;
+    const backgroundColor = teamPrimaryColors[teamName];
 
     return (
       <div
@@ -103,22 +104,10 @@ const AfterScoreBug = ({
           outline: 'none',
         }}
       >
-        {gradientColor && (
+        {backgroundColor && (
           <div
             style={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              right: 0,
-              left: 0,
-              background:
-                side === 'home'
-                  ? `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`
-                  : `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`,
-              backgroundBlendMode: 'screen',
-              filter: `saturate(${TEAM_SATURATION})`, // ✅ correct placement
-              pointerEvents: 'none',
-              zIndex: 1,
+              ...getTeamBackgroundStyle(backgroundColor),
               borderRadius: side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0',
             }}
           />
@@ -160,7 +149,12 @@ const AfterScoreBug = ({
           </div>
 
           <div
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              width: '40px',
+            }}
           >
             <div
               className="abbreviation"

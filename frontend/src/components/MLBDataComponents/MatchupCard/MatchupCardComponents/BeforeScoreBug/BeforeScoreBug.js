@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
-import teamPrimaryColors from '../mlbUtils/teamPrimaryColors';
+import teamPrimaryColors, {
+  getTeamBackgroundStyle,
+} from '../mlbUtils/teamPrimaryColors';
 
 const BeforeScoreBug = ({
   game,
@@ -34,7 +36,6 @@ const BeforeScoreBug = ({
 
       longPressTimerRef.current = setTimeout(() => {
         handleStarClick?.(teamId);
-
         longPressTriggeredRef.current = true;
         longPressTimerRef.current = null;
       }, 1000);
@@ -51,9 +52,7 @@ const BeforeScoreBug = ({
   }, []);
 
   useEffect(() => {
-    return () => {
-      clearLongPress();
-    };
+    return () => clearLongPress();
   }, [clearLongPress]);
 
   const gameNotStarted =
@@ -81,7 +80,7 @@ const BeforeScoreBug = ({
       {pitcher?.fullName ? (
         <>
           <div>
-            <span style={{ fontWeight: 'bold' }}></span> {pitcher.fullName} ({pitcher.pitchHand})
+            {pitcher.fullName} ({pitcher.pitchHand})
           </div>
           <div>
             <span style={{ fontWeight: 'bold' }}>ERA:</span> {pitcher.era}
@@ -98,8 +97,8 @@ const BeforeScoreBug = ({
   const renderTeamCell = (team, score, side, record) => {
     const abbr = getTeamAbbreviation(team.id);
     const teamName = team.name;
-    const gradientColor = teamPrimaryColors[teamName] || null;
     const isStarred = selectedStarTeamId === team.id;
+    const backgroundColor = teamPrimaryColors[teamName];
 
     return (
       <div
@@ -125,18 +124,10 @@ const BeforeScoreBug = ({
           outline: 'none',
         }}
       >
-        {gradientColor && (
+        {backgroundColor && (
           <div
             style={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              right: 0,
-              left: 0,
-              background: `linear-gradient(to right, ${gradientColor} 25%, transparent), ${gradientColor}`,
-              backgroundBlendMode: 'normal',
-              pointerEvents: 'none',
-              zIndex: 1,
+              ...getTeamBackgroundStyle(backgroundColor),
               borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
             }}
           />
@@ -161,35 +152,28 @@ const BeforeScoreBug = ({
             outline: 'none',
           }}
         >
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <img
-              src={getTeamLogo(teamName)}
-              alt={`${team.name} logo`}
-              style={{
-                width: '37px',
-                height: '37px',
-                objectFit: 'contain',
-                userSelect: 'none',
-                WebkitUserDrag: 'none',
-                outline: 'none',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            />
-          </div>
+          <img
+            src={getTeamLogo(teamName)}
+            alt={`${team.name} logo`}
+            style={{
+              width: '37px',
+              height: '37px',
+              objectFit: 'contain',
+            }}
+          />
 
           <div
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px' }}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              width: '40px',
+            }}
           >
             <div
-              className="abbreviation"
               style={{
-                height: '30px',
                 fontWeight: 'bold',
                 color: '#fff',
-                textAlign: 'center',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
               }}
             >
               {abbr}
@@ -199,10 +183,6 @@ const BeforeScoreBug = ({
               style={{
                 fontSize: '11px',
                 color: '#fff',
-                lineHeight: '12px',
-                width: '60px',
-                textAlign: 'center',
-                alignItems: 'center',
               }}
             >
               {record || '0-0'}
@@ -239,10 +219,6 @@ const BeforeScoreBug = ({
         gridTemplateRows: 'auto auto auto',
         marginBottom: '1px',
         cursor: 'pointer',
-        userSelect: 'none',
-        WebkitUserSelect: 'none',
-        WebkitTapHighlightColor: 'transparent',
-        outline: 'none',
         position: 'relative',
         paddingTop: '15px',
       }}
@@ -250,24 +226,14 @@ const BeforeScoreBug = ({
       <div
         style={{
           position: 'absolute',
-          top: '0',
+          top: 0,
           left: '50%',
           transform: 'translateX(-50%)',
-          zIndex: 1,
-          minWidth: '12px',
-          height: '12px',
-          padding: '3px 10px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           fontSize: '9px',
           color: 'white',
-          borderTopLeftRadius: '0px',
-          borderTopRightRadius: '0px',
+          padding: '3px 10px',
           borderBottomLeftRadius: '12px',
           borderBottomRightRadius: '12px',
-          lineHeight: 1,
-          pointerEvents: 'none',
         }}
       >
         {formattedStartTime}
@@ -284,8 +250,8 @@ const BeforeScoreBug = ({
       <div
         style={{
           margin: '2px',
-          border: '2px solid #555555',
-          backgroundColor: 'rgba(70, 70, 70, 1)',
+          border: '2px solid #555',
+          backgroundColor: 'rgba(70,70,70,1)',
           borderRadius: '0 0 0 6px',
           padding: '3px',
           color: '#fff',
@@ -297,10 +263,10 @@ const BeforeScoreBug = ({
       <div
         style={{
           margin: '2px',
-          border: '2px solid #555555',
-          backgroundColor: 'rgba(70, 70, 70, 1)',
-          padding: '3px',
+          border: '2px solid #555',
+          backgroundColor: 'rgba(70,70,70,1)',
           borderRadius: '0 0 6px 0',
+          padding: '3px',
           color: '#fff',
         }}
       >

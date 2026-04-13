@@ -1,9 +1,53 @@
-// frontend/src/components/MLBDataComponents/MatchupCard/MatchupCardSelections/BatterGamelog.js
 import React, { useEffect, useState, useRef } from 'react';
 import Cookies from 'js-cookie';
 import teamPrimaryColors, {
   TEAM_SATURATION,
 } from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
+
+const viewportStyle = {
+  width: '100%',
+  border: '1px solid rgba(255, 255, 255, 0.12)',
+  borderRadius: '8px',
+  overflow: 'hidden',
+  background: 'rgba(30, 30, 30, 0.55)',
+};
+
+const containerStyle = {
+  width: '100%',
+  background: 'transparent',
+};
+
+const tableStyle = {
+  width: '100%',
+  fontSize: '12px',
+  borderCollapse: 'collapse',
+  tableLayout: 'fixed',
+};
+
+const thStyle = {
+  padding: '5px 6px',
+  fontSize: '0.63rem',
+  fontWeight: 600,
+  color: 'rgba(255,255,255,0.82)',
+  background: 'rgba(255,255,255,0.03)',
+  borderBottom: '1px solid rgba(255,255,255,0.08)',
+  textAlign: 'center',
+};
+
+const tdStyle = {
+  padding: '5px 6px',
+  color: 'white',
+  borderBottom: '1px solid rgba(255,255,255,0.06)',
+  textAlign: 'center',
+  fontSize: '0.7rem',
+};
+
+const cellStyle = {
+  ...tdStyle,
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+};
 
 const BatterGamelog = ({
   teams = [],
@@ -102,70 +146,101 @@ const BatterGamelog = ({
     dragDeltaX.current = 0;
   };
 
-  const renderTeam = ({ team, teamType, logs = {}, roster = [] }) => {
+  const renderTeam = ({ team, teamType, logs = {}, roster = [] }, isSecondTeam = false) => {
     const selectedPlayer = selectedPlayers[team.id] || '';
     const playerGames = logs[selectedPlayer]?.slice(0, numGamesToShow) || [];
     const teamColor = teamPrimaryColors[team.name];
 
     return (
-      <div style={{ width: '100%', flexShrink: 0 }}>
+      <div style={{ ...containerStyle, width: '100%', flexShrink: 0 }}>
+        <div style={{ position: 'relative', overflow: 'hidden' }}>
+          <h3
+            style={{
+              margin: 0,
+              display: 'flex',
+              padding: '4px 0',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              zIndex: 2,
+              fontWeight: 300,
+              lineHeight: 1,
+              color: '#fff',
+              borderRadius: isSecondTeam ? '0' : '8px 8px 0 0',
+              background: teamColor
+                ? `linear-gradient(to right, ${teamColor} 25%, transparent), ${teamColor}`
+                : undefined,
+              backgroundBlendMode: teamColor ? 'screen' : undefined,
+              filter: teamColor ? `saturate(${TEAM_SATURATION})` : undefined,
+            }}
+          >
+            {team.name}
+
+            <button
+              onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
+              style={{
+                position: 'absolute',
+                right: '0.5rem',
+                marginBottom: '-12px',
+                transform: `translateY(-50%) ${showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)'}`,
+                fontSize: '0.6rem',
+                background: 'transparent',
+                color: 'white',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              ▶
+            </button>
+          </h3>
+        </div>
+
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr auto',
             alignItems: 'center',
             columnGap: '8px',
-            marginBottom: '6px',
+            margin: '6px 0',
             width: '100%',
+            padding: '0 6px',
+            boxSizing: 'border-box',
           }}
         >
-          <div
-            style={{
-              position: 'relative',
-              borderRadius: '4px',
-              overflow: 'hidden',
-            }}
-          >
-            <h3
+          {roster.length > 0 ? (
+            <select
+              value={selectedPlayer}
+              onChange={(e) => handleSelectChange(team.id, e.target.value)}
               style={{
                 margin: 0,
-                display: 'flex',
-                padding: '4px 0',
-                alignItems: 'center',
-                justifyContent: 'center',
-                position: 'relative',
-                zIndex: 2,
-                fontWeight: 300,
-                lineHeight: 1,
-                borderRadius: '4px',
-                color: '#fff',
-                background: teamColor
-                  ? `linear-gradient(to right, ${teamColor} 25%, transparent), ${teamColor}`
-                  : undefined,
-                backgroundBlendMode: teamColor ? 'screen' : undefined,
-                filter: teamColor ? `saturate(${TEAM_SATURATION})` : undefined,
+                padding: '4px',
+                width: '100%',
+                minWidth: 0,
               }}
             >
-              {team.name}
-
-              <button
-                onClick={() => handleSetShowing(showing === 'away' ? 'home' : 'away')}
-                style={{
-                  position: 'absolute',
-                  right: '0.5rem',
-                  marginBottom: '-12px',
-                  transform: `translateY(-50%) ${showing === 'away' ? 'scaleX(1)' : 'scaleX(-1)'}`,
-                  fontSize: '0.6rem',
-                  background: 'transparent',
-                  color: 'white',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                ▶
-              </button>
-            </h3>
-          </div>
+              {[...roster]
+                .filter((player) => {
+                  const playerName = player.person.fullName;
+                  const games = logs[playerName];
+                  return games && games.length > 0;
+                })
+                .sort((a, b) => {
+                  const aLast = a.person.fullName.split(' ').slice(-1)[0];
+                  const bLast = b.person.fullName.split(' ').slice(-1)[0];
+                  return aLast.localeCompare(bLast);
+                })
+                .map((player) => {
+                  const position = player.position?.abbreviation || 'N/A';
+                  return (
+                    <option key={player.person.fullName} value={player.person.fullName}>
+                      {player.person.fullName} ({position})
+                    </option>
+                  );
+                })}
+            </select>
+          ) : (
+            <div />
+          )}
 
           <select
             value={numGamesToShow}
@@ -187,69 +262,63 @@ const BatterGamelog = ({
           </select>
         </div>
 
-        {roster.length > 0 && (
-          <select
-            value={selectedPlayer}
-            onChange={(e) => handleSelectChange(team.id, e.target.value)}
-            style={{ marginBottom: '5px', padding: '4px', width: '100%' }}
-          >
-            {[...roster]
-              .filter((player) => {
-                const playerName = player.person.fullName;
-                const games = logs[playerName];
-                return games && games.length > 0;
-              })
-              .sort((a, b) => {
-                const aLast = a.person.fullName.split(' ').slice(-1)[0];
-                const bLast = b.person.fullName.split(' ').slice(-1)[0];
-                return aLast.localeCompare(bLast);
-              })
-              .map((player) => {
-                const position = player.position?.abbreviation || 'N/A';
-                return (
-                  <option key={player.person.fullName} value={player.person.fullName}>
-                    {player.person.fullName} ({position})
-                  </option>
-                );
-              })}
-          </select>
-        )}
-
         {playerGames.length === 0 ? (
-          <p>No recent games found for {selectedPlayer}.</p>
+          <div
+            style={{
+              padding: '14px 10px',
+              textAlign: 'center',
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: '0.7rem',
+            }}
+          >
+            No recent games found for {selectedPlayer}.
+          </div>
         ) : (
-          <table style={{ fontSize: '12px', width: '100%', tableLayout: 'fixed' }}>
+          <table style={tableStyle}>
             <thead>
               <tr>
-                <th style={{ width: '12%' }}>DATE</th>
-                <th style={{ width: '11%' }}>OPP</th>
-                <th style={{ width: '7%' }}>AB</th>
-                <th style={{ width: '7%' }}>R</th>
-                <th style={{ width: '7%' }}>H</th>
-                <th style={{ width: '8%' }}>RBI</th>
-                <th style={{ width: '7%' }}>BB</th>
-                <th style={{ width: '7%' }}>SO</th>
-                <th style={{ width: '8%' }}>HR</th>
-                <th style={{ width: '8%' }}>SB</th>
-                <th style={{ width: '11%' }}>AVG</th>
+                <th style={{ ...thStyle, width: '12%' }}>DATE</th>
+                <th style={{ ...thStyle, width: '11%' }}>OPP</th>
+                <th style={{ ...thStyle, width: '7%' }}>AB</th>
+                <th style={{ ...thStyle, width: '7%' }}>R</th>
+                <th style={{ ...thStyle, width: '7%' }}>H</th>
+                <th style={{ ...thStyle, width: '8%' }}>RBI</th>
+                <th style={{ ...thStyle, width: '7%' }}>BB</th>
+                <th style={{ ...thStyle, width: '7%' }}>SO</th>
+                <th style={{ ...thStyle, width: '8%' }}>HR</th>
+                <th style={{ ...thStyle, width: '8%' }}>SB</th>
+                <th style={{ ...thStyle, width: '11%' }}>AVG</th>
               </tr>
             </thead>
             <tbody>
-              {playerGames.map((game, idx) => (
-                <tr key={idx}>
-                  <td>{`${parseInt(game.date.split('-')[1], 10)}/${parseInt(game.date.split('-')[2], 10)}`}</td>
-                  <td>{game.opponent}</td>
-                  <td>{game.atBats ?? 'N/A'}</td>
-                  <td>{game.runs ?? 'N/A'}</td>
-                  <td>{game.hits ?? 'N/A'}</td>
-                  <td>{game.rbi ?? 'N/A'}</td>
-                  <td>{game.baseOnBalls ?? 'N/A'}</td>
-                  <td>{game.strikeOuts ?? 'N/A'}</td>
-                  <td>{game.homeRuns ?? 'N/A'}</td>
-                  <td>{game.stolenBases ?? 'N/A'}</td>
-                  <td>{game.avg ?? 'N/A'}</td>
-                </tr>
-              ))}
+              {playerGames.map((game, idx) => {
+                const mm = Number(game?.date?.split?.('-')?.[1] || 0);
+                const dd = Number(game?.date?.split?.('-')?.[2] || 0);
+                const dateStr = mm && dd ? `${mm}/${dd}` : game?.date || '';
+                const isLastRow = idx === playerGames.length - 1;
+
+                const rowTdStyle = isLastRow
+                  ? { ...tdStyle, borderBottom: 'none' }
+                  : tdStyle;
+
+                return (
+                  <tr key={idx}>
+                    <td style={rowTdStyle}>{dateStr}</td>
+                    <td style={{ ...cellStyle, borderBottom: rowTdStyle.borderBottom }}>
+                      {game.opponent}
+                    </td>
+                    <td style={rowTdStyle}>{game.atBats ?? 'N/A'}</td>
+                    <td style={rowTdStyle}>{game.runs ?? 'N/A'}</td>
+                    <td style={rowTdStyle}>{game.hits ?? 'N/A'}</td>
+                    <td style={rowTdStyle}>{game.rbi ?? 'N/A'}</td>
+                    <td style={rowTdStyle}>{game.baseOnBalls ?? 'N/A'}</td>
+                    <td style={rowTdStyle}>{game.strikeOuts ?? 'N/A'}</td>
+                    <td style={rowTdStyle}>{game.homeRuns ?? 'N/A'}</td>
+                    <td style={rowTdStyle}>{game.stolenBases ?? 'N/A'}</td>
+                    <td style={rowTdStyle}>{game.avg ?? 'N/A'}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -270,11 +339,7 @@ const BatterGamelog = ({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        width: '100%',
-      }}
+      style={viewportStyle}
     >
       <div
         style={{
@@ -284,8 +349,8 @@ const BatterGamelog = ({
           transition: 'transform 0.3s ease',
         }}
       >
-        {renderTeam(awayTeam)}
-        {renderTeam(homeTeam)}
+        {renderTeam(awayTeam, false)}
+        {renderTeam(homeTeam, true)}
       </div>
     </div>
   );

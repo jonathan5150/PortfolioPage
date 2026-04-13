@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import teamPrimaryColors, {
-  TEAM_SATURATION,
+  getTeamBackgroundStyle,
 } from '../../../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const VISIBLE_COLUMNS = 6;
@@ -141,19 +141,13 @@ const LastTwentyGames = ({ awayGames, homeGames, awayTeamId, homeTeamId }) => {
               position: 'relative',
               overflow: 'hidden',
               borderRadius: '4px',
-              backgroundColor: isWinner ? 'transparent' : 'rgba(90, 90, 90, 0.7)',
+              backgroundColor: isWinner ? 'transparent' : 'rgba(41, 41, 41, 0.4)',
             }}
           >
             {winnerColor && (
               <div
                 style={{
-                  position: 'absolute',
-                  inset: 0,
-                  background: `linear-gradient(to right, ${winnerColor} 25%, transparent), ${winnerColor}`,
-                  backgroundBlendMode: 'screen',
-                  filter: `saturate(${TEAM_SATURATION})`,
-                  pointerEvents: 'none',
-                  zIndex: 1,
+                  ...getTeamBackgroundStyle(winnerColor),
                   borderRadius: '4px',
                 }}
               />

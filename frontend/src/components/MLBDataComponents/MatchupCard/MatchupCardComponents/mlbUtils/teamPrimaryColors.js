@@ -1,25 +1,39 @@
 // teamPrimaryColors.js
 export const TEAM_SATURATION = 0.8;
 
-const TEAM_OPACITY = 0.3;
+const TEAM_OPACITY = 0.4;
 
 const rgba = (r, g, b) => `rgba(${r}, ${g}, ${b}, ${TEAM_OPACITY})`;
 
-export const getTeamBackgroundStyle = (teamColor) => ({
-  position: 'absolute',
-  inset: 0,
-  zIndex: 1,
-  pointerEvents: 'none',
-  borderRadius: '8px',
+const adjustColor = (rgba, amount) => {
+  const values = rgba.match(/[\d.]+/g).map(Number);
+  let [r, g, b, a] = values;
 
-  // ✅ EXACT SAME AS TEAM-CELL
-  background: `
-    linear-gradient(to right, ${teamColor} 25%, transparent),
-    ${teamColor}
-  `,
-  backgroundBlendMode: 'screen',
-  filter: `saturate(${TEAM_SATURATION})`,
-});
+  r = Math.max(0, Math.min(255, r + amount));
+  g = Math.max(0, Math.min(255, g + amount));
+  b = Math.max(0, Math.min(255, b + amount));
+
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+};
+
+export const getTeamBackgroundStyle = (teamColor) => {
+  const lighter = adjustColor(teamColor, 40);  // brighter left
+  const darker = adjustColor(teamColor, -40);  // darker right
+
+  return {
+    position: 'absolute',
+    inset: 0,
+    zIndex: 1,
+    pointerEvents: 'none',
+    borderRadius: '8px',
+
+    // ✅ SIMPLE gradient (mobile safe)
+    background: `linear-gradient(to right, ${lighter}, ${darker})`,
+
+    // keep saturation if you like it
+    filter: `saturate(${TEAM_SATURATION})`,
+  };
+};
 
 const teamPrimaryColors = {
   'Arizona Diamondbacks': rgba(170, 45, 65),
