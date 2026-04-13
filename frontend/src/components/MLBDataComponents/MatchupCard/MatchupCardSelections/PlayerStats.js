@@ -271,7 +271,15 @@ const PlayerStats = ({
 
                 return (
                   <tr key={player.person?.id || index}>
-                    <td style={{ ...tdStyle, textAlign: 'left' }}>
+                    <td
+                      style={{
+                        ...tdStyle,
+                        textAlign: 'left',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
                       {playerName || 'N/A'}
                     </td>
                     <td style={statCellStyle}>{stats.gamesPlayed || ''}</td>

@@ -12,7 +12,7 @@ const sectionTitleStyle = {
   padding: '6px 10px',
   background: 'rgba(255, 255, 255, 0.04)',
   color: 'rgba(255,255,255,0.8)',
-  fontSize: '0.63rem',
+  fontSize: '0.6rem',
   fontWeight: 300,
   letterSpacing: '0.08em',
   borderTop: '1px solid rgba(255, 255, 255, 0.08)',
@@ -31,7 +31,7 @@ const rowStyle = {
 
 const sideValueBaseStyle = {
   color: 'white',
-  fontSize: '0.7rem',
+  fontSize: '0.6rem',
   fontWeight: 500,
   padding: '1px 0',
 };
@@ -39,7 +39,7 @@ const sideValueBaseStyle = {
 const rankBaseStyle = {
   color: 'white',
   fontSize: '0.6rem',
-  fontWeight: 600,
+  fontWeight: 500,
   justifySelf: 'stretch',
   width: '100%',
   padding: '1px 0',
@@ -49,7 +49,7 @@ const rankBaseStyle = {
 const labelStyle = {
   color: 'white',
   fontSize: '0.7rem',
-  fontWeight: 600,
+  fontWeight: 500,
   textAlign: 'center',
   width: '100%',
 };
@@ -158,7 +158,7 @@ const getSideStyle = (winner, side, align) => ({
       : winner === 'tie'
       ? 'white'
       : 'white',
-  fontWeight: winner === side ? 700 : 500,
+  fontWeight: winner === side ? 500 : 500,
 });
 
 const getRankColor = (rankDisplay) => {
