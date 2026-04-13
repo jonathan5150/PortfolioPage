@@ -79,14 +79,22 @@ const GameCard = memo(function GameCard({
   onOpenAllToThisCard,
   onCloseAllCards,
   suppressNextScoreGridToggleRef,
+  numGamesToShow,
+  setNumGamesToShow,
 }) {
   const gamePk = game.gamePk;
 
   const [contentKey, setContentKey] = useState(() => {
     const saved = Cookies.get('contentKeys');
 
-    const detailedState = game?.status?.detailedState ?? liveData?.gameData?.status?.detailedState ?? '';
-    const abstractGameState = game?.status?.abstractGameState ?? liveData?.gameData?.status?.abstractGameState ?? '';
+    const detailedState =
+      game?.status?.detailedState ??
+      liveData?.gameData?.status?.detailedState ??
+      '';
+    const abstractGameState =
+      game?.status?.abstractGameState ??
+      liveData?.gameData?.status?.abstractGameState ??
+      '';
 
     const isLive = abstractGameState === 'Live';
     const isFinal =
@@ -122,11 +130,14 @@ const GameCard = memo(function GameCard({
   const handleStarClick = useCallback(
     (teamId) => {
       setSelectedStarTeamId((prevSelectedTeamId) => {
-        const nextSelectedTeamId = prevSelectedTeamId === teamId ? null : teamId;
+        const nextSelectedTeamId =
+          prevSelectedTeamId === teamId ? null : teamId;
 
         let existing = {};
         try {
-          existing = JSON.parse(Cookies.get('selectedStarTeamByGame') || '{}');
+          existing = JSON.parse(
+            Cookies.get('selectedStarTeamByGame') || '{}'
+          );
         } catch {
           existing = {};
         }
@@ -136,9 +147,13 @@ const GameCard = memo(function GameCard({
           [gamePk]: nextSelectedTeamId,
         };
 
-        Cookies.set('selectedStarTeamByGame', JSON.stringify(nextCookieValue), {
-          expires: 365,
-        });
+        Cookies.set(
+          'selectedStarTeamByGame',
+          JSON.stringify(nextCookieValue),
+          {
+            expires: 365,
+          }
+        );
 
         return nextSelectedTeamId;
       });
@@ -160,24 +175,14 @@ const GameCard = memo(function GameCard({
     }
   });
 
-  const [numGamesToShow, setNumGamesToShow] = useState(() => {
-    const saved = Cookies.get('numGamesToShowByGame');
-    if (!saved) return 5;
-
-    try {
-      const parsed = JSON.parse(saved);
-      return parsed?.[gamePk] || 5;
-    } catch {
-      return 5;
-    }
-  });
-
   const contentInnerRef = useRef(null);
   const resizeObserverRef = useRef(null);
   const animationFrameRef = useRef(null);
   const isTransitioningRef = useRef(false);
   const lastHandledSyncNonceRef = useRef(null);
-  const [animatedHeight, setAnimatedHeight] = useState(isExpanded ? 'auto' : '0px');
+  const [animatedHeight, setAnimatedHeight] = useState(
+    isExpanded ? 'auto' : '0px'
+  );
 
   const measureInnerHeight = useCallback(() => {
     const inner = contentInnerRef.current;
@@ -243,35 +248,11 @@ const GameCard = memo(function GameCard({
   );
 
   const handleNumGamesToShowChange = useCallback(
-    (valueOrUpdater) => {
-      setNumGamesToShow((prev) => {
-        const nextValue =
-          typeof valueOrUpdater === 'function'
-            ? valueOrUpdater(prev)
-            : valueOrUpdater;
-
-        try {
-          const existing = JSON.parse(Cookies.get('numGamesToShowByGame') || '{}');
-          Cookies.set(
-            'numGamesToShowByGame',
-            JSON.stringify({
-              ...existing,
-              [gamePk]: nextValue,
-            }),
-            { expires: 365 }
-          );
-        } catch {
-          Cookies.set(
-            'numGamesToShowByGame',
-            JSON.stringify({ [gamePk]: nextValue }),
-            { expires: 365 }
-          );
-        }
-
-        return nextValue;
-      });
+    (value) => {
+      setNumGamesToShow(value);
+      Cookies.set('globalNumGamesToShow', value, { expires: 365 });
     },
-    [gamePk]
+    [setNumGamesToShow]
   );
 
   useEffect(() => {
@@ -331,6 +312,7 @@ const GameCard = memo(function GameCard({
 
       case 'team-history':
         return <TeamHistory game={game} />;
+
       case 'teams-matchup':
         return (
           <TeamsMatchup
@@ -338,6 +320,7 @@ const GameCard = memo(function GameCard({
             getTeamAbbreviation={getTeamAbbreviation}
           />
         );
+
       case 'player-stats':
         return (
           <PlayerStats
@@ -441,7 +424,15 @@ const GameCard = memo(function GameCard({
     const nextHeight = `${measureInnerHeight()}px`;
     setAnimatedHeight(nextHeight);
     isTransitioningRef.current = true;
-  }, [isExpanded, contentKey, numGamesToShow, boxScoreView, statContent, animatedHeight, measureInnerHeight]);
+  }, [
+    isExpanded,
+    contentKey,
+    numGamesToShow,
+    boxScoreView,
+    statContent,
+    animatedHeight,
+    measureInnerHeight,
+  ]);
 
   useEffect(() => {
     const inner = contentInnerRef.current;
@@ -494,15 +485,18 @@ const GameCard = memo(function GameCard({
     };
   }, []);
 
-  const handleHeightTransitionEnd = useCallback((e) => {
-    if (e.propertyName !== 'height') return;
+  const handleHeightTransitionEnd = useCallback(
+    (e) => {
+      if (e.propertyName !== 'height') return;
 
-    if (isExpanded) {
-      setAnimatedHeight('auto');
-    }
+      if (isExpanded) {
+        setAnimatedHeight('auto');
+      }
 
-    isTransitioningRef.current = false;
-  }, [isExpanded]);
+      isTransitioningRef.current = false;
+    },
+    [isExpanded]
+  );
 
   return (
     <div className="game-container" style={{ position: 'relative' }}>
@@ -575,7 +569,13 @@ const GameCard = memo(function GameCard({
               width: '100%',
             }}
           >
-            <div style={{ position: 'relative', flex: '0 0 48%', maxWidth: '60%' }}>
+            <div
+              style={{
+                position: 'relative',
+                flex: '0 0 48%',
+                maxWidth: '60%',
+              }}
+            >
               <select
                 value={contentKey}
                 onChange={(e) => handleContentChange(e.target.value)}
@@ -698,6 +698,11 @@ const MatchupCard = ({
   const [syncCommand, setSyncCommand] = useState(null);
   const suppressNextScoreGridToggleRef = useRef(false);
 
+  const [numGamesToShow, setNumGamesToShow] = useState(() => {
+    const saved = Cookies.get('globalNumGamesToShow');
+    return saved ? Number(saved) : 5;
+  });
+
   useEffect(() => {
     if (!loading) {
       const timer = setTimeout(() => {
@@ -762,13 +767,19 @@ const MatchupCard = ({
       <div className="matchup-container">
         {loading ? (
           <div className="loading">
-            <img src={`${process.env.PUBLIC_URL}/baseball.gif`} alt="Loading..." />
+            <img
+              src={`${process.env.PUBLIC_URL}/baseball.gif`}
+              alt="Loading..."
+            />
             <p>loading...</p>
           </div>
         ) : delayOver && visibleGames.length === 0 ? (
           <p
             className="noGames"
-            style={{ opacity: fadeIn ? 1 : 0, transition: 'opacity 0.7s ease-in' }}
+            style={{
+              opacity: fadeIn ? 1 : 0,
+              transition: 'opacity 0.7s ease-in',
+            }}
           >
             Either no teams are selected or no games are scheduled for this date.
           </p>
@@ -792,6 +803,8 @@ const MatchupCard = ({
               onOpenAllToThisCard={handleOpenAllToThisCard}
               onCloseAllCards={handleCloseAllCards}
               suppressNextScoreGridToggleRef={suppressNextScoreGridToggleRef}
+              numGamesToShow={numGamesToShow}
+              setNumGamesToShow={setNumGamesToShow}
             />
           ))
         )}
