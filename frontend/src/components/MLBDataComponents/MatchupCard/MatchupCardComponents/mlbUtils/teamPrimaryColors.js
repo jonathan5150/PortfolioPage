@@ -10,7 +10,7 @@ export const getTeamBackgroundStyle = (teamColor) => ({
   inset: 0,
   zIndex: 1,
   pointerEvents: 'none',
-  borderRadius: '5px',
+  borderRadius: '8px',
 
   // ✅ EXACT SAME AS TEAM-CELL
   background: `

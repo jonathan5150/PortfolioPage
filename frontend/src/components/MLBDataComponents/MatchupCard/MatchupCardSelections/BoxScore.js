@@ -3,15 +3,63 @@ import teamPrimaryColors, {
   TEAM_SATURATION,
 } from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
+const viewportStyle = {
+  width: '100%',
+  border: '1px solid rgba(255, 255, 255, 0.12)',
+  borderRadius: '8px',
+  overflow: 'hidden',
+  background: 'rgba(30, 30, 30, 0.55)',
+};
+
+const containerStyle = {
+  width: '100%',
+  background: 'transparent',
+};
+
+const sectionTitleStyle = {
+  padding: '6px 10px',
+  background: 'rgba(255, 255, 255, 0.04)',
+  color: 'rgba(255,255,255,0.8)',
+  fontSize: '0.63rem',
+  fontWeight: 300,
+  letterSpacing: '0.08em',
+  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+};
+
+const tableStyle = {
+  width: '100%',
+  fontSize: '12px',
+  borderCollapse: 'collapse',
+  tableLayout: 'fixed',
+};
+
+const thStyle = {
+  padding: '5px 6px',
+  fontSize: '0.63rem',
+  fontWeight: 600,
+  color: 'rgba(255,255,255,0.82)',
+  background: 'rgba(255,255,255,0.03)',
+  borderBottom: '1px solid rgba(255,255,255,0.08)',
+  textAlign: 'center',
+};
+
+const tdStyle = {
+  padding: '5px 6px',
+  color: 'white',
+  borderBottom: '1px solid rgba(255,255,255,0.06)',
+  textAlign: 'center',
+  fontSize: '0.7rem',
+};
+
+const totalRowStyle = {
+  fontWeight: 700,
+  background: 'rgba(255,255,255,0.04)',
+};
+
 const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }) => {
   const boxscore = liveData?.liveData?.boxscore;
   const away = boxscore?.teams?.away;
   const home = boxscore?.teams?.home;
-
-  console.log('Live Data:', liveData);
-  console.log('Boxscore:', boxscore);
-  console.log('Away Team:', away);
-  console.log('Home Team:', home);
 
   const lineupUnavailable = !away?.battingOrder?.length || !home?.battingOrder?.length;
 
@@ -24,6 +72,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
   };
 
   const cellStyle = {
+    ...tdStyle,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -63,8 +112,17 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
 
   if (!away || !home || lineupUnavailable) {
     return (
-      <div style={{ padding: '5px', textAlign: 'center', fontStyle: 'italic' }}>
-        Lineup not yet available
+      <div style={viewportStyle}>
+        <div
+          style={{
+            padding: '14px 10px',
+            textAlign: 'center',
+            color: 'rgba(255,255,255,0.8)',
+            fontSize: '0.7rem',
+          }}
+        >
+          Lineup not yet available
+        </div>
       </div>
     );
   }
@@ -79,6 +137,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
     const teamColor = teamPrimaryColors[teamName];
 
     const displayedPlayers = new Set();
+
     const renderPlayer = (id, forceRender = false) => {
       if (displayedPlayers.has(id) && !forceRender) return null;
 
@@ -105,19 +164,20 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
       return (
         <tr key={id}>
           <td style={{ ...cellStyle, textAlign: 'left' }}>{playerName}</td>
-          <td>{playerPos}</td>
-          <td>{playerStats?.atBats ?? 0}</td>
-          <td>{playerStats?.runs ?? 0}</td>
-          <td>{playerStats?.hits ?? 0}</td>
-          <td>{playerStats?.rbi ?? 0}</td>
-          <td>{playerStats?.baseOnBalls ?? 0}</td>
-          <td>{playerStats?.strikeOuts ?? 0}</td>
-          <td>{playerStats?.homeRuns ?? 0}</td>
+          <td style={tdStyle}>{playerPos}</td>
+          <td style={tdStyle}>{playerStats?.atBats ?? 0}</td>
+          <td style={tdStyle}>{playerStats?.runs ?? 0}</td>
+          <td style={tdStyle}>{playerStats?.hits ?? 0}</td>
+          <td style={tdStyle}>{playerStats?.rbi ?? 0}</td>
+          <td style={tdStyle}>{playerStats?.baseOnBalls ?? 0}</td>
+          <td style={tdStyle}>{playerStats?.strikeOuts ?? 0}</td>
+          <td style={tdStyle}>{playerStats?.homeRuns ?? 0}</td>
         </tr>
       );
     };
 
     const allBatters = Object.values(players).filter((p) => p?.stats?.batting);
+
     const batterTotals = allBatters.reduce(
       (totals, p) => {
         const b = p.stats.batting;
@@ -169,8 +229,8 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
         : '—';
 
     return (
-      <div style={{ width: '100%' }}>
-        <div style={{ position: 'relative', borderRadius: 4, overflow: 'hidden' }}>
+      <div style={containerStyle}>
+        <div style={{ position: 'relative', overflow: 'hidden' }}>
           <h3
             style={{
               margin: 0,
@@ -183,7 +243,7 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
               fontWeight: 300,
               lineHeight: 1,
               color: '#fff',
-              borderRadius: '4px',
+              borderRadius: '8px 8px 0 0',
               background: teamColor
                 ? `linear-gradient(to right, ${teamColor} 25%, transparent), ${teamColor}`
                 : undefined,
@@ -212,18 +272,18 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
           </h3>
         </div>
 
-        <table style={{ margin: '5px 0 3px 0', width: '100%', fontSize: '12px' }}>
+        <table style={tableStyle}>
           <thead>
             <tr>
-              <th style={{ textAlign: 'left', width: '30%' }}></th>
-              <th style={{ width: '8.75%' }}>POS</th>
-              <th style={{ width: '8.75%' }}>AB</th>
-              <th style={{ width: '8.75%' }}>R</th>
-              <th style={{ width: '8.75%' }}>H</th>
-              <th style={{ width: '8.75%' }}>RBI</th>
-              <th style={{ width: '8.75%' }}>BB</th>
-              <th style={{ width: '8.75%' }}>SO</th>
-              <th style={{ width: '8.75%' }}>HR</th>
+              <th style={{ ...thStyle, textAlign: 'left', width: '40%' }}></th>
+              <th style={{ ...thStyle, width: '7.5%' }}>POS</th>
+              <th style={{ ...thStyle, width: '7.5%' }}>AB</th>
+              <th style={{ ...thStyle, width: '7.5%' }}>R</th>
+              <th style={{ ...thStyle, width: '7.5%' }}>H</th>
+              <th style={{ ...thStyle, width: '7.5%' }}>RBI</th>
+              <th style={{ ...thStyle, width: '7.5%' }}>BB</th>
+              <th style={{ ...thStyle, width: '7.5%' }}>SO</th>
+              <th style={{ ...thStyle, width: '7.5%' }}>HR</th>
             </tr>
           </thead>
           <tbody>
@@ -231,39 +291,32 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
             {bench.map((id) => renderPlayer(id))}
             {batterIdsFromAPI.map((id) => renderPlayer(id))}
 
-            <tr style={{ fontWeight: 'bold', borderTop: '1px solid #ccc' }}>
-              <td style={{ textAlign: 'left' }}>Total</td>
-              <td>—</td>
-              <td>{batterTotals.AB}</td>
-              <td>{batterTotals.R}</td>
-              <td>{batterTotals.H}</td>
-              <td>{batterTotals.RBI}</td>
-              <td>{batterTotals.BB}</td>
-              <td>{batterTotals.SO}</td>
-              <td>{batterTotals.HR}</td>
+            <tr style={totalRowStyle}>
+              <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 700 }}>Total</td>
+              <td style={tdStyle}>—</td>
+              <td style={tdStyle}>{batterTotals.AB}</td>
+              <td style={tdStyle}>{batterTotals.R}</td>
+              <td style={tdStyle}>{batterTotals.H}</td>
+              <td style={tdStyle}>{batterTotals.RBI}</td>
+              <td style={tdStyle}>{batterTotals.BB}</td>
+              <td style={tdStyle}>{batterTotals.SO}</td>
+              <td style={{ ...tdStyle, borderBottom: 'none' }}>{batterTotals.HR}</td>
             </tr>
           </tbody>
         </table>
 
-        <div
-          style={{
-            width: '98%',
-            height: '1px',
-            backgroundColor: 'rgba(70, 70, 70, 1)',
-            margin: '6px auto',
-          }}
-        />
+        <div style={sectionTitleStyle}>PITCHING</div>
 
-        <table style={{ width: '100%', marginTop: '5px', fontSize: '12px' }}>
+        <table style={tableStyle}>
           <thead>
             <tr>
-              <th style={{ textAlign: 'left', width: '30%' }}></th>
-              <th style={{ width: '11%' }}>IP</th>
-              <th style={{ width: '11%' }}>H</th>
-              <th style={{ width: '11%' }}>ER</th>
-              <th style={{ width: '11%' }}>K</th>
-              <th style={{ width: '11%' }}>BB</th>
-              <th style={{ width: '15%' }}>ERA</th>
+              <th style={{ ...thStyle, textAlign: 'left', width: '40%' }}></th>
+              <th style={{ ...thStyle, width: '10%' }}>IP</th>
+              <th style={{ ...thStyle, width: '10%' }}>H</th>
+              <th style={{ ...thStyle, width: '10%' }}>ER</th>
+              <th style={{ ...thStyle, width: '10%' }}>K</th>
+              <th style={{ ...thStyle, width: '10%' }}>BB</th>
+              <th style={{ ...thStyle, width: '10%' }}>ERA</th>
             </tr>
           </thead>
           <tbody>
@@ -276,26 +329,30 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
               const k = pitching.strikeOuts ?? 0;
               const bb = pitching.baseOnBalls ?? 0;
               const era = (er / (ip || 1)) * 9;
+
               return (
                 <tr key={i}>
                   <td style={{ ...cellStyle, textAlign: 'left' }}>{name}</td>
-                  <td>{formatIP(ip)}</td>
-                  <td>{h}</td>
-                  <td>{er}</td>
-                  <td>{k}</td>
-                  <td>{bb}</td>
-                  <td>{era.toFixed(2)}</td>
+                  <td style={tdStyle}>{formatIP(ip)}</td>
+                  <td style={tdStyle}>{h}</td>
+                  <td style={tdStyle}>{er}</td>
+                  <td style={tdStyle}>{k}</td>
+                  <td style={tdStyle}>{bb}</td>
+                  <td style={tdStyle}>{era.toFixed(2)}</td>
                 </tr>
               );
             })}
-            <tr style={{ fontWeight: 'bold', borderTop: '1px solid #ccc' }}>
-              <td style={{ textAlign: 'left' }}>Total</td>
-              <td>{formatIP(pitcherTotals.IP)}</td>
-              <td>{pitcherTotals.H}</td>
-              <td>{pitcherTotals.ER}</td>
-              <td>{pitcherTotals.K}</td>
-              <td>{pitcherTotals.BB}</td>
-              <td>{averageERA}</td>
+
+            <tr style={totalRowStyle}>
+              <td style={{ ...tdStyle, textAlign: 'left', fontWeight: 700, borderBottom: 'none' }}>
+                Total
+              </td>
+              <td style={{ ...tdStyle, borderBottom: 'none' }}>{formatIP(pitcherTotals.IP)}</td>
+              <td style={{ ...tdStyle, borderBottom: 'none' }}>{pitcherTotals.H}</td>
+              <td style={{ ...tdStyle, borderBottom: 'none' }}>{pitcherTotals.ER}</td>
+              <td style={{ ...tdStyle, borderBottom: 'none' }}>{pitcherTotals.K}</td>
+              <td style={{ ...tdStyle, borderBottom: 'none' }}>{pitcherTotals.BB}</td>
+              <td style={{ ...tdStyle, borderBottom: 'none' }}>{averageERA}</td>
             </tr>
           </tbody>
         </table>
@@ -310,20 +367,38 @@ const BoxScore = ({ liveData, gamePk, initialShowing = 'away', onShowingChange }
       onTouchEnd={handleTouchEnd}
       style={{
         position: 'relative',
-        overflow: 'hidden',
         height: '100%',
       }}
     >
-      <div
-        style={{
-          display: 'flex',
-          width: '200%',
-          transform: showing === 'away' ? 'translateX(0%)' : 'translateX(-50%)',
-          transition: 'transform 0.4s ease',
-        }}
-      >
-        <div style={{ width: '100%' }}>{renderTeam(away, 'Away')}</div>
-        <div style={{ width: '100%' }}>{renderTeam(home, 'Home')}</div>
+      <div style={viewportStyle}>
+        <div
+          style={{
+            display: 'flex',
+            width: '200%',
+            transform: showing === 'away' ? 'translateX(0%)' : 'translateX(-50%)',
+            transition: 'transform 0.4s ease',
+          }}
+        >
+          <div
+            style={{
+              flex: '0 0 50%',
+              maxWidth: '50%',
+              minWidth: '50%',
+            }}
+          >
+            {renderTeam(away, 'Away')}
+          </div>
+
+          <div
+            style={{
+              flex: '0 0 50%',
+              maxWidth: '50%',
+              minWidth: '50%',
+            }}
+          >
+            {renderTeam(home, 'Home')}
+          </div>
+        </div>
       </div>
     </div>
   );
