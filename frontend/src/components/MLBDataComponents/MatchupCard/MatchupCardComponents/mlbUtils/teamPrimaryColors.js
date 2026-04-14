@@ -1,5 +1,5 @@
 // teamPrimaryColors.js
-export const TEAM_SATURATION = 0.8;
+export const TEAM_SATURATION = 0.6;
 
 const TEAM_OPACITY = 0.4;
 
@@ -17,8 +17,8 @@ const adjustColor = (rgba, amount) => {
 };
 
 export const getTeamBackgroundStyle = (teamColor) => {
-  const lighter = adjustColor(teamColor, 40);  // brighter left
-  const darker = adjustColor(teamColor, -40);  // darker right
+  const lighter = adjustColor(teamColor, 30);  // brighter left
+  const darker = adjustColor(teamColor, -30);  // darker right
 
   return {
     position: 'absolute',
