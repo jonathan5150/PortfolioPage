@@ -209,7 +209,7 @@ const LiveScoreBug = ({
             <div
               className="abbreviation"
               style={{
-                height: '30px',
+                height: '20px',
                 fontWeight: 'bold',
                 color: '#fff',
                 textAlign: 'center',
@@ -223,7 +223,7 @@ const LiveScoreBug = ({
 
             <div
               style={{
-                fontSize: '11px',
+                fontSize: '9px',
                 color: '#fff',
                 lineHeight: '12px',
                 width: '60px',

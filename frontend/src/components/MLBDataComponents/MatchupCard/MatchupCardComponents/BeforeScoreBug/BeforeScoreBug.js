@@ -171,17 +171,22 @@ const BeforeScoreBug = ({
             }}
           >
             <div
-              style={{
-                fontWeight: 'bold',
-                color: '#fff',
-              }}
-            >
-              {abbr}
-            </div>
+                          className="abbreviation"
+                          style={{
+                            height: '20px',
+                            fontWeight: 'bold',
+                            textAlign: 'center',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          {abbr}
+                        </div>
 
             <div
               style={{
-                fontSize: '11px',
+                fontSize: '9px',
                 color: '#fff',
               }}
             >

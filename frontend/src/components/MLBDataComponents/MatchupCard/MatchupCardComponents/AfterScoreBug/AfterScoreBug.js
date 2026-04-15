@@ -159,7 +159,7 @@ const AfterScoreBug = ({
             <div
               className="abbreviation"
               style={{
-                height: '30px',
+                height: '20px',
                 fontWeight: 'bold',
                 textAlign: 'center',
                 display: 'flex',
@@ -172,7 +172,7 @@ const AfterScoreBug = ({
 
             <div
               style={{
-                fontSize: '11px',
+                fontSize: '9px',
                 lineHeight: '12px',
                 width: '60px',
                 textAlign: 'center',

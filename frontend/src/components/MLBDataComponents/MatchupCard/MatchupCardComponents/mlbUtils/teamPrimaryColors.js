@@ -1,8 +1,23 @@
 // teamPrimaryColors.js
-const TEAM_OPACITY = 0.8;
+const TEAM_OPACITY = 0.6; // slightly lower base opacity
+
 const rgba = (r, g, b) => `rgba(${r}, ${g}, ${b}, ${TEAM_OPACITY})`;
 
+// 👇 NEW: wash out function
+const washOut = (rgbaColor, amount = 0.4) => {
+  const values = rgbaColor.match(/[\d.]+/g).map(Number);
+  let [r, g, b, a] = values;
+
+  // blend toward white (255,255,255)
+  r = Math.round(r + (255 - r) * amount);
+  g = Math.round(g + (255 - g) * amount);
+  b = Math.round(b + (255 - b) * amount);
+
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+};
+
 export const getTeamBackgroundStyle = (teamColor) => {
+  const washed = washOut(teamColor, 0.1); // 👈 adjust this (0.3–0.6 sweet spot)
 
   return {
     position: 'absolute',
@@ -12,10 +27,9 @@ export const getTeamBackgroundStyle = (teamColor) => {
     borderRadius: '8px',
 
     background: `
-      linear-gradient(150deg, ${teamColor} 1%, transparent 90%),
-      linear-gradient(150deg, rgba(70,70,70,1), ${teamColor.replace(/[\d.]+\)$/, '0.2)')} 100%)
+      linear-gradient(150deg, ${washed} 1%, transparent 90%),
+      linear-gradient(150deg, rgba(70,70,70,1), ${washed.replace(/[\d.]+\)$/, '0.2)')} 100%)
     `,
-
   };
 };
 
