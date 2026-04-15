@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import Scoreboard from '../Scoreboard';
-import teamPrimaryColors from '../mlbUtils/teamPrimaryColors';
+import teamPrimaryColors, {
+  getTeamBackgroundStyle,
+} from '../mlbUtils/teamPrimaryColors';
 
 const LiveScoreBug = ({
   game,
@@ -133,7 +135,7 @@ const LiveScoreBug = ({
   const renderTeamCell = (team, score, side, record) => {
     const abbr = getTeamAbbreviation(team.id);
     const teamName = team.name;
-    const color = teamPrimaryColors[teamName];
+    const backgroundColor = teamPrimaryColors[teamName];
     const isStarred = selectedStarTeamId === team.id;
 
     return (
@@ -161,18 +163,10 @@ const LiveScoreBug = ({
           outline: 'none',
         }}
       >
-        {color && (
+        {backgroundColor && (
           <div
             style={{
-              position: 'absolute',
-              top: 0,
-              bottom: 0,
-              right: 0,
-              left: 0,
-              background: `linear-gradient(to right, ${color} 25%, transparent), ${color}`,
-              backgroundBlendMode: 'normal',
-              pointerEvents: 'none',
-              zIndex: 1,
+              ...getTeamBackgroundStyle(backgroundColor),
               borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
             }}
           />

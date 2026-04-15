@@ -1,24 +1,8 @@
 // teamPrimaryColors.js
-export const TEAM_SATURATION = 0.6;
-
-const TEAM_OPACITY = 0.4;
-
+const TEAM_OPACITY = 0.8;
 const rgba = (r, g, b) => `rgba(${r}, ${g}, ${b}, ${TEAM_OPACITY})`;
 
-const adjustColor = (rgba, amount) => {
-  const values = rgba.match(/[\d.]+/g).map(Number);
-  let [r, g, b, a] = values;
-
-  r = Math.max(0, Math.min(255, r + amount));
-  g = Math.max(0, Math.min(255, g + amount));
-  b = Math.max(0, Math.min(255, b + amount));
-
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
-};
-
 export const getTeamBackgroundStyle = (teamColor) => {
-  const lighter = adjustColor(teamColor, 30);  // brighter left
-  const darker = adjustColor(teamColor, -30);  // darker right
 
   return {
     position: 'absolute',
@@ -27,11 +11,11 @@ export const getTeamBackgroundStyle = (teamColor) => {
     pointerEvents: 'none',
     borderRadius: '8px',
 
-    // ✅ SIMPLE gradient (mobile safe)
-    background: `linear-gradient(to right, ${lighter}, ${darker})`,
+    background: `
+      linear-gradient(150deg, ${teamColor} 1%, transparent 90%),
+      linear-gradient(150deg, rgba(70,70,70,1), ${teamColor.replace(/[\d.]+\)$/, '0.2)')} 100%)
+    `,
 
-    // keep saturation if you like it
-    filter: `saturate(${TEAM_SATURATION})`,
   };
 };
 

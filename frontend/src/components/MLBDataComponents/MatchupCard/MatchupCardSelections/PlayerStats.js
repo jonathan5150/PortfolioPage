@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Cookies from 'js-cookie';
-import teamPrimaryColors, {
-  TEAM_SATURATION,
-} from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
+import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const viewportStyle = {
   width: '100%',
@@ -199,11 +197,13 @@ const PlayerStats = ({
                 lineHeight: 1,
                 color: '#fff',
                 borderRadius: '8px 8px 0 0',
-                background: teamColor
-                  ? `linear-gradient(to right, ${teamColor} 25%, transparent), ${teamColor}`
-                  : undefined,
-                backgroundBlendMode: teamColor ? 'screen' : undefined,
-                filter: teamColor ? `saturate(${TEAM_SATURATION})` : undefined,
+                background: `
+                                linear-gradient(
+                                  100deg,
+                                  ${teamColor} 0%,
+                                  ${teamColor.replace(/[\d.]+\)$/, '0.2)')} 100%
+                                )
+                              `,
               }}
             >
               {teamName}
