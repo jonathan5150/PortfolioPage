@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Cookies from 'js-cookie';
-import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
+import teamPrimaryColors, {
+  getTeamBackgroundStyle,
+} from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const viewportStyle = {
   width: '100%',
@@ -152,6 +154,13 @@ const BatterGamelog = ({
     return (
       <div style={{ ...containerStyle, width: '100%', flexShrink: 0 }}>
         <div style={{ position: 'relative', overflow: 'hidden' }}>
+          <div
+            style={{
+              ...getTeamBackgroundStyle(teamColor),
+              borderRadius: isSecondTeam ? '0' : '8px 8px 0 0',
+            }}
+          />
+
           <h3
             style={{
               margin: 0,
@@ -165,14 +174,7 @@ const BatterGamelog = ({
               lineHeight: 1,
               color: '#fff',
               borderRadius: isSecondTeam ? '0' : '8px 8px 0 0',
-              background: `
-                              linear-gradient(
-                                100deg,
-                                ${teamColor} 0%,
-                                ${teamColor.replace(/[\d.]+\)$/, '0.2)')} 100%
-                              )
-                            `,
-              backgroundBlendMode: teamColor ? 'screen' : undefined,
+              background: 'transparent',
             }}
           >
             {team.name}

@@ -1,5 +1,7 @@
 import React from 'react';
-import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
+import teamPrimaryColors, {
+  getTeamBackgroundStyle,
+} from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const viewportStyle = {
   width: '100%',
@@ -46,6 +48,8 @@ const cellStyle = {
   textOverflow: 'ellipsis',
 };
 
+
+
 const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
   const computeRes = (g) => {
     let r = String(g?.result ?? '').trim().toUpperCase();
@@ -82,31 +86,32 @@ const PitcherLastFive = ({ game, awayGames = [], homeGames = [] }) => {
     return (
       <div style={{ ...containerStyle }}>
         <div style={{ position: 'relative', overflow: 'hidden' }}>
-          <h3
-            style={{
-              margin: 0,
-              display: 'flex',
-              padding: '4px 0',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              zIndex: 2,
-              fontWeight: 300,
-              lineHeight: 1,
-              color: '#fff',
-              borderRadius: isSecondPitcher ? '0' : '8px 8px 0 0',
-              background: `
-                linear-gradient(
-                  100deg,
-                  ${teamColor} 0%,
-                  ${teamColor.replace(/[\d.]+\)$/, '0.2)')} 100%
-                )
-              `,
-              backgroundBlendMode: teamColor ? 'screen' : undefined,
-            }}
-          >
-            {name}
-          </h3>
+          <div style={{ position: 'relative', overflow: 'hidden' }}>
+            <div
+              style={{
+                ...getTeamBackgroundStyle(teamColor),
+                borderRadius: isSecondPitcher ? '0' : '8px 8px 0 0',
+              }}
+            />
+            <h3
+              style={{
+                margin: 0,
+                display: 'flex',
+                padding: '4px 0',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                zIndex: 2,
+                fontWeight: 300,
+                lineHeight: 1,
+                color: '#fff',
+                borderRadius: isSecondPitcher ? '0' : '8px 8px 0 0',
+                background: 'transparent',
+              }}
+            >
+              {name}
+            </h3>
+          </div>
         </div>
 
         {!Array.isArray(games) || games.length === 0 ? (
