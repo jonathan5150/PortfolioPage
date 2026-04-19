@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import teamPrimaryColors, {
   getTeamBackgroundStyle,
+  washOut,
 } from '../mlbUtils/teamPrimaryColors';
 
 const BeforeScoreBug = ({
@@ -99,6 +100,17 @@ const BeforeScoreBug = ({
     const teamName = team.name;
     const isStarred = selectedStarTeamId === team.id;
     const backgroundColor = teamPrimaryColors[teamName];
+    const borderColor = backgroundColor
+      ? washOut(backgroundColor, 0.2)
+      : 'rgb(85, 85, 85)';
+
+    const logoFilters = {
+      'Los Angeles Dodgers': 'brightness(0.65) contrast(1.4)',
+      'Philadelphia Phillies': 'brightness(0.75) contrast(2)',
+      'St. Louis Cardinals': 'brightness(1) contrast(1.2)',
+    };
+
+    const filter = logoFilters[teamName] || 'none';
 
     return (
       <div
@@ -141,7 +153,9 @@ const BeforeScoreBug = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            border: isStarred ? '2px solid #c49410' : '2px solid rgb(85, 85, 85)',
+            border: isStarred
+              ? '2px solid #c49410'
+              : `2px solid ${borderColor}`,
             borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
             padding: '5px 10px',
             position: 'relative',
@@ -159,6 +173,7 @@ const BeforeScoreBug = ({
               width: '37px',
               height: '37px',
               objectFit: 'contain',
+              filter,
             }}
           />
 
@@ -171,18 +186,18 @@ const BeforeScoreBug = ({
             }}
           >
             <div
-                          className="abbreviation"
-                          style={{
-                            height: '20px',
-                            fontWeight: 'bold',
-                            textAlign: 'center',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          {abbr}
-                        </div>
+              className="abbreviation"
+              style={{
+                height: '20px',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {abbr}
+            </div>
 
             <div
               style={{

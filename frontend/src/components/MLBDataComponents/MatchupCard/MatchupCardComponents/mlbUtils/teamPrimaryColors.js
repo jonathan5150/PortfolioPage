@@ -3,8 +3,8 @@ const TEAM_OPACITY = 0.6; // slightly lower base opacity
 
 const rgba = (r, g, b) => `rgba(${r}, ${g}, ${b}, ${TEAM_OPACITY})`;
 
-// 👇 NEW: wash out function
-const washOut = (rgbaColor, amount = 0.4) => {
+// 👇 NOW EXPORTED so you can reuse it (borders, text, etc.)
+export const washOut = (rgbaColor, amount = 0.4) => {
   const values = rgbaColor.match(/[\d.]+/g).map(Number);
   let [r, g, b, a] = values;
 
@@ -17,7 +17,7 @@ const washOut = (rgbaColor, amount = 0.4) => {
 };
 
 export const getTeamBackgroundStyle = (teamColor) => {
-  const washed = washOut(teamColor, 0.1); // 👈 adjust this (0.3–0.6 sweet spot)
+  const washed = washOut(teamColor, 0.1); // 👈 adjust this (0.1–0.4 sweet spot)
 
   return {
     position: 'absolute',
@@ -59,7 +59,7 @@ const teamPrimaryColors = {
   'San Diego Padres': rgba(245, 205, 70),
   'San Francisco Giants': rgba(245, 105, 50),
   'Seattle Mariners': rgba(40, 105, 105),
-  'St. Louis Cardinals': rgba(205, 60, 80),
+  'St. Louis Cardinals': rgba(200, 40, 40),
   'Tampa Bay Rays': rgba(40, 65, 105),
   'Texas Rangers': rgba(40, 75, 130),
   'Toronto Blue Jays': rgba(40, 90, 150),

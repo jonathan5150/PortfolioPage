@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import Scoreboard from '../Scoreboard';
 import teamPrimaryColors, {
   getTeamBackgroundStyle,
+  washOut,
 } from '../mlbUtils/teamPrimaryColors';
 
 const LiveScoreBug = ({
@@ -137,6 +138,17 @@ const LiveScoreBug = ({
     const teamName = team.name;
     const backgroundColor = teamPrimaryColors[teamName];
     const isStarred = selectedStarTeamId === team.id;
+    const borderColor = backgroundColor
+      ? washOut(backgroundColor, 0.2)
+      : 'rgb(85, 85, 85)';
+
+    const logoFilters = {
+      'Los Angeles Dodgers': 'brightness(0.65) contrast(1.4)',
+      'Philadelphia Phillies': 'brightness(0.75) contrast(2)',
+      'St. Louis Cardinals': 'brightness(1) contrast(1.2)',
+    };
+
+    const filter = logoFilters[teamName] || 'none';
 
     return (
       <div
@@ -180,7 +192,9 @@ const LiveScoreBug = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            border: isStarred ? '2px solid #c49410' : '2px solid rgb(85, 85, 85)',
+            border: isStarred
+              ? '2px solid #c49410'
+              : `2px solid ${borderColor}`,
             borderRadius: side === 'away' ? '6px 0 0 0' : '0 6px 0 0',
             padding: '5px 10px',
             position: 'relative',
@@ -195,6 +209,7 @@ const LiveScoreBug = ({
                 width: '37px',
                 height: '37px',
                 objectFit: 'contain',
+                filter,
                 userSelect: 'none',
                 WebkitUserDrag: 'none',
                 outline: 'none',

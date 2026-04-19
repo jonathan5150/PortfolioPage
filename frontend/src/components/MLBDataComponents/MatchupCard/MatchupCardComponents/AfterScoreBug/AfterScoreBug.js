@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import Scoreboard from '../Scoreboard';
 import teamPrimaryColors, {
   getTeamBackgroundStyle,
+  washOut,
 } from '../mlbUtils/teamPrimaryColors';
 
 const AfterScoreBug = ({
@@ -40,7 +41,7 @@ const AfterScoreBug = ({
         handleStarClick?.(teamId);
         longPressTriggeredRef.current = true;
         longPressTimerRef.current = null;
-      }, 1000);
+      }, 600);
     },
     [clearLongPress, handleStarClick]
   );
@@ -79,6 +80,16 @@ const AfterScoreBug = ({
     const teamName = team.name;
     const isStarred = selectedStarTeamId === team.id;
     const backgroundColor = teamPrimaryColors[teamName];
+    const logoFilters = {
+      'Los Angeles Dodgers': 'brightness(0.65) contrast(1.4)',
+      'Philadelphia Phillies': 'brightness(0.75) contrast(2)',
+      'St. Louis Cardinals': 'brightness(1) contrast(1.2)',
+    };
+
+    const filter = logoFilters[teamName] || 'none';
+    const borderColor = backgroundColor
+      ? washOut(backgroundColor, 0.2)
+      : 'rgb(85, 85, 85)';
 
     return (
       <div
@@ -121,7 +132,9 @@ const AfterScoreBug = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            border: isStarred ? '2px solid #c49410' : '2px solid rgb(85, 85, 85)',
+            border: isStarred
+              ? '2px solid #c49410'
+              : `2px solid ${borderColor}`,
             borderRadius: side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0',
             padding: '5px 10px',
             position: 'relative',
@@ -140,6 +153,9 @@ const AfterScoreBug = ({
                 width: '37px',
                 height: '37px',
                 objectFit: 'contain',
+
+                filter, // 👈 applies per team
+
                 userSelect: 'none',
                 WebkitUserDrag: 'none',
                 outline: 'none',
