@@ -42,7 +42,7 @@ const LiveScoreBug = ({
 
         longPressTriggeredRef.current = true;
         longPressTimerRef.current = null;
-      }, 1000);
+      }, 600);
     },
     [clearLongPress, handleStarClick]
   );

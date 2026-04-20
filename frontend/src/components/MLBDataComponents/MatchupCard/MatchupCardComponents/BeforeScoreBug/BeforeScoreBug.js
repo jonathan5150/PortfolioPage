@@ -39,7 +39,7 @@ const BeforeScoreBug = ({
         handleStarClick?.(teamId);
         longPressTriggeredRef.current = true;
         longPressTimerRef.current = null;
-      }, 1000);
+      }, 600);
     },
     [clearLongPress, handleStarClick]
   );
