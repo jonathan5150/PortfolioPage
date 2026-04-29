@@ -73,8 +73,6 @@ const PlayerStats = ({
   const awayRoster = batterGameLogs[awayTeamId]?.roster || [];
   const homeRoster = batterGameLogs[homeTeamId]?.roster || [];
 
-  const isPostseason = game?.gameType && game.gameType !== 'R';
-
   const [showing, setShowing] = useState(() => {
     const cookie = Cookies.get('playerStatsTeam');
     return cookie === 'home' ? 'home' : 'away';
@@ -171,14 +169,8 @@ const PlayerStats = ({
     const teamColor = teamPrimaryColors[teamName];
 
     let filteredPlayers = players.filter(
-      (p) => (p.seasonStats?.gamesPlayed || 0) >= (isPostseason ? 1 : 20)
+      (p) => (p.seasonStats?.gamesPlayed || 0) >= 1
     );
-
-    if (filteredPlayers.length === 0) {
-      filteredPlayers = players.filter(
-        (p) => (p.seasonStats?.gamesPlayed || 0) > 0
-      );
-    }
 
     const sortedPlayers = sortPlayers(filteredPlayers);
 

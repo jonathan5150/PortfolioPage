@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import Cookies from 'js-cookie';
 import MatchupCard from '../../components/MLBDataComponents/MatchupCard/MatchupCard';
 import { fetchGameData } from './MLBDataHelpers/MLBGameDataFetcher';
+import { fetchTeamMatchupData } from './MLBDataHelpers/fetchTeamMatchupData';
 
 function MLBData() {
   const [todayGames, setTodayGames] = useState([]);
@@ -21,6 +22,12 @@ function MLBData() {
   const teamsMenuRef = useRef();
   const [userPicks, setUserPicks] = useState({});
   const [batterGameLogs, setBatterGameLogs] = useState({});
+  const [teamMatchupData, setTeamMatchupData] = useState({
+    teamStatsMap: {},
+    standingsMap: {},
+    rankMaps: {},
+  });
+
   const [playerStatsSortConfig, setPlayerStatsSortConfig] = useState({
     key: 'fullName',
     direction: 'asc',
@@ -34,13 +41,13 @@ function MLBData() {
     [mlbTeams]
   );
 
-  // ✅ NEW: MLB static logo (no API needed)
   const getTeamLogo = (teamId) => {
     return `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${teamId}.svg`;
   };
 
   useEffect(() => {
     const savedPicks = Cookies.get('userPicks');
+
     if (savedPicks) {
       try {
         setUserPicks(JSON.parse(savedPicks));
@@ -55,9 +62,13 @@ function MLBData() {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty('--vh', `${vh}px`);
     };
+
     window.addEventListener('resize', updateViewportHeight);
     updateViewportHeight();
-    return () => window.removeEventListener('resize', updateViewportHeight);
+
+    return () => {
+      window.removeEventListener('resize', updateViewportHeight);
+    };
   }, []);
 
   useEffect(() => {
@@ -66,8 +77,12 @@ function MLBData() {
         setIsTeamsMenuOpen(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -90,9 +105,11 @@ function MLBData() {
           .sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
         const records = {};
+
         teamRecordsData.records.forEach((league) => {
           league.teamRecords.forEach((teamRecord) => {
-            records[teamRecord.team.id] = `${teamRecord.wins}-${teamRecord.losses}`;
+            const teamId = teamRecord.team.id;
+            records[teamId] = `${teamRecord.wins}-${teamRecord.losses}`;
           });
         });
 
@@ -103,17 +120,24 @@ function MLBData() {
 
         if (savedSelectedTeams) {
           try {
-            const parsed = JSON.parse(savedSelectedTeams);
-            setSelectedTeams(Array.isArray(parsed) ? parsed : teams.map(t => t.id));
+            const parsedSelectedTeams = JSON.parse(savedSelectedTeams);
+
+            setSelectedTeams(
+              Array.isArray(parsedSelectedTeams)
+                ? parsedSelectedTeams
+                : teams.map((team) => team.id)
+            );
           } catch {
-            setSelectedTeams(teams.map(t => t.id));
+            setSelectedTeams(teams.map((team) => team.id));
           }
         } else {
-          setSelectedTeams(teams.map(t => t.id));
+          setSelectedTeams(teams.map((team) => team.id));
         }
-
       } catch (error) {
         console.error('Error fetching initial data:', error);
+
+        setMlbTeams([]);
+        setTeamRecords({});
         setSelectedTeams([]);
         setLoading(false);
       }
@@ -121,6 +145,37 @@ function MLBData() {
 
     fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    const season = new Date(selectedDate).getFullYear();
+    let active = true;
+
+    const loadTeamMatchupData = async () => {
+      try {
+        const data = await fetchTeamMatchupData(season);
+
+        if (active) {
+          setTeamMatchupData(data);
+        }
+      } catch (error) {
+        console.error('Failed to load shared team matchup data:', error);
+
+        if (active) {
+          setTeamMatchupData({
+            teamStatsMap: {},
+            standingsMap: {},
+            rankMaps: {},
+          });
+        }
+      }
+    };
+
+    loadTeamMatchupData();
+
+    return () => {
+      active = false;
+    };
+  }, [selectedDate]);
 
   useEffect(() => {
     if (!mlbTeams.length || selectedTeams === null) return;
@@ -178,30 +233,34 @@ function MLBData() {
         const liveData = await Promise.all(
           todayGames.flatMap((date) =>
             date.games.map(async (game) => {
-              const res = await fetch(
-                `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`
-              );
-              const data = await res.json();
-              return { gamePk: game.gamePk, liveData: data };
+              const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
+              const response = await fetch(liveGameUrl);
+              const data = await response.json();
+
+              return {
+                gamePk: game.gamePk,
+                liveData: data,
+              };
             })
           )
         );
 
-        const map = {};
-        liveData.forEach((g) => {
-          map[g.gamePk] = g.liveData;
+        const liveGameDataMap = {};
+
+        liveData.forEach((game) => {
+          liveGameDataMap[game.gamePk] = game.liveData;
         });
 
-        setLiveGameData(map);
+        setLiveGameData(liveGameDataMap);
       } catch (error) {
-        console.warn('Live update failed', error);
+        console.warn('Error refreshing live game data:', error);
       }
     };
 
-    const id = setInterval(fetchLiveData, 10000);
+    const intervalId = setInterval(fetchLiveData, 10000);
     fetchLiveData();
 
-    return () => clearInterval(id);
+    return () => clearInterval(intervalId);
   }, [todayGames]);
 
   useEffect(() => {
@@ -209,14 +268,44 @@ function MLBData() {
   }, [userPicks]);
 
   const formatTime = (dateTime) => {
-    return new Date(dateTime).toLocaleTimeString([], {
+    const date = new Date(dateTime);
+
+    return date.toLocaleTimeString([], {
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
     });
   };
 
-  const getTeamRecord = (teamId) => teamRecords[teamId] || '0-0';
+  const getTeamRecord = (teamId) => {
+    return teamRecords[teamId] || '0-0';
+  };
+
+  const handleTeamChange = (teamId) => {
+    setSelectedTeams((prevSelectedTeams) => {
+      const safePrevSelectedTeams = Array.isArray(prevSelectedTeams) ? prevSelectedTeams : [];
+
+      const updatedSelectedTeams = safePrevSelectedTeams.includes(teamId)
+        ? safePrevSelectedTeams.filter((id) => id !== teamId)
+        : [...safePrevSelectedTeams, teamId];
+
+      Cookies.set('selectedTeams', JSON.stringify(updatedSelectedTeams), { expires: 399 });
+
+      return updatedSelectedTeams;
+    });
+  };
+
+  const handleSelectAll = () => {
+    const allTeamIds = mlbTeams.map((team) => team.id);
+
+    setSelectedTeams(allTeamIds);
+    Cookies.set('selectedTeams', JSON.stringify(allTeamIds), { expires: 399 });
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedTeams([]);
+    Cookies.set('selectedTeams', JSON.stringify([]), { expires: 399 });
+  };
 
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
@@ -244,6 +333,9 @@ function MLBData() {
           isTeamsMenuOpen={isTeamsMenuOpen}
           setIsTeamsMenuOpen={setIsTeamsMenuOpen}
           mlbTeams={mlbTeams}
+          handleTeamChange={handleTeamChange}
+          handleSelectAll={handleSelectAll}
+          handleDeselectAll={handleDeselectAll}
           teamsMenuRef={teamsMenuRef}
           todayGames={todayGames}
           gameBackgroundColors={gameBackgroundColors}
@@ -252,6 +344,7 @@ function MLBData() {
           batterGameLogs={batterGameLogs}
           playerStatsSortConfig={playerStatsSortConfig}
           setPlayerStatsSortConfig={setPlayerStatsSortConfig}
+          teamMatchupData={teamMatchupData}
         />
       )}
     </div>

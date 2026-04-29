@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
+import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const containerStyle = {
   width: '100%',
@@ -36,14 +37,57 @@ const sideValueBaseStyle = {
   padding: '1px 0',
 };
 
+const getSideValueStyle = (align) => ({
+  ...sideValueBaseStyle,
+  textAlign: align,
+  fontWeight: 500,
+  color: 'white',
+});
+
+const getWinnerRowBackground = (winner, awayTeamName, homeTeamName) => {
+  if (winner === 'away') {
+    const color = teamPrimaryColors[awayTeamName] || 'rgba(181, 152, 65, 0.35)';
+
+    return {
+      background: `linear-gradient(
+        to right,
+        ${color} 0%,
+        rgba(30, 30, 30, 0.35) 45%,
+        rgba(30, 30, 30, 0.15) 50%,
+        rgba(30, 30, 30, 0.35) 55%,
+        transparent 100%
+      )`,
+    };
+  }
+
+  if (winner === 'home') {
+    const color = teamPrimaryColors[homeTeamName] || 'rgba(181, 152, 65, 0.35)';
+
+    return {
+      background: `linear-gradient(
+        to left,
+        ${color} 0%,
+        rgba(30, 30, 30, 0.35) 45%,
+        rgba(30, 30, 30, 0.15) 50%,
+        rgba(30, 30, 30, 0.35) 55%,
+        transparent 100%
+      )`,
+    };
+  }
+
+  return {};
+};
+
 const rankBaseStyle = {
   color: 'white',
   fontSize: '0.6rem',
   fontWeight: 500,
-  justifySelf: 'stretch',
-  width: '100%',
+  justifySelf: 'center',
+  width: '32px',
   padding: '1px 0',
   fontVariantNumeric: 'tabular-nums',
+  textAlign: 'center',
+  borderRadius: '5px',
 };
 
 const labelStyle = {
@@ -52,13 +96,6 @@ const labelStyle = {
   fontWeight: 500,
   textAlign: 'center',
   width: '100%',
-};
-
-const loadingStyle = {
-  padding: '14px 10px',
-  textAlign: 'center',
-  color: 'rgba(255,255,255,0.8)',
-  fontSize: '0.7rem',
 };
 
 const getNumber = (value) => {
@@ -149,63 +186,20 @@ const getComparisonWinner = (awayValue, homeValue, lowerIsBetter = false) => {
   return awayNum > homeNum ? 'away' : 'home';
 };
 
-const getSideStyle = (winner, side, align) => ({
-  ...sideValueBaseStyle,
-  textAlign: align,
-  color:
-    winner === side
-      ? '#b59841'
-      : winner === 'tie'
-      ? 'white'
-      : 'white',
-  fontWeight: winner === side ? 500 : 500,
-});
-
-const getRankColor = (rankDisplay) => {
+const getRankFillColor = (rankDisplay) => {
   const rankNum = getRankNumberFromDisplay(rankDisplay);
 
-  if (rankNum == null) return 'white';
+  if (rankNum == null) return 'transparent';
   if (rankNum <= 5) return '#b59841';
   if (rankNum >= 25) return '#9c4848';
-  return 'white';
+  return 'transparent';
 };
 
-const getRankStyle = (rankDisplay) => {
-
-  return {
-    ...rankBaseStyle,
-    paddingRight: '4px',
-    color: getRankColor(rankDisplay),
-  };
-};
-
-const createRankMap = (items, statKey, lowerIsBetter = false) => {
-  const values = items
-    .map((item) => ({
-      teamId: item.teamId,
-      value: getNumber(item[statKey]),
-    }))
-    .filter((item) => item.value != null);
-
-  values.sort((a, b) => {
-    if (lowerIsBetter) return a.value - b.value;
-    return b.value - a.value;
-  });
-
-  const rankMap = {};
-  let currentRank = 0;
-  let previousValue = null;
-
-  values.forEach((item, index) => {
-    if (previousValue === null || item.value !== previousValue) {
-      currentRank = index + 1;
-      previousValue = item.value;
-    }
-    rankMap[item.teamId] = currentRank;
-  });
-
-  return rankMap;
-};
+const getRankStyle = (rankDisplay) => ({
+  ...rankBaseStyle,
+  background: getRankFillColor(rankDisplay),
+  color: 'white',
+});
 
 const buildRows = (awayTeam, homeTeam, standingsMap, rankMaps) => {
   const awayStanding = standingsMap[awayTeam.id] || {};
@@ -350,10 +344,8 @@ const buildRows = (awayTeam, homeTeam, standingsMap, rankMaps) => {
     },
     {
       label: 'DIV',
-      awayDisplay:
-        awayStanding.divisionRank != null ? String(awayStanding.divisionRank) : '—',
-      homeDisplay:
-        homeStanding.divisionRank != null ? String(homeStanding.divisionRank) : '—',
+      awayDisplay: awayStanding.divisionRank != null ? String(awayStanding.divisionRank) : '—',
+      homeDisplay: homeStanding.divisionRank != null ? String(homeStanding.divisionRank) : '—',
       awayCompare: awayStanding.divisionRank,
       homeCompare: homeStanding.divisionRank,
       lowerIsBetter: true,
@@ -373,179 +365,29 @@ const buildRows = (awayTeam, homeTeam, standingsMap, rankMaps) => {
   ];
 };
 
-const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
-  const [teamStats, setTeamStats] = useState({
-    awayHitting: null,
-    awayPitching: null,
-    homeHitting: null,
-    homePitching: null,
-    standingsMap: {},
-    rankMaps: {},
-  });
-
-  const [loading, setLoading] = useState(true);
-
+const TeamsMatchup = ({ game, teamMatchupData }) => {
   const awayTeamId = game?.teams?.away?.team?.id;
   const homeTeamId = game?.teams?.home?.team?.id;
 
-  useEffect(() => {
-    let isActive = true;
-
-    const fetchJson = async (url) => {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Request failed: ${response.status}`);
-      }
-      return response.json();
-    };
-
-    const getTeamStatSplit = (data) => data?.stats?.[0]?.splits?.[0]?.stat || {};
-
-    const load = async () => {
-      if (!awayTeamId || !homeTeamId) return;
-
-      setLoading(true);
-
-      try {
-        const season = new Date(game?.gameDate || Date.now()).getFullYear();
-
-        const [
-          awayHittingData,
-          awayPitchingData,
-          homeHittingData,
-          homePitchingData,
-          standingsData,
-          teamsData,
-        ] = await Promise.all([
-          fetchJson(
-            `https://statsapi.mlb.com/api/v1/teams/${awayTeamId}/stats?stats=season&group=hitting&season=${season}`
-          ),
-          fetchJson(
-            `https://statsapi.mlb.com/api/v1/teams/${awayTeamId}/stats?stats=season&group=pitching&season=${season}`
-          ),
-          fetchJson(
-            `https://statsapi.mlb.com/api/v1/teams/${homeTeamId}/stats?stats=season&group=hitting&season=${season}`
-          ),
-          fetchJson(
-            `https://statsapi.mlb.com/api/v1/teams/${homeTeamId}/stats?stats=season&group=pitching&season=${season}`
-          ),
-          fetchJson(
-            `https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=${season}&standingsTypes=regularSeason`
-          ),
-          fetchJson(`https://statsapi.mlb.com/api/v1/teams?sportId=1&season=${season}`),
-        ]);
-
-        const standingsMap = {};
-        const standingsRankInput = [];
-
-        (standingsData?.records || []).forEach((recordGroup) => {
-          (recordGroup?.teamRecords || []).forEach((record) => {
-            const teamId = record.team.id;
-            const divisionRank =
-              record.divisionRank != null ? Number(record.divisionRank) : null;
-            const gamesBack = record.gamesBack === '-' ? 0 : Number(record.gamesBack);
-            const pct =
-              typeof record.winningPercentage === 'string'
-                ? Number(`0${record.winningPercentage}`)
-                : null;
-
-            standingsMap[teamId] = {
-              divisionRank,
-              gamesBack,
-              pct,
-            };
-
-            standingsRankInput.push({
-              teamId,
-              pct,
-              divisionRank,
-              gamesBack,
-            });
-          });
-        });
-
-        const allTeamIds = (teamsData?.teams || []).map((team) => team.id);
-
-        const [allHittingStats, allPitchingStats] = await Promise.all([
-          Promise.all(
-            allTeamIds.map(async (teamId) => {
-              const data = await fetchJson(
-                `https://statsapi.mlb.com/api/v1/teams/${teamId}/stats?stats=season&group=hitting&season=${season}`
-              );
-              return { teamId, ...getTeamStatSplit(data) };
-            })
-          ),
-          Promise.all(
-            allTeamIds.map(async (teamId) => {
-              const data = await fetchJson(
-                `https://statsapi.mlb.com/api/v1/teams/${teamId}/stats?stats=season&group=pitching&season=${season}`
-              );
-              return { teamId, ...getTeamStatSplit(data) };
-            })
-          ),
-        ]);
-
-        const rankMaps = {
-          runs: createRankMap(allHittingStats, 'runs'),
-          hits: createRankMap(allHittingStats, 'hits'),
-          homeRuns: createRankMap(allHittingStats, 'homeRuns'),
-          rbi: createRankMap(allHittingStats, 'rbi'),
-          stolenBases: createRankMap(allHittingStats, 'stolenBases'),
-          avg: createRankMap(allHittingStats, 'avg'),
-          ops: createRankMap(allHittingStats, 'ops'),
-          era: createRankMap(allPitchingStats, 'era', true),
-          whip: createRankMap(allPitchingStats, 'whip', true),
-          strikeOuts: createRankMap(allPitchingStats, 'strikeOuts'),
-          pitchingAvg: createRankMap(allPitchingStats, 'avg', true),
-          recordPct: createRankMap(standingsRankInput, 'pct'),
-          divisionRank: createRankMap(standingsRankInput, 'divisionRank', true),
-          gamesBack: createRankMap(standingsRankInput, 'gamesBack', true),
-        };
-
-        if (!isActive) return;
-
-        setTeamStats({
-          awayHitting: getTeamStatSplit(awayHittingData),
-          awayPitching: getTeamStatSplit(awayPitchingData),
-          homeHitting: getTeamStatSplit(homeHittingData),
-          homePitching: getTeamStatSplit(homePitchingData),
-          standingsMap,
-          rankMaps,
-        });
-      } catch (error) {
-        console.error('Failed to load TeamsMatchup data:', error);
-
-        if (!isActive) return;
-
-        setTeamStats({
-          awayHitting: {},
-          awayPitching: {},
-          homeHitting: {},
-          homePitching: {},
-          standingsMap: {},
-          rankMaps: {},
-        });
-      } finally {
-        if (isActive) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      isActive = false;
-    };
-  }, [awayTeamId, homeTeamId, game?.gameDate]);
+  const teamStats = useMemo(
+    () => ({
+      awayHitting: teamMatchupData?.teamStatsMap?.[awayTeamId]?.hitting || {},
+      awayPitching: teamMatchupData?.teamStatsMap?.[awayTeamId]?.pitching || {},
+      homeHitting: teamMatchupData?.teamStatsMap?.[homeTeamId]?.hitting || {},
+      homePitching: teamMatchupData?.teamStatsMap?.[homeTeamId]?.pitching || {},
+      standingsMap: teamMatchupData?.standingsMap || {},
+      rankMaps: teamMatchupData?.rankMaps || {},
+    }),
+    [teamMatchupData, awayTeamId, homeTeamId]
+  );
 
   const awayTeam = useMemo(
     () => ({
       ...game?.teams?.away,
       id: awayTeamId,
       teamStats: {
-        hitting: teamStats.awayHitting || {},
-        pitching: teamStats.awayPitching || {},
+        hitting: teamStats.awayHitting,
+        pitching: teamStats.awayPitching,
       },
     }),
     [game, awayTeamId, teamStats.awayHitting, teamStats.awayPitching]
@@ -556,8 +398,8 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
       ...game?.teams?.home,
       id: homeTeamId,
       teamStats: {
-        hitting: teamStats.homeHitting || {},
-        pitching: teamStats.homePitching || {},
+        hitting: teamStats.homeHitting,
+        pitching: teamStats.homePitching,
       },
     }),
     [game, homeTeamId, teamStats.homeHitting, teamStats.homePitching]
@@ -568,17 +410,8 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
     [awayTeam, homeTeam, teamStats.standingsMap, teamStats.rankMaps]
   );
 
-  if (loading) {
-    return (
-      <div style={containerStyle}>
-        <div style={loadingStyle}>Loading team matchup...</div>
-      </div>
-    );
-  }
-
   return (
     <div style={containerStyle}>
-
       {rows.map((row, index) => {
         const winner = getComparisonWinner(
           row.awayCompare,
@@ -593,17 +426,22 @@ const TeamsMatchup = ({ game, getTeamAbbreviation }) => {
             <div
               style={{
                 ...rowStyle,
+                ...getWinnerRowBackground(
+                  winner,
+                  awayTeam?.team?.name,
+                  homeTeam?.team?.name
+                ),
                 borderBottom:
                   index === rows.length - 1
                     ? 'none'
                     : '1px solid rgba(255, 255, 255, 0.06)',
               }}
             >
-              <div style={getSideStyle(winner, 'away', 'left')}>{row.awayDisplay}</div>
+              <div style={getSideValueStyle('left')}>{row.awayDisplay}</div>
               <div style={getRankStyle(row.awayRank)}>{row.awayRank}</div>
               <div style={labelStyle}>{row.label}</div>
               <div style={getRankStyle(row.homeRank)}>{row.homeRank}</div>
-              <div style={getSideStyle(winner, 'home', 'right')}>{row.homeDisplay}</div>
+              <div style={getSideValueStyle('right')}>{row.homeDisplay}</div>
             </div>
           </React.Fragment>
         );

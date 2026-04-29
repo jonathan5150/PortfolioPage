@@ -72,6 +72,7 @@ const GameCard = memo(function GameCard({
   liveData,
   gameBackgroundColors,
   batterGameLogs,
+  teamMatchupData,
   playerStatsSortConfig,
   setPlayerStatsSortConfig,
   syncCommand,
@@ -130,14 +131,11 @@ const GameCard = memo(function GameCard({
   const handleStarClick = useCallback(
     (teamId) => {
       setSelectedStarTeamId((prevSelectedTeamId) => {
-        const nextSelectedTeamId =
-          prevSelectedTeamId === teamId ? null : teamId;
+        const nextSelectedTeamId = prevSelectedTeamId === teamId ? null : teamId;
 
         let existing = {};
         try {
-          existing = JSON.parse(
-            Cookies.get('selectedStarTeamByGame') || '{}'
-          );
+          existing = JSON.parse(Cookies.get('selectedStarTeamByGame') || '{}');
         } catch {
           existing = {};
         }
@@ -147,13 +145,9 @@ const GameCard = memo(function GameCard({
           [gamePk]: nextSelectedTeamId,
         };
 
-        Cookies.set(
-          'selectedStarTeamByGame',
-          JSON.stringify(nextCookieValue),
-          {
-            expires: 365,
-          }
-        );
+        Cookies.set('selectedStarTeamByGame', JSON.stringify(nextCookieValue), {
+          expires: 365,
+        });
 
         return nextSelectedTeamId;
       });
@@ -230,6 +224,7 @@ const GameCard = memo(function GameCard({
 
       try {
         const existing = JSON.parse(Cookies.get('boxScoreViews') || '{}');
+
         Cookies.set(
           'boxScoreViews',
           JSON.stringify({
@@ -317,7 +312,7 @@ const GameCard = memo(function GameCard({
         return (
           <TeamsMatchup
             game={game}
-            getTeamAbbreviation={getTeamAbbreviation}
+            teamMatchupData={teamMatchupData}
           />
         );
 
@@ -333,6 +328,7 @@ const GameCard = memo(function GameCard({
                 ...JSON.parse(Cookies.get('selectedPlayers') || '{}'),
                 [teamId]: playerName,
               };
+
               Cookies.set('selectedPlayers', JSON.stringify(updated), {
                 expires: 365,
               });
@@ -393,6 +389,7 @@ const GameCard = memo(function GameCard({
     playerStatsSortConfig,
     setPlayerStatsSortConfig,
     handleNumGamesToShowChange,
+    teamMatchupData,
   ]);
 
   useLayoutEffect(() => {
@@ -479,6 +476,7 @@ const GameCard = memo(function GameCard({
       if (resizeObserverRef.current) {
         resizeObserverRef.current.disconnect();
       }
+
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
@@ -601,6 +599,7 @@ const GameCard = memo(function GameCard({
                   </option>
                 ))}
               </select>
+
               <span
                 style={{
                   position: 'absolute',
@@ -690,6 +689,7 @@ const MatchupCard = ({
   todayGames,
   gameBackgroundColors,
   batterGameLogs,
+  teamMatchupData,
   playerStatsSortConfig,
   setPlayerStatsSortConfig,
 }) => {
@@ -796,6 +796,7 @@ const MatchupCard = ({
               liveData={liveGameData[game.gamePk]}
               gameBackgroundColors={gameBackgroundColors}
               batterGameLogs={batterGameLogs}
+              teamMatchupData={teamMatchupData}
               playerStatsSortConfig={playerStatsSortConfig}
               setPlayerStatsSortConfig={setPlayerStatsSortConfig}
               syncCommand={syncCommand}
