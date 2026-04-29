@@ -8,7 +8,6 @@ import { fetchGameData } from './MLBDataHelpers/MLBGameDataFetcher';
 function MLBData() {
   const [todayGames, setTodayGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [teamLogos, setTeamLogos] = useState({});
   const [mlbTeams, setMlbTeams] = useState([]);
   const [teamRecords, setTeamRecords] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -27,10 +26,18 @@ function MLBData() {
     direction: 'asc',
   });
 
-  const getTeamAbbreviation = useCallback((teamId) => {
-    const team = mlbTeams.find((team) => team.id === teamId);
-    return team ? team.abbreviation : '';
-  }, [mlbTeams]);
+  const getTeamAbbreviation = useCallback(
+    (teamId) => {
+      const team = mlbTeams.find((team) => team.id === teamId);
+      return team ? team.abbreviation : '';
+    },
+    [mlbTeams]
+  );
+
+  // ✅ NEW: MLB static logo (no API needed)
+  const getTeamLogo = (teamId) => {
+    return `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${teamId}.svg`;
+  };
 
   useEffect(() => {
     const savedPicks = Cookies.get('userPicks');
@@ -50,9 +57,7 @@ function MLBData() {
     };
     window.addEventListener('resize', updateViewportHeight);
     updateViewportHeight();
-    return () => {
-      window.removeEventListener('resize', updateViewportHeight);
-    };
+    return () => window.removeEventListener('resize', updateViewportHeight);
   }, []);
 
   useEffect(() => {
@@ -62,55 +67,55 @@ function MLBData() {
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const [teamLogosRes, mlbTeamsRes, teamRecordsRes] = await Promise.all([
-          fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams'),
+        const [mlbTeamsRes, teamRecordsRes] = await Promise.all([
           fetch('https://statsapi.mlb.com/api/v1/teams?sportId=1'),
-          fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104')
+          fetch('https://statsapi.mlb.com/api/v1/standings?leagueId=103,104'),
         ]);
 
-        const teamLogosData = await teamLogosRes.json();
         const mlbTeamsData = await mlbTeamsRes.json();
         const teamRecordsData = await teamRecordsRes.json();
 
-        const logos = {};
-        teamLogosData.sports[0].leagues[0].teams.forEach((team) => {
-          logos[team.team.displayName] = team.team.logos[0].href;
-        });
-
-        const teams = mlbTeamsData.teams.map(team => ({
-          id: team.id,
-          name: team.teamName === 'D-backs' ? 'Diamondbacks' : team.teamName,
-          abbreviation: team.abbreviation
-        })).sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
+        const teams = mlbTeamsData.teams
+          .map((team) => ({
+            id: team.id,
+            name: team.teamName === 'D-backs' ? 'Diamondbacks' : team.teamName,
+            abbreviation: team.abbreviation,
+          }))
+          .sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 
         const records = {};
         teamRecordsData.records.forEach((league) => {
           league.teamRecords.forEach((teamRecord) => {
-            const teamId = teamRecord.team.id;
-            records[teamId] = `${teamRecord.wins}-${teamRecord.losses}`;
+            records[teamRecord.team.id] = `${teamRecord.wins}-${teamRecord.losses}`;
           });
         });
 
-        setTeamLogos(logos);
         setMlbTeams(teams);
         setTeamRecords(records);
 
         const savedSelectedTeams = Cookies.get('selectedTeams');
+
         if (savedSelectedTeams) {
-          setSelectedTeams(JSON.parse(savedSelectedTeams));
+          try {
+            const parsed = JSON.parse(savedSelectedTeams);
+            setSelectedTeams(Array.isArray(parsed) ? parsed : teams.map(t => t.id));
+          } catch {
+            setSelectedTeams(teams.map(t => t.id));
+          }
         } else {
-          setSelectedTeams(teams.map(team => team.id));
+          setSelectedTeams(teams.map(t => t.id));
         }
+
       } catch (error) {
         console.error('Error fetching initial data:', error);
+        setSelectedTeams([]);
+        setLoading(false);
       }
     };
 
@@ -118,6 +123,8 @@ function MLBData() {
   }, []);
 
   useEffect(() => {
+    if (!mlbTeams.length || selectedTeams === null) return;
+
     const initializeData = async () => {
       await fetchGameData({
         selectedDate,
@@ -126,15 +133,13 @@ function MLBData() {
         setTodayGames,
         setVisibleGames,
         setBatterGameLogs,
-        setLiveGameData, // ✅ pass this
+        setLiveGameData,
         setLoading,
       });
-
-      // NOTE: fetchGameData will call setLoading(false) early to render faster
     };
 
     initializeData();
-  }, [selectedDate, getTeamAbbreviation]);
+  }, [selectedDate, getTeamAbbreviation, mlbTeams.length, selectedTeams]);
 
   useEffect(() => {
     if (!Array.isArray(selectedTeams)) return;
@@ -149,6 +154,7 @@ function MLBData() {
       if (detailedState?.includes('Postponed') && selectedDateStr === originalDateStr) {
         return new Date(originalDate);
       }
+
       return new Date(game.gameDate);
     };
 
@@ -165,28 +171,37 @@ function MLBData() {
   }, [selectedTeams, todayGames, selectedDate]);
 
   useEffect(() => {
+    if (!todayGames.length) return;
+
     const fetchLiveData = async () => {
-      const liveData = await Promise.all(todayGames.flatMap(date =>
-        date.games.map(async (game) => {
-          const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
-          const response = await fetch(liveGameUrl);
-          const data = await response.json();
-          return { gamePk: game.gamePk, liveData: data };
-        })
-      ));
+      try {
+        const liveData = await Promise.all(
+          todayGames.flatMap((date) =>
+            date.games.map(async (game) => {
+              const res = await fetch(
+                `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`
+              );
+              const data = await res.json();
+              return { gamePk: game.gamePk, liveData: data };
+            })
+          )
+        );
 
-      const liveGameDataMap = {};
-      liveData.forEach(game => {
-        liveGameDataMap[game.gamePk] = game.liveData;
-      });
+        const map = {};
+        liveData.forEach((g) => {
+          map[g.gamePk] = g.liveData;
+        });
 
-      setLiveGameData(liveGameDataMap);
+        setLiveGameData(map);
+      } catch (error) {
+        console.warn('Live update failed', error);
+      }
     };
 
-    const intervalId = setInterval(fetchLiveData, 10000);
+    const id = setInterval(fetchLiveData, 10000);
     fetchLiveData();
 
-    return () => clearInterval(intervalId);
+    return () => clearInterval(id);
   }, [todayGames]);
 
   useEffect(() => {
@@ -194,39 +209,14 @@ function MLBData() {
   }, [userPicks]);
 
   const formatTime = (dateTime) => {
-    const date = new Date(dateTime);
-    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-  };
-
-  const getTeamLogo = (mlbTeamName) => {
-    return teamLogos[mlbTeamName] || '';
-  };
-
-  const getTeamRecord = (teamId) => {
-    return teamRecords[teamId] || '0-0';
-  };
-
-  const handleTeamChange = (teamId) => {
-    setSelectedTeams((prevSelectedTeams) => {
-      const updatedSelectedTeams = prevSelectedTeams.includes(teamId)
-        ? prevSelectedTeams.filter((id) => id !== teamId)
-        : [...prevSelectedTeams, teamId];
-
-      Cookies.set('selectedTeams', JSON.stringify(updatedSelectedTeams), { expires: 399 });
-      return updatedSelectedTeams;
+    return new Date(dateTime).toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
     });
   };
 
-  const handleSelectAll = () => {
-    const allTeamIds = mlbTeams.map(team => team.id);
-    setSelectedTeams(allTeamIds);
-    Cookies.set('selectedTeams', JSON.stringify(allTeamIds), { expires: 399 });
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedTeams([]);
-    Cookies.set('selectedTeams', JSON.stringify([]), { expires: 399 });
-  };
+  const getTeamRecord = (teamId) => teamRecords[teamId] || '0-0';
 
   return (
     <div className={`mlb-data-container ${loading ? 'loading-background' : ''}`}>
@@ -254,9 +244,6 @@ function MLBData() {
           isTeamsMenuOpen={isTeamsMenuOpen}
           setIsTeamsMenuOpen={setIsTeamsMenuOpen}
           mlbTeams={mlbTeams}
-          handleTeamChange={handleTeamChange}
-          handleSelectAll={handleSelectAll}
-          handleDeselectAll={handleDeselectAll}
           teamsMenuRef={teamsMenuRef}
           todayGames={todayGames}
           gameBackgroundColors={gameBackgroundColors}

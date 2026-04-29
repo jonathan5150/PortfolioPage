@@ -203,11 +203,11 @@ const LiveScoreBug = ({
         >
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <img
-              src={getTeamLogo(team.name)}
+              src={getTeamLogo(team.id)}
               alt={`${team.name} logo`}
               style={{
-                width: '37px',
-                height: '37px',
+                width: '40px',
+                height: '40px',
                 objectFit: 'contain',
                 filter,
                 userSelect: 'none',
@@ -254,7 +254,7 @@ const LiveScoreBug = ({
               fontWeight: 'bold',
               fontSize: '25px',
               color: '#fff',
-              width: '30px',
+              width: '40px',
               textAlign: 'center',
             }}
           >

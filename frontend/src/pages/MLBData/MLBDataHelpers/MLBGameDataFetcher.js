@@ -1,6 +1,27 @@
 import { format, subDays } from 'date-fns';
 import { throttleAsyncTasks } from '../../../utils/concurrency';
 
+const debugFetch = async (label, url) => {
+  const start = performance.now();
+
+  console.log(`🟡 START: ${label}`, url);
+
+  try {
+    const res = await fetch(url);
+    const ms = Math.round(performance.now() - start);
+
+    console.log(`🟢 DONE: ${label} — ${ms}ms — status ${res.status}`);
+
+    return res;
+  } catch (err) {
+    const ms = Math.round(performance.now() - start);
+
+    console.error(`🔴 FAILED: ${label} — ${ms}ms`, err);
+
+    throw err;
+  }
+};
+
 /** Normalize MLB gameType (default to regular) */
 const getGameType = (game) => (game?.gameType ? String(game.gameType) : 'R');
 
@@ -84,8 +105,9 @@ const fetchHitterSeason = async (playerId, gameType) => {
     `https://statsapi.mlb.com/api/v1/people/${playerId}` +
     `?hydrate=stats(group=[hitting],type=[season],season=2026,gameType=[${gameType}])`;
 
-  const res = await fetch(url);
+  const res = await debugFetch(`Hitter season ${playerId} ${gameType}`, url);
   const data = await res.json();
+
   return data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat || {};
 };
 
@@ -96,6 +118,7 @@ const fetchHitterStatsCombined = async (playerId) => {
       fetchHitterSeason(playerId, 'R'),
       fetchHitterSeason(playerId, 'P'),
     ]);
+
     return mergeHittingStats(reg, post);
   } catch {
     return {};
@@ -117,8 +140,9 @@ const fetchPitcherData = async (pitcherId, gameType = 'R') => {
     `https://statsapi.mlb.com/api/v1/people/${pitcherId}` +
     `?hydrate=stats(group=[pitching],type=[season],season=2026,gameType=[${gameType}])`;
 
-  const response = await fetch(url);
+  const response = await debugFetch(`Pitcher stats ${pitcherId} ${gameType}`, url);
   const data = await response.json();
+
   const stats = data.people?.[0]?.stats?.[0]?.splits?.[0]?.stat;
   const pitchHand = data.people?.[0]?.pitchHand?.code;
 
@@ -135,26 +159,26 @@ const fetchPitcherData = async (pitcherId, gameType = 'R') => {
 /** Pitcher "last five" starts across Regular + ALL postseason rounds (F,D,L,W), with fallbacks */
 const fetchPitcherLastFiveStarts = async (pitcherId, gameDate, getTeamAbbreviation) => {
   if (!pitcherId) return [];
+
   const beforeDay = new Date(gameDate).toISOString().split('T')[0];
 
   const fetchLogs = async (gameTypeParam) => {
     const url =
       `https://statsapi.mlb.com/api/v1/people/${pitcherId}/stats` +
       `?stats=gameLog&group=pitching&season=2026&gameType=${gameTypeParam}`;
-    const res = await fetch(url);
+
+    const res = await debugFetch(`Pitcher last five ${pitcherId} ${gameTypeParam}`, url);
     const data = await res.json();
+
     return data?.stats?.[0]?.splits || [];
   };
 
   try {
-    // Primary: explicit round codes to capture all postseason logs
     let splits = await fetchLogs('R,F,D,L,W');
 
-    // Fallbacks: some environments accept P; last resort R only
     if (!Array.isArray(splits) || splits.length === 0) splits = await fetchLogs('R,P');
     if (!Array.isArray(splits) || splits.length === 0) splits = await fetchLogs('R');
 
-    // strictly BEFORE current game to avoid including the same-day start
     const prior = (splits || [])
       .filter((g) => g.date < beforeDay)
       .sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -215,7 +239,7 @@ export const fetchGameData = async ({
       `stats(group=[hitting],type=[season],season=2026,gameType=[R,P])` +
       `&startDate=${todayFormatted}&endDate=${todayFormatted}`;
 
-    const response = await fetch(url);
+    const response = await debugFetch('Main schedule', url);
     const data = await response.json();
 
     /** Last 20 */
@@ -223,11 +247,13 @@ export const fetchGameData = async ({
       const startDate = format(subDays(new Date(selectedDateValue), 180), 'yyyy-MM-dd');
       const endDate = format(subDays(new Date(selectedDateValue), 1), 'yyyy-MM-dd');
 
-      const gamesResponse = await fetch(
-        `https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1&startDate=${startDate}&endDate=${endDate}&teamId=${teamId}`
-      );
+      const lastTwentyUrl =
+        `https://statsapi.mlb.com/api/v1/schedule?hydrate=team,lineups&sportId=1` +
+        `&startDate=${startDate}&endDate=${endDate}&teamId=${teamId}`;
 
+      const gamesResponse = await debugFetch(`Last 20 games team ${teamId}`, lastTwentyUrl);
       const gamesData = await gamesResponse.json();
+
       const games = gamesData.dates?.flatMap((date) => date.games) || [];
 
       return games
@@ -252,7 +278,9 @@ export const fetchGameData = async ({
       const filteredRoster = [];
 
       try {
-        const res = await fetch(`https://statsapi.mlb.com/api/v1/teams/${teamId}/roster/40Man`);
+        const rosterUrl = `https://statsapi.mlb.com/api/v1/teams/${teamId}/roster/40Man`;
+
+        const res = await debugFetch(`40-man roster ${teamName} ${teamId}`, rosterUrl);
         const rosterData = await res.json();
 
         const batters = rosterData.roster.filter(
@@ -262,13 +290,17 @@ export const fetchGameData = async ({
         const playerIds = batters.map((b) => b.person.id);
         const idString = playerIds.join(',');
 
+        const seasonUrlR =
+          `https://statsapi.mlb.com/api/v1/people?personIds=${idString}` +
+          `&hydrate=stats(group=[hitting],type=[season],season=2026,gameType=[R])`;
+
+        const seasonUrlP =
+          `https://statsapi.mlb.com/api/v1/people?personIds=${idString}` +
+          `&hydrate=stats(group=[hitting],type=[season],season=2026,gameType=[P])`;
+
         const [seasonResR, seasonResP] = await Promise.all([
-          fetch(
-            `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2026,gameType=[R])`
-          ),
-          fetch(
-            `https://statsapi.mlb.com/api/v1/people?personIds=${idString}&hydrate=stats(group=[hitting],type=[season],season=2026,gameType=[P])`
-          ),
+          debugFetch(`Team hitter season R ${teamName} ${teamId}`, seasonUrlR),
+          debugFetch(`Team hitter season P ${teamName} ${teamId}`, seasonUrlP),
         ]);
 
         const [seasonDataR, seasonDataP] = await Promise.all([
@@ -278,9 +310,11 @@ export const fetchGameData = async ({
 
         const mapFrom = (people) => {
           const m = {};
+
           for (const person of people?.people || []) {
             m[person.id] = person.stats?.[0]?.splits?.[0]?.stat || {};
           }
+
           return m;
         };
 
@@ -288,6 +322,7 @@ export const fetchGameData = async ({
         const mapP = mapFrom(seasonDataP);
 
         const seasonStatsMap = {};
+
         for (const pid of playerIds) {
           seasonStatsMap[pid] = mergeHittingStats(mapR[pid], mapP[pid]);
         }
@@ -303,8 +338,9 @@ export const fetchGameData = async ({
             `?stats=gameLog&group=hitting&season=2026&gameType=R,P`;
 
           try {
-            const logRes = await fetch(logUrl);
+            const logRes = await debugFetch(`Batter log ${fullName} ${playerId}`, logUrl);
             const logData = await logRes.json();
+
             const splits = logData.stats?.[0]?.splits || [];
 
             const filtered = splits
@@ -331,6 +367,7 @@ export const fetchGameData = async ({
             });
           } catch (err) {
             console.warn(`Failed to load logs for ${fullName}:`, err);
+
             filteredRoster.push({
               ...batter,
               seasonStats: seasonStatsMap[playerId] || {},
@@ -346,14 +383,24 @@ export const fetchGameData = async ({
       return { logs, roster: filteredRoster };
     };
 
+    console.log('⚾ Starting full game hydration...');
+
     const games = await Promise.all(
       (data.dates || []).map(async (gameDay) => {
         return {
           ...gameDay,
           games: await Promise.all(
             gameDay.games.map(async (game) => {
+              console.log(
+                `⚾ Hydrating game ${game.gamePk}: ${game.teams.away.team.name} @ ${game.teams.home.team.name}`
+              );
+
               const liveGameUrl = `https://statsapi.mlb.com/api/v1.1/game/${game.gamePk}/feed/live`;
-              const gameData = await fetch(liveGameUrl).then((res) => res.json());
+
+              const gameData = await debugFetch(`Live feed ${game.gamePk}`, liveGameUrl).then(
+                (res) => res.json()
+              );
+
               const gameType = getGameType(game);
 
               const awayPitcherId = game.teams.away.probablePitcher?.id;
@@ -414,6 +461,8 @@ export const fetchGameData = async ({
                 game
               );
 
+              console.log(`✅ Finished hydrating game ${game.gamePk}`);
+
               return {
                 ...game,
                 liveData: gameData,
@@ -451,7 +500,10 @@ export const fetchGameData = async ({
       })
     );
 
+    console.log('✅ Finished full game hydration. Building state...');
+
     const backgroundColors = {};
+
     games.forEach((gameDay) => {
       gameDay.games.forEach((game) => {
         const gamePk = game.gamePk;
@@ -460,6 +512,7 @@ export const fetchGameData = async ({
 
         const getTeamBackgroundColor = (teamId) => {
           const isFinished = ['F', 'O'].includes(statusCode);
+
           if (!statusCode || !isFinished) return 'rgba(85, 85, 85, 1)';
 
           const homeScore = currentGameData.liveData.linescore.teams.home.runs;
@@ -514,6 +567,7 @@ export const fetchGameData = async ({
     setTodayGames(games);
 
     const liveGameDataMap = {};
+
     for (const gameDay of games) {
       for (const game of gameDay.games) {
         liveGameDataMap[game.gamePk] = game.liveData;
@@ -521,7 +575,11 @@ export const fetchGameData = async ({
     }
 
     setLiveGameData(liveGameDataMap);
+
+    console.log('✅ Turning loading off now.');
     setLoading(false);
+
+    console.log('⚾ Starting background batter log fetch...');
 
     (async () => {
       const batterLogs = {};
@@ -538,6 +596,7 @@ export const fetchGameData = async ({
                   game.gameDate,
                   getTeamAbbreviation
                 );
+
                 batterLogs[team.id] = { logs, roster };
               } catch (err) {
                 console.warn(`Skipping ${team.name} due to error`, err);
@@ -548,6 +607,8 @@ export const fetchGameData = async ({
       }
 
       await Promise.all(teamFetchTasks);
+
+      console.log('✅ Finished background batter log fetch.');
       setBatterGameLogs(batterLogs);
     })();
   } catch (error) {

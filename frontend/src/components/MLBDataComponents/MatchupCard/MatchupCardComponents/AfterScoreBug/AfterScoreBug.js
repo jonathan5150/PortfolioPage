@@ -147,11 +147,11 @@ const AfterScoreBug = ({
         >
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
             <img
-              src={getTeamLogo(teamName)}
+              src={getTeamLogo(team.id)}
               alt={`${team.name} logo`}
               style={{
-                width: '37px',
-                height: '37px',
+                width: '40px',
+                height: '40px',
                 objectFit: 'contain',
 
                 filter, // 👈 applies per team
@@ -203,7 +203,7 @@ const AfterScoreBug = ({
             style={{
               fontWeight: 'bold',
               fontSize: '25px',
-              width: '30px',
+              width: '40px',
               textAlign: 'center',
             }}
           >
