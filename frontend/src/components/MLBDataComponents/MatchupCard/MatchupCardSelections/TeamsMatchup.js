@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import teamPrimaryColors from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
+import teamPrimaryColors, { washOut } from '../MatchupCardComponents/mlbUtils/teamPrimaryColors';
 
 const containerStyle = {
   width: '100%',
@@ -45,31 +45,37 @@ const getSideValueStyle = (align) => ({
 });
 
 const getWinnerRowBackground = (winner, awayTeamName, homeTeamName) => {
+  const rowBg = 'rgba(30, 30, 30, 0.55)';
+
   if (winner === 'away') {
-    const color = teamPrimaryColors[awayTeamName] || 'rgba(181, 152, 65, 0.35)';
+    const base = teamPrimaryColors[awayTeamName];
+    if (!base) return {};
+
+    const washed = washOut(base, 0.1);
 
     return {
       background: `linear-gradient(
         to right,
-        ${color} 0%,
-        rgba(30, 30, 30, 0.35) 45%,
-        rgba(30, 30, 30, 0.15) 50%,
-        rgba(30, 30, 30, 0.35) 55%,
+        ${washed} 0%,
+        ${washed.replace(/[\d.]+\)$/, '0.35)')} 5%,
+        ${rowBg} 45%,
         transparent 100%
       )`,
     };
   }
 
   if (winner === 'home') {
-    const color = teamPrimaryColors[homeTeamName] || 'rgba(181, 152, 65, 0.35)';
+    const base = teamPrimaryColors[homeTeamName];
+    if (!base) return {};
+
+    const washed = washOut(base, 0.1);
 
     return {
       background: `linear-gradient(
         to left,
-        ${color} 0%,
-        rgba(30, 30, 30, 0.35) 45%,
-        rgba(30, 30, 30, 0.15) 50%,
-        rgba(30, 30, 30, 0.35) 55%,
+        ${washed} 0%,
+        ${washed.replace(/[\d.]+\)$/, '0.35)')} 18%,
+        ${rowBg} 45%,
         transparent 100%
       )`,
     };
@@ -195,9 +201,9 @@ const getRankFillColor = (rankDisplay) => {
   return 'transparent';
 };
 
-const getRankStyle = (rankDisplay) => ({
+const getRankStyle = (rankDisplay, disableFill = false) => ({
   ...rankBaseStyle,
-  background: getRankFillColor(rankDisplay),
+  background: disableFill ? 'transparent' : getRankFillColor(rankDisplay),
   color: 'white',
 });
 
@@ -349,8 +355,9 @@ const buildRows = (awayTeam, homeTeam, standingsMap, rankMaps) => {
       awayCompare: awayStanding.divisionRank,
       homeCompare: homeStanding.divisionRank,
       lowerIsBetter: true,
-      awayRank: formatRank(rankMaps.divisionRank?.[awayTeam.id]),
-      homeRank: formatRank(rankMaps.divisionRank?.[homeTeam.id]),
+      awayRank: formatRank(awayStanding.divisionRank),
+      homeRank: formatRank(homeStanding.divisionRank),
+      disableRankFill: true,
     },
     {
       label: 'GB',
@@ -359,8 +366,9 @@ const buildRows = (awayTeam, homeTeam, standingsMap, rankMaps) => {
       awayCompare: awayStanding.gamesBack,
       homeCompare: homeStanding.gamesBack,
       lowerIsBetter: true,
-      awayRank: formatRank(rankMaps.gamesBack?.[awayTeam.id]),
-      homeRank: formatRank(rankMaps.gamesBack?.[homeTeam.id]),
+      awayRank: formatRank(awayStanding.divisionRank),
+      homeRank: formatRank(homeStanding.divisionRank),
+      disableRankFill: true,
     },
   ];
 };
@@ -438,9 +446,9 @@ const TeamsMatchup = ({ game, teamMatchupData }) => {
               }}
             >
               <div style={getSideValueStyle('left')}>{row.awayDisplay}</div>
-              <div style={getRankStyle(row.awayRank)}>{row.awayRank}</div>
+              <div style={getRankStyle(row.awayRank, row.disableRankFill)}>{row.awayRank}</div>
               <div style={labelStyle}>{row.label}</div>
-              <div style={getRankStyle(row.homeRank)}>{row.homeRank}</div>
+              <div style={getRankStyle(row.homeRank, row.disableRankFill)}>{row.homeRank}</div>
               <div style={getSideValueStyle('right')}>{row.homeDisplay}</div>
             </div>
           </React.Fragment>
