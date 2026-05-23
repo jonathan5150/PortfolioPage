@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import './MLBData.scss';
 import { format } from 'date-fns';
 import Cookies from 'js-cookie';
@@ -15,13 +15,13 @@ function MLBData() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isTeamsMenuOpen, setIsTeamsMenuOpen] = useState(false);
   const [selectedTeams, setSelectedTeams] = useState(null);
-  const [visibleGames, setVisibleGames] = useState([]);
   const [liveGameData, setLiveGameData] = useState({});
   const [gameBackgroundColors, setGameBackgroundColors] = useState({});
   const [numGamesToShow, setNumGamesToShow] = useState({});
   const teamsMenuRef = useRef();
   const [userPicks, setUserPicks] = useState({});
   const [batterGameLogs, setBatterGameLogs] = useState({});
+
   const [teamMatchupData, setTeamMatchupData] = useState({
     teamStatsMap: {},
     standingsMap: {},
@@ -32,6 +32,10 @@ function MLBData() {
     key: 'fullName',
     direction: 'asc',
   });
+
+  const selectedSeason = useMemo(() => {
+    return new Date(selectedDate).getFullYear();
+  }, [selectedDate]);
 
   const getTeamAbbreviation = useCallback(
     (teamId) => {
@@ -44,6 +48,36 @@ function MLBData() {
   const getTeamLogo = (teamId) => {
     return `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${teamId}.svg`;
   };
+
+  const visibleGames = useMemo(() => {
+    if (!Array.isArray(selectedTeams)) return [];
+
+    const selectedDateStr = format(new Date(selectedDate), 'yyyy-MM-dd');
+
+    const getEffectiveDate = (game) => {
+      const detailedState = game.liveData?.gameData?.status?.detailedState;
+      const originalDate = game.liveData?.gameData?.datetime?.originalDate;
+      const originalDateStr = originalDate
+        ? format(new Date(originalDate), 'yyyy-MM-dd')
+        : null;
+
+      if (detailedState?.includes('Postponed') && selectedDateStr === originalDateStr) {
+        return new Date(originalDate);
+      }
+
+      return new Date(game.gameDate);
+    };
+
+    return todayGames
+      .flatMap((date) =>
+        date.games.filter(
+          (game) =>
+            selectedTeams.includes(game.teams.away.team.id) ||
+            selectedTeams.includes(game.teams.home.team.id)
+        )
+      )
+      .sort((a, b) => getEffectiveDate(a) - getEffectiveDate(b));
+  }, [selectedTeams, todayGames, selectedDate]);
 
   useEffect(() => {
     const savedPicks = Cookies.get('userPicks');
@@ -147,12 +181,11 @@ function MLBData() {
   }, []);
 
   useEffect(() => {
-    const season = new Date(selectedDate).getFullYear();
     let active = true;
 
     const loadTeamMatchupData = async () => {
       try {
-        const data = await fetchTeamMatchupData(season);
+        const data = await fetchTeamMatchupData(selectedSeason);
 
         if (active) {
           setTeamMatchupData(data);
@@ -175,10 +208,10 @@ function MLBData() {
     return () => {
       active = false;
     };
-  }, [selectedDate]);
+  }, [selectedSeason]);
 
   useEffect(() => {
-    if (!mlbTeams.length || selectedTeams === null) return;
+    if (!mlbTeams.length) return;
 
     const initializeData = async () => {
       await fetchGameData({
@@ -186,7 +219,6 @@ function MLBData() {
         getTeamAbbreviation,
         setGameBackgroundColors,
         setTodayGames,
-        setVisibleGames,
         setBatterGameLogs,
         setLiveGameData,
         setLoading,
@@ -194,36 +226,7 @@ function MLBData() {
     };
 
     initializeData();
-  }, [selectedDate, getTeamAbbreviation, mlbTeams.length, selectedTeams]);
-
-  useEffect(() => {
-    if (!Array.isArray(selectedTeams)) return;
-
-    const selectedDateStr = format(new Date(selectedDate), 'yyyy-MM-dd');
-
-    const getEffectiveDate = (game) => {
-      const detailedState = game.liveData?.gameData?.status?.detailedState;
-      const originalDate = game.liveData?.gameData?.datetime?.originalDate;
-      const originalDateStr = originalDate ? format(new Date(originalDate), 'yyyy-MM-dd') : null;
-
-      if (detailedState?.includes('Postponed') && selectedDateStr === originalDateStr) {
-        return new Date(originalDate);
-      }
-
-      return new Date(game.gameDate);
-    };
-
-    const filtered = todayGames.flatMap((date) =>
-      date.games.filter(
-        (game) =>
-          selectedTeams.includes(game.teams.away.team.id) ||
-          selectedTeams.includes(game.teams.home.team.id)
-      )
-    );
-
-    const sorted = filtered.sort((a, b) => getEffectiveDate(a) - getEffectiveDate(b));
-    setVisibleGames(sorted);
-  }, [selectedTeams, todayGames, selectedDate]);
+  }, [selectedDate, getTeamAbbreviation, mlbTeams.length]);
 
   useEffect(() => {
     if (!todayGames.length) return;
@@ -283,13 +286,17 @@ function MLBData() {
 
   const handleTeamChange = (teamId) => {
     setSelectedTeams((prevSelectedTeams) => {
-      const safePrevSelectedTeams = Array.isArray(prevSelectedTeams) ? prevSelectedTeams : [];
+      const safePrevSelectedTeams = Array.isArray(prevSelectedTeams)
+        ? prevSelectedTeams
+        : [];
 
       const updatedSelectedTeams = safePrevSelectedTeams.includes(teamId)
         ? safePrevSelectedTeams.filter((id) => id !== teamId)
         : [...safePrevSelectedTeams, teamId];
 
-      Cookies.set('selectedTeams', JSON.stringify(updatedSelectedTeams), { expires: 399 });
+      Cookies.set('selectedTeams', JSON.stringify(updatedSelectedTeams), {
+        expires: 399,
+      });
 
       return updatedSelectedTeams;
     });
