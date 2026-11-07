@@ -6,6 +6,7 @@ const https = require('https');
 const RULES = {
   '/espn/site': 'https://site.api.espn.com',
   '/espn/web': 'https://site.web.api.espn.com',
+  '/espn/core': 'https://sports.core.api.espn.com',
   '/nflverse': 'https://github.com/nflverse/nflverse-data/releases/download',
 };
 

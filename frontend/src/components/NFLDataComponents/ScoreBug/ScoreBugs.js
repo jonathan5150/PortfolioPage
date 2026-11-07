@@ -1,6 +1,7 @@
 import React from 'react';
 import TeamCell, { useLongPress } from './TeamCell';
 import Linescore from './Linescore';
+import { headshotUrl } from '../../../pages/NFLData/NFLDataApi/endpoints';
 
 // Three score bug variants, matching the MLB app's Before / Live / After bugs.
 
@@ -49,7 +50,60 @@ export const formatPeriod = (period) => (period > 4 ? (period === 5 ? 'OT' : `${
 
 const passingLeader = (competitor) => competitor?.leaders?.find((l) => /passing/i.test(l.category));
 
+// "154/232, 1795 YDS, 12 TD, 4 INT" -> "1795 YDS, 12 TD, 4 INT"
+const qbStatLine = (value) => String(value || '').replace(/^\s*\d+\/\d+\s*,\s*/, '');
+
 // ---------- Pre-game ----------
+
+// "KC -9.5" -> KC shows -9.5 and the other team +9.5; "EVEN" -> PK for both.
+export const spreadForTeam = (details, abbreviation) => {
+  const text = String(details || '').trim();
+  if (!text) return null;
+  if (/^(even|pk|pick)/i.test(text)) return 'PK';
+  const match = text.match(/^([A-Z]{2,4})\s+([-+]?\d+(?:\.\d+)?)$/);
+  if (!match) return null;
+  const line = Math.abs(Number(match[2]));
+  if (line === 0) return 'PK';
+  return match[1] === abbreviation ? `-${line}` : `+${line}`;
+};
+
+const playersBoxStyle = (corner) => ({
+  ...infoBoxStyle(corner),
+  justifyContent: 'flex-start',
+  gap: '5px',
+  padding: '5px 8px 5px 5px',
+});
+
+const PlayerRow = ({ label, name, statLine, headshot }) => (
+  <div className="player-row">
+    <div className="player-headshot">
+      {headshot && (
+        <img
+          src={headshot}
+          alt=""
+          draggable={false}
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      )}
+    </div>
+    <div className="player-text">
+      <div className="ellipsis">
+        <span className="player-name">{name || 'N/A'}</span> <span className="player-pos">{label}</span>
+      </div>
+      {statLine && <div className="ellipsis player-stat-line">{statLine}</div>}
+    </div>
+  </div>
+);
+
+const PlayersBox = ({ rows, corner }) => (
+  <div style={playersBoxStyle(corner)}>
+    {rows.map((row) => (
+      <PlayerRow key={row.label} {...row} />
+    ))}
+  </div>
+);
 
 export const PreGameScoreBug = ({ game, starredTeamId, onStar, onToggle }) => {
   const longPress = useLongPress(onStar);
@@ -57,25 +111,20 @@ export const PreGameScoreBug = ({ game, starredTeamId, onStar, onToggle }) => {
     ? new Date(game.date).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })
     : 'TBD';
 
-  const renderQbBox = (competitor, corner) => {
+  const rows = (side) => {
+    const competitor = game[side];
     const qb = passingLeader(competitor);
-    return (
-      <div style={infoBoxStyle(corner)}>
-        {qb ? (
-          <>
-            <div className="ellipsis">
-              <b>QB:</b> {qb.athleteFullName || qb.athleteName}
-            </div>
-            <div className="ellipsis" style={{ opacity: 0.85 }}>{qb.value}</div>
-          </>
-        ) : (
-          <div className="ellipsis">
-            <b>QB:</b> N/A
-          </div>
-        )}
-      </div>
-    );
+    return [
+      {
+        label: 'QB',
+        name: qb ? qb.athleteFullName || qb.athleteName : null,
+        statLine: qb ? qbStatLine(qb.value) : null,
+        headshot: qb?.athleteId ? headshotUrl(qb.athleteId) : null,
+      },
+    ];
   };
+  const away = rows('away');
+  const home = rows('home');
 
   return (
     <div
@@ -86,22 +135,26 @@ export const PreGameScoreBug = ({ game, starredTeamId, onStar, onToggle }) => {
     >
       <div className="kickoff-tab">
         {game.status.isPostponed ? game.status.shortDetail : kickoff}
-        {game.broadcast ? ` · ${game.broadcast}` : ''}
-        {game.odds?.details ? ` · ${game.odds.details}` : ''}
       </div>
 
-      {['away', 'home'].map((side) => (
-        <TeamCell
-          key={side}
-          side={side}
-          competitor={game[side]}
-          score="-"
-          isStarred={starredTeamId === game[side]?.teamId}
-          longPress={longPress}
-        />
-      ))}
-      {renderQbBox(game.away, 'left')}
-      {renderQbBox(game.home, 'right')}
+      {['away', 'home'].map((side) => {
+        const spread = spreadForTeam(game.odds?.details, game[side]?.team?.abbreviation);
+        const moneyLine = game.odds?.[`${side}MoneyLine`] || null;
+        return (
+          <TeamCell
+            key={side}
+            side={side}
+            competitor={game[side]}
+            score={spread || (moneyLine ? 'PK' : '-')}
+            scoreIsSpread={Boolean(spread || moneyLine)}
+            subScore={moneyLine ? `ML ${moneyLine}` : null}
+            isStarred={starredTeamId === game[side]?.teamId}
+            longPress={longPress}
+          />
+        );
+      })}
+      <PlayersBox rows={away} corner="left" />
+      <PlayersBox rows={home} corner="right" />
     </div>
   );
 };

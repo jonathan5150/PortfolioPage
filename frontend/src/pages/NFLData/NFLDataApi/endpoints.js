@@ -4,6 +4,7 @@
 
 const SITE = 'https://site.api.espn.com/apis/site/v2/sports/football/nfl';
 const SITE_WEB = 'https://site.web.api.espn.com/apis/common/v3/sports/football/nfl';
+const CORE = 'https://sports.core.api.espn.com/v2/sports/football/leagues/nfl';
 const STANDINGS = 'https://site.api.espn.com/apis/v2/sports/football/nfl/standings';
 
 // nflverse publishes season files as GitHub release assets. Browsers can be blocked
@@ -51,6 +52,15 @@ export const espnUrls = {
       seasontype: seasonType,
       limit: 32,
     })}`,
+
+  // Sportsbook lines (current + opening; closing lines once the game is final).
+  eventOdds: (eventId) => `${CORE}/events/${eventId}/competitions/${eventId}/odds`,
+
+  // Team depth chart (used to find the current starting QB).
+  depthChart: (teamId, season) => `${CORE}/seasons/${season}/teams/${teamId}/depthcharts`,
+
+  // ESPN FPI win probability.
+  eventPredictor: (eventId) => `${CORE}/events/${eventId}/competitions/${eventId}/predictor`,
 
   standings: (season) => `${STANDINGS}${query({ season })}`,
 };

@@ -3,15 +3,24 @@
 // jonathanrainey.dev can't call it directly. The page requests
 //   /espn/site/apis/...  -> https://site.api.espn.com/apis/...
 //   /espn/web/apis/...   -> https://site.web.api.espn.com/apis/...
+//   /espn/core/v2/...    -> https://sports.core.api.espn.com/v2/...  (betting lines)
 // and this function fetches it server-side.
 
 const HOSTS = {
   site: 'https://site.api.espn.com',
   web: 'https://site.web.api.espn.com',
+  core: 'https://sports.core.api.espn.com',
+};
+
+// Each host only exposes its own API root; this is not an open proxy.
+const PATH_PATTERNS = {
+  site: /^apis\/[\w\-/.]+$/,
+  web: /^apis\/[\w\-/.]+$/,
+  core: /^v2\/sports\/football\/[\w\-/.]+$/,
 };
 
 // Live endpoints get a short edge cache; everything else can be cached longer.
-const ttlFor = (path) => (/\/(scoreboard|summary)\b/.test(path) ? 10 : 300);
+const ttlFor = (path) => (/\/(scoreboard|summary|odds|predictor)\b/.test(path) ? 10 : 300);
 
 export async function onRequestGet({ request, params }) {
   const parts = Array.isArray(params.path) ? params.path : [params.path];
@@ -19,8 +28,7 @@ export async function onRequestGet({ request, params }) {
   const base = HOSTS[hostKey];
   const path = rest.join('/');
 
-  // Only proxy ESPN's API paths; this is not an open proxy.
-  if (!base || !/^apis\/[\w\-/.]+$/.test(path)) {
+  if (!base || !PATH_PATTERNS[hostKey].test(path)) {
     return new Response('Not found', { status: 404 });
   }
 

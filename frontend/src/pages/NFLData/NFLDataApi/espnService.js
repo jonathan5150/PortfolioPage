@@ -10,6 +10,7 @@ import {
   parseTeamStatsByTeam,
   parseStandings,
   parseTeamSchedule,
+  parseStartingQb,
 } from './espnParsers';
 
 const MINUTE = 60 * 1000;
@@ -29,6 +30,9 @@ export const getTeamSchedule = async (teamId, season, seasonType = 2) =>
   parseTeamSchedule(
     await fetchJson(espnUrls.teamSchedule(teamId, season, seasonType), { ttlMs: 5 * MINUTE })
   );
+
+export const getStartingQbId = async (teamId, season) =>
+  parseStartingQb(await fetchJson(espnUrls.depthChart(teamId, season), { ttlMs: 30 * MINUTE }));
 
 export const getRoster = async (teamId) =>
   parseRoster(await fetchJson(espnUrls.roster(teamId), { ttlMs: 30 * MINUTE }));

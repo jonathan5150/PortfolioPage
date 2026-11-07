@@ -129,6 +129,24 @@ const parseLeaders = (leaders = []) =>
     })
     .filter(Boolean);
 
+// Scoreboard odds: spread text, total, and each side's moneyline ("+145" / "-175").
+const parseScoreboardOdds = (o) => {
+  const ml = (side) => {
+    const raw = o.moneyline?.[side]?.close?.odds ?? o[`${side}TeamOdds`]?.moneyLine ?? null;
+    if (raw === null || raw === undefined || raw === '') return null;
+    const text = String(raw).trim();
+    if (/^even$/i.test(text)) return '+100';
+    const n = toNumber(text.replace('+', ''));
+    return n === null ? null : n > 0 ? `+${n}` : String(n);
+  };
+  return {
+    details: o.details || '',
+    overUnder: o.overUnder ?? null,
+    awayMoneyLine: ml('away'),
+    homeMoneyLine: ml('home'),
+  };
+};
+
 export const parseEvent = (event) => {
   const comp = event?.competitions?.[0] || {};
   const competitors = (comp.competitors || []).map(parseCompetitor);
@@ -147,14 +165,24 @@ export const parseEvent = (event) => {
     status,
     venue: comp.venue?.fullName || '',
     broadcast: (comp.broadcasts || []).flatMap((b) => b.names || []).join(', '),
-    odds: comp.odds?.[0]
-      ? { details: comp.odds[0].details || '', overUnder: comp.odds[0].overUnder ?? null }
-      : null,
+    odds: comp.odds?.[0] ? parseScoreboardOdds(comp.odds[0]) : null,
     away,
     home,
     situation: status.state === 'in' ? parseSituation(comp.situation, competitors) : null,
     leaders: parseLeaders(comp.leaders),
   };
+};
+
+// core API depth chart -> athlete id of the QB listed first, or null.
+export const parseStartingQb = (json) => {
+  for (const chart of json?.items || []) {
+    const qb = chart?.positions?.qb;
+    if (!qb?.athletes?.length) continue;
+    const starter = [...qb.athletes].sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99))[0];
+    const id = starter?.athlete?.id ?? String(starter?.athlete?.$ref || '').match(/athletes\/(\d+)/)?.[1];
+    if (id) return String(id);
+  }
+  return null;
 };
 
 // A team's schedule (teams/{id}/schedule) uses the same event shape as the scoreboard.

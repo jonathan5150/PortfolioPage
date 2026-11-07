@@ -38,6 +38,7 @@ const fetchWithTimeout = async (url, timeoutMs) => {
 const PROXY_RULES = [
   { origin: 'https://site.api.espn.com/', prefix: '/espn/site/' },
   { origin: 'https://site.web.api.espn.com/', prefix: '/espn/web/' },
+  { origin: 'https://sports.core.api.espn.com/', prefix: '/espn/core/' },
   { origin: 'https://github.com/nflverse/nflverse-data/releases/download/', prefix: '/nflverse/' },
 ];
 

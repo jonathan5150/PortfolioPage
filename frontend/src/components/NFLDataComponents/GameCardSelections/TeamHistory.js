@@ -48,7 +48,6 @@ const HistoryColumn = ({ g, teamId, width }) => {
           </div>
         ))}
       </div>
-      <div className={`history-result ${won ? 'w' : tie ? 't' : 'l'}`}>{won ? 'W' : tie ? 'T' : 'L'}</div>
     </div>
   );
 };
