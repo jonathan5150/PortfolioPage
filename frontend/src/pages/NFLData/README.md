@@ -40,6 +40,15 @@ components/NFLDataComponents/
 
 ESPN's API is unofficial and can change without notice; all URLs live in `endpoints.js` and all parsing in `espnParsers.js`.
 
+## Same-origin proxy (CORS)
+
+Some ESPN endpoints don't allow browser requests from other domains, so the app requests `/espn/site/...`, `/espn/web/...` and `/nflverse/...` on its own domain:
+
+- **Production:** Cloudflare Pages Functions in `frontend/functions/` fetch from ESPN/GitHub server-side (only ESPN `apis/` paths and nflverse season CSVs are allowed). `functions/` at the repo root re-exports them, so they deploy whichever folder the Pages project uses as its root.
+- **`npm start`:** `src/setupProxy.js` serves the same paths from the dev server.
+
+`http.js` tries the proxy first and falls back to calling the host directly if the proxy isn't available.
+
 ## nflverse files
 
 Browsers may block nflverse's GitHub release downloads (CORS on the redirect). To serve them from your own domain instead:
