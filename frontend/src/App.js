@@ -10,6 +10,7 @@ import Contact from './pages/Contact';
 import HerbicideCalculatorParentPage from './pages/HerbicideCalculatorParentPage';
 import HerbicideCalculator from './pages//HerbicideCalculator/HerbicideCalculator';
 import MLBData from './pages/MLBData/MLBData';
+import NFLData from './pages/NFLData/NFLData';
 import Header from './components/PortfolioComponents/Header';
 
 
@@ -58,6 +59,7 @@ function Main() {
       </div>
       <Routes>
         <Route path="/mlbdata" element={<MLBData />} />
+        <Route path="/nfldata" element={<NFLData />} />
       </Routes>
     </div>
   );
