@@ -78,16 +78,21 @@ const TeamCell = ({
         style={{
           border: isStarred ? '2px solid #c49410' : `2px solid ${getTeamBorderColor(team)}`,
           borderRadius: radius,
+          overflow: 'hidden',
           opacity: dimmed ? 0.6 : 1,
         }}
       >
-        {team?.logo ? (
-          <img src={team.logo} alt={`${team.displayName} logo`} className="team-logo" draggable={false} />
-        ) : (
-          <div className="team-logo" />
+        {team?.logo && (
+          <img
+            src={team.logo}
+            alt=""
+            aria-hidden="true"
+            className={`team-logo-watermark ${side}`}
+            draggable={false}
+          />
         )}
 
-        <div className="team-abbr-block">
+        <div className="team-abbr-block" title={team?.displayName}>
           <div className="abbreviation">
             {team?.abbreviation}
             {hasPossession && <span className="possession-ball" title="Possession">●</span>}

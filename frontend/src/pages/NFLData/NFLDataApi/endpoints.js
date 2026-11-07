@@ -34,6 +34,9 @@ export const espnUrls = {
 
   summary: (eventId) => `${SITE}/summary${query({ event: eventId })}`,
 
+  teamSchedule: (teamId, season, seasonType = 2) =>
+    `${SITE}/teams/${teamId}/schedule${query({ season, seasontype: seasonType })}`,
+
   roster: (teamId) => `${SITE}/teams/${teamId}/roster`,
 
   athleteGameLog: (athleteId, season) =>

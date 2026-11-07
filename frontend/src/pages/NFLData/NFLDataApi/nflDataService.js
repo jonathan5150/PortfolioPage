@@ -12,6 +12,7 @@ export {
   getPlayerGameLog,
   getRoster,
   getStandings,
+  getTeamSchedule,
   SKILL_POSITIONS,
 } from './espnService';
 
