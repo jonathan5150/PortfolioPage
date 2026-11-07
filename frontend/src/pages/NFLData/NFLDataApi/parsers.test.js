@@ -9,7 +9,8 @@ import {
 import { parsePlayerSeasonCsv, parseCsv } from './nflverseParsers';
 import { buildRankings, rankValues, ESPN_METRICS } from './teamRankings';
 import { seasonLineFromGameLog } from './espnService';
-import { getPollInterval } from '../NFLData';
+import { getPollInterval, teamsFromEvents } from '../NFLData';
+import { toProxyUrl } from './http';
 import {
   teamsResponse,
   scoreboardResponse,
@@ -143,5 +144,25 @@ describe('live polling', () => {
     expect(getPollInterval([ev('pre', '2026-11-08T18:00:00Z')], now)).toBe(30000);
     expect(getPollInterval([ev('pre', '2026-11-09T18:00:00Z')], now)).toBeNull();
     expect(getPollInterval([ev('post')], now)).toBeNull();
+  });
+});
+
+describe('proxy routing', () => {
+  test('ESPN and nflverse URLs map to same-origin proxy paths', () => {
+    expect(toProxyUrl('https://site.api.espn.com/apis/site/v2/sports/football/nfl/teams?limit=40')).toBe(
+      '/espn/site/apis/site/v2/sports/football/nfl/teams?limit=40'
+    );
+    expect(toProxyUrl('https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/1/gamelog')).toBe(
+      '/espn/web/apis/common/v3/sports/football/nfl/athletes/1/gamelog'
+    );
+    expect(
+      toProxyUrl('https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_reg_2025.csv')
+    ).toBe('/nflverse/stats_player/stats_player_reg_2025.csv');
+    expect(toProxyUrl('/nfl-data/stats_player_reg_2025.csv')).toBeNull();
+  });
+
+  test('team list can be rebuilt from the scoreboard', () => {
+    const teams = teamsFromEvents(parseScoreboard(scoreboardResponse).events);
+    expect(teams.map((t) => t.abbreviation)).toEqual(['BUF', 'KC', 'NE', 'NYJ']);
   });
 });

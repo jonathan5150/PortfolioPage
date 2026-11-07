@@ -21,6 +21,17 @@ export const getPollInterval = (events, now = Date.now()) => {
   return kickoffSoon ? PREGAME_POLL_MS : null;
 };
 
+// Fallback team list built from the week's games (used if the teams endpoint fails).
+export const teamsFromEvents = (events) => {
+  const byId = new Map();
+  events.forEach((e) =>
+    [e.away?.team, e.home?.team].forEach((t) => {
+      if (t?.id && !byId.has(t.id)) byId.set(t.id, t);
+    })
+  );
+  return [...byId.values()].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
+};
+
 export const LoadingFootball = () => (
   <div className="loading">
     <div className="loading-football" role="img" aria-label="Loading">
@@ -66,9 +77,15 @@ function NFLData() {
 
     (async () => {
       try {
-        const [teamList, board] = await Promise.all([getTeams(), getScoreboard()]);
+        const [teamsResult, board] = await Promise.all([
+          getTeams().catch((err) => {
+            console.warn('Team list unavailable, using teams from the scoreboard:', err);
+            return null;
+          }),
+          getScoreboard(),
+        ]);
         if (!active) return;
-        setTeams(teamList);
+        setTeams(teamsResult?.length ? teamsResult : teamsFromEvents(board.events));
         setScoreboard(board);
         setCurrentSeason(board.season);
         setSelection({ season: board.season, seasonType: board.seasonType, week: board.week });
