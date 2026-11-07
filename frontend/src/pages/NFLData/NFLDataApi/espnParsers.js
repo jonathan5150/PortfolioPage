@@ -122,6 +122,7 @@ const parseLeaders = (leaders = []) =>
         label: group.shortDisplayName || group.displayName || group.name,
         athleteId: top.athlete?.id ? String(top.athlete.id) : null,
         athleteName: top.athlete?.shortName || top.athlete?.displayName || '',
+        athleteFullName: top.athlete?.displayName || top.athlete?.fullName || top.athlete?.shortName || '',
         teamId: top.team?.id ? String(top.team.id) : top.athlete?.team?.id ? String(top.athlete.team.id) : null,
         value: top.displayValue || '',
       };
@@ -142,7 +143,7 @@ export const parseEvent = (event) => {
     shortName: event?.shortName || '',
     week: event?.week?.number ?? null,
     season: event?.season?.year ?? null,
-    seasonType: event?.season?.type ?? null,
+    seasonType: event?.season?.type ?? event?.seasonType?.type ?? null,
     status,
     venue: comp.venue?.fullName || '',
     broadcast: (comp.broadcasts || []).flatMap((b) => b.names || []).join(', '),
@@ -155,6 +156,13 @@ export const parseEvent = (event) => {
     leaders: parseLeaders(comp.leaders),
   };
 };
+
+// A team's schedule (teams/{id}/schedule) uses the same event shape as the scoreboard.
+export const parseTeamSchedule = (json) =>
+  (json?.events || [])
+    .map(parseEvent)
+    .filter((e) => e.id && e.away && e.home)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
 
 // ESPN's calendar lists each season type (pre/regular/post) and the weeks inside it.
 export const parseCalendar = (json) => {

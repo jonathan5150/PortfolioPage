@@ -9,6 +9,7 @@ import {
   parseGameLog,
   parseTeamStatsByTeam,
   parseStandings,
+  parseTeamSchedule,
 } from './espnParsers';
 
 const MINUTE = 60 * 1000;
@@ -23,6 +24,11 @@ export const getScoreboard = async (params = {}, { live = false } = {}) =>
 
 export const getGameSummary = async (eventId, { live = false } = {}) =>
   parseSummary(await fetchJson(espnUrls.summary(eventId), { ttlMs: live ? 0 : 5 * MINUTE }));
+
+export const getTeamSchedule = async (teamId, season, seasonType = 2) =>
+  parseTeamSchedule(
+    await fetchJson(espnUrls.teamSchedule(teamId, season, seasonType), { ttlMs: 5 * MINUTE })
+  );
 
 export const getRoster = async (teamId) =>
   parseRoster(await fetchJson(espnUrls.roster(teamId), { ttlMs: 30 * MINUTE }));

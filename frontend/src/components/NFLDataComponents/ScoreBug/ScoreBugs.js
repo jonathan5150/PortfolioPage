@@ -64,7 +64,7 @@ export const PreGameScoreBug = ({ game, starredTeamId, onStar, onToggle }) => {
         {qb ? (
           <>
             <div className="ellipsis">
-              <b>QB:</b> {qb.athleteName}
+              <b>QB:</b> {qb.athleteFullName || qb.athleteName}
             </div>
             <div className="ellipsis" style={{ opacity: 0.85 }}>{qb.value}</div>
           </>
@@ -82,7 +82,7 @@ export const PreGameScoreBug = ({ game, starredTeamId, onStar, onToggle }) => {
       className="score-grid"
       onClick={onToggle}
       onClickCapture={longPress.suppressClick}
-      style={{ ...gridStyle, position: 'relative', paddingTop: '15px' }}
+      style={{ ...gridStyle, position: 'relative', paddingTop: '19px' }}
     >
       <div className="kickoff-tab">
         {game.status.isPostponed ? game.status.shortDetail : kickoff}
@@ -131,7 +131,7 @@ export const LiveScoreBug = ({ game, starredTeamId, onStar, onToggle, showLinesc
       className="score-grid"
       onClick={onToggle}
       onClickCapture={longPress.suppressClick}
-      style={{ ...gridStyle, padding: '5px 5px 0 5px' }}
+      style={gridStyle}
     >
       {['away', 'home'].map((side) => (
         <TeamCell
@@ -186,7 +186,7 @@ export const FinalScoreBug = ({ game, starredTeamId, onStar, onToggle, showLines
       className="score-grid"
       onClick={onToggle}
       onClickCapture={longPress.suppressClick}
-      style={{ ...gridStyle, position: 'relative', paddingTop: '15px' }}
+      style={{ ...gridStyle, position: 'relative', paddingTop: '19px' }}
     >
       <div className="kickoff-tab">{game.status.shortDetail || 'Final'}</div>
       {['away', 'home'].map((side) => (
