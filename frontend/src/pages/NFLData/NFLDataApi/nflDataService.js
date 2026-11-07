@@ -13,6 +13,7 @@ export {
   getRoster,
   getStandings,
   getTeamSchedule,
+  getStartingQbId,
   SKILL_POSITIONS,
 } from './espnService';
 

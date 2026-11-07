@@ -77,7 +77,7 @@ const NFLDataNavbar = ({
               setIsWeekMenuOpen(false);
             }}
           >
-            TEAMS <span className={`arrow ${isTeamsMenuOpen ? 'open' : 'closed'}`}>▼</span>
+            TEAMS
           </button>
 
           {isTeamsMenuOpen && (
@@ -112,7 +112,7 @@ const NFLDataNavbar = ({
               setIsTeamsMenuOpen(false);
             }}
           >
-            {weekLabel} <span className={`arrow ${isWeekMenuOpen ? 'open' : 'closed'}`}>▼</span>
+            {weekLabel}
           </button>
 
           <button

@@ -183,7 +183,82 @@
   margin-bottom: 8px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 8px;
+}
+
+.nfl-data-container .qb-stat-line {
+  font-size: 10px;
+  opacity: 0.85;
+}
+
+.nfl-data-container .player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.nfl-data-container .player-row + .player-row {
+  padding-top: 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.nfl-data-container .player-name {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.nfl-data-container .player-pos {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nfl-data-container .player-stat-line {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.nfl-data-container .player-headshot {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.nfl-data-container .player-headshot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  transform: scale(1.25) translateY(8%);
+  -webkit-user-drag: none;
+}
+
+.nfl-data-container .player-text {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.nfl-data-container .team-score.spread {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.05;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.nfl-data-container .team-moneyline {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
 }
 
 .nfl-data-container .live-dot {
@@ -538,38 +613,424 @@
 
 /* ---------- linescore ---------- */
 
-.nfl-data-container .scoreboard {
-  background-color: rgba(70, 70, 70, 0.8);
-  border: 2px solid #555555;
-  display: flex;
-  flex-direction: column;
-  padding: 5px;
-  border-radius: 6px;
+/* ---------- quarter scoreboard ---------- */
+
+.nfl-data-container .linescore {
+  background: linear-gradient(180deg, rgba(58, 58, 58, 0.95), rgba(36, 36, 36, 0.95));
+  border: 1.5px solid #555555;
+  border-radius: 8px;
+  padding: 4px 6px 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 6px rgba(0, 0, 0, 0.25);
+  font-variant-numeric: tabular-nums;
+  animation: nflFadeIn 0.4s ease-in-out;
 }
 
-.nfl-data-container .scoreboard-row {
-  display: flex;
-  width: 100%;
+.nfl-data-container .linescore-row {
+  display: grid;
+  align-items: center;
+  column-gap: 2px;
+  min-height: 28px;
 }
 
-.nfl-data-container .scoreboard-header {
-  opacity: 0.75;
+.nfl-data-container .linescore-row + .linescore-row:not(.linescore-head) {
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.nfl-data-container .scoreboard-cell {
-  flex: 1;
+.nfl-data-container .linescore-head {
+  min-height: 20px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.nfl-data-container .linescore-team {
   display: flex;
   align-items: center;
-  justify-content: center;
-  height: 21px;
-  font-size: 10pt;
-  opacity: 0;
-  animation: nflFadeIn 0.5s ease-in-out forwards;
+  gap: 6px;
+  padding-left: 7px;
+  height: 20px;
+  font-weight: 700;
+  font-size: 13px;
+  border-left: 3px solid var(--team-accent, transparent);
+  border-radius: 2px;
 }
 
-.nfl-data-container .scoreboard-cell.team-abbr {
-  flex: 2;
-  font-weight: bold;
+.nfl-data-container .linescore-head .linescore-team {
+  border-left-color: transparent;
+}
+
+.nfl-data-container .linescore-logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  -webkit-user-drag: none;
+}
+
+.nfl-data-container .linescore-cell {
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+  border-radius: 4px;
+  padding: 2px 0;
+}
+
+.nfl-data-container .linescore-cell.scored {
+  color: #fff;
+}
+
+.nfl-data-container .linescore-cell.current {
+  background: rgba(217, 72, 72, 0.18);
+  color: #fff;
+}
+
+.nfl-data-container .linescore-head .linescore-cell.current {
+  color: #ff8a8a;
+}
+
+.nfl-data-container .linescore-total {
+  justify-self: end;
+  min-width: 34px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nfl-data-container .linescore-head .linescore-total {
+  background: transparent;
+  font-size: 9px;
+  padding: 0 6px;
+}
+
+.nfl-data-container .linescore-row.leading .linescore-total {
+  background: rgba(196, 148, 16, 0.25);
+  color: #f5d16b;
+}
+
+/* ---------- betting ---------- */
+
+.nfl-data-container .betting-panel {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(30, 30, 30, 0.55);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.nfl-data-container .bet-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nfl-data-container .bet-section-title:first-child {
+  border-top: none;
+}
+
+.nfl-data-container .bet-provider {
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nfl-data-container .bet-message {
+  padding: 14px 10px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.7rem;
+}
+
+.nfl-data-container .bet-lines {
+  padding: 4px 8px 8px;
+}
+
+.nfl-data-container .bet-lines-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr 1fr 1fr;
+  column-gap: 6px;
+  align-items: stretch;
+  margin-top: 5px;
+}
+
+.nfl-data-container .bet-lines-head {
+  margin-top: 2px;
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.nfl-data-container .bet-team {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-left: 8px;
+  border-left: 3px solid #777777;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.nfl-data-container .bet-fav-tag {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(196, 148, 16, 0.3);
+  color: #f5d16b;
+}
+
+.nfl-data-container .bet-cell {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 5px 2px 4px;
+  text-align: center;
+  min-width: 0;
+}
+
+.nfl-data-container .bet-main {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.nfl-data-container .bet-sub {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  min-height: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nfl-data-container .bet-open {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.nfl-data-container .bet-final {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px 8px;
+}
+
+.nfl-data-container .bet-final-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nfl-data-container .bet-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(196, 148, 16, 0.22);
+  color: #f5d16b;
+}
+
+.nfl-data-container .bet-winprob {
+  padding: 0 10px 10px;
+}
+
+.nfl-data-container .bet-winprob-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.nfl-data-container .bet-winprob-title {
+  font-size: 0.5rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nfl-data-container .bet-winprob-bar {
+  display: flex;
+  height: 7px;
+  border-radius: 4px;
+  overflow: hidden;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nfl-data-container .bet-trends {
+  padding: 4px 0 2px;
+}
+
+.nfl-data-container .bet-trends-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 1fr;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 12px;
+  font-size: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.nfl-data-container .bet-trends-row:last-child {
+  border-bottom: none;
+}
+
+.nfl-data-container .bet-trends-head {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.nfl-data-container .bet-trends-head span:last-child {
+  text-align: right;
+}
+
+.nfl-data-container .bet-trends-label {
+  text-align: center;
+  font-size: 0.55rem;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.nfl-data-container .bet-trends-side.right {
+  text-align: right;
+}
+
+.nfl-data-container .bet-trend-val.hot {
+  color: #7fd68f;
+  font-weight: 600;
+}
+
+.nfl-data-container .bet-trend-val.cold {
+  color: #e48a8a;
+}
+
+.nfl-data-container .bet-dots {
+  display: inline-flex;
+  gap: 3px;
+  vertical-align: middle;
+}
+
+.nfl-data-container .bet-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nfl-data-container .bet-dot.W {
+  background: #5cb86c;
+}
+
+.nfl-data-container .bet-dot.L {
+  background: #c45656;
+}
+
+.nfl-data-container .bet-dot.P {
+  background: #b5a34a;
+}
+
+.nfl-data-container .bet-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 6px;
+  padding: 8px;
+}
+
+.nfl-data-container .bet-highlight {
+  position: relative;
+  padding: 7px 9px 8px 11px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-left: 3px solid #8a8a8a;
+}
+
+.nfl-data-container .bet-highlight.positive {
+  border-left-color: #5cb86c;
+}
+
+.nfl-data-container .bet-highlight.negative {
+  border-left-color: #c45656;
+}
+
+.nfl-data-container .bet-highlight.neutral {
+  border-left-color: #c49410;
+}
+
+.nfl-data-container .bet-highlight-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.nfl-data-container .bet-highlight-type {
+  font-size: 0.5rem;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nfl-data-container .bet-strength {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.nfl-data-container .bet-strength span {
+  width: 10px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.nfl-data-container .bet-strength span.on {
+  background: #c49410;
+}
+
+.nfl-data-container .bet-highlight-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.nfl-data-container .bet-highlight-text {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.82);
+  margin-top: 2px;
+}
+
+.nfl-data-container .bet-lean {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(196, 148, 16, 0.2);
+  color: #f5d16b;
+}
+
+.nfl-data-container .bet-disclaimer {
+  padding: 6px 10px 8px;
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
 }
 
 /* ---------- panels ---------- */
@@ -673,7 +1134,6 @@
   width: 100%;
 }
 
-.nfl-data-container .comparison-row,
 .nfl-data-container .scoring-play {
   display: grid;
   align-items: center;
@@ -683,11 +1143,6 @@
   font-weight: 500;
 }
 
-.nfl-data-container .comparison-row {
-  grid-template-columns: 1fr 90px 1fr;
-}
-
-.nfl-data-container .comparison-label,
 .nfl-data-container .ranking-label {
   font-size: 0.68rem;
   text-align: center;
@@ -814,20 +1269,6 @@
   font-weight: 700;
 }
 
-.nfl-data-container .history-result {
-  font-size: 9px;
-  font-weight: 700;
-  padding-top: 2px;
-}
-
-.nfl-data-container .history-result.w {
-  color: #e3b341;
-}
-
-.nfl-data-container .history-result.l {
-  opacity: 0.6;
-}
-
 .nfl-data-container .history-empty {
   font-size: 11px;
   opacity: 0.7;
@@ -866,6 +1307,21 @@
 
   .nfl-data-container .scoring-play {
     grid-template-columns: 46px 30px 1fr 38px;
+  }
+
+  .nfl-data-container .bet-trends-row {
+    grid-template-columns: 1fr 96px 1fr;
+    padding: 0 8px;
+  }
+
+  .nfl-data-container .bet-lines-row {
+    grid-template-columns: 0.9fr 1fr 1fr 1fr;
+    column-gap: 4px;
+  }
+
+  .nfl-data-container .linescore-team {
+    padding-left: 5px;
+    gap: 4px;
   }
 }
 

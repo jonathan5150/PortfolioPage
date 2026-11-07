@@ -40,10 +40,22 @@ export const useLongPress = (onLongPress, delay = 600) => {
   return { start, clear, suppressClick };
 };
 
+// Per-team tweaks for the faded background logo.
+const WATERMARK_STYLE = {
+  NYJ: { filter: 'grayscale(1) brightness(1.8)', opacity: 0.45 },
+  LAR: { filter: 'grayscale(1) brightness(2.6) sepia(1) saturate(4.5) hue-rotate(12deg)', opacity: 0.42 },
+};
+
+// A team that lost a final game goes fully gray (color wash, border and logo).
+const LOSER_WATERMARK = { filter: 'grayscale(1) brightness(0.8)', opacity: 0.3 };
+const LOSER_BORDER = 'rgb(110, 110, 110)';
+
 const TeamCell = ({
   competitor,
   side,
   score,
+  scoreIsSpread,
+  subScore,
   isStarred,
   hasPossession,
   isWinner,
@@ -71,12 +83,20 @@ const TeamCell = ({
       onContextMenu={(e) => e.preventDefault()}
       style={{ display: 'flex', position: 'relative', margin: '2px' }}
     >
-      <div style={{ ...getTeamBackgroundStyle(getTeamColor(team)), borderRadius: radius }} />
+      <div
+        style={{
+          ...getTeamBackgroundStyle(getTeamColor(team)),
+          borderRadius: radius,
+          ...(dimmed ? { filter: 'grayscale(1)' } : null),
+        }}
+      />
 
       <div
         className="team-info-container"
         style={{
-          border: isStarred ? '2px solid #c49410' : `2px solid ${getTeamBorderColor(team)}`,
+          border: isStarred
+            ? '2px solid #c49410'
+            : `2px solid ${dimmed ? LOSER_BORDER : getTeamBorderColor(team)}`,
           borderRadius: radius,
           overflow: 'hidden',
           opacity: dimmed ? 0.6 : 1,
@@ -88,6 +108,7 @@ const TeamCell = ({
             alt=""
             aria-hidden="true"
             className={`team-logo-watermark ${side}`}
+            style={dimmed ? LOSER_WATERMARK : WATERMARK_STYLE[team.abbreviation]}
             draggable={false}
           />
         )}
@@ -100,7 +121,10 @@ const TeamCell = ({
           <div className="team-record">{competitor?.record || '0-0'}</div>
         </div>
 
-        <div className={`team-score ${isWinner ? 'winner' : ''}`}>{score}</div>
+        <div className={`team-score ${isWinner ? 'winner' : ''} ${scoreIsSpread ? 'spread' : ''}`}>
+          {score}
+          {subScore && <div className="team-moneyline">{subScore}</div>}
+        </div>
       </div>
     </div>
   );

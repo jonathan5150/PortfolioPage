@@ -5,6 +5,7 @@ import TeamRankings from '../GameCardSelections/TeamRankings';
 import PlayerSeasonStats from '../GameCardSelections/PlayerSeasonStats';
 import PlayerGameLog from '../GameCardSelections/PlayerGameLog';
 import TeamHistory from '../GameCardSelections/TeamHistory';
+import Betting from '../GameCardSelections/Betting';
 import { usePersistentMapEntry } from '../shared/usePersistentState';
 import useGameSummary from './useGameSummary';
 
@@ -12,6 +13,7 @@ export const PANEL_OPTIONS = [
   { value: 'box-score', label: 'BOX SCORE' },
   { value: 'team-rankings', label: 'TEAM RANKINGS' },
   { value: 'team-history', label: 'TEAM W/L HISTORY' },
+  { value: 'betting', label: 'BETTING' },
   { value: 'season-stats', label: 'SEASON STATS' },
   { value: 'game-log', label: 'PLAYER GAME LOG' },
 ];
@@ -115,6 +117,8 @@ const GameCard = memo(function GameCard({
     switch (panelKey) {
       case 'box-score':
         return <BoxScore game={game} summaryState={summaryState} />;
+      case 'betting':
+        return <Betting game={game} />;
       case 'team-history':
         return <TeamHistory game={game} />;
       case 'season-stats':

@@ -37,19 +37,6 @@ export const BOX_SCORE_SECTIONS = [
     ],
   },
   {
-    category: 'defensive',
-    title: 'DEFENSE',
-    columns: [
-      { key: 'totalTackles', label: 'TOT', labels: ['TOT'] },
-      { key: 'soloTackles', label: 'SOLO', labels: ['SOLO'] },
-      { key: 'sacks', label: 'SACK', labels: ['SACKS'] },
-      { key: 'tacklesForLoss', label: 'TFL', labels: ['TFL'] },
-      { key: 'passesDefended', label: 'PD', labels: ['PD'] },
-      { key: 'QBHits', label: 'QBH', labels: ['QB HTS', 'QBH'] },
-    ],
-    limit: 8,
-  },
-  {
     category: 'interceptions',
     title: 'INTERCEPTIONS',
     columns: [
@@ -103,16 +90,3 @@ export const buildCategoryTable = (category, section) => {
 
   return { columns: tableColumns, rows, totals };
 };
-
-// Team comparison rows shown above the player tables.
-export const TEAM_STAT_ROWS = [
-  { name: 'firstDowns', label: '1ST DOWNS' },
-  { name: 'totalYards', label: 'TOTAL YDS' },
-  { name: 'netPassingYards', label: 'PASS YDS' },
-  { name: 'rushingYards', label: 'RUSH YDS' },
-  { name: 'thirdDownEff', label: '3RD DOWN' },
-  { name: 'redZoneAttempts', label: 'RED ZONE' },
-  { name: 'turnovers', label: 'TURNOVERS', lowerIsBetter: true },
-  { name: 'totalPenaltiesYards', label: 'PENALTIES', lowerIsBetter: true },
-  { name: 'possessionTime', label: 'POSSESSION' },
-];

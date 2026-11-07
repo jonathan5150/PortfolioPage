@@ -1,19 +1,23 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import SwipeTeamPanel from '../shared/SwipeTeamPanel';
 import StatTable from '../shared/StatTable';
 import useAsyncData from '../shared/useAsyncData';
 import usePersistentState, { usePersistentMapEntry } from '../shared/usePersistentState';
 import { messageStyle } from '../shared/tableStyles';
-import { getRoster, getPlayerGameLog, SKILL_POSITIONS } from '../../../pages/NFLData/NFLDataApi/nflDataService';
+import { getRoster, getPlayerGameLog, getStartingQbId, SKILL_POSITIONS } from '../../../pages/NFLData/NFLDataApi/nflDataService';
 import { buildGameLogTable } from './gameLogColumns';
 
 const POSITION_ORDER = { QB: 0, RB: 1, FB: 2, WR: 3, TE: 4 };
 const GAME_COUNTS = [5, 10];
 
 const TeamGameLog = ({ team, season, numGames, setNumGames, defaultPlayerId, throughDate }) => {
-  // Remember the chosen player per team across sessions.
-  const [savedId, setSavedId] = usePersistentMapEntry('gameLogPlayerByTeam', team?.id, null);
+  // Always opens on the team's current starting QB (depth chart, then the
+  // scoreboard's passing leader); picking another player only lasts while open.
+  const [pickedId, setPickedId] = useState(null);
   const roster = useAsyncData(() => getRoster(team.id), [team?.id], { enabled: Boolean(team?.id) });
+  const starter = useAsyncData(() => getStartingQbId(team.id, season), [team?.id, season], {
+    enabled: Boolean(team?.id),
+  });
 
   const players = useMemo(
     () =>
@@ -27,16 +31,18 @@ const TeamGameLog = ({ team, season, numGames, setNumGames, defaultPlayerId, thr
     [roster.data]
   );
 
+  const onRoster = (id) => id && players.some((p) => p.id === id);
   const selectedId =
-    (savedId && players.some((p) => p.id === savedId) && savedId) ||
-    (defaultPlayerId && players.some((p) => p.id === defaultPlayerId) && defaultPlayerId) ||
+    (onRoster(pickedId) && pickedId) ||
+    (onRoster(starter.data) && starter.data) ||
+    (onRoster(defaultPlayerId) && defaultPlayerId) ||
     players.find((p) => p.position === 'QB')?.id ||
     players[0]?.id ||
     null;
   const selectedPlayer = players.find((p) => p.id === selectedId);
 
   const log = useAsyncData(() => getPlayerGameLog(selectedId, season), [selectedId, season], {
-    enabled: Boolean(selectedId),
+    enabled: Boolean(selectedId) && !starter.loading,
   });
 
   // "Last N" is relative to this matchup: viewing an old week shows the games leading up to it.
@@ -51,7 +57,7 @@ const TeamGameLog = ({ team, season, numGames, setNumGames, defaultPlayerId, thr
     [selectedPlayer?.position, recentGames]
   );
 
-  if (roster.loading) return <div style={messageStyle}>Loading roster…</div>;
+  if (roster.loading || starter.loading) return <div style={messageStyle}>Loading roster…</div>;
   if (roster.error || !players.length) return <div style={messageStyle}>Roster unavailable right now.</div>;
 
   return (
@@ -59,7 +65,7 @@ const TeamGameLog = ({ team, season, numGames, setNumGames, defaultPlayerId, thr
       <div className="gamelog-controls">
         <select
           value={selectedId || ''}
-          onChange={(e) => setSavedId(e.target.value)}
+          onChange={(e) => setPickedId(e.target.value)}
           aria-label="Player"
         >
           {players.map((p) => (
