@@ -661,3 +661,16 @@ describe('live down & distance', () => {
     expect(situationText({ down: 0, distance: 0 }, { isHalftime: true })).toBe('Halftime');
   });
 });
+
+describe('live stoppages', () => {
+  // eslint-disable-next-line global-require
+  const { isStoppage } = require('../../../components/NFLDataComponents/ScoreBug/ScoreBugs');
+  it('spots timeouts and breaks, not real plays', () => {
+    expect(isStoppage({ lastPlayType: 'Official Timeout', lastPlay: 'Official Timeout at 01:02.' })).toBe(true);
+    expect(isStoppage({ lastPlayType: 'Timeout', lastPlay: 'Timeout #1 by KC at 08:12.' })).toBe(true);
+    expect(isStoppage({ lastPlayType: 'End Period', lastPlay: 'END QUARTER 1' })).toBe(true);
+    expect(isStoppage({ lastPlayType: 'Two-minute warning', lastPlay: 'Two-Minute Warning' })).toBe(true);
+    expect(isStoppage({ lastPlayType: 'Pass Reception', lastPlay: 'D.Prescott pass short left to R.Flournoy' })).toBe(false);
+    expect(isStoppage(null)).toBe(false);
+  });
+});

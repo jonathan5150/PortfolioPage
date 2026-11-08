@@ -1,5 +1,6 @@
 import React from 'react';
 import TeamCell from './TeamCell';
+import useGameSummary from '../GameCard/useGameSummary';
 import Linescore from './Linescore';
 import { headshotUrl } from '../../../pages/NFLData/NFLDataApi/endpoints';
 import { getEventPredictor } from '../../../pages/NFLData/NFLDataApi/bettingService';
@@ -233,9 +234,18 @@ export const situationText = (s, status) => {
   return `${ordinal(s.down)} & ${s.distance === 0 ? 'Goal' : s.distance}`;
 };
 
+// Stoppages (TV / team timeouts, end of a quarter, two-minute warning) say
+// nothing about the game, so the score bug shows the latest scoring play then.
+const STOPPAGE = /timeout|end of (the )?(quarter|half|game)|end quarter|two[- ]minute warning/i;
+export const isStoppage = (s) => Boolean(s) && STOPPAGE.test(`${s.lastPlayType || ''} ${s.lastPlay || ''}`);
+
 export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
   const s = game.situation;
   const status = game.status;
+  const stoppage = isStoppage(s);
+  const summary = useGameSummary(game, stoppage);
+  const lastScore = summary.data?.scoringPlays?.[summary.data.scoringPlays.length - 1]?.text;
+  const playText = stoppage && lastScore ? lastScore : s?.lastPlay;
 
   const downText = situationText(s, status);
 
@@ -258,8 +268,8 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
           {s?.possessionText ? ` · ${s.possessionText}` : ''}
           {s?.isRedZone && <span className="red-zone-tag">RZ</span>}
         </div>
-        <div className="ellipsis last-play" title={s?.lastPlay || ''}>
-          {s?.lastPlay || ' '}
+        <div className="ellipsis last-play" title={playText || ''}>
+          {playText || ' '}
         </div>
       </div>
 
