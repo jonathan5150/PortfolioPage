@@ -353,6 +353,7 @@ export const parseRoster = (json) => {
         side: group?.position || '',
         headshot: a.headshot?.href || '',
         status: a.status?.type || a.status?.name || '',
+        injuryStatus: a.injuries?.[0]?.status || null,
       });
     });
   });

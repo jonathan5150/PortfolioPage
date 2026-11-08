@@ -24,9 +24,9 @@ export async function onRequestGet({ request, params, env }) {
     if (incoming.has(key)) search.set(key, incoming.get(key));
   });
 
-  // The free plan allows 2,500 event objects a month and refreshes every 10
-  // minutes, so an hour of edge caching keeps a whole slate cheap.
-  const ttl = 3600;
+  // The free plan allows 2,500 event objects a month. The page asks for one
+  // slate per 6-hour window (same URL for everyone), so cache it that long.
+  const ttl = 6 * 3600;
   try {
     const upstream = await fetch(`${BASE}/events?${search}`, {
       headers: { accept: 'application/json', 'x-api-key': env.SGO_API_KEY },

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import useAsyncData from '../shared/useAsyncData';
 import useInView from '../shared/useInView';
 import { getTeamColor, getTeamBorderColor, washOut } from '../shared/teamColors';
@@ -21,8 +21,13 @@ import {
 } from '../../../pages/NFLData/NFLDataApi/picks';
 import { headshotUrl } from '../../../pages/NFLData/NFLDataApi/endpoints';
 import { Holdable } from '../shared/ParlayContext';
+import TeamToggle from '../shared/TeamToggle';
+import BoxScore from './BoxScore';
+import useGameSummary from '../GameCard/useGameSummary';
+import { hasStarted, frozenOdds, saveOddsSnapshot } from '../../../pages/NFLData/NFLDataApi/oddsSnapshots';
 
 // Betting tab (bet mode only).
+//   BOX SCORE – scoring plays and each team's player stats
 //   LINES   – main lines, win probability, one-line winner / spread / total picks
 //   PLAYERS – touchdown chances and DraftKings anytime TD odds for each team's
 //             QB, top RBs and WR/TEs, plus SEARCH for any skill player
@@ -219,6 +224,9 @@ const PickLine = ({ pick, leg, game, grade }) => {
 };
 
 const LinesTab = ({ game, lines, linePicks, grades }) => {
+  const lockedNote = lines.data?.frozen ? (
+    <div className="hold-hint">Lines locked at about 30 minutes before kickoff.</div>
+  ) : null;
   const odds = lines.data?.odds;
   const predictor = lines.data?.predictor;
   if (lines.loading) return <div className="bet-message">Loading lines…</div>;
@@ -228,6 +236,7 @@ const LinesTab = ({ game, lines, linePicks, grades }) => {
     <>
       <LinesTable game={game} odds={odds} />
       <WinProbability game={game} predictor={predictor} />
+      {lockedNote}
       <HoldHint />
       <div className="pick-lines">
         {linePicks ? (
@@ -342,7 +351,9 @@ const OddsStatus = ({ bookOdds, problem, isFinal, onRetry }) => {
   if (hasTdOdds) return null;
   let text;
   let retry = false;
-  if (isFinal) text = `This game is over, so ${BOOK.name} touchdown odds are closed. Our chances only.`;
+  if (problem === 'started' && !isFinal) {
+    text = `${BOOK.name} touchdown odds lock at kickoff, and they weren't loaded on this device before this game started. Our chances only.`;
+  } else if (isFinal) text = `This game is over, so ${BOOK.name} touchdown odds are closed. Our chances only.`;
   else if (problem === 'nokey') {
     text = (
       <>
@@ -367,31 +378,6 @@ const OddsStatus = ({ bookOdds, problem, isFinal, onRetry }) => {
     </div>
   );
 };
-
-// Sideways team picker (logo + abbreviation) shared by every PLAYERS sub-tab.
-// dimmed: the search box is in use, which covers both teams.
-const TeamToggle = ({ game, teamSide, onChange, dimmed = false }) => (
-  <div className="search-team-toggle" role="tablist" aria-label="Team">
-    {['away', 'home'].map((side) => {
-      const team = game[side]?.team;
-      const active = teamSide === side && !dimmed;
-      return (
-        <button
-          key={side}
-          type="button"
-          role="tab"
-          aria-selected={teamSide === side}
-          className={active ? 'active' : ''}
-          onClick={() => onChange(side)}
-          style={active ? { borderColor: teamAccent(team) } : undefined}
-        >
-          {team?.logo && <img src={team.logo} alt="" draggable={false} />}
-          {team?.abbreviation}
-        </button>
-      );
-    })}
-  </div>
-);
 
 // SEARCH: every QB / RB / WR / TE on both rosters.
 
@@ -591,12 +577,17 @@ const PlayersTab = ({ game, deep, playerPicks, isFinal, odds, rankings, oddsProb
 // ---------- panel ----------
 
 const TABS = [
+  { key: 'boxscore', label: 'BOX SCORE' },
   { key: 'lines', label: 'LINES' },
   { key: 'players', label: 'PLAYERS' },
 ];
 
-const Betting = ({ game, rankings }) => {
+// Lines refresh this often while the game is open and hasn't started.
+const LINES_REFRESH_MS = 5 * 60 * 1000;
+
+const Betting = ({ game, rankings, isOpen = true }) => {
   const isFinal = game.status.state === 'post';
+  const started = hasStarted(game);
   const [tab, setTab] = useState('lines');
   const [needPlayers, setNeedPlayers] = useState(false);
   const [ref, inView] = useInView();
@@ -605,23 +596,52 @@ const Betting = ({ game, rankings }) => {
     if (tab === 'players') setNeedPlayers(true);
   }, [tab]);
 
+  // Box score (live games keep refreshing while the tab is showing).
+  const summaryState = useGameSummary(game, isOpen && tab === 'boxscore');
+
+  // Until kickoff, an open game's odds refresh every few minutes (and when it's
+  // reopened after a while). TD prices come from the cached slate, so this
+  // doesn't spend SportsGameOdds requests.
+  const [refresh, setRefresh] = useState(0);
+  const lastLoadRef = useRef(0);
+  useEffect(() => {
+    if (!isOpen || started) return undefined;
+    if (lastLoadRef.current && Date.now() - lastLoadRef.current >= LINES_REFRESH_MS) setRefresh((n) => n + 1);
+    const id = setInterval(() => {
+      if (document.visibilityState !== 'hidden') setRefresh((n) => n + 1);
+    }, LINES_REFRESH_MS);
+    return () => clearInterval(id);
+  }, [isOpen, started]);
+
   // Lines (with DraftKings bet-slip links) come from ESPN's DraftKings feed;
-  // anytime TD prices from one cached SportsGameOdds slate request.
+  // anytime TD prices from one cached SportsGameOdds slate. Before kickoff each
+  // load is saved; after kickoff both show what they were ~30 minutes before.
   const [oddsAttempt, setOddsAttempt] = useState(0);
   const lines = useAsyncData(
     async () => {
       const [espnOdds, predictor, book] = await Promise.all([
         settle(getEventOdds(game.id, { final: isFinal })),
         settle(getEventPredictor(game.id)),
-        isFinal ? null : getBookOdds(game),
+        getBookOdds(game),
       ]);
-      const bookOdds = book?.odds || null;
-      return { odds: espnOdds, predictor, bookOdds, problem: book?.problem || null };
+      lastLoadRef.current = Date.now();
+      let odds = espnOdds;
+      let frozen = false;
+      if (!started) saveOddsSnapshot(game, 'lines', espnOdds);
+      else {
+        const saved = frozenOdds(game, 'lines');
+        if (saved) {
+          odds = saved;
+          frozen = true;
+        }
+      }
+      return { odds, frozen, predictor, bookOdds: book?.odds || null, problem: book?.problem || null };
     },
-    [game.id, isFinal, oddsAttempt],
+    [game.id, isFinal, started, oddsAttempt, refresh],
     { keepPrevious: true },
   );
   const odds = lines.data?.odds;
+  const bookOdds = lines.data?.bookOdds || null;
 
   // Season results for the line picks wait until the panel is on screen.
   const research = useAsyncData(
@@ -636,17 +656,26 @@ const Betting = ({ game, rankings }) => {
     { enabled: inView || needPlayers },
   );
 
-  // Players load once PLAYERS is opened; their TD odds came with the lines.
-  const deep = useAsyncData(
+  // Players load once PLAYERS is opened. Their TD odds come with the lines (and
+  // refresh with them) without reloading every player's game logs.
+  const players = useAsyncData(
     async () => {
       const [away, home] = await Promise.all([
         settle(getTeamPlayers(game.away?.teamId, game)),
         settle(getTeamPlayers(game.home?.teamId, game)),
       ]);
-      return { players: { away, home }, bookOdds: lines.data?.bookOdds || null };
+      return { away, home };
     },
-    [game.id, game.away?.teamId, game.home?.teamId, game.season, lines.data],
-    { enabled: needPlayers && !lines.loading },
+    [game.id, game.away?.teamId, game.home?.teamId, game.season],
+    { enabled: needPlayers },
+  );
+  const deep = useMemo(
+    () => ({
+      ...players,
+      loading: players.loading || lines.loading,
+      data: players.data ? { players: players.data, bookOdds } : null,
+    }),
+    [players, lines.loading, bookOdds],
   );
 
   const linePicks = useMemo(
@@ -683,13 +712,13 @@ const Betting = ({ game, rankings }) => {
         ))}
       </div>
 
+      {tab === 'boxscore' && <BoxScore game={game} summaryState={summaryState} withToggle />}
       {tab === 'lines' && <LinesTab game={game} lines={lines} linePicks={linePicks} grades={grades} />}
       {tab === 'players' && (
         <PlayersTab
           game={game}
           deep={deep}
           playerPicks={playerPicks}
-
           isFinal={isFinal}
           odds={odds}
           rankings={rankings}
