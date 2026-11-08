@@ -11,7 +11,7 @@ import {
   isUnavailable,
 } from './espnService';
 import { parseEventOdds, parsePredictor, gradeGame, computeTeamTrends } from './betting';
-import { buildLinePicks, gradeLinePicks } from './picks';
+import { buildLinePicks, gradeLinePicks, linePickBets } from './picks';
 import { frozenOdds } from './oddsSnapshots';
 
 const MINUTE = 60 * 1000;
@@ -56,7 +56,8 @@ export const getTeamBettingTrends = async (teamId, game) => {
 export const getGradedLinePicks = async (game) => {
   const savedPicks = frozenOdds(game, 'picks');
   const savedLines = frozenOdds(game, 'lines');
-  if (savedPicks && savedLines) return gradeLinePicks(savedPicks, game, savedLines);
+  const graded = (picks, lines) => ({ ...gradeLinePicks(picks, game, lines), bets: linePickBets(picks, game, lines) });
+  if (savedPicks && savedLines) return graded(savedPicks, savedLines);
   const quiet = (p) => p.catch(() => null);
   const [odds, predictor, awayTrends, homeTrends] = await Promise.all([
     quiet(getEventOdds(game.id, { final: true })),
@@ -67,7 +68,7 @@ export const getGradedLinePicks = async (game) => {
   const lines = savedLines || odds;
   if (!lines) return null;
   const picks = savedPicks || buildLinePicks({ game, odds: lines, predictor, awayTrends, homeTrends });
-  return gradeLinePicks(picks, game, lines);
+  return picks ? graded(picks, lines) : null;
 };
 
 // ---------- key players (QB / RB / WR) ----------

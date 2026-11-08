@@ -609,6 +609,54 @@ export const gradeLinePicks = (linePicks, game, odds) =>
       }
     : null;
 
+// ---------- flat-stake bets ----------
+
+// Spread and total bets without a posted price are assumed to be the
+// standard -110.
+const STANDARD_PRICE = -110;
+
+// What a `stake` bet at American odds `price` pays back (stake included):
+// a win returns stake + profit, a push returns the stake, a loss nothing.
+export const betReturn = (stake, price, result) => {
+  if (result === 'P') return stake;
+  if (result !== 'W') return 0;
+  const profit = price > 0 ? (stake * price) / 100 : (stake * 100) / -price;
+  return Math.round((stake + profit) * 100) / 100;
+};
+
+// The three line picks as bets, in moneyline, spread, over/under order:
+// what was bet, the pregame price and how it graded. Bets with no price
+// (a moneyline with no posted odds) are left out.
+export const linePickBets = (linePicks, game, odds) => {
+  if (!linePicks) return [];
+  const abbr = (side) => game?.[side]?.team?.abbreviation || side.toUpperCase();
+  const bet = (key, label, price) => {
+    const pick = linePicks[key];
+    const result = gradeLinePick(pick, game, odds);
+    if (!pick || !result || price === null || price === undefined) return null;
+    return { key, label, price, result };
+  };
+  const winner = linePicks.winner;
+  const spread = linePicks.spread;
+  const total = linePicks.total;
+  const priceOr = (n) => (n === null || n === undefined ? STANDARD_PRICE : n);
+  return [
+    winner && bet('winner', `${abbr(winner.side)} ML`, odds?.[winner.side]?.moneyLine),
+    spread &&
+      bet(
+        'spread',
+        `${abbr(spread.side)} ${fmtLine(odds?.[spread.side]?.spreadLine)}`,
+        priceOr(odds?.[spread.side]?.spreadOdds),
+      ),
+    total &&
+      bet(
+        'total',
+        `${total.side === 'over' ? 'OVER' : 'UNDER'} ${odds?.total?.line ?? ''}`.trim(),
+        priceOr(total.side === 'over' ? odds?.total?.overOdds : odds?.total?.underOdds),
+      ),
+  ].filter(Boolean);
+};
+
 // QB / RB / WR-TE touchdown picks for the PLAYERS tab. `players` is
 // { away: { qb: [...], rb: [...], wr: [...] }, home: { ... } }.
 // Points a team is expected to score from the total and its spread.
