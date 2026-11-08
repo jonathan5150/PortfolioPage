@@ -403,6 +403,11 @@
   margin: 2px 0 8px;
 }
 
+.nfl-data-container .bet-stakes {
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: -4px;
+}
+
 .nfl-data-container .bet-filter-btn {
   padding: 5px 2px;
   border: 1px solid rgba(255, 255, 255, 0.25);
@@ -424,7 +429,7 @@
 
 .nfl-data-container .bet-row {
   display: grid;
-  grid-template-columns: 1fr 44px 44px 56px;
+  grid-template-columns: 1fr 52px 40px 62px;
   gap: 6px;
   padding: 1px 0;
   font-size: 11px;

@@ -34,8 +34,8 @@ const gradeOf = async (game) => {
   return grades;
 };
 
-// Every pick is a flat $10 bet at its pregame price.
-const STAKE = 10;
+// Every pick is a flat bet (the chosen stake) at its pregame price.
+const STAKES = [10, 25, 100];
 const BET_FILTERS = [
   { key: 'all', label: 'TOTAL' },
   { key: 'winner', label: 'MONEYLINE' },
@@ -43,7 +43,8 @@ const BET_FILTERS = [
   { key: 'total', label: 'O/U' },
 ];
 
-const money = (n) => `$${Math.abs(n).toFixed(2)}`;
+const money = (n) =>
+  `$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const signedMoney = (n) => `${n > 0.004 ? '+' : n < -0.004 ? '-' : ''}${money(n)}`;
 const tone = (n) => (n > 0.004 ? 'up' : n < -0.004 ? 'down' : 'even');
 const dayKey = (date) => new Date(date).toDateString();
@@ -51,7 +52,7 @@ const dayLabel = (date) =>
   new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
 
 // Finished games' bets, oldest kickoff first, grouped by the day they were played.
-const betDays = (finished, gradedById, filter) => {
+const betDays = (finished, gradedById, filter, stake) => {
   const days = [];
   [...finished]
     .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
@@ -59,8 +60,8 @@ const betDays = (finished, gradedById, filter) => {
       const bets = (gradedById[game.id]?.bets || [])
         .filter((b) => filter === 'all' || b.key === filter)
         .map((b) => {
-          const back = betReturn(STAKE, b.price, b.result);
-          return { ...b, back, profit: back - STAKE };
+          const back = betReturn(stake, b.price, b.result);
+          return { ...b, back, profit: back - stake };
         });
       if (!bets.length) return;
       const key = dayKey(game.date);
@@ -79,12 +80,13 @@ const matchup = (g) => `${g.away?.team?.abbreviation || 'AWAY'} @ ${g.home?.team
 
 const BetResults = ({ finished, gradedById }) => {
   const [filter, setFilter] = useState('all');
-  const days = betDays(finished, gradedById, filter);
+  const [stake, setStake] = useState(STAKES[0]);
+  const days = betDays(finished, gradedById, filter, stake);
   const week = days.reduce((sum, d) => sum + d.profit, 0);
 
   return (
     <div className="bet-results">
-      <div className="prediction-record-title">BETTING RESULTS · $10 PER BET</div>
+      <div className="prediction-record-title">BETTING RESULTS · ${stake} PER BET</div>
       <div className="bet-filter">
         {BET_FILTERS.map((f) => (
           <button
@@ -94,6 +96,18 @@ const BetResults = ({ finished, gradedById }) => {
             onClick={() => setFilter(f.key)}
           >
             {f.label}
+          </button>
+        ))}
+      </div>
+      <div className="bet-filter bet-stakes">
+        {STAKES.map((amount) => (
+          <button
+            key={amount}
+            type="button"
+            className={`bet-filter-btn ${stake === amount ? 'active' : ''}`}
+            onClick={() => setStake(amount)}
+          >
+            ${amount} / BET
           </button>
         ))}
       </div>
@@ -116,7 +130,7 @@ const BetResults = ({ finished, gradedById }) => {
                   {bets.map((b) => (
                     <div key={b.key} className="bet-row">
                       <span className="bet-label">{b.label}</span>
-                      <span>{money(STAKE)}</span>
+                      <span>{money(stake)}</span>
                       <span>{fmtOdds(b.price)}</span>
                       <span className={`bet-return ${tone(b.profit)}`}>{money(b.back)}</span>
                     </div>
