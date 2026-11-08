@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
 import useAsyncData from '../shared/useAsyncData';
+import useInView from '../shared/useInView';
+import { readPreference, writePreference } from '../shared/usePersistentState';
 import { getGradedLinePicks } from '../../../pages/NFLData/NFLDataApi/bettingService';
 import { runWithConcurrency } from '../../../pages/NFLData/NFLDataApi/http';
 
@@ -11,22 +13,36 @@ const MARKETS = [
   { key: 'total', label: 'O/U' },
 ];
 
+// A finished game's grades never change, so they're kept in localStorage and
+// later visits don't refetch anything. Bump the version when the pick rules change.
+const GRADES_KEY = 'gradedPicks:v1';
+const gradeOf = async (game) => {
+  const saved = readPreference(GRADES_KEY, {});
+  if (saved[game.id]) return saved[game.id];
+  const grades = await getGradedLinePicks(game);
+  if (grades) writePreference(GRADES_KEY, { ...readPreference(GRADES_KEY, {}), [game.id]: grades });
+  return grades;
+};
+
 const pct = ({ W, L }) => (W + L ? `${Math.round((W / (W + L)) * 100)}%` : '—');
 
 const PredictionRecord = ({ games }) => {
   const finished = useMemo(() => (games || []).filter((g) => g.status?.state === 'post'), [games]);
   const ids = finished.map((g) => g.id).join(',');
+  // The record sits at the bottom of the list: grading waits until it's near
+  // the screen, so it never competes with a game being opened.
+  const [ref, inView] = useInView({ rootMargin: '300px' });
 
   const graded = useAsyncData(
     async () => {
       const results = await runWithConcurrency(
-        finished.map((g) => () => getGradedLinePicks(g)),
+        finished.map((g) => () => gradeOf(g)),
         2,
       );
       return results.map((r) => (r.ok ? r.value : null)).filter(Boolean);
     },
     [ids],
-    { enabled: finished.length > 0 },
+    { enabled: finished.length > 0 && inView },
   );
 
   if (!finished.length) return null;
@@ -41,10 +57,10 @@ const PredictionRecord = ({ games }) => {
   const total = rows.reduce((acc, r) => ({ W: acc.W + r.W, L: acc.L + r.L }), { W: 0, L: 0 });
 
   return (
-    <div className="games-count-outer prediction-record-outer">
+    <div className="games-count-outer prediction-record-outer" ref={ref}>
       <div className="games-count-inner prediction-record">
         <div className="prediction-record-title">PREDICTION RECORD · FINISHED GAMES</div>
-        {graded.loading && !graded.data ? (
+        {!graded.data ? (
           <div className="prediction-record-loading">Grading this week's picks…</div>
         ) : (
           <div className="prediction-record-rows">

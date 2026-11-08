@@ -121,16 +121,30 @@
   position: relative;
 }
 
-.nfl-data-container .game-slot::after {
-  content: '';
+/* The ring is four thin strips (top and bottom carry the rounded corners), each
+   painting the same spinning conic gradient centred on the whole game. Only
+   the 3px border repaints per frame instead of a gradient the size of the
+   whole open game, which is what made phones stutter. */
+.nfl-data-container .game-ring {
   position: absolute;
-  /* the ring's inside edge hugs the team cells and the panel below */
-  inset: -2px 4px;
+  inset: -2px 4px; /* the ring's inside edge hugs the team cells and the panel below */
   z-index: 5;
-  padding: 3px; /* ring thickness */
-  border-radius: 10px;
+  container-type: size; /* lets the strips find the ring's centre (cqw / cqh) */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.nfl-data-container .game-slot.open .game-ring {
+  opacity: 1;
+}
+
+.nfl-data-container .game-ring > i {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
   background: conic-gradient(
-    from var(--ring-angle),
+    from var(--ring-angle) at var(--cx) var(--cy),
     #111 0deg 25deg,
     var(--ring-away, #888) 50deg,
     var(--ring-away-light, #bbb) 90deg,
@@ -141,21 +155,60 @@
     var(--ring-home, #888) 310deg,
     #111 335deg 360deg
   );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.35s ease;
 }
 
-.nfl-data-container .game-slot.open::after {
-  opacity: 1;
+.nfl-data-container .game-slot.open .game-ring > i {
   animation: nflRingSpin 13s linear infinite;
 }
 
+/* top / bottom: 10px tall with the rounded corners, hollowed to a 3px line */
+.nfl-data-container .ring-top,
+.nfl-data-container .ring-bottom {
+  left: 0;
+  right: 0;
+  height: 10px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+.nfl-data-container .ring-top {
+  top: 0;
+  padding: 3px 3px 0;
+  border-radius: 10px 10px 0 0;
+  --cx: 50cqw;
+  --cy: 50cqh;
+}
+
+.nfl-data-container .ring-bottom {
+  bottom: 0;
+  padding: 0 3px 3px;
+  border-radius: 0 0 10px 10px;
+  --cx: 50cqw;
+  --cy: calc(10px - 50cqh);
+}
+
+/* left / right: plain 3px lines between the corners */
+.nfl-data-container .ring-left,
+.nfl-data-container .ring-right {
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  --cy: calc(50cqh - 10px);
+}
+
+.nfl-data-container .ring-left {
+  left: 0;
+  --cx: 50cqw;
+}
+
+.nfl-data-container .ring-right {
+  right: 0;
+  --cx: calc(3px - 50cqw);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .nfl-data-container .game-slot.open::after {
+  .nfl-data-container .game-slot.open .game-ring > i {
     animation: none;
   }
 }
@@ -1117,7 +1170,6 @@
 
 .nfl-data-container .team-info-container {
   border: 2px solid var(--cell-border, rgb(85, 85, 85));
-  transition: border-color 0.5s ease;
   width: 100%;
   height: 50px;
   display: flex;
@@ -1156,8 +1208,10 @@
   filter: none;
 }
 
+/* Only opacity animates: it's cheap for phones to fade. Saturation and border
+   colour switch at once (animating those repainted every cell each frame). */
 .nfl-data-container .team-cell-bg {
-  transition: opacity 0.5s ease, filter 0.5s ease;
+  transition: opacity 0.5s ease;
 }
 
 .nfl-data-container .has-open .game-slot:not(.open) .team-cell-bg {
@@ -1167,15 +1221,20 @@
 
 /* team name, record and win prob / score dim with the cell: a little on a
    closed game, more while another game is open */
-.nfl-data-container .team-info-container > *:not(.team-logo-watermark) {
+.nfl-data-container .team-text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
   transition: opacity 0.5s ease;
 }
 
-.nfl-data-container .team-cell:not(.expanded) .team-info-container > *:not(.team-logo-watermark) {
+.nfl-data-container .team-cell:not(.expanded) .team-text {
   opacity: 0.85;
 }
 
-.nfl-data-container .has-open .game-slot:not(.open) .team-info-container > *:not(.team-logo-watermark) {
+.nfl-data-container .has-open .game-slot:not(.open) .team-text {
   opacity: 0.55;
 }
 

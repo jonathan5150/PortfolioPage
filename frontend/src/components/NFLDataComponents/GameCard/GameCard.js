@@ -51,7 +51,9 @@ const GameCard = memo(function GameCard({
   syncCommand,
   onBroadcast,
   suppressNextToggleRef,
-  openGameId,
+  // The list owns which game is open (one at a time). A per-card boolean means
+  // opening, switching or closing a game only re-renders the cards that change.
+  isOpen = false,
   onUserToggle,
   hideMode = false,
   hidden = false,
@@ -61,7 +63,7 @@ const GameCard = memo(function GameCard({
   const [storedPanel, setPanelKey] = usePersistentMapEntry('panelByGame', game.id, 'betting');
   const panelKey = SHOW_PANEL_CONTROLS ? storedPanel : 'betting';
   const panelOptions = PANEL_OPTIONS;
-  const [isExpanded, setIsExpanded] = useState(false);
+  const isExpanded = isOpen;
   // Panels mount the first time a card opens and then stay mounted, so closing
   // animates smoothly and reopening doesn't refetch.
   const [hasOpened, setHasOpened] = useState(false);
@@ -101,29 +103,19 @@ const GameCard = memo(function GameCard({
     if (syncCommand.type === 'set-all' && syncCommand.sourceGameId !== game.id) {
       setPanelKey(syncCommand.panelKey);
     }
-    if (syncCommand.type === 'close-all') {
-      setIsExpanded(false);
-    }
   }, [syncCommand, game.id, setPanelKey]);
-
-  // A click opens/closes this game and tells the list, which keeps only one
-  // game open at a time.
-  // Another game was opened: close this one.
-  useEffect(() => {
-    if (openGameId && openGameId !== game.id) setIsExpanded(false);
-  }, [openGameId, game.id]);
 
   // A hidden game can't be opened; hiding an open game closes it.
   useEffect(() => {
-    if (hidden) setIsExpanded(false);
-  }, [hidden]);
+    if (hidden && isOpen) onUserToggle?.(game.id, false);
+  }, [hidden, isOpen, onUserToggle, game.id]);
 
+  // A click asks the list to open/close this game (CLOSE on the panel goes
+  // through the list's close-all, which clears the open game).
   const toggle = useCallback(() => {
     if (suppressNextToggleRef?.current || hidden) return;
-    const next = !isExpanded;
-    setIsExpanded(next);
-    onUserToggle?.(game.id, next);
-  }, [suppressNextToggleRef, hidden, isExpanded, onUserToggle, game.id]);
+    onUserToggle?.(game.id, !isOpen);
+  }, [suppressNextToggleRef, hidden, isOpen, onUserToggle, game.id]);
 
   // In HIDE GAMES mode a tap anywhere on the game hides/unhides it instead of opening it.
   const handleHideClick = useCallback(
@@ -197,6 +189,14 @@ const GameCard = memo(function GameCard({
           />
         </label>
       )}
+      {/* swirling ring for the open game, drawn as four thin edge strips so only
+          the 3px border repaints while it spins (see .game-ring in NFLData.scss) */}
+      <span className="game-ring" aria-hidden="true">
+        <i className="ring-top" />
+        <i className="ring-right" />
+        <i className="ring-bottom" />
+        <i className="ring-left" />
+      </span>
       <div className="game-slot-body" onClickCapture={handleHideClick}>
         {hidden && <div className="hidden-overlay">HIDDEN</div>}
         <div className="game-slot-content">

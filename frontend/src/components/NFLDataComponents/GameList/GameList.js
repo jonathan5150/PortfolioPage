@@ -170,7 +170,7 @@ const GameList = ({
                     syncCommand={syncCommand}
                     onBroadcast={broadcast}
                     suppressNextToggleRef={suppressNextToggleRef}
-                    openGameId={openGameId}
+                    isOpen={openGameId === game.id}
                     onUserToggle={handleUserToggle}
                     hideMode={hideMode}
                     hidden={hiddenSet.has(game.id)}
