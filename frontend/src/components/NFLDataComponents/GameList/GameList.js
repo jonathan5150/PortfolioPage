@@ -8,6 +8,8 @@ import { ParlayProvider } from '../shared/ParlayContext';
 import ParlayBar from '../ParlayBar/ParlayBar';
 import PredictionRecord from './PredictionRecord';
 
+const MERGE_WINDOW_MS = 30 * 60 * 1000;
+
 const GameList = ({
   loading,
   games,
@@ -72,6 +74,12 @@ const GameList = ({
     [games, hideMode, hiddenSet],
   );
 
+  // Only counts while that game is actually in the list (switching weeks with a
+  // game open shouldn't leave the new week faded).
+  const hasOpenGame = Boolean(openGameId) && shownGames.some((g) => g.id === openGameId);
+
+  // Kickoffs on the same day within half an hour of each other (Sunday's 3:05
+  // and 3:25 games) share one group: "SUN 3:05 PM / 3:25 PM".
   const slots = useMemo(() => {
     const byLabel = new Map();
     shownGames.forEach((game) => {
@@ -79,7 +87,27 @@ const GameList = ({
       if (!byLabel.has(label)) byLabel.set(label, []);
       byLabel.get(label).push(game);
     });
-    return [...byLabel.entries()].map(([label, slotGames]) => ({ label, games: slotGames }));
+
+    const merged = [];
+    [...byLabel.entries()].forEach(([label, slotGames]) => {
+      const first = slotGames[0];
+      const upcoming = first.status.state === 'pre' && !first.status.isPostponed && Boolean(first.date);
+      const start = upcoming ? new Date(first.date) : null;
+      const prev = merged[merged.length - 1];
+      if (
+        start &&
+        prev?.lastStart &&
+        prev.lastStart.toDateString() === start.toDateString() &&
+        start - prev.lastStart <= MERGE_WINDOW_MS
+      ) {
+        prev.games.push(...slotGames);
+        prev.label = `${prev.label} / ${start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+        prev.lastStart = start;
+      } else {
+        merged.push({ label, games: [...slotGames], lastStart: start });
+      }
+    });
+    return merged;
   }, [shownGames]);
 
   // A tap that only closes a navbar menu shouldn't also open a game card.
@@ -116,7 +144,7 @@ const GameList = ({
           onToggleHideMode={toggleHideMode}
         />
 
-        <div className={`matchup-container ${openGameId ? 'has-open' : ''}`}>
+        <div className={`matchup-container ${hasOpenGame ? 'has-open' : ''}`}>
           {loading ? (
             <LoadingField className="inline-loading" />
           ) : shownGames.length === 0 ? (
