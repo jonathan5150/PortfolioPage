@@ -42,7 +42,7 @@ export const useLongPress = (onLongPress, delay = 600) => {
 
 // Per-team colour tweaks for the background logo.
 const WATERMARK_STYLE = {
-  NYJ: { filter: 'grayscale(1) brightness(2.8)' },
+  NYJ: { filter: 'grayscale(1) brightness(4.5)', '--wm-opacity': 0.85 }, // near-white
   LV: { filter: 'brightness(1.7) contrast(1.1)' },
   LAR: { filter: 'grayscale(1) brightness(2.6) sepia(1) saturate(4.5) hue-rotate(12deg)' },
 };
@@ -50,7 +50,7 @@ const WATERMARK_STYLE = {
 // Some logos read bigger or smaller than the rest at the same size; this
 // scales each one so they look even.
 const WATERMARK_SIZE = {
-  IND: 0.78,
+  IND: 0.68,
   NO: 0.77,
   ATL: 0.85,
   MIN: 0.83,

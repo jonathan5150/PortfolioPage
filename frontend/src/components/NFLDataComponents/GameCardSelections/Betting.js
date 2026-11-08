@@ -188,6 +188,15 @@ const PickHeadline = ({ pick, game }) => {
   );
 };
 
+// Winner / spread odds sit in a pill of the picked team's cell colour; the
+// over/under pill keeps the gold styling.
+const teamPillStyle = (team) => {
+  const color = getTeamColor(team);
+  if (!color) return undefined;
+  const fill = washOut(color, 0.1).replace(/[\d.]+\)$/, '0.85)');
+  return { background: fill, color: '#ffffff' };
+};
+
 const GRADE_TITLE = { W: 'The pick was right', L: 'The pick was wrong' };
 
 const PickLine = ({ pick, leg, game, grade }) => {
@@ -196,7 +205,11 @@ const PickLine = ({ pick, leg, game, grade }) => {
     <Holdable className={`pick-line ${pick.strong ? 'strong' : ''}`} leg={leg}>
       <PickHeadline pick={pick} game={game} />
       <span className="pick-because">{pick.summary}</span>
-      {pick.odds && <span className="pick-odds">{pick.odds}</span>}
+      {pick.odds && (
+        <span className="pick-odds" style={pick.key !== 'total' ? teamPillStyle(game[pick.side]?.team) : undefined}>
+          {pick.odds}
+        </span>
+      )}
       {/* finished games: green corner when the pick was right, red when wrong */}
       {(grade === 'W' || grade === 'L') && (
         <span className={`pick-result ${grade === 'W' ? 'right' : 'wrong'}`} title={GRADE_TITLE[grade]} />

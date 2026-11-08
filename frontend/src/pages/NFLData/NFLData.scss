@@ -151,7 +151,7 @@
 
 .nfl-data-container .game-slot.open::after {
   opacity: 1;
-  animation: nflRingSpin 16s linear infinite;
+  animation: nflRingSpin 13s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1117,6 +1117,7 @@
 
 .nfl-data-container .team-info-container {
   border: 2px solid var(--cell-border, rgb(85, 85, 85));
+  transition: border-color 0.5s ease;
   width: 100%;
   height: 50px;
   display: flex;
@@ -1136,7 +1137,18 @@
    While a game is open, every other game's cells fade to about half. */
 .nfl-data-container .team-cell-bg {
   opacity: 0.72;
-  filter: saturate(0.8);
+  filter: saturate(0.45); /* closer to black and white until the game is opened */
+}
+
+/* With no game open, every cell is brighter: a stronger colour wash and a
+   slightly lifted border. */
+.nfl-data-container .matchup-container:not(.has-open) .team-cell-bg {
+  opacity: 0.95;
+  filter: saturate(0.85);
+}
+
+.nfl-data-container .matchup-container:not(.has-open) .team-info-container {
+  border-color: color-mix(in srgb, var(--cell-border) 80%, white);
 }
 
 .nfl-data-container .team-cell.expanded .team-cell-bg {
@@ -1150,6 +1162,21 @@
 
 .nfl-data-container .has-open .game-slot:not(.open) .team-cell-bg {
   opacity: 0.4;
+  filter: saturate(0.2);
+}
+
+/* team name, record and win prob / score dim with the cell: a little on a
+   closed game, more while another game is open */
+.nfl-data-container .team-info-container > *:not(.team-logo-watermark) {
+  transition: opacity 0.5s ease;
+}
+
+.nfl-data-container .team-cell:not(.expanded) .team-info-container > *:not(.team-logo-watermark) {
+  opacity: 0.85;
+}
+
+.nfl-data-container .has-open .game-slot:not(.open) .team-info-container > *:not(.team-logo-watermark) {
+  opacity: 0.55;
 }
 
 .nfl-data-container .has-open .game-slot:not(.open) .team-info-container {
