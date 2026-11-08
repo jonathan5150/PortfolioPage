@@ -146,7 +146,7 @@ const GameCard = memo(function GameCard({
       case 'box-score':
         return <BoxScore game={game} summaryState={summaryState} />;
       case 'betting':
-        return <Betting game={game} rankings={rankings} />;
+        return <Betting game={game} rankings={rankings} isOpen={isExpanded} />;
       case 'team-history':
         return <TeamHistory game={game} />;
       case 'season-stats':

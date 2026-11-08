@@ -12,6 +12,7 @@ import {
 } from './espnService';
 import { parseEventOdds, parsePredictor, gradeGame, computeTeamTrends } from './betting';
 import { buildLinePicks, gradeLinePicks } from './picks';
+import { frozenOdds } from './oddsSnapshots';
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -58,9 +59,10 @@ export const getGradedLinePicks = async (game) => {
     quiet(getTeamBettingTrends(game.away?.teamId, game)),
     quiet(getTeamBettingTrends(game.home?.teamId, game)),
   ]);
-  if (!odds) return null;
-  const picks = buildLinePicks({ game, odds, predictor, awayTrends, homeTrends });
-  return gradeLinePicks(picks, game, odds);
+  const lines = frozenOdds(game, 'lines') || odds;
+  if (!lines) return null;
+  const picks = buildLinePicks({ game, odds: lines, predictor, awayTrends, homeTrends });
+  return gradeLinePicks(picks, game, lines);
 };
 
 // ---------- key players (QB / RB / WR) ----------
@@ -112,8 +114,20 @@ export const getTeamPlayers = async (teamId, game) => {
   ]);
 
   const qbId = starterId || leaders.passing[0]?.athleteId || null;
+  // The depth chart's starter, unless he's out: then the healthy QB with the most yards.
+  const startingQb = async () => {
+    const starter = qbId ? await getCoreAthlete(qbId, season).catch(() => null) : null;
+    if (starter && !isUnavailable(starter.injuryStatus)) return starter;
+    const [backup] = await healthyLeaders(
+      leaders.passing.filter((l) => l.athleteId !== qbId),
+      ['QB'],
+      season,
+      1,
+    );
+    return backup || null;
+  };
   const [qb, rbs, wrs] = await Promise.all([
-    qbId ? getCoreAthlete(qbId, season).catch(() => null) : null,
+    startingQb(),
     healthyLeaders(leaders.rushing, ['RB', 'FB'], season, RB_COUNT),
     healthyLeaders(leaders.receiving, ['WR', 'TE'], season, WR_COUNT),
   ]);
@@ -132,7 +146,8 @@ export const getGameSkillPlayers = async (game) => {
     getRoster(game[side]?.teamId)
       .then((roster) =>
         roster
-          .filter((p) => SEARCH_POSITIONS.includes(p.position))
+          // injured-list / ruled-out players aren't listed
+          .filter((p) => SEARCH_POSITIONS.includes(p.position) && !isUnavailable(p.injuryStatus))
           .map((p) => ({ ...p, teamSide: side, teamAbbr: game[side]?.team?.abbreviation })),
       )
       .catch(() => []);

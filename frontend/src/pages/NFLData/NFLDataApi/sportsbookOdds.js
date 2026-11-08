@@ -6,6 +6,7 @@
 //     DraftKings' TD links there are shared between players, so TD bets can't
 //     be linked and are added in DraftKings by hand.
 import { fetchJson } from './http';
+import { hasStarted, frozenOdds, saveOddsSnapshot } from './oddsSnapshots';
 
 const MINUTE = 60 * 1000;
 
@@ -116,7 +117,13 @@ export const findSgoEvent = (events, game) => {
 
 // ---------- fetching ----------
 
-const SLATE_TTL = 30 * MINUTE;
+// The free SportsGameOdds plan has a monthly cap, so TD odds refresh at most
+// once per 6-hour window (about 4 requests a day for the whole site, since the
+// proxy caches each window's slate at the edge).
+const HOUR = 60 * MINUTE;
+const SLATE_WINDOW = 6 * HOUR;
+const windowStart = (now = Date.now()) => Math.floor(now / SLATE_WINDOW) * SLATE_WINDOW;
+const slateExpiry = () => windowStart() + SLATE_WINDOW;
 const STORAGE_KEY = 'nflStatsWizard:sgoSlate:v3'; // v1: unfiltered 15 MB slate, v2: another book
 let slateCache = null;
 
@@ -133,10 +140,7 @@ const readStoredSlate = () => {
 const storeSlate = (events) => {
   try {
     ['nflStatsWizard:sgoSlate', 'nflStatsWizard:sgoSlate:v2'].forEach((k) => window.localStorage.removeItem(k));
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ book: BOOK.id, expires: Date.now() + SLATE_TTL, events }),
-    );
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ book: BOOK.id, expires: slateExpiry(), events }));
   } catch {
     // storage full or blocked – the in-memory cache still works
   }
@@ -146,19 +150,16 @@ const storeSlate = (events) => {
 // the book offers); with it, well under 1 MB. PLAYER_ID matches any player.
 export const SLATE_ODD_IDS = ['touchdowns-PLAYER_ID-game-yn-yes'];
 
-const HOUR = 60 * MINUTE;
-
 const requestSlate = async () => {
-  // The window is rounded to the hour so everyone loading the page in the same
-  // hour sends the identical URL, and the proxy's hour-long edge cache answers
-  // instead of spending the free plan's quota on every visit.
-  const hour = Math.floor(Date.now() / HOUR) * HOUR;
+  // Rounded to the 6-hour window so everyone in that window sends the identical
+  // URL and the proxy's edge cache answers instead of spending the quota.
+  const start = windowStart();
   const query = new URLSearchParams({
     leagueID: 'NFL',
     oddsAvailable: 'true',
     bookmakerID: BOOK.id,
-    startsAfter: new Date(hour - 7 * HOUR).toISOString(),
-    startsBefore: new Date(hour + 6 * 24 * HOUR + HOUR).toISOString(),
+    startsAfter: new Date(start - SLATE_WINDOW).toISOString(),
+    startsBefore: new Date(start + 6 * 24 * HOUR + SLATE_WINDOW).toISOString(),
     limit: '50',
     oddID: SLATE_ODD_IDS.join(','),
   });
@@ -178,14 +179,14 @@ const getSgoSlate = async () => {
   if (slateCache && slateCache.expires > Date.now()) return slateCache.value;
   const stored = readStoredSlate();
   if (stored) {
-    slateCache = { value: Promise.resolve(stored), expires: Date.now() + SLATE_TTL };
+    slateCache = { value: Promise.resolve(stored), expires: slateExpiry() };
     return stored;
   }
   const promise = requestSlate().then((events) => {
     storeSlate(events);
     return events;
   });
-  slateCache = { value: promise, expires: Date.now() + SLATE_TTL };
+  slateCache = { value: promise, expires: slateExpiry() };
   try {
     return await promise;
   } catch (error) {
@@ -194,13 +195,21 @@ const getSgoSlate = async () => {
   }
 };
 
-// { odds: { players } | null, problem } for one game. problem says why
-// odds are missing: null (fine), 'nokey', 'ratelimit', 'offline' or 'notlisted'.
+// { odds: { players } | null, problem, frozen } for one game. problem says why
+// odds are missing: null (fine), 'nokey', 'ratelimit', 'offline', 'notlisted'
+// or 'started' (kicked off before this device saved its pre-game odds).
+// Once a game starts, its odds are the ones saved about 30 minutes before kickoff.
 export const getBookOdds = async (game) => {
+  if (hasStarted(game)) {
+    const saved = frozenOdds(game, 'td');
+    return saved ? { odds: saved, problem: null, frozen: true } : { odds: null, problem: 'started' };
+  }
   try {
     const event = findSgoEvent(await getSgoSlate(), game);
     if (!event) return { odds: null, problem: 'notlisted' };
-    return { odds: parseSgoEvent(event), problem: null };
+    const odds = parseSgoEvent(event);
+    saveOddsSnapshot(game, 'td', odds);
+    return { odds, problem: null };
   } catch (error) {
     // The proxy answers 503 when SGO_API_KEY isn't configured.
     const problem = error.status === 503 ? 'nokey' : error.status === 429 ? 'ratelimit' : 'offline';

@@ -5,6 +5,7 @@ import { usePersistentMapEntry } from '../shared/usePersistentState';
 import { viewportStyle, sectionTitleStyle, messageStyle } from '../shared/tableStyles';
 import { BOX_SCORE_SECTIONS, buildCategoryTable } from './boxScoreColumns';
 import { formatPeriod } from '../ScoreBug/ScoreBugs';
+import TeamToggle from '../shared/TeamToggle';
 
 const ScoringPlays = ({ summary, teamsById }) => {
   if (!summary.scoringPlays.length) return null;
@@ -29,8 +30,11 @@ const ScoringPlays = ({ summary, teamsById }) => {
   );
 };
 
-const BoxScore = ({ game, summaryState }) => {
+// withToggle: the Betting panel's BOX SCORE tab. Away / home buttons with
+// SCORING PLAYS attached underneath pick what's shown, one at a time.
+const BoxScore = ({ game, summaryState, withToggle = false }) => {
   const [showing, setShowing] = usePersistentMapEntry('boxScoreSideByGame', game.id, 'away');
+  const [view, setView] = usePersistentMapEntry('boxScoreViewByGame', game.id, 'scoring');
   const { data: summary, loading, error } = summaryState;
 
   const teamsById = useMemo(
@@ -38,7 +42,7 @@ const BoxScore = ({ game, summaryState }) => {
       [game.away?.teamId]: game.away?.team,
       [game.home?.teamId]: game.home?.team,
     }),
-    [game]
+    [game],
   );
 
   if (game.status.state === 'pre') {
@@ -79,6 +83,30 @@ const BoxScore = ({ game, summaryState }) => {
       <StatTable key={section.category} columns={table.columns} rows={table.rows} />
     ));
   };
+
+  if (withToggle) {
+    return (
+      <div className="box-score-tab">
+        <div className="td-team-toggle">
+          <TeamToggle
+            game={game}
+            teamSide={view}
+            onChange={setView}
+            below={{ key: 'scoring', label: 'SCORING PLAYS' }}
+          />
+        </div>
+        {view === 'scoring' ? (
+          summary.scoringPlays.length ? (
+            <ScoringPlays summary={summary} teamsById={teamsById} />
+          ) : (
+            <div style={messageStyle}>No scoring plays yet.</div>
+          )
+        ) : (
+          <div style={viewportStyle}>{renderSide(view, game[view]?.team)}</div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div>

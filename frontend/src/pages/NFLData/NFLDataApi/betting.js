@@ -63,9 +63,19 @@ export const parseOddsLinks = (links = []) => {
 
 // core API: events/{id}/competitions/{id}/odds. `spread` is the HOME team's line.
 export const parseEventOdds = (json) => {
+  // Finished games carry many books, including in-game "Live Odds" lines and
+  // partial entries (a spread with no total or moneyline) that can be far off
+  // the market. Use the most complete pre-game line; priority breaks ties.
+  const completeness = (i) =>
+    (i.spread !== undefined && i.spread !== null ? 1 : 0) +
+    (i.overUnder !== undefined && i.overUnder !== null ? 1 : 0) +
+    (i.homeTeamOdds?.moneyLine !== undefined || i.homeTeamOdds?.current?.moneyLine ? 1 : 0);
   const items = (json?.items || [])
     .filter((i) => i && (i.details || i.overUnder !== undefined || i.spread !== undefined))
-    .sort((a, b) => (a.provider?.priority ?? 99) - (b.provider?.priority ?? 99));
+    .filter((i) => !/live odds/i.test(i.provider?.name || ''))
+    .sort(
+      (a, b) => completeness(b) - completeness(a) || (a.provider?.priority ?? 99) - (b.provider?.priority ?? 99),
+    );
   const item = items[0];
   if (!item) return null;
 

@@ -615,3 +615,33 @@ describe('gradeLinePick', () => {
     expect(gradeLinePick({ key: 'winner', side: 'home' }, { ...game, status: { state: 'in' } }, odds)).toBeNull();
   });
 });
+
+describe('odds frozen at kickoff', () => {
+  // eslint-disable-next-line global-require
+  const { saveOddsSnapshot, frozenOdds, hasStarted } = require('./oddsSnapshots');
+  const kickoff = Date.parse('2026-11-08T18:00:00Z');
+  const game = { id: 'g1', date: '2026-11-08T18:00:00Z', status: { state: 'pre' } };
+  const min = 60 * 1000;
+  beforeEach(() => window.localStorage.clear());
+
+  it('keeps the last copy from 30+ minutes before kickoff', () => {
+    saveOddsSnapshot(game, 'lines', { homeSpread: -3 }, kickoff - 120 * min);
+    saveOddsSnapshot(game, 'lines', { homeSpread: -3.5 }, kickoff - 40 * min);
+    saveOddsSnapshot(game, 'lines', { homeSpread: -6 }, kickoff - 10 * min); // last half hour: ignored
+    expect(frozenOdds(game, 'lines')).toEqual({ homeSpread: -3.5 });
+  });
+
+  it('falls back to the first copy inside the last half hour', () => {
+    saveOddsSnapshot(game, 'td', { players: { a: 1 } }, kickoff - 20 * min);
+    saveOddsSnapshot(game, 'td', { players: { a: 2 } }, kickoff - 5 * min);
+    expect(frozenOdds(game, 'td')).toEqual({ players: { a: 1 } });
+  });
+
+  it('saves nothing once the game has started', () => {
+    saveOddsSnapshot({ ...game, status: { state: 'in' } }, 'lines', { homeSpread: -9 }, kickoff - 60 * min);
+    saveOddsSnapshot(game, 'lines', { homeSpread: -9 }, kickoff + min);
+    expect(frozenOdds(game, 'lines')).toBeNull();
+    expect(hasStarted(game, kickoff + min)).toBe(true);
+    expect(hasStarted(game, kickoff - min)).toBe(false);
+  });
+});
