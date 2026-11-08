@@ -166,3 +166,28 @@ describe('proxy routing', () => {
     expect(teams.map((t) => t.abbreviation)).toEqual(['BUF', 'KC', 'NE', 'NYJ']);
   });
 });
+
+describe('touchdownScorers', () => {
+  // eslint-disable-next-line global-require
+  const { touchdownScorers } = require('./espnParsers');
+  const cat = (athletes) => ({ athletes });
+  it('counts rushing, receiving and return TDs but not passing TDs', () => {
+    const summary = {
+      players: {
+        1: {
+          categories: {
+            passing: cat([{ id: 'qb', stats: { passingTouchdowns: '3', rushingTouchdowns: '0' } }]),
+            rushing: cat([
+              { id: 'qb', stats: { rushingTouchdowns: '1' } },
+              { id: 'rb', stats: { rushingTouchdowns: '0' } },
+            ]),
+            receiving: cat([{ id: 'wr', stats: { receivingTouchdowns: '2' } }]),
+            kickReturns: cat([{ id: 'wr', stats: { kickReturnTouchdowns: '1' } }]),
+          },
+        },
+      },
+    };
+    expect(touchdownScorers(summary)).toEqual({ qb: 1, wr: 3 });
+    expect(touchdownScorers(null)).toEqual({});
+  });
+});

@@ -396,6 +396,41 @@
   border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
+.nfl-data-container .bet-results-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 1px solid rgba(245, 209, 107, 0.6);
+  border-radius: 4px;
+  background: rgba(245, 209, 107, 0.08);
+  color: #f5d16b;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.nfl-data-container .bet-results-toggle.open {
+  margin-bottom: 8px;
+}
+
+.nfl-data-container .bet-results-caret {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid currentColor;
+  transition: transform 0.2s ease;
+}
+
+.nfl-data-container .bet-results-toggle.open .bet-results-caret {
+  transform: rotate(180deg);
+}
+
 .nfl-data-container .bet-filter {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
