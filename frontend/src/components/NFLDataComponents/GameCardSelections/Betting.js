@@ -589,6 +589,11 @@ const Betting = ({ game, rankings, isOpen = true }) => {
   const isFinal = game.status.state === 'post';
   const started = hasStarted(game);
   const [tab, setTab] = useState('lines');
+  // counts openings, so BOX SCORE starts on SCORING PLAYS each time the game opens
+  const [openCount, setOpenCount] = useState(0);
+  useEffect(() => {
+    if (isOpen) setOpenCount((n) => n + 1);
+  }, [isOpen]);
   const [needPlayers, setNeedPlayers] = useState(false);
   const [ref, inView] = useInView();
 
@@ -722,7 +727,7 @@ const Betting = ({ game, rankings, isOpen = true }) => {
         ))}
       </div>
 
-      {tab === 'boxscore' && <BoxScore game={game} summaryState={summaryState} withToggle />}
+      {tab === 'boxscore' && <BoxScore key={openCount} game={game} summaryState={summaryState} withToggle />}
       {tab === 'lines' && <LinesTab game={game} lines={lines} linePicks={linePicks} grades={grades} />}
       {tab === 'players' && (
         <PlayersTab
