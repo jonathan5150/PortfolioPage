@@ -220,14 +220,24 @@ const TimeoutDots = ({ remaining }) => (
   </span>
 );
 
+// "3rd & 7" for a live game. Between plays (kickoffs, extra points, timeouts)
+// ESPN sends down -1 and distance 0, sometimes with text like "-1th and 0", so
+// only a real down (1st-4th) is shown; otherwise the clock / quarter.
+const BROKEN_DOWN_TEXT = /-\s*\d|\b0th\b|\b[05-9]th\b/i;
+export const situationText = (s, status) => {
+  const fallback = status?.isHalftime ? 'Halftime' : status?.shortDetail || '';
+  if (!s || !(s.down >= 1 && s.down <= 4)) return fallback;
+  const text = s.shortDownDistanceText || s.downDistanceText;
+  if (text && !BROKEN_DOWN_TEXT.test(text)) return text;
+  if (s.distance === null || s.distance === undefined || s.distance < 0) return fallback;
+  return `${ordinal(s.down)} & ${s.distance === 0 ? 'Goal' : s.distance}`;
+};
+
 export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
   const s = game.situation;
   const status = game.status;
 
-  const downText =
-    s?.shortDownDistanceText ||
-    s?.downDistanceText ||
-    (s?.down ? `${ordinal(s.down)} & ${s.distance}` : status.isHalftime ? 'Halftime' : status.shortDetail);
+  const downText = situationText(s, status);
 
   return (
     <div className="score-grid" onClick={onToggle} style={gridStyle}>
