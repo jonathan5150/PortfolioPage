@@ -40,14 +40,17 @@ export const useLongPress = (onLongPress, delay = 600) => {
   return { start, clear, suppressClick };
 };
 
-// Per-team tweaks for the faded background logo.
+// Per-team tweaks for the faded background logo. --wm-opacity is the logo's
+// resting opacity (it brightens from there while the game is open).
 const WATERMARK_STYLE = {
-  NYJ: { filter: 'grayscale(1) brightness(1.8)', opacity: 0.45 },
-  LAR: { filter: 'grayscale(1) brightness(2.6) sepia(1) saturate(4.5) hue-rotate(12deg)', opacity: 0.42 },
+  NYJ: { filter: 'grayscale(1) brightness(2.8)', '--wm-opacity': 0.5 },
+  LAR: { filter: 'grayscale(1) brightness(2.6) sepia(1) saturate(4.5) hue-rotate(12deg)', '--wm-opacity': 0.42 },
 };
 
 // A team that lost a final game goes fully gray (color wash, border and logo).
-const LOSER_WATERMARK = { filter: 'grayscale(1) brightness(0.8)', opacity: 0.3 };
+const LOSER_WATERMARK = { filter: 'grayscale(1) brightness(0.8)', '--wm-opacity': 0.3 };
+
+// While a game's card is open its logos grow and brighten; they settle back when it closes.
 const LOSER_BORDER = 'rgb(110, 110, 110)';
 
 const TeamCell = ({
@@ -62,6 +65,7 @@ const TeamCell = ({
   dimmed,
   corner = 'top',
   longPress,
+  expanded = false,
 }) => {
   const team = competitor?.team;
   const radius =
@@ -75,7 +79,7 @@ const TeamCell = ({
 
   return (
     <div
-      className="team-cell"
+      className={`team-cell ${expanded ? 'expanded' : ''}`}
       onPointerDown={() => longPress?.start(competitor?.teamId)}
       onPointerUp={() => longPress?.clear()}
       onPointerLeave={() => longPress?.clear()}

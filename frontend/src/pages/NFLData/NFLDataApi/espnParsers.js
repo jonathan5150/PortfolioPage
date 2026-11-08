@@ -129,24 +129,6 @@ const parseLeaders = (leaders = []) =>
     })
     .filter(Boolean);
 
-// Scoreboard odds: spread text, total, and each side's moneyline ("+145" / "-175").
-const parseScoreboardOdds = (o) => {
-  const ml = (side) => {
-    const raw = o.moneyline?.[side]?.close?.odds ?? o[`${side}TeamOdds`]?.moneyLine ?? null;
-    if (raw === null || raw === undefined || raw === '') return null;
-    const text = String(raw).trim();
-    if (/^even$/i.test(text)) return '+100';
-    const n = toNumber(text.replace('+', ''));
-    return n === null ? null : n > 0 ? `+${n}` : String(n);
-  };
-  return {
-    details: o.details || '',
-    overUnder: o.overUnder ?? null,
-    awayMoneyLine: ml('away'),
-    homeMoneyLine: ml('home'),
-  };
-};
-
 export const parseEvent = (event) => {
   const comp = event?.competitions?.[0] || {};
   const competitors = (comp.competitors || []).map(parseCompetitor);
@@ -164,12 +146,47 @@ export const parseEvent = (event) => {
     seasonType: event?.season?.type ?? event?.seasonType?.type ?? null,
     status,
     venue: comp.venue?.fullName || '',
+    venueCity: comp.venue?.address?.city || '',
+    venueState: comp.venue?.address?.state || '',
     broadcast: (comp.broadcasts || []).flatMap((b) => b.names || []).join(', '),
-    odds: comp.odds?.[0] ? parseScoreboardOdds(comp.odds[0]) : null,
+    odds: comp.odds?.[0]
+      ? { details: comp.odds[0].details || '', overUnder: comp.odds[0].overUnder ?? null }
+      : null,
+    indoor: Boolean(comp.venue?.indoor),
+    weather: event?.weather
+      ? { text: event.weather.displayValue || '', temperature: toNumber(event.weather.temperature) }
+      : null,
     away,
     home,
     situation: status.state === 'in' ? parseSituation(comp.situation, competitors) : null,
     leaders: parseLeaders(comp.leaders),
+  };
+};
+
+const refId = (ref, kind) => String(ref || '').match(new RegExp(`${kind}/(\\d+)`))?.[1] || null;
+
+// core API team leaders -> { rushing: [{ athleteId, statLine, value }], receiving: [...], passing: [...] }
+export const parseTeamLeaders = (json) => {
+  const pick = (name) =>
+    (json?.categories?.find((c) => c.name === name)?.leaders || [])
+      .map((l) => ({
+        athleteId: l.athlete?.id ? String(l.athlete.id) : refId(l.athlete?.$ref, 'athletes'),
+        statLine: l.displayValue || '',
+        value: toNumber(l.value),
+      }))
+      .filter((l) => l.athleteId);
+  return { passing: pick('passingLeader'), rushing: pick('rushingLeader'), receiving: pick('receivingLeader') };
+};
+
+// core API athlete -> the bits the betting tab needs.
+export const parseCoreAthlete = (json) => {
+  if (!json?.id) return null;
+  return {
+    id: String(json.id),
+    name: json.displayName || json.fullName || '',
+    position: json.position?.abbreviation || '',
+    headshot: json.headshot?.href || null,
+    injuryStatus: json.injuries?.[0]?.status || null,
   };
 };
 

@@ -59,6 +59,13 @@ export const espnUrls = {
   // Team depth chart (used to find the current starting QB).
   depthChart: (teamId, season) => `${CORE}/seasons/${season}/teams/${teamId}/depthcharts`,
 
+  // A team's season stat leaders (ranked athlete refs + "141 CAR, 770 YDS, 6 TD" lines).
+  teamLeaders: (teamId, season, seasonType = 2) =>
+    `${CORE}/seasons/${season}/types/${seasonType}/teams/${teamId}/leaders`,
+
+  // Small athlete record: name, position, headshot and current injury status.
+  coreAthlete: (athleteId, season) => `${CORE}/seasons/${season}/athletes/${athleteId}`,
+
   // ESPN FPI win probability.
   eventPredictor: (eventId) => `${CORE}/events/${eventId}/competitions/${eventId}/predictor`,
 

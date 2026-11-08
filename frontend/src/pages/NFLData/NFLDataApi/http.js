@@ -17,7 +17,38 @@ export class HttpError extends Error {
   }
 }
 
+// Global cap on simultaneous network requests, so opening every card at once
+// (the BET button) queues requests instead of firing hundreds together.
+const MAX_CONCURRENT = 8;
+let active = 0;
+const waiting = [];
+
+const acquire = () =>
+  new Promise((resolve) => {
+    if (active < MAX_CONCURRENT) {
+      active += 1;
+      resolve();
+    } else {
+      waiting.push(resolve);
+    }
+  });
+
+const release = () => {
+  const next = waiting.shift();
+  if (next) next();
+  else active -= 1;
+};
+
 const fetchWithTimeout = async (url, timeoutMs) => {
+  await acquire();
+  try {
+    return await fetchOnce(url, timeoutMs);
+  } finally {
+    release();
+  }
+};
+
+const fetchOnce = async (url, timeoutMs) => {
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const timer = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
 

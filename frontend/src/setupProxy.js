@@ -28,7 +28,33 @@ const forward = (url, res, redirectsLeft = 3) => {
     });
 };
 
+// SportsGameOdds (DraftKings anytime TD odds). Key from SGO_API_KEY in frontend/.env.local.
+const SGO_API = 'https://api.sportsgameodds.com/v2';
+const SGO_PARAMS = ['leagueID', 'oddsAvailable', 'bookmakerID', 'startsAfter', 'startsBefore', 'limit', 'cursor', 'includeOpposingOdds', 'oddID'];
+
+const sgoApi = (req, res) => {
+  const url = new URL(req.url, 'http://localhost');
+  if (url.pathname.replace(/^\/+/, '') !== 'events') {
+    res.writeHead(404, { 'content-type': 'text/plain' });
+    res.end('Not found');
+    return;
+  }
+  if (!process.env.SGO_API_KEY) {
+    res.writeHead(503, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ error: 'SGO_API_KEY is not configured' }));
+    return;
+  }
+  const search = new URLSearchParams();
+  SGO_PARAMS.forEach((key) => {
+    if (url.searchParams.has(key)) search.set(key, url.searchParams.get(key));
+  });
+  // SportsGameOdds also accepts the key as the apiKey query parameter.
+  search.set('apiKey', process.env.SGO_API_KEY);
+  forward(`${SGO_API}/events?${search}`, res);
+};
+
 module.exports = function setupProxy(app) {
+  app.use('/sgo', sgoApi);
   Object.entries(RULES).forEach(([prefix, target]) => {
     // Express strips the mount prefix, so req.url is the remainder (path + query).
     app.use(prefix, (req, res) => forward(`${target}${req.url}`, res));

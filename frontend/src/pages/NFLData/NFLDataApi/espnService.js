@@ -11,6 +11,8 @@ import {
   parseStandings,
   parseTeamSchedule,
   parseStartingQb,
+  parseTeamLeaders,
+  parseCoreAthlete,
 } from './espnParsers';
 
 const MINUTE = 60 * 1000;
@@ -30,6 +32,16 @@ export const getTeamSchedule = async (teamId, season, seasonType = 2) =>
   parseTeamSchedule(
     await fetchJson(espnUrls.teamSchedule(teamId, season, seasonType), { ttlMs: 5 * MINUTE })
   );
+
+export const getTeamLeaders = async (teamId, season) =>
+  parseTeamLeaders(await fetchJson(espnUrls.teamLeaders(teamId, season), { ttlMs: 30 * MINUTE }));
+
+export const getCoreAthlete = async (athleteId, season) =>
+  parseCoreAthlete(await fetchJson(espnUrls.coreAthlete(athleteId, season), { ttlMs: 30 * MINUTE }));
+
+// Out, IR, doubtful, suspended or PUP -> not expected to play.
+export const isUnavailable = (injuryStatus) =>
+  /out|reserve|doubtful|suspen|pup|physically|non-football/i.test(injuryStatus || '');
 
 export const getStartingQbId = async (teamId, season) =>
   parseStartingQb(await fetchJson(espnUrls.depthChart(teamId, season), { ttlMs: 30 * MINUTE }));

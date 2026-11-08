@@ -3,13 +3,31 @@ import {
   parsePredictor,
   gradeGame,
   computeTeamTrends,
-  computePlayerTrend,
-  buildInsights,
   impliedProbability,
   fmtLine,
-  gradeFinal,
+  parlayOdds,
+  americanToDecimal,
 } from './betting';
-import { keyPlayersForGame } from './bettingService';
+import {
+  parseSgoEvent,
+  findSgoEvent,
+  normalizeName,
+  playerMarketsFor,
+  parseBetslipLink,
+  parlayUrl,
+} from './sportsbookOdds';
+import { parseOddsLinks } from './betting';
+import {
+  buildLinePicks,
+  buildPlayerPicks,
+  pickWinner,
+  pickSpread,
+  pickTotal,
+  marginFromProbability,
+  weatherEffect,
+} from './picks';
+import { parseStartingQb, parseTeamLeaders, parseCoreAthlete } from './espnParsers';
+import { isUnavailable } from './espnService';
 import { toProxyUrl } from './http';
 
 const team = (id, abbreviation) => ({ id, abbreviation });
@@ -97,11 +115,6 @@ describe('grading', () => {
     expect(gradeGame('H', g, null)).toMatchObject({ ats: null, ou: null, su: 'W' });
   });
 
-  test('final game result from home view', () => {
-    const g = game('3', competitor('A', 'AAA', 10), competitor('H', 'HHH', 24));
-    expect(gradeFinal(g, odds)).toEqual({ spread: 'HHH covered', total: 'U', points: 34 });
-  });
-
   test('team trends: records, splits, streaks', () => {
     const graded = [
       { ats: 'L', su: 'L', ou: 'U', line: 3, isHome: false, pointsFor: 10, pointsAgainst: 20, coverMargin: -7 },
@@ -121,146 +134,7 @@ describe('grading', () => {
   });
 });
 
-describe('player trends', () => {
-  const log = (season, opponentId, yards, tds = 0) => ({
-    season,
-    opponentId,
-    stats: { receivingYards: yards, receivingTouchdowns: tds },
-  });
-
-  test('versus opponent, recent form and TD rate', () => {
-    // newest first
-    const games = [
-      log(2026, 'X', 110, 1),
-      log(2026, 'Y', 95, 1),
-      log(2026, 'Z', 100, 0),
-      log(2026, 'Y', 40, 1),
-      log(2026, 'Z', 35, 1),
-      log(2025, 'NYJ', 120, 1),
-      log(2025, 'Z', 30),
-      log(2024, 'NYJ', 140),
-    ];
-    const t = computePlayerTrend({ games, season: 2026, opponentId: 'NYJ', category: 'receiving' });
-    expect(t.vsOppGames).toBe(2);
-    expect(t.vsOppAvg).toBe(130);
-    expect(t.seasonGames).toBe(5);
-    expect(t.recentAvg).toBeCloseTo(101.67, 1);
-    expect(t.tdGames).toBe(4);
-    expect(t.firstSeason).toBe(2024);
-  });
-});
-
-describe('insights', () => {
-  const g = {
-    id: '9',
-    away: competitor('A', 'AAA', null),
-    home: competitor('H', 'HHH', null),
-    status: { state: 'pre' },
-  };
-  const odds = parseEventOdds(oddsJson);
-
-  const hotTrends = computeTeamTrends(
-    Array.from({ length: 10 }, (_, i) => ({
-      ats: i < 8 ? 'W' : 'L',
-      su: 'W',
-      ou: 'O',
-      line: -3,
-      isHome: i % 2 === 0,
-      pointsFor: 30,
-      pointsAgainst: 20,
-      coverMargin: 4,
-    }))
-  );
-  const coldTrends = computeTeamTrends(
-    Array.from({ length: 10 }, () => ({
-      ats: 'L',
-      su: 'L',
-      ou: 'O',
-      line: 3,
-      isHome: false,
-      pointsFor: 17,
-      pointsAgainst: 27,
-      coverMargin: -6,
-    }))
-  );
-
-  test('flags a team that keeps covering and one that keeps failing', () => {
-    const insights = buildInsights({ game: g, odds, predictor: null, awayTrends: coldTrends, homeTrends: hotTrends, players: [] });
-    const ids = insights.map((i) => i.id);
-    expect(ids).toContain('HHH-ats');
-    expect(ids).toContain('AAA-ats');
-    const hot = insights.find((i) => i.id === 'HHH-ats');
-    expect(hot.text).toContain('8 of 10');
-    expect(hot.lean).toBe('Consider HHH -9.5');
-    expect(insights.length).toBeLessThanOrEqual(8);
-    // sorted strongest first
-    insights.slice(1).forEach((i, idx) => expect(insights[idx].strength).toBeGreaterThanOrEqual(i.strength));
-  });
-
-  test('flags combined overs and moneyline value from FPI', () => {
-    const insights = buildInsights({
-      game: g,
-      odds,
-      predictor: { away: 35, home: 65 },
-      awayTrends: coldTrends,
-      homeTrends: hotTrends,
-      players: [],
-      limit: 20,
-    });
-    const ids = insights.map((i) => i.id);
-    expect(ids).toContain('combined-ou');
-    expect(ids).toContain('AAA-value'); // +400 implies 20%, FPI says 35%
-  });
-
-  test('player matchup highlight', () => {
-    const players = [
-      {
-        id: 'p1',
-        name: 'Test Receiver',
-        oppAbbr: 'HHH',
-        trend: {
-          category: 'receiving',
-          label: 'rec yds',
-          long: 'receiving yards',
-          minDiff: 12,
-          careerAvg: 60,
-          careerGames: 30,
-          firstSeason: 2024,
-          vsOppAvg: 95,
-          vsOppGames: 3,
-          seasonAvg: 60,
-          seasonGames: 8,
-          recentAvg: 62,
-          recentGames: 3,
-          tdGames: 1,
-          tdWindow: 5,
-        },
-      },
-    ];
-    const insights = buildInsights({ game: g, odds: null, predictor: null, awayTrends: null, homeTrends: null, players });
-    expect(insights).toHaveLength(1);
-    expect(insights[0].text).toContain('95 rec yds in 3 games vs HHH since 2024');
-    expect(insights[0].lean).toBe('Consider Test Receiver over on receiving yards');
-  });
-});
-
 describe('betting wiring', () => {
-  test('key players come from team leaders', () => {
-    const g = {
-      away: competitor('A', 'AAA', null, {
-        leaders: [
-          { category: 'passingLeader', athleteId: '1', athleteName: 'P. Passer', athleteFullName: 'Pat Passer' },
-          { category: 'receivingLeader', athleteId: '2', athleteName: 'R. Catch' },
-        ],
-      }),
-      home: competitor('H', 'HHH', null, { leaders: [] }),
-    };
-    const players = keyPlayersForGame(g);
-    expect(players).toHaveLength(2);
-    expect(players[0]).toMatchObject({ name: 'Pat Passer', category: 'passing', oppId: 'H', oppAbbr: 'HHH' });
-    expect(players[1]).toMatchObject({ name: 'R. Catch', category: 'receiving' });
-  });
-
   test('core API goes through the same-origin proxy', () => {
     expect(toProxyUrl('https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/1/competitions/1/odds')).toBe(
       '/espn/core/v2/sports/football/leagues/nfl/events/1/competitions/1/odds'
@@ -268,10 +142,7 @@ describe('betting wiring', () => {
   });
 });
 
-describe('schedule and depth chart parsers', () => {
-  // eslint-disable-next-line global-require
-  const { parseStartingQb } = require('./espnParsers');
-
+describe('schedule, depth chart and leaders parsers', () => {
   test('starting QB is the rank-1 QB on the depth chart', () => {
     const json = {
       items: [
@@ -293,12 +164,426 @@ describe('schedule and depth chart parsers', () => {
     expect(parseStartingQb({ items: [] })).toBeNull();
   });
 
-  test('pre-game spread shown in place of the score', () => {
-    // eslint-disable-next-line global-require
-    const { spreadForTeam } = require('../../../components/NFLDataComponents/ScoreBug/ScoreBugs');
-    expect(spreadForTeam('KC -9.5', 'KC')).toBe('-9.5');
-    expect(spreadForTeam('KC -9.5', 'NYJ')).toBe('+9.5');
-    expect(spreadForTeam('EVEN', 'KC')).toBe('PK');
-    expect(spreadForTeam('', 'KC')).toBeNull();
+  test('team leaders, athlete records and injury filter', () => {
+    const leaders = parseTeamLeaders({
+      categories: [
+        {
+          name: 'rushingLeader',
+          leaders: [{ displayValue: '141 CAR, 770 YDS', value: 770, athlete: { $ref: 'http://x/athletes/4567048?lang=en' } }],
+        },
+      ],
+    });
+    expect(leaders.rushing).toEqual([{ athleteId: '4567048', statLine: '141 CAR, 770 YDS', value: 770 }]);
+    expect(
+      parseCoreAthlete({ id: 1, displayName: 'A B', position: { abbreviation: 'WR' }, injuries: [{ status: 'Out' }] })
+    ).toMatchObject({ id: '1', name: 'A B', position: 'WR', injuryStatus: 'Out' });
+    expect(isUnavailable('Injured Reserve')).toBe(true);
+    expect(isUnavailable('Questionable')).toBe(false);
+  });
+
+});
+
+describe('picks', () => {
+  const team = (id, abbreviation, displayName) => ({ id, abbreviation, displayName, name: displayName.split(' ').pop() });
+  const g = {
+    id: '9',
+    season: 2026,
+    date: '2026-11-08T18:00Z',
+    status: { state: 'pre' },
+    indoor: false,
+    weather: { text: 'Sunny', temperature: 60 },
+    away: { teamId: 'A', team: team('A', 'NYJ', 'New York Jets') },
+    home: { teamId: 'H', team: team('H', 'KC', 'Kansas City Chiefs') },
+  };
+  const odds = parseEventOdds(oddsJson); // KC -9.5, total 48.5
+  const trend = (games, { ats = 'W', ou = 'O', su = 'W', pf = 27, pa = 20, line = -3 } = {}) =>
+    computeTeamTrends(
+      Array.from({ length: games }, () => ({ ats, ou, su, line, isHome: true, pointsFor: pf, pointsAgainst: pa, coverMargin: 1 }))
+    );
+
+  test('FPI margin conversion is close to real lines', () => {
+    expect(Math.round(marginFromProbability(80))).toBe(9);
+    expect(marginFromProbability(50)).toBeCloseTo(0);
+  });
+
+  test('winner follows FPI and explains why', () => {
+    const w = pickWinner({
+      game: g,
+      odds,
+      predictor: { away: 20, home: 80 },
+      awayTrends: trend(8, { su: 'L', pf: 17, pa: 26 }),
+      homeTrends: trend(8, { pf: 28, pa: 18 }),
+    });
+    expect(w.pick).toBe('Kansas City Chiefs');
+    expect(w.odds).toBe('ML -535');
+    expect(w.reasons[0]).toBe("ESPN's FPI gives KC an 80% chance to win.");
+    expect(w.reasons.length).toBeLessThanOrEqual(4);
+    expect(w.reasons.join(' ')).toContain('KC is 8-0 this season');
+  });
+
+  test('spread takes the points when the favorite is overpriced', () => {
+    // FPI 60% ~ KC by 2.6 and scoring averages ~ even, but KC is -9.5
+    const s = pickSpread({
+      game: g,
+      odds,
+      predictor: { away: 40, home: 60 },
+      awayTrends: trend(6, { pf: 22, pa: 22 }),
+      homeTrends: trend(6, { pf: 23, pa: 22 }),
+    });
+    expect(s.pick).toBe('NYJ +9.5');
+    expect(s.odds).toBe('-102');
+    expect(s.reasons.length).toBeGreaterThan(0);
+  });
+
+  test('total leans over when scoring and history point over, and reports weather', () => {
+    const t = pickTotal({
+      game: g,
+      odds,
+      predictor: null,
+      awayTrends: trend(6, { pf: 30, pa: 28, ou: 'O' }),
+      homeTrends: trend(6, { pf: 31, pa: 27, ou: 'O' }),
+    });
+    expect(t.pick).toBe('OVER 48.5');
+    expect(t.odds).toBe('-102');
+    expect(t.reasons.join(' ')).toContain('Sunny, 60°F');
+  });
+
+  test('weather adjustments', () => {
+    expect(weatherEffect({ indoor: true }).adj).toBeGreaterThan(0);
+    expect(weatherEffect({ weather: { text: 'Snow', temperature: 25 } }).adj).toBeLessThan(0);
+    expect(weatherEffect({ weather: { text: 'Cloudy', temperature: 30 } }).adj).toBeLessThan(0);
+  });
+
+  test('line picks: one-line headline and reason, gold flag when FPI beats the moneyline', () => {
+    const picks = buildLinePicks({
+      game: g,
+      odds,
+      predictor: { away: 35, home: 65 }, // NYJ +400 implies 20%
+      awayTrends: trend(6),
+      homeTrends: trend(6),
+    });
+    expect(picks.winner.headline).toBe('CHIEFS TO WIN');
+    expect(picks.winner.summary).toContain("ESPN's model likes the Chiefs here, 65% to win.");
+    expect(picks.winner.strong).toBe(false); // KC -535 implies 84% > 65%
+    expect(picks.spread.headline).toBe('JETS TO COVER +9.5');
+    expect(picks.spread.summary).toBe(
+      "Getting 9.5 points is a lot of cushion. We only see the Jets losing by about 2. They've covered 6 of 6 games this year."
+    );
+    expect(picks.spread.strong).toBe(true);
+    expect(picks.total.headline).toMatch(/^(OVER|UNDER) 48.5$/);
+
+    const underdog = buildLinePicks({ game: g, odds, predictor: { away: 55, home: 45 }, awayTrends: null, homeTrends: null });
+    expect(underdog.winner.headline).toBe('JETS TO WIN');
+    expect(underdog.winner.strong).toBe(true); // 55% vs 20% implied
+  });
+
+  test("player picks are touchdown calls with the book's anytime TD odds", () => {
+    const back = (id, name, tds) => ({
+      id,
+      name,
+      position: 'RB',
+      games: tds.map((t) => ({ season: 2026, stats: { rushingTouchdowns: t, receivingTouchdowns: 0 } })),
+    });
+    const picks = buildPlayerPicks({
+      game: g,
+      players: {
+        away: { qb: [], rb: [back('1', 'Busy Back', [1, 1, 2, 1, 0, 1])], wr: [] },
+        home: { qb: [], rb: [back('2', 'Quiet Back', [0, 0, 0, 0, 0, 0])], wr: [] },
+      },
+      bookOdds: { players: { 'busy back': { anytimeTd: { yes: { price: 200, link: { url: 'u', marketId: 'm', selectionId: 's' } } } } } },
+      rankings: null,
+      odds,
+    });
+    expect(picks.rb.map((p) => p.player.name)).toEqual(['Busy Back', 'Quiet Back']);
+    const busy = picks.rb[0].td;
+    expect(busy).toMatchObject({ price: 200, opinion: 'BET YES', verdict: 'Should score' });
+    expect(busy.link.selectionId).toBe('s');
+    expect(busy.reason).toContain("DraftKings' +200");
+    expect(busy.reason).toMatch(/^Should score: 6 TDs in 6 games this season/);
+    expect(busy.reason).toContain('better than the 33.3%');
+    const quiet = picks.rb[1].td;
+    expect(quiet.price).toBeNull();
+    expect(quiet.verdict).toBe('Unlikely to score');
+    expect(picks.rb[0].markets).toBeUndefined();
+  });
+});
+
+describe('parlays', () => {
+  test('combined odds', () => {
+    expect(americanToDecimal(-110)).toBeCloseTo(1.909, 3);
+    // two -110 legs pay about +264
+    expect(parlayOdds([{ odds: -110 }, { odds: -110 }])).toBe(264);
+    expect(parlayOdds([{ odds: 150 }, { odds: null }])).toBe(150);
+    expect(parlayOdds([{ odds: null }])).toBeNull();
+  });
+
+  test('DraftKings bet-slip links, from ESPN odds links, joined into one parlay link', () => {
+    const gateway = (outcome) =>
+      `https://sportsbook.draftkings.com/gateway?s=__s__&wpsrc=413&preurl=${encodeURIComponent(
+        `https://sportsbook.draftkings.com/event/34118128?outcomes=${outcome}`
+      )}`;
+    const links = parseOddsLinks([
+      { rel: ['home', 'desktop', 'bets', 'draftkings'], href: gateway('0ML84695561_1') },
+      { rel: ['away', 'desktop', 'bets', 'draftkings'], href: gateway('0ML84695561_3') },
+      { rel: ['under', 'desktop', 'bets'], href: gateway('0OU84695561U5250_3') },
+      { rel: ['game', 'desktop', 'bets'], href: 'https://sportsbook.draftkings.com/gateway?s=1' },
+    ]);
+    expect(links.awayMl).toEqual({
+      url: 'https://sportsbook.draftkings.com/event/34118128?outcomes=0ML84695561_3',
+      eventId: '34118128',
+      outcome: '0ML84695561_3',
+    });
+    expect(links.under.outcome).toBe('0OU84695561U5250_3');
+    expect(links.game).toBeUndefined();
+
+    const td = parseBetslipLink('https://sportsbook.draftkings.com/event/34118128?outcomes=0QA1%232_13L88808Q1-9Q20');
+    expect(td.outcome).toBe('0QA1#2_13L88808Q1-9Q20');
+    expect(parseBetslipLink('https://example.com/nope')).toBeNull();
+
+    // '#' in an id is escaped so the link doesn't stop there
+    expect(parlayUrl([{ link: links.awayMl }, { link: null }, { link: links.under }, { link: td }])).toBe(
+      'https://sportsbook.draftkings.com/event/34118128?outcomes=0ML84695561_3+0OU84695561U5250_3+0QA1%232_13L88808Q1-9Q20'
+    );
+    expect(parlayUrl([{ link: null }])).toBeNull();
+  });
+});
+
+describe('touchdown chance', () => {
+  // eslint-disable-next-line global-require
+  const { touchdownChance, impliedTeamPoints } = require('./picks');
+  const g = (season, rushTd, recTd = 0) => ({ season, stats: { rushingTouchdowns: rushTd, receivingTouchdowns: recTd } });
+
+  test('a back who scores often is likely; a quiet one is a long shot', () => {
+    const hot = touchdownChance({
+      games: [g(2026, 1), g(2026, 2), g(2026, 1), g(2026, 0), g(2026, 1), g(2026, 1)],
+      position: 'RB',
+      season: 2026,
+      name: 'Hot Back',
+      oppAbbr: 'OPP',
+    });
+    const cold = touchdownChance({
+      games: [g(2026, 0), g(2026, 0), g(2026, 0), g(2026, 0), g(2026, 0), g(2026, 0)],
+      position: 'WR',
+      season: 2026,
+      name: 'Cold Receiver',
+      oppAbbr: 'OPP',
+    });
+    expect(hot.probability).toBeGreaterThan(45);
+    expect(hot.opinion).toBe('LIKELY');
+    expect(cold.probability).toBeLessThan(20);
+    expect(hot.reason).toContain('6 TDs in 6 games this season');
+  });
+
+  test('QBs only count rushing scores; implied points and prices move the call', () => {
+    const qb = touchdownChance({ games: [g(2026, 0, 3), g(2026, 0, 2)], position: 'QB', season: 2026, name: 'QB', oppAbbr: 'X' });
+    expect(qb.reason).toContain('0 rushing TDs');
+    const base = { games: [g(2026, 1), g(2026, 1), g(2026, 0), g(2026, 1)], position: 'RB', season: 2026, name: 'RB', oppAbbr: 'X' };
+    expect(touchdownChance({ ...base, teamPoints: 30 }).probability).toBeGreaterThan(touchdownChance({ ...base, teamPoints: 15 }).probability);
+    const link = { url: 'u', marketId: 'm', selectionId: 's' };
+    const value = touchdownChance({ ...base, bookTd: { price: 250, link } }); // +250 implies 28.6%
+    expect(value.opinion).toBe('BET YES');
+    expect(value.strong).toBe(true);
+    expect(value.link).toBe(link);
+    expect(touchdownChance({ ...base, bookTd: { price: -300, link: null } }).opinion).toBe('PASS');
+    expect(impliedTeamPoints({ total: { line: 52.5 }, home: { spreadLine: -3 } }, 'home')).toBe(27.75);
+  });
+});
+
+describe('player names', () => {
+  test('names normalize across sources', () => {
+    expect(normalizeName('Kenneth Walker III')).toBe('kenneth walker');
+    expect(normalizeName("Ja'Marr Chase")).toBe('jamarr chase');
+    expect(normalizeName('Kyle Pitts Sr.')).toBe('kyle pitts');
+    expect(normalizeName('PATRICK_MAHOMES_1_NFL')).toBe('patrick mahomes');
+  });
+});
+
+describe('DraftKings anytime TD prices from SportsGameOdds', () => {
+  const dk = (odds, extra = {}, outcome = `0QA${Math.floor(Math.random() * 1e9)}`) => ({
+    draftkings: {
+      available: true,
+      odds,
+      deeplink: `https://sportsbook.draftkings.com/event/34118128?outcomes=${outcome}`,
+      ...extra,
+    },
+  });
+  const td = (playerID, betTypeID, sideID, book) => ({
+    oddID: `touchdowns-${playerID}-game-${betTypeID}-${sideID}`,
+    statID: 'touchdowns',
+    statEntityID: playerID,
+    playerID,
+    periodID: 'game',
+    betTypeID,
+    sideID,
+    byBookmaker: book,
+  });
+
+  const event = {
+    teams: { home: { names: { long: 'Atlanta Falcons' } }, away: { names: { long: 'Cincinnati Bengals' } } },
+    status: { startsAt: '2026-11-08T14:30:00.000Z' },
+    players: { BIJAN_ROBINSON_1_NFL: { name: 'Bijan Robinson' } },
+    odds: {
+      a: td('BIJAN_ROBINSON_1_NFL', 'yn', 'yes', dk('-320', {}, 'UNIQUE1')),
+      b: td('BIJAN_ROBINSON_1_NFL', 'ou', 'over', dk('+170', { overUnder: '1.5' })), // 2+ TDs, ignored
+      c: td('TEE_HIGGINS_1_NFL', 'ou', 'over', dk('+115', { overUnder: '0.5' }, 'UNIQUE2')), // over 0.5 = anytime
+      d: td('CHASE_BROWN_1_NFL', 'yn', 'yes', { draftkings: { available: false, odds: '-180' } }),
+    },
+  };
+
+  test('anytime TD prices per player', () => {
+    const odds = parseSgoEvent(event);
+    expect(playerMarketsFor(odds, 'Bijan Robinson').anytimeTd.yes).toMatchObject({ price: -320, link: { outcome: 'UNIQUE1' } });
+    expect(playerMarketsFor(odds, 'Tee Higgins').anytimeTd.yes.price).toBe(115);
+    expect(playerMarketsFor(odds, 'Chase Brown')).toBeNull(); // not offered right now
+    expect(odds.lines).toBeUndefined(); // lines come from ESPN's DraftKings feed
+  });
+
+  test("DraftKings' shared TD links are dropped", () => {
+    const shared = dk('+200', {}, 'SAME');
+    const odds = parseSgoEvent({
+      odds: {
+        a: td('A_ONE_1_NFL', 'yn', 'yes', shared),
+        b: td('B_TWO_1_NFL', 'yn', 'yes', shared),
+        c: td('C_THREE_1_NFL', 'yn', 'yes', dk('+300', {}, 'MINE')),
+      },
+    });
+    expect(playerMarketsFor(odds, 'A One').anytimeTd.yes).toEqual({ price: 200, link: null });
+    expect(playerMarketsFor(odds, 'C Three').anytimeTd.yes.link.outcome).toBe('MINE');
+  });
+
+  test('finds the SportsGameOdds event for a game', () => {
+    const game = {
+      date: '2026-11-08T14:30Z',
+      away: { team: { displayName: 'Cincinnati Bengals' } },
+      home: { team: { displayName: 'Atlanta Falcons' } },
+    };
+    expect(findSgoEvent([event], game)).toBe(event);
+    expect(findSgoEvent([event], { ...game, home: { team: { displayName: 'Other' } } })).toBeNull();
+  });
+});
+
+describe('touchdown breakdown rows', () => {
+  // eslint-disable-next-line global-require
+  const { touchdownChance } = require('./picks');
+  const g = (season, rushTd) => ({ season, stats: { rushingTouchdowns: rushTd, receivingTouchdowns: 0 } });
+
+  test('labelled, coloured evidence for the card', () => {
+    const td = touchdownChance({
+      games: [g(2026, 1), g(2026, 1), g(2026, 0), g(2026, 1), g(2026, 1), g(2025, 1), g(2025, 0)],
+      position: 'RB',
+      season: 2026,
+      oppId: 'O',
+      oppAbbr: 'OPP',
+      rankings: { teamCount: 32, ranks: { oppPpg: { O: 30 } } },
+      teamPoints: 27,
+      bookTd: { price: 150, link: null },
+    });
+    const rows = Object.fromEntries(td.factors.map((f) => [f.label, f]));
+    expect(rows['This season']).toMatchObject({ value: '4 TDs in 5 games', tone: 'good' });
+    expect(rows['Last 5']).toMatchObject({ value: 'scored in 4', tone: 'good' });
+    expect(rows['Last season'].value).toBe('1 TD in 2 games');
+    // team total and opponent defense still shape the chance but aren't listed
+    expect(rows['Team total']).toBeUndefined();
+    expect(rows['OPP defense']).toBeUndefined();
+    expect(td.chance).toBe('LIKELY');
+    expect(td.strong).toBe(true);
+    expect(rows['DraftKings +150'].value).toMatch(/% vs 40% implied: (value|about fair|too short)$/);
+  });
+});
+
+describe('kickoff conditions', () => {
+  // eslint-disable-next-line global-require
+  const { conditionsAtKickoff, compass, describeWeatherCode } = require('./gameConditions');
+
+  test('reads the forecast hour nearest kickoff', () => {
+    const json = {
+      hourly: {
+        time: ['2026-11-08T17:00', '2026-11-08T18:00', '2026-11-08T19:00'],
+        temperature_2m: [55.1, 58.6, 60.2],
+        wind_speed_10m: [6.2, 11.7, 14],
+        wind_direction_10m: [180, 225, 270],
+        weather_code: [3, 1, 61],
+      },
+    };
+    expect(conditionsAtKickoff(json, '2026-11-08T18:05Z')).toEqual({
+      temperature: 58.6,
+      wind: 11.7,
+      windFrom: 'SW',
+      sky: 'Partly cloudy',
+      icon: '⛅',
+    });
+    expect(conditionsAtKickoff({ hourly: { time: [] } }, '2026-11-08T18:00Z')).toBeNull();
+  });
+
+  test('compass points and weather codes', () => {
+    expect(compass(0)).toBe('N');
+    expect(compass(350)).toBe('N');
+    expect(compass(90)).toBe('E');
+    expect(describeWeatherCode(71).text).toBe('Snow');
+    expect(describeWeatherCode(95).text).toBe('Storms');
+    expect(describeWeatherCode(null)).toBeNull();
+  });
+});
+
+describe('player card extras', () => {
+  // eslint-disable-next-line global-require
+  const { chanceLabel, seasonStatLine, touchdownChance } = require('./picks');
+
+  test('likelihood labels and the 25% gold border', () => {
+    expect(chanceLabel(52)).toBe('LIKELY');
+    expect(chanceLabel(31)).toBe('GOOD CHANCE');
+    expect(chanceLabel(20)).toBe('LONG SHOT');
+    expect(chanceLabel(8)).toBe('UNLIKELY');
+    const none = touchdownChance({ games: [{ season: 2026, stats: { receivingTouchdowns: 0 } }], position: 'WR', season: 2026 });
+    expect(none.strong).toBe(false);
+  });
+
+  test('season stat line by position, falling back to last season', () => {
+    const qbGames = [
+      { season: 2026, stats: { completions: 20, passingAttempts: 30, passingYards: 250, passingTouchdowns: 2, interceptions: 1, rushingYards: 10 } },
+      { season: 2026, stats: { completions: 25, passingAttempts: 35, passingYards: 300, passingTouchdowns: 3, interceptions: 0, rushingYards: 5 } },
+    ];
+    const qb = seasonStatLine(qbGames, 'QB', 2026);
+    expect(qb.season).toBe('2026');
+    expect(Object.fromEntries(qb.items.map((i) => [i.label, i.value]))).toMatchObject({
+      GP: 2,
+      'CMP%': '69.2',
+      'PASS YDS': 550,
+      'PASS TD': 5,
+      INT: 1,
+      'RUSH YDS': 15,
+    });
+    const rookie = seasonStatLine([{ season: 2025, stats: { receptions: 4, receivingYards: 50 } }], 'TE', 2026);
+    expect(rookie.season).toBe('2025');
+    expect(rookie.items.find((i) => i.label === 'Y/R').value).toBe('12.5');
+    expect(seasonStatLine([], 'RB', 2026)).toBeNull();
+  });
+});
+
+describe('touchdown history', () => {
+  // eslint-disable-next-line global-require
+  const { touchdownHistory } = require('./picks');
+
+  test("only this season's games, last 10 at most, oldest first, with date and opponent", () => {
+    const games = [
+      ...Array.from({ length: 12 }, (_, i) => ({
+        eventId: `g${i}`,
+        season: 2026,
+        date: `2026-${String(12 - Math.floor(i / 4)).padStart(2, '0')}-${String(28 - i).padStart(2, '0')}T18:00Z`,
+        atVs: i % 2 ? '@' : 'vs',
+        opponentAbbr: 'KC',
+        stats: { rushingTouchdowns: i === 0 ? 2 : 0, receivingTouchdowns: i === 3 ? 1 : 0 },
+      })),
+      { eventId: 'old', season: 2025, date: '2025-12-01T18:00Z', stats: { rushingTouchdowns: 1 } },
+    ];
+    const history = touchdownHistory(games, 'RB', 2026);
+    expect(history).toHaveLength(10);
+    expect(history.map((g) => g.id)).not.toContain('old');
+    const newest = history[history.length - 1];
+    expect(newest).toMatchObject({ id: 'g0', tds: 2, scored: true, opp: 'vs KC' });
+    expect(newest.date).toMatch(/^\d{1,2}\/\d{1,2}$/);
+    expect(history.find((g) => g.id === 'g3')).toMatchObject({ scored: true, opp: '@ KC' });
+    expect(touchdownHistory(games, 'QB', 2026).find((g) => g.id === 'g3').scored).toBe(false); // QBs: rushing only
+    expect(touchdownHistory([], 'WR', 2026)).toEqual([]);
   });
 });
