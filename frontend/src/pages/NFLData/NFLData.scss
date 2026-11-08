@@ -522,6 +522,33 @@
   font-weight: 800;
 }
 
+.nfl-data-container .season-totals {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(245, 209, 107, 0.5);
+}
+
+.nfl-data-container .season-row {
+  display: grid;
+  grid-template-columns: 1fr auto 40px 72px;
+  gap: 8px;
+  padding: 1px 0;
+  font-size: 12px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.nfl-data-container .season-row > span:first-child {
+  text-align: left;
+}
+
+.nfl-data-container .season-row.total {
+  margin-top: 3px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  font-weight: 800;
+}
+
 .nfl-data-container .bet-week {
   margin-top: 8px;
   font-size: 12px;
@@ -1486,29 +1513,66 @@
   font-size: 9px;
 }
 
-.nfl-data-container .timeouts-row {
+/* live: down & distance top left, quarter and clock top right, the play below */
+.nfl-data-container .live-play-box {
+  padding: 5px 10px;
+  text-align: left;
+}
+
+.nfl-data-container .live-play-top {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 5px;
-  font-size: 9px;
-  margin-top: 3px;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 700;
 }
 
-.nfl-data-container .timeout-dots {
+.nfl-data-container .live-play-clock {
+  flex: none;
+  white-space: nowrap;
+}
+
+.nfl-data-container .marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.nfl-data-container .marquee.scrolling {
+  mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 8px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 8px), transparent 100%);
+}
+
+.nfl-data-container .marquee-track {
   display: inline-flex;
-  gap: 2px;
 }
 
-.nfl-data-container .timeout-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  border: 1px solid #888;
+.nfl-data-container .marquee.scrolling .marquee-track {
+  animation-name: nflMarquee;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform;
 }
 
-.nfl-data-container .timeout-dot.on {
-  background: #b59841;
-  border-color: #b59841;
+.nfl-data-container .marquee-text {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+@keyframes nflMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--marquee-distance));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nfl-data-container .marquee.scrolling .marquee-track {
+    animation: none;
+  }
 }
 
 /* ---------- linescore ---------- */

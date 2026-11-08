@@ -2,6 +2,7 @@ import React from 'react';
 import TeamCell from './TeamCell';
 import useGameSummary from '../GameCard/useGameSummary';
 import Linescore from './Linescore';
+import Marquee from '../shared/Marquee';
 import { headshotUrl } from '../../../pages/NFLData/NFLDataApi/endpoints';
 import { getEventPredictor } from '../../../pages/NFLData/NFLDataApi/bettingService';
 import { getGameConditions } from '../../../pages/NFLData/NFLDataApi/gameConditions';
@@ -213,14 +214,6 @@ export const PreGameScoreBug = ({ game, onToggle, showLinescore }) => {
 
 // ---------- Live ----------
 
-const TimeoutDots = ({ remaining }) => (
-  <span className="timeout-dots" aria-label={`${remaining ?? 0} timeouts left`}>
-    {[0, 1, 2].map((i) => (
-      <span key={i} className={`timeout-dot ${i < (remaining ?? 0) ? 'on' : ''}`} />
-    ))}
-  </span>
-);
-
 // "3rd & 7" for a live game. Between plays (kickoffs, extra points, timeouts)
 // ESPN sends down -1 and distance 0, sometimes with text like "-1th and 0", so
 // only a real down (1st-4th) is shown; otherwise the clock / quarter.
@@ -247,7 +240,11 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
   const lastScore = summary.data?.scoringPlays?.[summary.data.scoringPlays.length - 1]?.text;
   const playText = stoppage && lastScore ? lastScore : s?.lastPlay;
 
-  const downText = situationText(s, status);
+  // Top left: the down and distance (only when there's a real down), top
+  // right: quarter and clock. The play underneath gets the full width.
+  const hasDown = !status.isHalftime && s?.down >= 1 && s?.down <= 4;
+  const downText = hasDown ? situationText(s, status) : '';
+  const clockText = status.isHalftime ? 'Halftime' : `${formatPeriod(status.period)} ${status.displayClock}`;
 
   return (
     <div className="score-grid" onClick={onToggle} style={gridStyle}>
@@ -262,28 +259,21 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
         />
       ))}
 
-      <div style={{ ...infoBoxStyle('left'), textAlign: 'left', paddingLeft: '10px' }}>
-        <div className="ellipsis" style={{ fontWeight: 700 }}>
-          {downText}
-          {s?.possessionText ? ` · ${s.possessionText}` : ''}
-          {s?.isRedZone && <span className="red-zone-tag">RZ</span>}
+      <div
+        className="live-play-box"
+        style={{ ...infoBoxStyle('left'), gridColumn: '1 / span 2', borderRadius: '0 0 6px 6px', padding: '5px 10px' }}
+      >
+        <div className="live-play-top">
+          <span className="ellipsis">
+            {downText}
+            {hasDown && s?.possessionText ? ` · ${s.possessionText}` : ''}
+            {hasDown && s?.isRedZone && <span className="red-zone-tag">RZ</span>}
+          </span>
+          <span className="live-play-clock">
+            <span className="live-indicator">●</span> {clockText}
+          </span>
         </div>
-        <div className="ellipsis last-play" title={playText || ''}>
-          {playText || ' '}
-        </div>
-      </div>
-
-      <div style={{ ...infoBoxStyle('right'), alignItems: 'center' }}>
-        <div style={{ fontWeight: 700, fontSize: '13px' }}>
-          <span className="live-indicator">●</span>{' '}
-          {status.isHalftime ? 'HALF' : `${formatPeriod(status.period)} ${status.displayClock}`}
-        </div>
-        <div className="timeouts-row">
-          <span>{game.away?.team?.abbreviation}</span>
-          <TimeoutDots remaining={s?.awayTimeouts} />
-          <TimeoutDots remaining={s?.homeTimeouts} />
-          <span>{game.home?.team?.abbreviation}</span>
-        </div>
+        <Marquee className="last-play" text={playText || ' '} />
       </div>
 
       <InfoDrawer open={showLinescore}>
