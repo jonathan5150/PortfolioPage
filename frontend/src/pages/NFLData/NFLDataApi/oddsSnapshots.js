@@ -30,7 +30,8 @@ const kickoffOf = (game) => (game?.date ? Date.parse(game.date) : NaN);
 export const hasStarted = (game, now = Date.now()) =>
   game?.status?.state === 'in' || game?.status?.state === 'post' || now >= kickoffOf(game);
 
-// kind: 'lines' (ESPN / DraftKings game lines) or 'td' (anytime TD prices).
+// kind: 'lines' (ESPN / DraftKings game lines), 'td' (anytime TD prices) or
+// 'picks' (the engine's winner / spread / total picks, as shown on LINES).
 // Keeps two copies per game: the latest one taken 30+ minutes before kickoff
 // ("anchor"), and the first one taken inside that last half hour ("late", only
 // used if this device never saw the game earlier).
