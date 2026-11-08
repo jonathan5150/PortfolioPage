@@ -1,3 +1,5 @@
+import { teamLogo, playerHeadshot } from './endpoints';
+
 // Pure functions that turn raw ESPN JSON into the small, stable shapes the UI uses.
 // Nothing in here touches the network or React, so it can be unit tested with fixtures.
 
@@ -31,7 +33,7 @@ export const parseTeam = (raw) => {
     location: team.location || '',
     color: asHexColor(team.color),
     alternateColor: asHexColor(team.alternateColor),
-    logo: firstLogo(team),
+    logo: teamLogo(firstLogo(team)),
   };
 };
 
@@ -186,7 +188,7 @@ export const parseCoreAthlete = (json) => {
     id: String(json.id),
     name: json.displayName || json.fullName || '',
     position: json.position?.abbreviation || '',
-    headshot: json.headshot?.href || null,
+    headshot: json.headshot?.href ? playerHeadshot(json.headshot.href) : null,
     injuryStatus: json.injuries?.[0]?.status || null,
   };
 };
@@ -352,7 +354,7 @@ export const parseRoster = (json) => {
         jersey: a.jersey || '',
         position: a.position?.abbreviation || '',
         side: group?.position || '',
-        headshot: a.headshot?.href || '',
+        headshot: a.headshot?.href ? playerHeadshot(a.headshot.href) : '',
         status: a.status?.type || a.status?.name || '',
         injuryStatus: a.injuries?.[0]?.status || null,
       });

@@ -79,5 +79,18 @@ export const nflverseUrls = {
   teamSeasonFile: (season) => `stats_team_reg_${season}.csv`,
 };
 
+// ESPN serves logos at 500x500 (a few, like GB and LV, at 4096x4096) and
+// headshots at 600x436, far bigger than the page shows them. Decoded, that was
+// ~200 MB of images, enough to make low-memory phones lag. ESPN's image
+// service returns resized copies (transparency kept).
+const ESPN_IMAGE = /^https?:\/\/a\.espncdn\.com(\/i\/[^?#]+)$/;
+export const espnImage = (url, width, height = width) => {
+  const match = ESPN_IMAGE.exec(url || '');
+  return match ? `https://a.espncdn.com/combiner/i?img=${match[1]}&w=${width}&h=${height}` : url;
+};
+export const LOGO_PX = 256; // largest use: the 130px background logo, on 2x/3x screens
+export const teamLogo = (url) => espnImage(url, LOGO_PX);
+export const playerHeadshot = (url) => espnImage(url, 168, 122);
+
 export const headshotUrl = (athleteId) =>
-  `https://a.espncdn.com/i/headshots/nfl/players/full/${athleteId}.png`;
+  playerHeadshot(`https://a.espncdn.com/i/headshots/nfl/players/full/${athleteId}.png`);

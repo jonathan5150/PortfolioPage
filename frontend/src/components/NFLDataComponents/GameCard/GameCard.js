@@ -64,11 +64,18 @@ const GameCard = memo(function GameCard({
   const panelKey = SHOW_PANEL_CONTROLS ? storedPanel : 'betting';
   const panelOptions = PANEL_OPTIONS;
   const isExpanded = isOpen;
-  // Panels mount the first time a card opens and then stay mounted, so closing
-  // animates smoothly and reopening doesn't refetch.
+  // Only the open game keeps its panel built (and for a moment after closing,
+  // so the collapse animates). Panels for every game opened used to stay
+  // mounted, which piled up memory on low-RAM phones; reopening rebuilds from
+  // the fetch cache, so it doesn't refetch.
   const [hasOpened, setHasOpened] = useState(false);
   useEffect(() => {
-    if (isExpanded) setHasOpened(true);
+    if (isExpanded) {
+      setHasOpened(true);
+      return undefined;
+    }
+    const timer = setTimeout(() => setHasOpened(false), 500);
+    return () => clearTimeout(timer);
   }, [isExpanded]);
 
   // Fetch the detailed summary only when the box score is actually showing.
