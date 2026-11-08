@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './NFLData.scss';
+import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
 import GameList from '../../components/NFLDataComponents/GameList/GameList';
 import usePersistentState from '../../components/NFLDataComponents/shared/usePersistentState';
 import { getTeams, getScoreboard, getTeamRankings } from './NFLDataApi/nflDataService';
@@ -32,14 +33,7 @@ export const teamsFromEvents = (events) => {
   return [...byId.values()].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 };
 
-export const LoadingFootball = () => (
-  <div className="loading">
-    <div className="loading-football" role="img" aria-label="Loading">
-      🏈
-    </div>
-    <p>loading...</p>
-  </div>
-);
+export const LoadingFootball = () => <LoadingField />;
 
 function NFLData() {
   const [teams, setTeams] = useState([]);

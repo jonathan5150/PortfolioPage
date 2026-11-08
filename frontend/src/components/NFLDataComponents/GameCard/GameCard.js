@@ -10,10 +10,10 @@ import { usePersistentMapEntry } from '../shared/usePersistentState';
 import useGameSummary from './useGameSummary';
 
 export const PANEL_OPTIONS = [
+  { value: 'betting', label: 'BETTING' },
   { value: 'box-score', label: 'BOX SCORE' },
   { value: 'team-rankings', label: 'TEAM RANKINGS' },
   { value: 'team-history', label: 'TEAM W/L HISTORY' },
-  { value: 'betting', label: 'BETTING' },
   { value: 'season-stats', label: 'SEASON STATS' },
   { value: 'game-log', label: 'PLAYER GAME LOG' },
 ];
@@ -46,11 +46,16 @@ const GameCard = memo(function GameCard({
   syncCommand,
   onBroadcast,
   suppressNextToggleRef,
+  betMode,
 }) {
   const state = game.status.state;
-  const defaultPanel = state === 'pre' ? 'team-rankings' : 'box-score';
+  const normalPanel = state === 'pre' ? 'team-rankings' : 'box-score';
+  const defaultPanel = betMode ? 'betting' : normalPanel;
 
-  const [panelKey, setPanelKey] = usePersistentMapEntry('panelByGame', game.id, defaultPanel);
+  const [storedPanel, setPanelKey] = usePersistentMapEntry('panelByGame', game.id, defaultPanel);
+  // The Betting panel only exists in bet mode.
+  const panelKey = !betMode && storedPanel === 'betting' ? normalPanel : storedPanel;
+  const panelOptions = betMode ? PANEL_OPTIONS : PANEL_OPTIONS.filter((o) => o.value !== 'betting');
   const [starredTeamId, setStarredTeamId] = usePersistentMapEntry('starredTeamByGame', game.id, null);
   const [isExpanded, setIsExpanded] = useState(false);
   // Panels mount the first time a card opens and then stay mounted, so closing
@@ -80,7 +85,8 @@ const GameCard = memo(function GameCard({
     const observer = new ResizeObserver(() => setHeight(inner.scrollHeight));
     observer.observe(inner);
     return () => observer.disconnect();
-  }, [isExpanded]);
+    // hasOpened: re-measure once the panel mounts (cards can start open in bet mode)
+  }, [isExpanded, hasOpened]);
 
   // ---- sync commands from other cards ----
   const lastNonceRef = useRef(null);
@@ -118,7 +124,7 @@ const GameCard = memo(function GameCard({
       case 'box-score':
         return <BoxScore game={game} summaryState={summaryState} />;
       case 'betting':
-        return <Betting game={game} />;
+        return <Betting game={game} rankings={rankings} />;
       case 'team-history':
         return <TeamHistory game={game} />;
       case 'season-stats':
@@ -145,6 +151,7 @@ const GameCard = memo(function GameCard({
     onStar: handleStar,
     onToggle: toggle,
     showLinescore: isExpanded,
+    betMode,
   };
 
   return (
@@ -180,7 +187,7 @@ const GameCard = memo(function GameCard({
                 className="panel-select"
                 aria-label="Choose stats view"
               >
-                {PANEL_OPTIONS.map((o) => (
+                {panelOptions.map((o) => (
                   <option key={o.value} value={o.value}>
                     {o.label}
                   </option>

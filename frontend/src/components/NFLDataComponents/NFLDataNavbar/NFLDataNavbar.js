@@ -22,6 +22,8 @@ const NFLDataNavbar = ({
   isWeekMenuOpen,
   setIsWeekMenuOpen,
   onOutsideClose,
+  betMode,
+  onToggleBetMode,
   hasLiveGames,
 }) => {
   const teamsRef = useRef(null);
@@ -62,10 +64,11 @@ const NFLDataNavbar = ({
 
   return (
     <div className="nflDataNavbar">
-      <div className="logo-text-overlay">
-        NFL Stats Guide
+      <h1 className="nfl-title">
+        <span className="nfl-title-badge">NFL</span>
+        <span className="nfl-title-text">Stats Guide</span>
         {hasLiveGames && <span className="live-dot" title="Games in progress – updating live" />}
-      </div>
+      </h1>
 
       <div className="controls">
         <div className="teams-dropdown-wrapper" ref={teamsRef}>
@@ -142,6 +145,19 @@ const NFLDataNavbar = ({
             </div>
           )}
         </div>
+
+        <button
+          type="button"
+          className={`nfl-control-button bet-button ${betMode ? 'active' : ''}`}
+          aria-pressed={Boolean(betMode)}
+          onClick={() => {
+            setIsTeamsMenuOpen(false);
+            setIsWeekMenuOpen(false);
+            onToggleBetMode?.();
+          }}
+        >
+          BET MODE
+        </button>
       </div>
     </div>
   );

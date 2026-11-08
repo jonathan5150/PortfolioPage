@@ -1,8 +1,16 @@
 // Network side of the Betting panel. Pure math lives in ./betting.js.
 import { fetchJson, runWithConcurrency } from './http';
 import { espnUrls } from './endpoints';
-import { getTeamSchedule, getPlayerGameLog } from './espnService';
-import { parseEventOdds, parsePredictor, gradeGame, computeTeamTrends, computePlayerTrend } from './betting';
+import {
+  getTeamSchedule,
+  getPlayerGameLog,
+  getRoster,
+  getTeamLeaders,
+  getCoreAthlete,
+  getStartingQbId,
+  isUnavailable,
+} from './espnService';
+import { parseEventOdds, parsePredictor, gradeGame, computeTeamTrends } from './betting';
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -39,57 +47,79 @@ export const getTeamBettingTrends = async (teamId, game) => {
   return computeTeamTrends(graded);
 };
 
-const CATEGORIES = [
-  { key: 'passing', match: /passing/i },
-  { key: 'rushing', match: /rushing/i },
-  { key: 'receiving', match: /receiving/i },
-];
+// ---------- key players (QB / RB / WR) ----------
 
-// The passing / rushing / receiving leaders ESPN lists for each team.
-export const keyPlayersForGame = (game) =>
-  ['away', 'home'].flatMap((side) => {
-    const self = game[side];
-    const opp = game[side === 'away' ? 'home' : 'away'];
-    return CATEGORIES.map(({ key, match }) => {
-      const leader = (self?.leaders || []).find((l) => match.test(l.category));
-      if (!leader?.athleteId) return null;
-      return {
-        id: `${leader.athleteId}-${key}`,
-        athleteId: leader.athleteId,
-        name: leader.athleteFullName || leader.athleteName,
-        category: key,
-        teamAbbr: self?.team?.abbreviation,
-        oppAbbr: opp?.team?.abbreviation,
-        oppId: opp?.teamId,
-      };
-    }).filter(Boolean);
-  });
-
-const SEASONS_BACK = 3;
-
-export const getPlayerBettingTrend = async (player, game) => {
-  const seasons = Array.from({ length: SEASONS_BACK }, (_, i) => game.season - i);
-  const logs = await runWithConcurrency(
-    seasons.map((season) => async () => (await getPlayerGameLog(player.athleteId, season)).games.map((g) => ({ ...g, season }))),
-    3
-  );
-
-  const seen = new Set();
-  const games = logs
-    .filter((r) => r.ok)
-    .flatMap((r) => r.value)
-    .filter(beforeGame({ id: game.id, date: game.date }))
-    .filter((g) => (seen.has(g.eventId) ? false : seen.add(g.eventId)))
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  return computePlayerTrend({ games, season: game.season, opponentId: player.oppId, category: player.category });
+// Walks a team's leaders (most yards first) and returns up to `count` healthy
+// players at `positions`, fetching athlete records only as far as needed.
+const healthyLeaders = async (leaders, positions, season, count, maxChecks = 8) => {
+  const found = [];
+  for (const leader of leaders.slice(0, maxChecks)) {
+    if (found.length >= count) break;
+    // eslint-disable-next-line no-await-in-loop
+    const athlete = await getCoreAthlete(leader.athleteId, season).catch(() => null);
+    if (athlete && positions.includes(athlete.position) && !isUnavailable(athlete.injuryStatus)) found.push(athlete);
+  }
+  return found;
 };
 
-export const getPlayersBettingTrends = async (game) => {
-  const players = keyPlayersForGame(game);
-  const results = await runWithConcurrency(
-    players.map((p) => async () => ({ ...p, trend: await getPlayerBettingTrend(p, game) })),
-    3
+const SEASONS_BACK = 2;
+
+// This season and last season's game logs, limited to games before `game`.
+export const getRecentGames = async (athleteId, game) => {
+  const seasons = Array.from({ length: SEASONS_BACK }, (_, i) => game.season - i);
+  const logs = await Promise.all(
+    seasons.map((season) =>
+      getPlayerGameLog(athleteId, season)
+        .then((log) => log.games.map((g) => ({ ...g, season })))
+        .catch(() => [])
+    )
   );
-  return results.filter((r) => r.ok).map((r) => r.value);
+  const cutoff = game.date ? new Date(game.date).getTime() : Infinity;
+  const seen = new Set();
+  return logs
+    .flat()
+    .filter((g) => g.eventId !== game.id && (!g.date || new Date(g.date).getTime() < cutoff))
+    .filter((g) => (seen.has(g.eventId) ? false : seen.add(g.eventId)))
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+};
+
+// Starting QB (depth chart), the top two healthy RBs and top three healthy
+// WR/TEs by yards, each with this and last season's game logs.
+export const RB_COUNT = 2;
+export const WR_COUNT = 3;
+
+export const getTeamPlayers = async (teamId, game) => {
+  const season = game.season;
+  const [leaders, starterId] = await Promise.all([
+    getTeamLeaders(teamId, season).catch(() => ({ passing: [], rushing: [], receiving: [] })),
+    getStartingQbId(teamId, season).catch(() => null),
+  ]);
+
+  const qbId = starterId || leaders.passing[0]?.athleteId || null;
+  const [qb, rbs, wrs] = await Promise.all([
+    qbId ? getCoreAthlete(qbId, season).catch(() => null) : null,
+    healthyLeaders(leaders.rushing, ['RB', 'FB'], season, RB_COUNT),
+    healthyLeaders(leaders.receiving, ['WR', 'TE'], season, WR_COUNT),
+  ]);
+
+  const withGames = (list) =>
+    Promise.all(list.filter(Boolean).map(async (p) => ({ ...p, games: await getRecentGames(p.id, game) })));
+  const [qbFull, rbFull, wrFull] = await Promise.all([withGames([qb]), withGames(rbs), withGames(wrs)]);
+  return { qb: qbFull, rb: rbFull, wr: wrFull };
+};
+
+// Every QB / RB / WR / TE on both rosters, for the SEARCH tab.
+const SEARCH_POSITIONS = ['QB', 'RB', 'FB', 'WR', 'TE'];
+
+export const getGameSkillPlayers = async (game) => {
+  const load = (side) =>
+    getRoster(game[side]?.teamId)
+      .then((roster) =>
+        roster
+          .filter((p) => SEARCH_POSITIONS.includes(p.position))
+          .map((p) => ({ ...p, teamSide: side, teamAbbr: game[side]?.team?.abbreviation }))
+      )
+      .catch(() => []);
+  const [away, home] = await Promise.all([load('away'), load('home')]);
+  return [...away, ...home];
 };
