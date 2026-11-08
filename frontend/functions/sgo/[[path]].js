@@ -30,13 +30,15 @@ export async function onRequestGet({ request, params, env }) {
   try {
     const upstream = await fetch(`${BASE}/events?${search}`, {
       headers: { accept: 'application/json', 'x-api-key': env.SGO_API_KEY },
-      cf: { cacheTtl: ttl, cacheEverything: true },
+      // Only successful slates are cached; a rate-limit or quota error must not
+      // stick around for an hour.
+      cf: { cacheEverything: true, cacheTtlByStatus: { '200-299': ttl, '300-599': 0 } },
     });
     return new Response(upstream.body, {
       status: upstream.status,
       headers: {
         'content-type': upstream.headers.get('content-type') || 'application/json',
-        'cache-control': `public, max-age=${ttl}`,
+        'cache-control': upstream.ok ? `public, max-age=${ttl}` : 'no-store',
       },
     });
   } catch (error) {

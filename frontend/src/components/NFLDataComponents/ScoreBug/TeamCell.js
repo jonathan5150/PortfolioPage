@@ -107,7 +107,7 @@ const TeamCell = ({
         style={{
           ...getTeamBackgroundStyle(getTeamColor(team)),
           borderRadius: radius,
-          transition: 'border-radius 0.3s ease, opacity 0.5s ease, filter 0.5s ease',
+          transition: 'border-radius 0.3s ease, opacity 0.5s ease',
           ...(dimmed ? { filter: 'grayscale(1)' } : null),
         }}
       />
@@ -117,7 +117,7 @@ const TeamCell = ({
         style={{
           '--cell-border': dimmed ? LOSER_BORDER : getTeamBorderColor(team), // border drawn in CSS
           borderRadius: radius,
-          transition: 'border-radius 0.3s ease, border-color 0.5s ease',
+          transition: 'border-radius 0.3s ease',
           overflow: 'hidden',
           opacity: dimmed ? 0.6 : 1,
         }}
@@ -137,21 +137,25 @@ const TeamCell = ({
           />
         )}
 
-        <div className="team-abbr-block" title={team?.displayName}>
-          <div className="abbreviation">
-            {team?.abbreviation}
-            {hasPossession && (
-              <span className="possession-ball" title="Possession">
-                ●
-              </span>
-            )}
+        {/* name, record and score share one layer, so dimming a cell fades a
+            single element instead of each piece of text */}
+        <div className="team-text">
+          <div className="team-abbr-block" title={team?.displayName}>
+            <div className="abbreviation">
+              {team?.abbreviation}
+              {hasPossession && (
+                <span className="possession-ball" title="Possession">
+                  ●
+                </span>
+              )}
+            </div>
+            <div className="team-record">{competitor?.record || '0-0'}</div>
           </div>
-          <div className="team-record">{competitor?.record || '0-0'}</div>
-        </div>
 
-        <div className={`team-score ${isWinner ? 'winner' : ''} ${scoreIsSpread ? 'spread' : ''}`}>
-          {score}
-          {subScore && <div className="team-moneyline">{subScore}</div>}
+          <div className={`team-score ${isWinner ? 'winner' : ''} ${scoreIsSpread ? 'spread' : ''}`}>
+            {score}
+            {subScore && <div className="team-moneyline">{subScore}</div>}
+          </div>
         </div>
       </div>
     </div>

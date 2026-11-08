@@ -45,7 +45,11 @@ export const parseBetslipLink = (href) => {
   const match = text.match(/draftkings\.com\/event\/(\d+)\?outcomes=([^&\s]+)/);
   if (!match) return null;
   const [, eventId, outcome] = match;
-  return { url: `https://sportsbook.draftkings.com/event/${eventId}?outcomes=${encodeURIComponent(outcome)}`, eventId, outcome };
+  return {
+    url: `https://sportsbook.draftkings.com/event/${eventId}?outcomes=${encodeURIComponent(outcome)}`,
+    eventId,
+    outcome,
+  };
 };
 
 // One DraftKings bet-slip link with every leg's outcome id, joined by '+'.
@@ -129,7 +133,10 @@ const readStoredSlate = () => {
 const storeSlate = (events) => {
   try {
     ['nflStatsWizard:sgoSlate', 'nflStatsWizard:sgoSlate:v2'].forEach((k) => window.localStorage.removeItem(k));
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ book: BOOK.id, expires: Date.now() + SLATE_TTL, events }));
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ book: BOOK.id, expires: Date.now() + SLATE_TTL, events }),
+    );
   } catch {
     // storage full or blocked – the in-memory cache still works
   }
@@ -139,14 +146,19 @@ const storeSlate = (events) => {
 // the book offers); with it, well under 1 MB. PLAYER_ID matches any player.
 export const SLATE_ODD_IDS = ['touchdowns-PLAYER_ID-game-yn-yes'];
 
+const HOUR = 60 * MINUTE;
+
 const requestSlate = async () => {
-  const now = new Date();
+  // The window is rounded to the hour so everyone loading the page in the same
+  // hour sends the identical URL, and the proxy's hour-long edge cache answers
+  // instead of spending the free plan's quota on every visit.
+  const hour = Math.floor(Date.now() / HOUR) * HOUR;
   const query = new URLSearchParams({
     leagueID: 'NFL',
     oddsAvailable: 'true',
     bookmakerID: BOOK.id,
-    startsAfter: new Date(now.getTime() - 6 * 60 * MINUTE).toISOString(),
-    startsBefore: new Date(now.getTime() + 6 * 24 * 60 * MINUTE).toISOString(),
+    startsAfter: new Date(hour - 7 * HOUR).toISOString(),
+    startsBefore: new Date(hour + 6 * 24 * HOUR + HOUR).toISOString(),
     limit: '50',
     oddID: SLATE_ODD_IDS.join(','),
   });
