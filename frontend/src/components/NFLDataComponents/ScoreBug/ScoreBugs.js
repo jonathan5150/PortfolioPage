@@ -1,5 +1,5 @@
 import React from 'react';
-import TeamCell, { useLongPress } from './TeamCell';
+import TeamCell from './TeamCell';
 import Linescore from './Linescore';
 import { headshotUrl } from '../../../pages/NFLData/NFLDataApi/endpoints';
 import { getEventPredictor } from '../../../pages/NFLData/NFLDataApi/bettingService';
@@ -34,24 +34,28 @@ const infoBoxStyle = (corner) => ({
   minWidth: 0,
 });
 
-const LinescoreDrawer = ({ game, open }) => (
+// Everything below the team cells that only shows once the game is opened.
+const InfoDrawer = ({ open, maxHeight = 260, children }) => (
   <div
+    className="info-drawer"
     style={{
       gridColumn: '1 / span 2',
       overflow: 'hidden',
-      padding: open ? '2px 2px 3px' : '0 5px',
-      maxHeight: open ? '120px' : '0px',
+      padding: open ? '0 0 3px' : '0',
+      maxHeight: open ? `${maxHeight}px` : '0px',
       opacity: open ? 1 : 0,
       transition: 'max-height 0.6s ease, opacity 0.45s ease, padding 0.4s ease',
     }}
   >
-    <Linescore game={game} />
+    {children}
   </div>
 );
 
 // Top bar of a card, always four columns: when (or the final status), stadium,
 // sky + temperature at kickoff, and wind (left blank indoors).
-const KickoffBar = ({ game, label }) => {
+// altLabel: a second label that cross-fades with `label` forever (finished
+// games swap "Final" with their original start time).
+const KickoffBar = ({ game, label, altLabel }) => {
   const conditions = useAsyncData(() => getGameConditions(game), [game.id]);
   const c = conditions.data;
   const w = c?.weather;
@@ -61,8 +65,9 @@ const KickoffBar = ({ game, label }) => {
   let sky = '—';
   let wind = '—';
   if (indoor) {
-    sky = '🏟️ Indoors';
-    wind = '';
+    // no weather indoors: leave the sky column empty and say so in the last one
+    sky = '';
+    wind = '🏟️ Indoors';
   } else if (w) {
     sky = `${w.icon || ''} ${w.temperature !== null ? `${Math.round(w.temperature)}°F` : ''} ${w.sky || ''}`.trim();
     wind = w.wind !== null ? `💨 ${Math.round(w.wind)} mph ${w.windFrom}`.trim() : '—';
@@ -73,11 +78,20 @@ const KickoffBar = ({ game, label }) => {
 
   return (
     <div className="kickoff-bar">
-      <span className="kickoff-when">{label}</span>
+      {altLabel ? (
+        <span className="kickoff-when kickoff-swap">
+          <span className="kickoff-swap-a">{label}</span>
+          <span className="kickoff-swap-b" aria-hidden="true">
+            {altLabel}
+          </span>
+        </span>
+      ) : (
+        <span className="kickoff-when">{label}</span>
+      )}
       <span className="kickoff-where" title={c?.stadium || game.venue}>
         {c?.stadium || game.venue || '—'}
       </span>
-      <span className="kickoff-sky">{sky}</span>
+      <span className={`kickoff-sky ${sky ? '' : 'empty'}`}>{sky}</span>
       <span className={`kickoff-wind ${wind ? '' : 'empty'}`}>{wind}</span>
     </div>
   );
@@ -93,8 +107,21 @@ const qbStatLine = (value) => String(value || '').replace(/^\s*\d+\/\d+\s*,\s*/,
 
 // ---------- Pre-game ----------
 
+// The label a game is grouped under: its start time, or Live / Final.
+export const slotLabel = (game) => {
+  if (game.status.state === 'post') return 'Final';
+  if (game.status.state === 'in') return 'Live';
+  if (game.status.isPostponed) return game.status.shortDetail || 'Postponed';
+  return game.date
+    ? new Date(game.date).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })
+    : 'TBD';
+};
+
 const playersBoxStyle = (corner) => ({
   ...infoBoxStyle(corner),
+  // square on top where it meets the open team cell; rounded at the bottom
+  borderRadius: corner === 'left' ? '0 0 0 6px' : '0 0 6px 0',
+  margin: '0 2px 2px', // sits right under the team cells
   justifyContent: 'flex-start',
   gap: '5px',
   padding: '5px 8px 5px 5px',
@@ -131,14 +158,13 @@ const PlayersBox = ({ rows, corner, team }) => (
   </div>
 );
 
-export const PreGameScoreBug = ({ game, starredTeamId, onStar, onToggle, betMode, showLinescore }) => {
-  const longPress = useLongPress(onStar);
+export const PreGameScoreBug = ({ game, onToggle, showLinescore }) => {
   const kickoff = game.date
     ? new Date(game.date).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })
     : 'TBD';
 
-  // In bet mode, ESPN FPI win probability fills the score spot before kickoff.
-  const predictor = useAsyncData(() => getEventPredictor(game.id), [game.id], { enabled: Boolean(betMode) });
+  // ESPN FPI win probability fills the score spot before kickoff.
+  const predictor = useAsyncData(() => getEventPredictor(game.id), [game.id]);
 
   const rows = (side) => {
     const competitor = game[side];
@@ -156,16 +182,9 @@ export const PreGameScoreBug = ({ game, starredTeamId, onStar, onToggle, betMode
   const home = rows('home');
 
   return (
-    <div
-      className="score-grid"
-      onClick={onToggle}
-      onClickCapture={longPress.suppressClick}
-      style={{ ...gridStyle, position: 'relative' }}
-    >
-      <KickoffBar game={game} label={game.status.isPostponed ? game.status.shortDetail : kickoff} />
-
+    <div className="score-grid" onClick={onToggle} style={{ ...gridStyle, position: 'relative' }}>
       {['away', 'home'].map((side) => {
-        const prob = betMode ? predictor.data?.[side] : null;
+        const prob = predictor.data?.[side];
         const hasProb = prob !== null && prob !== undefined;
         return (
           <TeamCell
@@ -175,14 +194,18 @@ export const PreGameScoreBug = ({ game, starredTeamId, onStar, onToggle, betMode
             score={hasProb ? `${Math.round(prob)}%` : ''}
             scoreIsSpread={hasProb}
             subScore={hasProb ? 'WIN PROB' : null}
-            isStarred={starredTeamId === game[side]?.teamId}
-            longPress={longPress}
+            corner={showLinescore ? 'top' : 'all'}
             expanded={showLinescore}
           />
         );
       })}
-      <PlayersBox rows={away} corner="left" team={game.away?.team} />
-      <PlayersBox rows={home} corner="right" team={game.home?.team} />
+      <InfoDrawer open={showLinescore}>
+        <div className="info-drawer-row">
+          <PlayersBox rows={away} corner="left" team={game.away?.team} />
+          <PlayersBox rows={home} corner="right" team={game.home?.team} />
+        </div>
+        <KickoffBar game={game} label={game.status.isPostponed ? game.status.shortDetail : kickoff} />
+      </InfoDrawer>
     </div>
   );
 };
@@ -197,8 +220,7 @@ const TimeoutDots = ({ remaining }) => (
   </span>
 );
 
-export const LiveScoreBug = ({ game, starredTeamId, onStar, onToggle, showLinescore }) => {
-  const longPress = useLongPress(onStar);
+export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
   const s = game.situation;
   const status = game.status;
 
@@ -208,21 +230,14 @@ export const LiveScoreBug = ({ game, starredTeamId, onStar, onToggle, showLinesc
     (s?.down ? `${ordinal(s.down)} & ${s.distance}` : status.isHalftime ? 'Halftime' : status.shortDetail);
 
   return (
-    <div
-      className="score-grid"
-      onClick={onToggle}
-      onClickCapture={longPress.suppressClick}
-      style={gridStyle}
-    >
+    <div className="score-grid" onClick={onToggle} style={gridStyle}>
       {['away', 'home'].map((side) => (
         <TeamCell
           key={side}
           side={side}
           competitor={game[side]}
           score={game[side]?.score ?? 0}
-          isStarred={starredTeamId === game[side]?.teamId}
           hasPossession={s?.possessionTeamId && s.possessionTeamId === game[side]?.teamId}
-          longPress={longPress}
           expanded={showLinescore}
         />
       ))}
@@ -251,26 +266,22 @@ export const LiveScoreBug = ({ game, starredTeamId, onStar, onToggle, showLinesc
         </div>
       </div>
 
-      <LinescoreDrawer game={game} open={showLinescore} />
+      <InfoDrawer open={showLinescore}>
+        <Linescore game={game} />
+        <KickoffBar game={game} label={status.shortDetail || 'Live'} />
+      </InfoDrawer>
     </div>
   );
 };
 
 // ---------- Final ----------
 
-export const FinalScoreBug = ({ game, starredTeamId, onStar, onToggle, showLinescore }) => {
-  const longPress = useLongPress(onStar);
+export const FinalScoreBug = ({ game, onToggle, showLinescore }) => {
   const awayWon = game.away?.winner;
   const homeWon = game.home?.winner;
 
   return (
-    <div
-      className="score-grid"
-      onClick={onToggle}
-      onClickCapture={longPress.suppressClick}
-      style={{ ...gridStyle, position: 'relative' }}
-    >
-      <KickoffBar game={game} label={game.status.shortDetail || 'Final'} />
+    <div className="score-grid" onClick={onToggle} style={{ ...gridStyle, position: 'relative' }}>
       {['away', 'home'].map((side) => (
         <TeamCell
           key={side}
@@ -278,14 +289,23 @@ export const FinalScoreBug = ({ game, starredTeamId, onStar, onToggle, showLines
           corner="all"
           competitor={game[side]}
           score={game[side]?.score ?? '-'}
-          isStarred={starredTeamId === game[side]?.teamId}
           isWinner={side === 'away' ? awayWon : homeWon}
           dimmed={(side === 'away' && homeWon) || (side === 'home' && awayWon)}
-          longPress={longPress}
           expanded={showLinescore}
         />
       ))}
-      <LinescoreDrawer game={game} open={showLinescore} />
+      <InfoDrawer open={showLinescore}>
+        <Linescore game={game} />
+        <KickoffBar
+          game={game}
+          label={game.status.shortDetail || 'Final'}
+          altLabel={
+            game.date
+              ? new Date(game.date).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })
+              : null
+          }
+        />
+      </InfoDrawer>
     </div>
   );
 };

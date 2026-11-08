@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getTeamSchedule } from '../../../pages/NFLData/NFLDataApi/nflDataService';
 import useAsyncData from '../shared/useAsyncData';
-import { getTeamBackgroundStyle, getTeamColor } from '../shared/teamColors';
+import { getTeamBackgroundStyle, getTeamBorderColor, getTeamColor } from '../shared/teamColors';
 import { viewportStyle, messageStyle } from '../shared/tableStyles';
 
 // NFL version of the MLB "TEAM W/L HISTORY" panel: each team's completed games
 // this season leading up to this matchup, newest on the right. Wins get the
-// team's color wash. Drag (or swipe) sideways to see earlier games.
+// team's color wash and border; losses are a neutral slate tile. Drag (or swipe) sideways to see earlier games.
 
 const VISIBLE_COLUMNS = 6;
 
@@ -29,24 +29,63 @@ const weekLabel = (g) => {
   return g.date ? new Date(g.date).toLocaleDateString([], { month: 'numeric', day: 'numeric' }) : '';
 };
 
-const HistoryColumn = ({ g, teamId, width }) => {
+const resultOf = (g, teamId) => {
   const self = g.away?.teamId === teamId ? g.away : g.home;
   const opp = self === g.away ? g.home : g.away;
   const tie = g.away?.score === g.home?.score;
-  const won = !tie && (self?.winner || (self?.score ?? 0) > (opp?.score ?? 0));
+  const won = !tie && (self?.winner || Number(self?.score ?? 0) > Number(opp?.score ?? 0));
+  return { self, opp, home: self === g.home, result: tie ? 'T' : won ? 'W' : 'L' };
+};
+
+// "6-3" (plus ties) and the current streak, e.g. "W2".
+const summarize = (games, teamId) => {
+  const results = games.map((g) => resultOf(g, teamId).result);
+  const count = (r) => results.filter((x) => x === r).length;
+  const ties = count('T');
+  const record = `${count('W')}-${count('L')}${ties ? `-${ties}` : ''}`;
+  const last = results[results.length - 1];
+  let streak = 0;
+  for (let i = results.length - 1; i >= 0 && results[i] === last; i -= 1) streak += 1;
+  return { record, streak: last ? `${last}${streak}` : '' };
+};
+
+const HistoryHead = ({ team, games, teamId }) => {
+  const { record, streak } = summarize(games, teamId);
+  return (
+    <div className="history-head">
+      {team?.logo && <img src={team.logo} alt="" draggable={false} />}
+      <span className="history-head-name">{team?.abbreviation}</span>
+      <span className="history-head-record">{record}</span>
+      {streak && <span className={`history-streak ${streak[0].toLowerCase()}`}>{streak}</span>}
+    </div>
+  );
+};
+
+const HistoryColumn = ({ g, teamId, width }) => {
+  const { self, opp, home, result } = resultOf(g, teamId);
+  const won = result === 'W';
   const color = won ? getTeamColor(self?.team) : null;
 
   return (
     <div className="history-column" style={{ flex: `0 0 ${width}px`, width: `${width}px` }}>
       <div className="history-week">{weekLabel(g)}</div>
-      <div className={`history-box ${won ? 'won' : ''}`}>
-        {color && <div style={{ ...getTeamBackgroundStyle(color), borderRadius: '4px' }} />}
-        {[g.away, g.home].map((c) => (
-          <div key={c?.teamId} className="history-line">
-            <span className={c?.teamId === teamId ? 'history-self' : ''}>{c?.team?.abbreviation}</span>
-            <span>{c?.score ?? '-'}</span>
-          </div>
-        ))}
+      <div
+        className={`history-box ${result.toLowerCase()}`}
+        style={won ? { borderColor: getTeamBorderColor(self?.team) } : undefined}
+      >
+        {color && <div style={{ ...getTeamBackgroundStyle(color), borderRadius: '6px' }} />}
+        <span className={`history-result ${result.toLowerCase()}`}>{result}</span>
+        <span className="history-opp">
+          <span className="history-at">{home ? 'vs' : '@'}</span>
+          {opp?.team?.logo ? (
+            <img src={opp.team.logo} alt={opp.team.abbreviation} draggable={false} />
+          ) : (
+            opp?.team?.abbreviation
+          )}
+        </span>
+        <span className="history-score">
+          {self?.score ?? '-'}-{opp?.score ?? '-'}
+        </span>
       </div>
     </div>
   );
@@ -56,13 +95,10 @@ const TeamHistory = ({ game }) => {
   const awayId = game.away?.teamId;
   const homeId = game.home?.teamId;
 
-  const { data, error, loading } = useAsyncData(
-    async () => {
-      const [away, home] = await Promise.all([loadTeamHistory(awayId, game), loadTeamHistory(homeId, game)]);
-      return { away, home };
-    },
-    [game.id, awayId, homeId, game.season, game.seasonType]
-  );
+  const { data, error, loading } = useAsyncData(async () => {
+    const [away, home] = await Promise.all([loadTeamHistory(awayId, game), loadTeamHistory(homeId, game)]);
+    return { away, home };
+  }, [game.id, awayId, homeId, game.season, game.seasonType]);
 
   const containerRef = useRef(null);
   const dragRef = useRef(null);
@@ -127,8 +163,8 @@ const TeamHistory = ({ game }) => {
   }
 
   const rows = [
-    { teamId: awayId, games: data.away },
-    { teamId: homeId, games: data.home },
+    { teamId: awayId, team: game.away?.team, games: data.away },
+    { teamId: homeId, team: game.home?.team, games: data.home },
   ];
 
   return (
@@ -143,12 +179,15 @@ const TeamHistory = ({ game }) => {
       >
         <div className="history-track">
           {rows.map((row) => (
-            <div key={row.teamId} className="history-row">
-              {row.games.length ? (
-                row.games.map((g) => <HistoryColumn key={g.id} g={g} teamId={row.teamId} width={columnWidth} />)
-              ) : (
-                <div className="history-empty">No completed games</div>
-              )}
+            <div key={row.teamId} className="history-block">
+              <HistoryHead team={row.team} games={row.games} teamId={row.teamId} />
+              <div className="history-row">
+                {row.games.length ? (
+                  row.games.map((g) => <HistoryColumn key={g.id} g={g} teamId={row.teamId} width={columnWidth} />)
+                ) : (
+                  <div className="history-empty">No completed games</div>
+                )}
+              </div>
             </div>
           ))}
         </div>

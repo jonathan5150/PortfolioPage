@@ -480,7 +480,7 @@ describe('touchdown breakdown rows', () => {
     });
     const rows = Object.fromEntries(td.factors.map((f) => [f.label, f]));
     expect(rows['This season']).toMatchObject({ value: '4 TDs in 5 games', tone: 'good' });
-    expect(rows['Last 5']).toMatchObject({ value: 'scored in 4', tone: 'good' });
+    expect(rows['Last 5']).toBeUndefined(); // recent form shows in the history bar instead
     expect(rows['Last season'].value).toBe('1 TD in 2 games');
     // team total and opponent defense still shape the chance but aren't listed
     expect(rows['Team total']).toBeUndefined();
@@ -585,5 +585,33 @@ describe('touchdown history', () => {
     expect(history.find((g) => g.id === 'g3')).toMatchObject({ scored: true, opp: '@ KC' });
     expect(touchdownHistory(games, 'QB', 2026).find((g) => g.id === 'g3').scored).toBe(false); // QBs: rushing only
     expect(touchdownHistory([], 'WR', 2026)).toEqual([]);
+  });
+});
+
+describe('gradeLinePick', () => {
+  // eslint-disable-next-line global-require
+  const { gradeLinePick } = require('./picks');
+  const game = { status: { state: 'post' }, away: { score: '20' }, home: { score: '24' } };
+  const odds = { away: { spreadLine: 3.5 }, home: { spreadLine: -3.5 }, total: { line: 44 } };
+
+  it('grades the winner pick on the final score', () => {
+    expect(gradeLinePick({ key: 'winner', side: 'home' }, game, odds)).toBe('W');
+    expect(gradeLinePick({ key: 'winner', side: 'away' }, game, odds)).toBe('L');
+  });
+
+  it('grades the spread pick with the picked side line', () => {
+    expect(gradeLinePick({ key: 'spread', side: 'home' }, game, odds)).toBe('W'); // 4 > 3.5
+    expect(gradeLinePick({ key: 'spread', side: 'away' }, game, odds)).toBe('L');
+    expect(gradeLinePick({ key: 'spread', side: 'home' }, game, { home: { spreadLine: -4 } })).toBe('P');
+  });
+
+  it('grades over/under against the total', () => {
+    expect(gradeLinePick({ key: 'total', side: 'under' }, game, odds)).toBe('P'); // 44 on a 44 line
+    expect(gradeLinePick({ key: 'total', side: 'over' }, game, { total: { line: 43.5 } })).toBe('W');
+    expect(gradeLinePick({ key: 'total', side: 'under' }, game, { total: { line: 43.5 } })).toBe('L');
+  });
+
+  it('returns null before the game is final', () => {
+    expect(gradeLinePick({ key: 'winner', side: 'home' }, { ...game, status: { state: 'in' } }, odds)).toBeNull();
   });
 });

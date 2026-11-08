@@ -210,6 +210,7 @@ function NFLData() {
           loading={loading}
           games={visibleGames}
           totalGames={scoreboard.events.length}
+          weekGames={scoreboard.events}
           teams={teams}
           teamsById={teamsById}
           selectedTeams={selectedTeams}

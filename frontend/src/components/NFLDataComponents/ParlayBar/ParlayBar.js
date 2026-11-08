@@ -52,17 +52,6 @@ const ParlayBar = () => {
                   </span>
                 </div>
                 <span className="parlay-leg-odds">{l.odds !== null && l.odds !== undefined ? fmtOdds(l.odds) : '—'}</span>
-                {l.link && (
-                  <a
-                    className="parlay-leg-add"
-                    href={l.link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title={`Add ${l.label} to your ${BOOK.name} bet slip`}
-                  >
-                    ADD
-                  </a>
-                )}
                 <button type="button" className="parlay-remove" aria-label={`Remove ${l.label}`} onClick={() => remove(l.id)}>
                   ×
                 </button>

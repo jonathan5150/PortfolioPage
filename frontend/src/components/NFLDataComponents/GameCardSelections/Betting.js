@@ -14,6 +14,7 @@ import { BOOK, getBookOdds, normalizeName } from '../../../pages/NFLData/NFLData
 import { fmtLine, fmtOdds } from '../../../pages/NFLData/NFLDataApi/betting';
 import {
   buildLinePicks,
+  gradeLinePicks,
   buildPlayerPicks,
   pickPlayer,
   impliedTeamPoints,
@@ -112,6 +113,9 @@ const LinesTable = ({ game, odds }) => {
       {rows.map(({ side, competitor, o, totalLabel, totalOdds }) => (
         <div key={side} className="bet-lines-row">
           <div className="bet-team" style={{ borderLeftColor: teamAccent(competitor?.team) }}>
+            {competitor?.team?.logo && (
+              <img src={competitor.team.logo} alt="" className="bet-team-logo" draggable={false} />
+            )}
             <span className="bet-team-abbr">{competitor?.team?.abbreviation}</span>
           </div>
           <Holdable className="bet-cell" leg={o.spreadLine !== null ? legs.spread(side) : null}>
@@ -184,18 +188,24 @@ const PickHeadline = ({ pick, game }) => {
   );
 };
 
-const PickLine = ({ pick, leg, game }) => {
+const GRADE_TITLE = { W: 'The pick was right', L: 'The pick was wrong' };
+
+const PickLine = ({ pick, leg, game, grade }) => {
   if (!pick) return null;
   return (
     <Holdable className={`pick-line ${pick.strong ? 'strong' : ''}`} leg={leg}>
       <PickHeadline pick={pick} game={game} />
       <span className="pick-because">{pick.summary}</span>
       {pick.odds && <span className="pick-odds">{pick.odds}</span>}
+      {/* finished games: green corner when the pick was right, red when wrong */}
+      {(grade === 'W' || grade === 'L') && (
+        <span className={`pick-result ${grade === 'W' ? 'right' : 'wrong'}`} title={GRADE_TITLE[grade]} />
+      )}
     </Holdable>
   );
 };
 
-const LinesTab = ({ game, lines, linePicks }) => {
+const LinesTab = ({ game, lines, linePicks, grades }) => {
   const odds = lines.data?.odds;
   const predictor = lines.data?.predictor;
   if (lines.loading) return <div className="bet-message">Loading lines…</div>;
@@ -209,7 +219,13 @@ const LinesTab = ({ game, lines, linePicks }) => {
       <div className="pick-lines">
         {linePicks ? (
           ['winner', 'spread', 'total'].map((key) => (
-            <PickLine key={key} pick={linePicks[key]} leg={linePickLeg(key, linePicks[key], game, odds)} game={game} />
+            <PickLine
+              key={key}
+              pick={linePicks[key]}
+              leg={linePickLeg(key, linePicks[key], game, odds)}
+              game={game}
+              grade={grades?.[key]}
+            />
           ))
         ) : (
           <div className="bet-message small">Working out the picks…</div>
@@ -339,22 +355,32 @@ const OddsStatus = ({ bookOdds, problem, isFinal, onRetry }) => {
   );
 };
 
-// Players listed under a header with their team's logo and name, away team first.
-const TeamGroup = ({ game, side, children }) => {
-  const team = game[side]?.team;
-  return (
-    <div className="team-group">
-      <div className="team-group-head" style={{ borderLeftColor: teamAccent(team) }}>
-        {team?.logo && <img src={team.logo} alt="" className="team-group-logo" draggable={false} />}
-        <span className="team-group-name">{team?.displayName || team?.abbreviation}</span>
-      </div>
-      {children}
-    </div>
-  );
-};
+// Sideways team picker (logo + abbreviation) shared by every PLAYERS sub-tab.
+// dimmed: the search box is in use, which covers both teams.
+const TeamToggle = ({ game, teamSide, onChange, dimmed = false }) => (
+  <div className="search-team-toggle" role="tablist" aria-label="Team">
+    {['away', 'home'].map((side) => {
+      const team = game[side]?.team;
+      const active = teamSide === side && !dimmed;
+      return (
+        <button
+          key={side}
+          type="button"
+          role="tab"
+          aria-selected={teamSide === side}
+          className={active ? 'active' : ''}
+          onClick={() => onChange(side)}
+          style={active ? { borderColor: teamAccent(team) } : undefined}
+        >
+          {team?.logo && <img src={team.logo} alt="" draggable={false} />}
+          {team?.abbreviation}
+        </button>
+      );
+    })}
+  </div>
+);
 
 // SEARCH: every QB / RB / WR / TE on both rosters.
-const POSITION_ORDER = { QB: 0, RB: 1, FB: 1, WR: 2, TE: 3 };
 
 const SearchResult = ({ player, game, deep, odds, rankings }) => {
   const other = player.teamSide === 'away' ? 'home' : 'away';
@@ -381,31 +407,47 @@ const SearchResult = ({ player, game, deep, odds, rankings }) => {
   return <TouchdownCard pick={pick} game={game} large />;
 };
 
-const SearchPanel = ({ game, deep, odds, rankings }) => {
+// SEARCH lists players by role, then last name.
+const ROLE_ORDER = { QB: 0, RB: 1, FB: 1, WR: 2, TE: 3 };
+const NAME_SUFFIX = /^(jr|sr|ii|iii|iv|v)\.?$/i;
+const lastName = (name = '') => {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter((part) => !NAME_SUFFIX.test(part));
+  return parts[parts.length - 1] || name;
+};
+
+const SearchPanel = ({ game, deep, odds, rankings, teamSide, setTeamSide }) => {
   const [query, setQuery] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const roster = useAsyncData(() => getGameSkillPlayers(game), [game.id, game.away?.teamId, game.home?.teamId]);
   const priced = deep.data?.bookOdds?.players || {};
   const hasOdds = (p) => Boolean(priced[normalizeName(p.name)]?.anytimeTd);
 
-  const players = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return (roster.data || [])
-      .filter(
-        (p) =>
-          !q ||
-          p.name.toLowerCase().includes(q) ||
-          p.position.toLowerCase() === q ||
-          (p.teamAbbr || '').toLowerCase() === q,
-      )
-      .sort(
-        (a, b) =>
-          Number(hasOdds(b)) - Number(hasOdds(a)) ||
-          (POSITION_ORDER[a.position] ?? 9) - (POSITION_ORDER[b.position] ?? 9) ||
-          a.name.localeCompare(b.name),
-      );
+  // Only players DraftKings has a TD price for. The toggle picks which team's
+  // list to show; typing a search covers both teams.
+  const q = query.trim().toLowerCase();
+  const players = useMemo(
+    () =>
+      (roster.data || [])
+        .filter(hasOdds)
+        .filter((p) =>
+          q
+            ? p.name.toLowerCase().includes(q) ||
+              p.position.toLowerCase() === q ||
+              (p.teamAbbr || '').toLowerCase() === q
+            : p.teamSide === teamSide,
+        )
+        .sort(
+          (a, b) =>
+            (ROLE_ORDER[a.position] ?? 9) - (ROLE_ORDER[b.position] ?? 9) ||
+            lastName(a.name).localeCompare(lastName(b.name)) ||
+            a.name.localeCompare(b.name),
+        ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roster.data, query, priced]);
+    [roster.data, q, teamSide, priced],
+  );
 
   const selected = (roster.data || []).find((p) => p.id === selectedId) || null;
 
@@ -419,6 +461,7 @@ const SearchPanel = ({ game, deep, odds, rankings }) => {
         onChange={(e) => setQuery(e.target.value)}
         aria-label="Search players"
       />
+      <TeamToggle game={game} teamSide={teamSide} onChange={setTeamSide} dimmed={Boolean(q)} />
       {selected && (
         <SearchResult key={selected.id} player={selected} game={game} deep={deep} odds={odds} rankings={rankings} />
       )}
@@ -426,45 +469,44 @@ const SearchPanel = ({ game, deep, odds, rankings }) => {
         <div className="bet-message">Loading rosters…</div>
       ) : (
         <div className="search-list" role="listbox" aria-label="Players">
-          {['away', 'home'].map((side) => {
-            const mine = players.filter((p) => p.teamSide === side);
-            if (!mine.length) return null;
-            const team = game[side]?.team;
+          {players.map((p) => {
+            const team = game[p.teamSide]?.team;
             return (
-              <React.Fragment key={side}>
-                <div className="search-team-head" style={{ borderLeftColor: teamAccent(team) }}>
-                  {team?.logo && <img src={team.logo} alt="" className="team-group-logo" draggable={false} />}
-                  <span className="team-group-name">{team?.displayName}</span>
-                </div>
-                {mine.map((p) => (
-                  <button
-                    key={`${p.teamSide}-${p.id}`}
-                    type="button"
-                    role="option"
-                    aria-selected={p.id === selectedId}
-                    className={`search-item ${p.id === selectedId ? 'active' : ''}`}
-                    onClick={() => setSelectedId(p.id)}
-                  >
-                    <span className="player-headshot small">
-                      <img
-                        src={p.headshot || headshotUrl(p.id)}
-                        alt=""
-                        loading="lazy"
-                        draggable={false}
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
-                      />
-                    </span>
-                    <span className="search-item-name">{p.name}</span>
-                    <span className="player-pos">{p.position}</span>
-                    {hasOdds(p) && <span className="search-item-lines">TD ODDS</span>}
-                  </button>
-                ))}
-              </React.Fragment>
+              <button
+                key={`${p.teamSide}-${p.id}`}
+                type="button"
+                role="option"
+                aria-selected={p.id === selectedId}
+                className={`search-item ${p.id === selectedId ? 'active' : ''}`}
+                onClick={() => setSelectedId(p.id)}
+              >
+                <span
+                  className="player-headshot small"
+                  style={team ? { borderColor: getTeamBorderColor(team) } : undefined}
+                >
+                  <img
+                    src={p.headshot || headshotUrl(p.id)}
+                    alt=""
+                    loading="lazy"
+                    draggable={false}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </span>
+                <span className="search-item-name">{p.name}</span>
+                <span className="player-pos">
+                  {q ? `${p.teamAbbr} · ` : ''}
+                  {p.position}
+                </span>
+              </button>
             );
           })}
-          {!players.length && <div className="bet-message small">No players match “{query}”.</div>}
+          {!players.length && (
+            <div className="bet-message small">
+              {q ? `No players with TD odds match “${query}”.` : 'No TD odds for this team yet.'}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -480,7 +522,8 @@ const GROUPS = [
 
 const PlayersTab = ({ game, deep, playerPicks, isFinal, odds, rankings, oddsProblem, onRetryOdds }) => {
   const [group, setGroup] = useState('qb');
-  const list = playerPicks?.[group] || [];
+  const [teamSide, setTeamSide] = useState('away');
+  const list = (playerPicks?.[group] || []).filter((p) => p.player.teamSide === teamSide);
 
   return (
     <>
@@ -498,27 +541,32 @@ const PlayersTab = ({ game, deep, playerPicks, isFinal, odds, rankings, oddsProb
           </button>
         ))}
       </div>
-      <div className="hold-hint">Hold a player to add their anytime TD to your parlay.</div>
       {group === 'search' ? (
-        <SearchPanel game={game} deep={deep} odds={odds} rankings={rankings} />
+        <SearchPanel
+          game={game}
+          deep={deep}
+          odds={odds}
+          rankings={rankings}
+          teamSide={teamSide}
+          setTeamSide={setTeamSide}
+        />
       ) : !playerPicks ? (
         <div className="bet-message">Loading players…</div>
-      ) : list.length ? (
-        <div className="td-list">
-          {['away', 'home'].map((side) => {
-            const mine = list.filter((p) => p.player.teamSide === side);
-            if (!mine.length) return null;
-            return (
-              <TeamGroup key={side} game={game} side={side}>
-                {mine.map((p) => (
-                  <TouchdownCard key={`${p.player.teamSide}-${p.player.id}`} pick={p} game={game} />
-                ))}
-              </TeamGroup>
-            );
-          })}
-        </div>
       ) : (
-        <div className="bet-message">No players found.</div>
+        <>
+          <div className="td-team-toggle">
+            <TeamToggle game={game} teamSide={teamSide} onChange={setTeamSide} />
+          </div>
+          {list.length ? (
+            <div className="td-list">
+              {list.map((p) => (
+                <TouchdownCard key={`${p.player.teamSide}-${p.player.id}`} pick={p} game={game} />
+              ))}
+            </div>
+          ) : (
+            <div className="bet-message">No players found.</div>
+          )}
+        </>
       )}
       {!deep.loading && (
         <OddsStatus bookOdds={deep.data?.bookOdds} problem={oddsProblem} isFinal={isFinal} onRetry={onRetryOdds} />
@@ -593,6 +641,10 @@ const Betting = ({ game, rankings }) => {
       research.data && odds ? buildLinePicks({ game, odds, predictor: lines.data?.predictor, ...research.data }) : null,
     [research.data, game, odds, lines.data],
   );
+  const grades = useMemo(
+    () => (isFinal && linePicks ? gradeLinePicks(linePicks, game, odds) : null),
+    [isFinal, linePicks, game, odds],
+  );
   const playerPicks = useMemo(
     () =>
       deep.data
@@ -618,7 +670,7 @@ const Betting = ({ game, rankings }) => {
         ))}
       </div>
 
-      {tab === 'lines' && <LinesTab game={game} lines={lines} linePicks={linePicks} />}
+      {tab === 'lines' && <LinesTab game={game} lines={lines} linePicks={linePicks} grades={grades} />}
       {tab === 'players' && (
         <PlayersTab
           game={game}

@@ -78,21 +78,23 @@ export const pickWinner = (ctx) => {
   let pick;
   if (away.prob !== null && home.prob !== null) pick = home.prob >= away.prob ? home : away;
   else if (away.ml !== null && home.ml !== null) pick = home.ml <= away.ml ? home : away;
-  else if (away.trends && home.trends) pick = (home.trends.ppg - home.trends.papg) >= (away.trends.ppg - away.trends.papg) ? home : away;
+  else if (away.trends && home.trends)
+    pick = home.trends.ppg - home.trends.papg >= away.trends.ppg - away.trends.papg ? home : away;
   else return null;
   const opp = pick === home ? away : home;
 
   const reasons = [];
-  if (pick.prob !== null) reasons.push(`ESPN's FPI gives ${pick.abbr} ${article(pick.prob)} ${fmt1(pick.prob)}% chance to win.`);
+  if (pick.prob !== null)
+    reasons.push(`ESPN's FPI gives ${pick.abbr} ${article(pick.prob)} ${fmt1(pick.prob)}% chance to win.`);
   if (pick.trends && opp.trends) {
     reasons.push(
-      `${pick.abbr} is ${recordText(pick.trends.su, ['W', 'L', 'T'])} this season; ${opp.abbr} is ${recordText(opp.trends.su, ['W', 'L', 'T'])}.`
+      `${pick.abbr} is ${recordText(pick.trends.su, ['W', 'L', 'T'])} this season; ${opp.abbr} is ${recordText(opp.trends.su, ['W', 'L', 'T'])}.`,
     );
     const pm = pick.trends.ppg - pick.trends.papg;
     const om = opp.trends.ppg - opp.trends.papg;
     if (Number.isFinite(pm) && Number.isFinite(om) && pm > om) {
       reasons.push(
-        `${pick.abbr} has a ${pm >= 0 ? '+' : ''}${fmt1(pm)} point differential per game, vs ${om >= 0 ? '+' : ''}${fmt1(om)} for ${opp.abbr}.`
+        `${pick.abbr} has a ${pm >= 0 ? '+' : ''}${fmt1(pm)} point differential per game, vs ${om >= 0 ? '+' : ''}${fmt1(om)} for ${opp.abbr}.`,
       );
     }
     const recent = lastN(pick.trends);
@@ -177,7 +179,7 @@ export const pickSpread = (ctx) => {
     const m = marginFromProbability(home.prob);
     const favByFpi = m >= 0 ? home : away;
     reasons.push(
-      `FPI's win odds point to ${favByFpi.abbr} by about ${fmt1(Math.abs(m))}; the line has ${fav.abbr} by ${Math.abs(homeSpread)}.`
+      `FPI's win odds point to ${favByFpi.abbr} by about ${fmt1(Math.abs(m))}; the line has ${fav.abbr} by ${Math.abs(homeSpread)}.`,
     );
   }
   if (proj) {
@@ -189,7 +191,10 @@ export const pickSpread = (ctx) => {
   if (pickAts?.n >= 3 && pickAts.rate >= 0.5) {
     const role = pick.line < 0 ? 'favorite' : pick.line > 0 ? 'underdog' : null;
     const roleRec = role ? (pick.line < 0 ? pick.trends.atsFav : pick.trends.atsDog) : null;
-    const roleText = roleRec && rate(roleRec)?.n >= 2 ? ` (${recordText(roleRec)} as ${role === 'favorite' ? 'a favorite' : 'an underdog'})` : '';
+    const roleText =
+      roleRec && rate(roleRec)?.n >= 2
+        ? ` (${recordText(roleRec)} as ${role === 'favorite' ? 'a favorite' : 'an underdog'})`
+        : '';
     reasons.push(`${pick.abbr} is ${recordText(pick.trends.ats)} against the spread this season${roleText}.`);
   }
   const oppAts = rate(opp.trends?.ats);
@@ -205,18 +210,26 @@ export const pickSpread = (ctx) => {
   const pickMargin = homeMargin === null ? null : pick === home ? homeMargin : -homeMargin;
   const lines = [];
   if (pickMargin === null) {
-    lines.push(pick.line > 0 ? `Taking ${spreadWords(pick.line)} in a game the numbers see as tight.` : `Laying ${spreadWords(pick.line)} with the better team.`);
+    lines.push(
+      pick.line > 0
+        ? `Taking ${spreadWords(pick.line)} in a game the numbers see as tight.`
+        : `Laying ${spreadWords(pick.line)} with the better team.`,
+    );
   } else if (pick.line < 0) {
     const cushion = pickMargin - Math.abs(pick.line);
     lines.push(
       cushion >= 3
         ? `We have the ${pick.name} winning by about ${pts(pickMargin)}, comfortably more than ${spreadWords(pick.line)}.`
-        : `We have the ${pick.name} winning by about ${pts(pickMargin)}, just enough to clear ${spreadWords(pick.line)}.`
+        : `We have the ${pick.name} winning by about ${pts(pickMargin)}, just enough to clear ${spreadWords(pick.line)}.`,
     );
   } else if (pickMargin >= 0) {
-    lines.push(`Upset alert: our numbers have the ${pick.name} winning this outright, so getting ${spreadWords(pick.line)} is a bonus.`);
+    lines.push(
+      `Upset alert: our numbers have the ${pick.name} winning this outright, so getting ${spreadWords(pick.line)} is a bonus.`,
+    );
   } else {
-    lines.push(`Getting ${spreadWords(pick.line)} is a lot of cushion. We only see the ${pick.name} losing by about ${pts(-pickMargin)}.`);
+    lines.push(
+      `Getting ${spreadWords(pick.line)} is a lot of cushion. We only see the ${pick.name} losing by about ${pts(-pickMargin)}.`,
+    );
   }
   if (pickAts?.n >= 3 && pickAts.rate >= 0.5) {
     lines.push(`They've covered ${pick.trends.ats.W || 0} of ${plural(pickAts.n, 'game')} this year.`);
@@ -248,10 +261,13 @@ export const weatherEffect = (game) => {
   if (!w) return { adj: 0, text: null };
   const temp = w.temperature;
   const where = `${w.text || 'Forecast'}${temp !== null && temp !== undefined ? `, ${temp}°F` : ''}`;
-  if (/snow|sleet|ice|storm|thunder/i.test(w.text || '')) return { adj: -3, text: `${where}: bad weather usually keeps scoring down.` };
+  if (/snow|sleet|ice|storm|thunder/i.test(w.text || ''))
+    return { adj: -3, text: `${where}: bad weather usually keeps scoring down.` };
   if (/rain|shower/i.test(w.text || '')) return { adj: -2, text: `${where}: a wet ball tends to slow offenses.` };
-  if (temp !== null && temp !== undefined && temp <= 32) return { adj: -2, text: `${where}: freezing temperatures tend to lower scoring.` };
-  if (temp !== null && temp !== undefined && temp <= 40) return { adj: -1, text: `${where}: cold weather can slow scoring a little.` };
+  if (temp !== null && temp !== undefined && temp <= 32)
+    return { adj: -2, text: `${where}: freezing temperatures tend to lower scoring.` };
+  if (temp !== null && temp !== undefined && temp <= 40)
+    return { adj: -1, text: `${where}: cold weather can slow scoring a little.` };
   return { adj: 0, text: `${where}: no weather concerns.` };
 };
 
@@ -273,7 +289,7 @@ export const pickTotal = (ctx) => {
   const reasons = [];
   if (proj) {
     reasons.push(
-      `Scoring averages project about ${fmt1(proj.total)} points (${away.abbr} ${fmt1(proj.away)}, ${home.abbr} ${fmt1(proj.home)}) against a total of ${line}.`
+      `Scoring averages project about ${fmt1(proj.total)} points (${away.abbr} ${fmt1(proj.away)}, ${home.abbr} ${fmt1(proj.home)}) against a total of ${line}.`,
     );
   }
   [away, home].forEach((s) => {
@@ -294,23 +310,25 @@ export const pickTotal = (ctx) => {
       lines.push(
         diff >= 4
           ? `These offenses project for about ${Math.round(proj.total)} points, well clear of ${line}.`
-          : `Scoring averages put this around ${Math.round(proj.total)}, a touch over ${line}.`
+          : `Scoring averages put this around ${Math.round(proj.total)}, a touch over ${line}.`,
       );
     } else {
       lines.push(
         diff <= -4
           ? `We project about ${Math.round(proj.total)} total points, well short of ${line}.`
-          : `We project about ${Math.round(proj.total)}, a little under ${line}.`
+          : `We project about ${Math.round(proj.total)}, a little under ${line}.`,
       );
     }
   }
   if (O + U >= 4) {
     const hits = over ? O : U;
-    if (hits / (O + U) >= 0.55) lines.push(`The ${over ? 'over' : 'under'} has cashed in ${hits} of ${O + U} of these teams' games.`);
+    if (hits / (O + U) >= 0.55)
+      lines.push(`The ${over ? 'over' : 'under'} has cashed in ${hits} of ${O + U} of these teams' games.`);
   }
   const w = game.weather;
   if (/snow|sleet|ice/i.test(w?.text || '')) lines.push('Snow in the forecast should turn this into a grind.');
-  else if (/rain|shower|storm|thunder/i.test(w?.text || '')) lines.push('Rain means a slick ball and a lot more running.');
+  else if (/rain|shower|storm|thunder/i.test(w?.text || ''))
+    lines.push('Rain means a slick ball and a lot more running.');
   else if (w?.temperature !== null && w?.temperature !== undefined && w.temperature <= 35)
     lines.push(`A ${Math.round(w.temperature)}° kickoff won't do the offenses any favors.`);
   else if (game.indoor && over) lines.push('Dome conditions: fast track, no weather excuses.');
@@ -369,9 +387,18 @@ STAT_SETS.TE = STAT_SETS.WR;
 STAT_SETS.FB = STAT_SETS.RB;
 
 const STAT_NAMES = [
-  'completions', 'passingAttempts', 'passingYards', 'passingTouchdowns', 'interceptions',
-  'rushingAttempts', 'rushingYards', 'rushingTouchdowns',
-  'receivingTargets', 'receptions', 'receivingYards', 'receivingTouchdowns',
+  'completions',
+  'passingAttempts',
+  'passingYards',
+  'passingTouchdowns',
+  'interceptions',
+  'rushingAttempts',
+  'rushingYards',
+  'rushingTouchdowns',
+  'receivingTargets',
+  'receptions',
+  'receivingYards',
+  'receivingTouchdowns',
 ];
 
 export const seasonStatLine = (games, position, season) => {
@@ -478,13 +505,17 @@ export const touchdownChance = ({ games, position, season, oppId, oppAbbr, ranki
 
   let opinion;
   if (edge !== null) opinion = edge >= 6 ? 'BET YES' : edge <= -6 ? 'PASS' : 'FAIR PRICE';
-  else opinion = probability >= 45 ? 'LIKELY' : probability >= 30 ? 'GOOD CHANCE' : probability >= 15 ? 'LONG SHOT' : 'UNLIKELY';
+  else
+    opinion =
+      probability >= 45 ? 'LIKELY' : probability >= 30 ? 'GOOD CHANCE' : probability >= 15 ? 'LONG SHOT' : 'UNLIKELY';
 
   const recent = thisSeason.slice(0, 5);
   const recentScored = recent.filter((g) => tdsIn(g, position) > 0).length;
   const bits = [];
   if (thisSeason.length) {
-    bits.push(`${tdThis} ${position === 'QB' ? 'rushing ' : ''}TD${tdThis === 1 ? '' : 's'} in ${thisSeason.length} games this season`);
+    bits.push(
+      `${tdThis} ${position === 'QB' ? 'rushing ' : ''}TD${tdThis === 1 ? '' : 's'} in ${thisSeason.length} games this season`,
+    );
     if (recent.length >= 3) bits.push(`scored in ${recentScored} of the last ${recent.length}`);
   }
   if (lastSeason.length) bits.push(`${tdLast} in ${lastSeason.length} games last season`);
@@ -509,14 +540,8 @@ export const touchdownChance = ({ games, position, season, oppId, oppAbbr, ranki
       tone: tdThis / thisSeason.length >= prior ? 'good' : 'bad',
     });
   }
-  if (recent.length >= 3) {
-    factors.push({
-      label: `Last ${recent.length}`,
-      value: `scored in ${recentScored}`,
-      tone: recentScored / recent.length >= 0.4 ? 'good' : recentScored === 0 ? 'bad' : null,
-    });
-  }
-  if (lastSeason.length) factors.push({ label: 'Last season', value: `${tdWord(tdLast)} in ${lastSeason.length} games`, tone: null });
+  if (lastSeason.length)
+    factors.push({ label: 'Last season', value: `${tdWord(tdLast)} in ${lastSeason.length} games`, tone: null });
   if (priceNote) {
     factors.push({
       label: `${BOOK.name} ${fmtOdds(bookTd.price)}`,
@@ -548,6 +573,42 @@ export const buildLinePicks = ({ game, odds, predictor, awayTrends, homeTrends }
   return { winner: pickWinner(ctx), spread: pickSpread(ctx), total: pickTotal(ctx) };
 };
 
+// How a line pick did once the game is final: 'W', 'L', 'P' (push) or null
+// when there's no score or line to grade it against.
+export const gradeLinePick = (pick, game, odds) => {
+  if (!pick || game?.status?.state !== 'post') return null;
+  const score = { away: Number(game.away?.score), home: Number(game.home?.score) };
+  if (!Number.isFinite(score.away) || !Number.isFinite(score.home)) return null;
+  const result = (n) => (n > 0 ? 'W' : n < 0 ? 'L' : 'P');
+
+  if (pick.key === 'winner') {
+    const other = pick.side === 'away' ? 'home' : 'away';
+    return result(score[pick.side] - score[other]);
+  }
+  if (pick.key === 'spread') {
+    const line = odds?.[pick.side]?.spreadLine;
+    if (line === null || line === undefined) return null;
+    const other = pick.side === 'away' ? 'home' : 'away';
+    return result(score[pick.side] - score[other] + Number(line));
+  }
+  if (pick.key === 'total') {
+    const line = odds?.total?.line;
+    if (line === null || line === undefined) return null;
+    const diff = score.away + score.home - Number(line);
+    return result(pick.side === 'over' ? diff : -diff);
+  }
+  return null;
+};
+
+export const gradeLinePicks = (linePicks, game, odds) =>
+  linePicks
+    ? {
+        winner: gradeLinePick(linePicks.winner, game, odds),
+        spread: gradeLinePick(linePicks.spread, game, odds),
+        total: gradeLinePick(linePicks.total, game, odds),
+      }
+    : null;
+
 // QB / RB / WR-TE touchdown picks for the PLAYERS tab. `players` is
 // { away: { qb: [...], rb: [...], wr: [...] }, home: { ... } }.
 // Points a team is expected to score from the total and its spread.
@@ -573,7 +634,7 @@ export const buildPlayerPicks = ({ game, players, rankings, bookOdds, odds }) =>
             rankings,
             bookOdds,
             teamPoints: impliedTeamPoints(odds, side),
-          })
+          }),
         )
         .filter(Boolean);
     });
