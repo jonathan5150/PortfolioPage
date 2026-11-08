@@ -1180,7 +1180,7 @@
   z-index: 2;
 }
 
-.nfl-data-container .team-info-container > *:not(.team-logo-watermark) {
+.nfl-data-container .team-info-container > *:not(.team-logo-watermark):not(.possession-flag) {
   position: relative;
   z-index: 1;
 }
@@ -1293,12 +1293,24 @@
   position: relative;
 }
 
-.nfl-data-container .possession-ball {
+.nfl-data-container .possession-flag {
   position: absolute;
-  right: -11px;
-  top: 1px;
-  font-size: 8px;
-  color: #e3b341;
+  top: 0;
+  z-index: 3;
+  width: 12px;
+  height: 12px;
+  background: #e3b341;
+  pointer-events: none;
+}
+
+.nfl-data-container .possession-flag.away {
+  right: 0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
+.nfl-data-container .possession-flag.home {
+  left: 0;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
 }
 
 .nfl-data-container .team-record {
@@ -1428,12 +1440,7 @@
 }
 
 .nfl-data-container .linescore-cell.current {
-  background: rgba(217, 72, 72, 0.18);
   color: #fff;
-}
-
-.nfl-data-container .linescore-head .linescore-cell.current {
-  color: #ff8a8a;
 }
 
 .nfl-data-container .linescore-total {

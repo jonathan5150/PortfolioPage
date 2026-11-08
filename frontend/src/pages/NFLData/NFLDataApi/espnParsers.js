@@ -109,6 +109,7 @@ const parseSituation = (s, competitors) => {
     homeTimeouts: s.homeTimeouts ?? null,
     awayTimeouts: s.awayTimeouts ?? null,
     lastPlay: s.lastPlay?.text || '',
+    lastPlayType: s.lastPlay?.type?.text || '',
   };
 };
 

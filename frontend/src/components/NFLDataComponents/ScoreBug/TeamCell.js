@@ -137,18 +137,13 @@ const TeamCell = ({
           />
         )}
 
+        {/* possession: a small yellow triangle in the corner facing the middle */}
+        {hasPossession && <span className={`possession-flag ${side}`} title="Possession" aria-label="Has the ball" />}
         {/* name, record and score share one layer, so dimming a cell fades a
             single element instead of each piece of text */}
         <div className="team-text">
           <div className="team-abbr-block" title={team?.displayName}>
-            <div className="abbreviation">
-              {team?.abbreviation}
-              {hasPossession && (
-                <span className="possession-ball" title="Possession">
-                  ●
-                </span>
-              )}
-            </div>
+            <div className="abbreviation">{team?.abbreviation}</div>
             <div className="team-record">{competitor?.record || '0-0'}</div>
           </div>
 
