@@ -24,6 +24,7 @@ import { Holdable } from '../shared/ParlayContext';
 import TeamToggle from '../shared/TeamToggle';
 import BoxScore from './BoxScore';
 import useGameSummary from '../GameCard/useGameSummary';
+import { touchdownScorers } from '../../../pages/NFLData/NFLDataApi/espnParsers';
 import { hasStarted, frozenOdds, saveOddsSnapshot } from '../../../pages/NFLData/NFLDataApi/oddsSnapshots';
 
 // Betting tab (bet mode only).
@@ -297,8 +298,12 @@ const TdHistory = ({ history }) => {
   );
 };
 
+// Players who've scored a touchdown in this game, { athleteId: touchdowns }.
+const TdScorersContext = React.createContext({});
+
 const TouchdownCard = ({ pick, game, large = false }) => {
   const { player, td, stats, tdHistory } = pick;
+  const scored = React.useContext(TdScorersContext)[player.id];
   const side = player.teamSide;
   const other = side === 'away' ? 'home' : 'away';
   return (
@@ -340,6 +345,10 @@ const TouchdownCard = ({ pick, game, large = false }) => {
             </React.Fragment>
           ))}
         </dl>
+      )}
+      {/* green corner once the player has scored a touchdown in this game */}
+      {scored > 0 && (
+        <span className="pick-result right" title={`Scored ${scored > 1 ? `${scored} touchdowns` : 'a touchdown'}`} />
       )}
     </Holdable>
   );
@@ -579,7 +588,7 @@ const PlayersTab = ({ game, deep, playerPicks, isFinal, odds, rankings, oddsProb
 const TABS = [
   { key: 'boxscore', label: 'BOX SCORE' },
   { key: 'lines', label: 'LINES' },
-  { key: 'players', label: 'PLAYERS' },
+  { key: 'players', label: 'TD ODDS' },
 ];
 
 // Lines refresh this often while the game is open and hasn't started.
@@ -604,7 +613,9 @@ const Betting = ({ game, rankings, isOpen = true }) => {
   }, [tab]);
 
   // Box score (live games keep refreshing while the tab is showing).
-  const summaryState = useGameSummary(game, isOpen && tab === 'boxscore');
+  // TD ODDS uses it too, to mark the players who've scored.
+  const summaryState = useGameSummary(game, isOpen && (tab === 'boxscore' || tab === 'players'));
+  const tdScorers = useMemo(() => touchdownScorers(summaryState.data), [summaryState.data]);
 
   // Until kickoff, an open game's odds refresh every few minutes (and when it's
   // reopened after a while). TD prices come from the cached slate, so this
@@ -732,16 +743,18 @@ const Betting = ({ game, rankings, isOpen = true }) => {
       {tab === 'boxscore' && <BoxScore key={openCount} game={game} summaryState={summaryState} withToggle />}
       {tab === 'lines' && <LinesTab game={game} lines={lines} linePicks={linePicks} grades={grades} />}
       {tab === 'players' && (
-        <PlayersTab
-          game={game}
-          deep={deep}
-          playerPicks={playerPicks}
-          isFinal={isFinal}
-          odds={odds}
-          rankings={rankings}
-          oddsProblem={lines.data?.problem}
-          onRetryOdds={() => setOddsAttempt((n) => n + 1)}
-        />
+        <TdScorersContext.Provider value={tdScorers}>
+          <PlayersTab
+            game={game}
+            deep={deep}
+            playerPicks={playerPicks}
+            isFinal={isFinal}
+            odds={odds}
+            rankings={rankings}
+            oddsProblem={lines.data?.problem}
+            onRetryOdds={() => setOddsAttempt((n) => n + 1)}
+          />
+        </TdScorersContext.Provider>
       )}
     </div>
   );

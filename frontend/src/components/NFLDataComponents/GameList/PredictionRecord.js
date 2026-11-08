@@ -43,8 +43,7 @@ const BET_FILTERS = [
   { key: 'total', label: 'O/U' },
 ];
 
-const money = (n) =>
-  `$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const money = (n) => `$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const signedMoney = (n) => `${n > 0.004 ? '+' : n < -0.004 ? '-' : ''}${money(n)}`;
 const tone = (n) => (n > 0.004 ? 'up' : n < -0.004 ? 'down' : 'even');
 const dayKey = (date) => new Date(date).toDateString();
@@ -83,9 +82,20 @@ const BetResults = ({ finished, gradedById }) => {
   const [stake, setStake] = useState(STAKES[0]);
   const days = betDays(finished, gradedById, filter, stake);
   const week = days.reduce((sum, d) => sum + d.profit, 0);
+  // Closed until asked for: a button opens and closes the list.
+  const [open, setOpen] = useState(false);
+  const toggle = (
+    <button type="button" className={`bet-results-toggle ${open ? 'open' : ''}`} onClick={() => setOpen((o) => !o)}>
+      {open ? 'HIDE BETTING RESULTS' : 'SHOW BETTING RESULTS'}
+      <span className="bet-results-caret" aria-hidden="true" />
+    </button>
+  );
+
+  if (!open) return <div className="bet-results">{toggle}</div>;
 
   return (
     <div className="bet-results">
+      {toggle}
       <div className="prediction-record-title">BETTING RESULTS · ${stake} PER BET</div>
       <div className="bet-filter">
         {BET_FILTERS.map((f) => (

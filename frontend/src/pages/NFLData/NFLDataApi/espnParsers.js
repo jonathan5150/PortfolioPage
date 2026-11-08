@@ -338,6 +338,25 @@ export const parseSummary = (json) => {
   };
 };
 
+// Players who scored a touchdown themselves in a parsed summary, as
+// { athleteId: touchdowns }: rushing, receiving, return and defensive scores
+// count, a quarterback's passing touchdowns don't (same as an anytime TD bet).
+export const touchdownScorers = (summary) => {
+  const scorers = {};
+  Object.values(summary?.players || {}).forEach(({ categories }) => {
+    Object.values(categories || {}).forEach((cat) => {
+      cat.athletes.forEach((a) => {
+        if (!a.id) return;
+        const tds = Object.entries(a.stats || {})
+          .filter(([key]) => /Touchdowns$/.test(key) && key !== 'passingTouchdowns')
+          .reduce((sum, [, value]) => sum + (Number(value) || 0), 0);
+        if (tds > 0) scorers[a.id] = (scorers[a.id] || 0) + tds;
+      });
+    });
+  });
+  return scorers;
+};
+
 // ---------- Roster ----------
 
 export const parseRoster = (json) => {
