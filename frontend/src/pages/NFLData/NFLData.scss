@@ -1788,15 +1788,10 @@
   flex-direction: column;
 }
 
-.nfl-data-container .search-team-toggle.attached button {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
 .nfl-data-container .team-toggle-below {
-  margin-top: -1.5px; /* shares the border with the team buttons above */
+  margin-top: 4px; /* its own button, spaced like the gap between the teams */
   padding: 5px 0;
-  border-radius: 0 0 6px 6px;
+  border-radius: 6px;
   border: 1.5px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.04);
   box-shadow: none;
@@ -1809,10 +1804,9 @@
 }
 
 .nfl-data-container .team-toggle-below.active {
-  position: relative; /* its gold border sits over the shared edge */
   color: #ffffff;
   background: rgba(255, 255, 255, 0.1);
-  border-color: #c49410;
+  border-color: rgba(255, 255, 255, 0.35); /* stays gray; the fill shows it's selected */
 }
 
 .nfl-data-container .search-team-toggle img {

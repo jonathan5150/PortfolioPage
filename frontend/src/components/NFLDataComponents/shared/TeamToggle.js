@@ -4,11 +4,11 @@ import { getTeamColor, washOut } from './teamColors';
 const teamAccent = (team) => washOut(getTeamColor(team) || 'rgba(120,120,120,0.6)', 0.15).replace(/[\d.]+\)$/, '1)');
 
 // Sideways away | home picker with team logos (PLAYERS and BOX SCORE).
-// `below` adds a full-width option attached under the two teams, e.g.
+// `below` adds a full-width option as its own button under the two teams, e.g.
 // { key: 'scoring', label: 'SCORING PLAYS' } in the box score.
 const TeamToggle = ({ game, teamSide, onChange, dimmed = false, below = null }) => {
   const row = (
-    <div className={`search-team-toggle ${below ? 'attached' : ''}`} role="tablist" aria-label="Team">
+    <div className="search-team-toggle" role="tablist" aria-label="Team">
       {['away', 'home'].map((side) => {
         const team = game[side]?.team;
         const active = teamSide === side && !dimmed;
