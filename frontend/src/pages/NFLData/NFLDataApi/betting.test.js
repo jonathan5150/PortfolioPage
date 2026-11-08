@@ -645,3 +645,19 @@ describe('odds frozen at kickoff', () => {
     expect(hasStarted(game, kickoff - min)).toBe(false);
   });
 });
+
+describe('live down & distance', () => {
+  // eslint-disable-next-line global-require
+  const { situationText } = require('../../../components/NFLDataComponents/ScoreBug/ScoreBugs');
+  const status = { shortDetail: '8:23 - 2nd', isHalftime: false };
+  it('shows a real down', () => {
+    expect(situationText({ down: 3, distance: 7, shortDownDistanceText: '3rd & 7' }, status)).toBe('3rd & 7');
+    expect(situationText({ down: 2, distance: 4 }, status)).toBe('2nd & 4');
+  });
+  it('never shows the between-plays -1 / 0 placeholder', () => {
+    expect(situationText({ down: -1, distance: 0 }, status)).toBe('8:23 - 2nd');
+    expect(situationText({ down: -1, distance: 0, downDistanceText: '-1th and 0' }, status)).toBe('8:23 - 2nd');
+    expect(situationText({ down: 1, distance: 10, shortDownDistanceText: '-1th & 0' }, status)).toBe('1st & 10');
+    expect(situationText({ down: 0, distance: 0 }, { isHalftime: true })).toBe('Halftime');
+  });
+});
