@@ -1806,7 +1806,7 @@
 .nfl-data-container .team-toggle-below.active {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.35); /* stays gray; the fill shows it's selected */
+  border-color: #c49410; /* gold while selected; the team buttons above lose theirs */
 }
 
 .nfl-data-container .search-team-toggle img {

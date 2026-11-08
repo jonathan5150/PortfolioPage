@@ -20,9 +20,8 @@ const TeamToggle = ({ game, teamSide, onChange, dimmed = false, below = null }) 
             aria-selected={teamSide === side}
             className={active ? 'active' : ''}
             onClick={() => onChange(side)}
-            // the box score's team buttons always wear their team colour; elsewhere
-            // only the selected team does
-            style={active || below ? { borderColor: teamAccent(team) } : undefined}
+            // only the selected button is outlined (team colour)
+            style={active ? { borderColor: teamAccent(team) } : undefined}
           >
             {team?.logo && <img src={team.logo} alt="" draggable={false} />}
             {team?.abbreviation}

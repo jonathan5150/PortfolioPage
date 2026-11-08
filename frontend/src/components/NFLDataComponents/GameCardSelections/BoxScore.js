@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import SwipeTeamPanel from '../shared/SwipeTeamPanel';
 import StatTable from '../shared/StatTable';
 import { usePersistentMapEntry } from '../shared/usePersistentState';
@@ -34,7 +34,8 @@ const ScoringPlays = ({ summary, teamsById }) => {
 // SCORING PLAYS attached underneath pick what's shown, one at a time.
 const BoxScore = ({ game, summaryState, withToggle = false }) => {
   const [showing, setShowing] = usePersistentMapEntry('boxScoreSideByGame', game.id, 'away');
-  const [view, setView] = usePersistentMapEntry('boxScoreViewByGame', game.id, 'scoring');
+  // SCORING PLAYS every time the game is opened (the panel remounts this on open)
+  const [view, setView] = useState('scoring');
   const { data: summary, loading, error } = summaryState;
 
   const teamsById = useMemo(
