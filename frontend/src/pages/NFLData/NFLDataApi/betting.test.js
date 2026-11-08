@@ -616,6 +616,41 @@ describe('gradeLinePick', () => {
   });
 });
 
+describe('flat-stake bets', () => {
+  // eslint-disable-next-line global-require
+  const { betReturn, linePickBets } = require('./picks');
+
+  it('pays American odds back with the stake', () => {
+    expect(betReturn(10, -170, 'W')).toBe(15.88);
+    expect(betReturn(10, 150, 'W')).toBe(25);
+    expect(betReturn(10, -110, 'L')).toBe(0);
+    expect(betReturn(10, -110, 'P')).toBe(10);
+  });
+
+  it('lists moneyline, spread and total bets with their pregame prices', () => {
+    const game = {
+      status: { state: 'post' },
+      away: { score: '20', team: { abbreviation: 'BUF' } },
+      home: { score: '24', team: { abbreviation: 'KC' } },
+    };
+    const odds = {
+      away: { moneyLine: 140, spreadLine: 3.5, spreadOdds: -105 },
+      home: { moneyLine: -170, spreadLine: -3.5, spreadOdds: null },
+      total: { line: 47.5, overOdds: -110, underOdds: -110 },
+    };
+    const picks = {
+      winner: { key: 'winner', side: 'home' },
+      spread: { key: 'spread', side: 'home' },
+      total: { key: 'total', side: 'under' },
+    };
+    expect(linePickBets(picks, game, odds)).toEqual([
+      { key: 'winner', label: 'KC ML', price: -170, result: 'W' },
+      { key: 'spread', label: 'KC -3.5', price: -110, result: 'W' },
+      { key: 'total', label: 'UNDER 47.5', price: -110, result: 'W' },
+    ]);
+  });
+});
+
 describe('odds frozen at kickoff', () => {
   // eslint-disable-next-line global-require
   const { saveOddsSnapshot, frozenOdds, hasStarted } = require('./oddsSnapshots');

@@ -388,6 +388,106 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
+/* betting results: every pick as a flat $10 bet */
+
+.nfl-data-container .bet-results {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.nfl-data-container .bet-filter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin: 2px 0 8px;
+}
+
+.nfl-data-container .bet-filter-btn {
+  padding: 5px 2px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.75);
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.nfl-data-container .bet-filter-btn.active {
+  border-color: #f5d16b;
+  color: #f5d16b;
+  background: rgba(245, 209, 107, 0.1);
+}
+
+.nfl-data-container .bet-row {
+  display: grid;
+  grid-template-columns: 1fr 44px 44px 56px;
+  gap: 6px;
+  padding: 1px 0;
+  font-size: 11px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.nfl-data-container .bet-row > span:first-child {
+  text-align: left;
+}
+
+.nfl-data-container .bet-head {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nfl-data-container .bet-day-label {
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #f5d16b;
+  text-align: left;
+}
+
+.nfl-data-container .bet-game-label {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: left;
+}
+
+.nfl-data-container .bet-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nfl-data-container .bet-return.up {
+  color: #6fd38a;
+}
+
+.nfl-data-container .bet-return.down {
+  color: #ff7a7a;
+}
+
+.nfl-data-container .bet-total {
+  grid-template-columns: 1fr auto;
+  margin-top: 3px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  font-weight: 800;
+}
+
+.nfl-data-container .bet-week {
+  margin-top: 8px;
+  font-size: 12px;
+  border-top-color: rgba(245, 209, 107, 0.5);
+}
+
 /* ---------- loading ---------- */
 
 @keyframes nflFadeInOut {
