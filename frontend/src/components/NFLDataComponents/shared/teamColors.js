@@ -23,7 +23,7 @@ const NFL_TEAM_COLORS = {
   IND: rgba(20, 80, 160),
   JAX: rgba(0, 105, 120),
   KC: rgba(215, 30, 55),
-  LV: rgba(135, 140, 145),
+  LV: rgba(170, 176, 183), // silver, lifted so it doesn't look washed out
   LAC: rgba(0, 130, 200),
   LAR: rgba(25, 75, 160),
   MIA: rgba(0, 140, 150),
@@ -83,7 +83,20 @@ export const getTeamBackgroundStyle = (teamColor) => {
   };
 };
 
+// Teams whose border needs extra pop (their colours are greys).
+const BORDER_OVERRIDES = {
+  LV: 'rgba(190, 196, 202, 0.5)',
+};
+
 export const getTeamBorderColor = (team) => {
+  if (team && BORDER_OVERRIDES[team.abbreviation]) return BORDER_OVERRIDES[team.abbreviation];
   const color = getTeamColor(team);
   return color ? washOut(color, 0.2) : 'rgb(85, 85, 85)';
+};
+
+// Solid team colour plus a lighter shade of it, for the swirling ring around an open game.
+export const getTeamRingColors = (team) => {
+  const base = getTeamColor(team) || 'rgba(140, 140, 140, 1)';
+  const solid = base.replace(/[\d.]+\)$/, '1)');
+  return [solid, washOut(solid, 0.45)];
 };

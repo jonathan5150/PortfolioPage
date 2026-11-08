@@ -11,6 +11,7 @@ import {
   isUnavailable,
 } from './espnService';
 import { parseEventOdds, parsePredictor, gradeGame, computeTeamTrends } from './betting';
+import { buildLinePicks, gradeLinePicks } from './picks';
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -39,12 +40,27 @@ export const getTeamBettingTrends = async (teamId, game) => {
 
   const results = await runWithConcurrency(
     schedule.map((g) => async () => gradeGame(teamId, g, await getEventOdds(g.id, { final: true }))),
-    4
+    4,
   );
 
   // A game without a line still counts toward scoring and straight-up records.
   const graded = schedule.map((g, i) => (results[i].ok ? results[i].value : gradeGame(teamId, g, null)));
   return computeTeamTrends(graded);
+};
+
+// The engine's winner / spread / total picks for a finished game, made from
+// what was known before kickoff, and how each one did.
+export const getGradedLinePicks = async (game) => {
+  const quiet = (p) => p.catch(() => null);
+  const [odds, predictor, awayTrends, homeTrends] = await Promise.all([
+    quiet(getEventOdds(game.id, { final: true })),
+    quiet(getEventPredictor(game.id)),
+    quiet(getTeamBettingTrends(game.away?.teamId, game)),
+    quiet(getTeamBettingTrends(game.home?.teamId, game)),
+  ]);
+  if (!odds) return null;
+  const picks = buildLinePicks({ game, odds, predictor, awayTrends, homeTrends });
+  return gradeLinePicks(picks, game, odds);
 };
 
 // ---------- key players (QB / RB / WR) ----------
@@ -71,8 +87,8 @@ export const getRecentGames = async (athleteId, game) => {
     seasons.map((season) =>
       getPlayerGameLog(athleteId, season)
         .then((log) => log.games.map((g) => ({ ...g, season })))
-        .catch(() => [])
-    )
+        .catch(() => []),
+    ),
   );
   const cutoff = game.date ? new Date(game.date).getTime() : Infinity;
   const seen = new Set();
@@ -117,7 +133,7 @@ export const getGameSkillPlayers = async (game) => {
       .then((roster) =>
         roster
           .filter((p) => SEARCH_POSITIONS.includes(p.position))
-          .map((p) => ({ ...p, teamSide: side, teamAbbr: game[side]?.team?.abbreviation }))
+          .map((p) => ({ ...p, teamSide: side, teamAbbr: game[side]?.team?.abbreviation })),
       )
       .catch(() => []);
   const [away, home] = await Promise.all([load('away'), load('home')]);

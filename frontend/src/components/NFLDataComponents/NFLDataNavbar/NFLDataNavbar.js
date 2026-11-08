@@ -22,9 +22,9 @@ const NFLDataNavbar = ({
   isWeekMenuOpen,
   setIsWeekMenuOpen,
   onOutsideClose,
-  betMode,
-  onToggleBetMode,
   hasLiveGames,
+  hideMode,
+  onToggleHideMode,
 }) => {
   const teamsRef = useRef(null);
   const weekRef = useRef(null);
@@ -47,9 +47,12 @@ const NFLDataNavbar = ({
     return () => document.removeEventListener('pointerdown', handlePointerDown, true);
   }, [isTeamsMenuOpen, isWeekMenuOpen, setIsTeamsMenuOpen, setIsWeekMenuOpen, onOutsideClose]);
 
+  // Preseason weeks aren't offered: regular season and playoffs only.
+  const seasonCalendar = useMemo(() => calendar.filter((section) => section.seasonType !== 1), [calendar]);
+
   const flatWeeks = useMemo(
-    () => calendar.flatMap((section) => section.weeks.map((w) => ({ seasonType: section.seasonType, ...w }))),
-    [calendar]
+    () => seasonCalendar.flatMap((section) => section.weeks.map((w) => ({ seasonType: section.seasonType, ...w }))),
+    [seasonCalendar],
   );
   const currentIndex = flatWeeks.findIndex((w) => w.seasonType === seasonType && w.week === week);
   const currentWeek = flatWeeks[currentIndex];
@@ -80,7 +83,7 @@ const NFLDataNavbar = ({
               setIsWeekMenuOpen(false);
             }}
           >
-            TEAMS
+            HIDE TEAMS
           </button>
 
           {isTeamsMenuOpen && (
@@ -131,7 +134,7 @@ const NFLDataNavbar = ({
           {isWeekMenuOpen && (
             <div className="nfl-dropdown-menu week-dropdown">
               <WeekMenu
-                calendar={calendar}
+                calendar={seasonCalendar}
                 seasons={seasons}
                 season={season}
                 seasonType={seasonType}
@@ -148,15 +151,15 @@ const NFLDataNavbar = ({
 
         <button
           type="button"
-          className={`nfl-control-button bet-button ${betMode ? 'active' : ''}`}
-          aria-pressed={Boolean(betMode)}
+          className={`nfl-control-button hide-games-button ${hideMode ? 'active' : ''}`}
+          aria-pressed={Boolean(hideMode)}
           onClick={() => {
             setIsTeamsMenuOpen(false);
             setIsWeekMenuOpen(false);
-            onToggleBetMode?.();
+            onToggleHideMode?.();
           }}
         >
-          BET MODE
+          HIDE GAMES
         </button>
       </div>
     </div>

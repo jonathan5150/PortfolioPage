@@ -7,6 +7,7 @@ import PlayerGameLog from '../GameCardSelections/PlayerGameLog';
 import TeamHistory from '../GameCardSelections/TeamHistory';
 import Betting from '../GameCardSelections/Betting';
 import { usePersistentMapEntry } from '../shared/usePersistentState';
+import { getTeamRingColors } from '../shared/teamColors';
 import useGameSummary from './useGameSummary';
 
 export const PANEL_OPTIONS = [
@@ -17,6 +18,10 @@ export const PANEL_OPTIONS = [
   { value: 'season-stats', label: 'SEASON STATS' },
   { value: 'game-log', label: 'PLAYER GAME LOG' },
 ];
+
+// The panel picker row (view dropdown + SET / CLOSE) is switched off for now:
+// every game shows the Betting panel. Flip this to bring the row back.
+const SHOW_PANEL_CONTROLS = false;
 
 const controlButtonStyle = {
   padding: '4px 10px',
@@ -46,17 +51,16 @@ const GameCard = memo(function GameCard({
   syncCommand,
   onBroadcast,
   suppressNextToggleRef,
-  betMode,
+  openGameId,
+  onUserToggle,
+  hideMode = false,
+  hidden = false,
+  onToggleHidden,
 }) {
   const state = game.status.state;
-  const normalPanel = state === 'pre' ? 'team-rankings' : 'box-score';
-  const defaultPanel = betMode ? 'betting' : normalPanel;
-
-  const [storedPanel, setPanelKey] = usePersistentMapEntry('panelByGame', game.id, defaultPanel);
-  // The Betting panel only exists in bet mode.
-  const panelKey = !betMode && storedPanel === 'betting' ? normalPanel : storedPanel;
-  const panelOptions = betMode ? PANEL_OPTIONS : PANEL_OPTIONS.filter((o) => o.value !== 'betting');
-  const [starredTeamId, setStarredTeamId] = usePersistentMapEntry('starredTeamByGame', game.id, null);
+  const [storedPanel, setPanelKey] = usePersistentMapEntry('panelByGame', game.id, 'betting');
+  const panelKey = SHOW_PANEL_CONTROLS ? storedPanel : 'betting';
+  const panelOptions = PANEL_OPTIONS;
   const [isExpanded, setIsExpanded] = useState(false);
   // Panels mount the first time a card opens and then stay mounted, so closing
   // animates smoothly and reopening doesn't refetch.
@@ -97,27 +101,53 @@ const GameCard = memo(function GameCard({
     if (syncCommand.type === 'set-all' && syncCommand.sourceGameId !== game.id) {
       setPanelKey(syncCommand.panelKey);
     }
-    if (syncCommand.type === 'open-all') {
-      setPanelKey(syncCommand.panelKey);
-      setIsExpanded(true);
-    }
     if (syncCommand.type === 'close-all') {
       setIsExpanded(false);
     }
   }, [syncCommand, game.id, setPanelKey]);
 
-  const toggle = useCallback(() => {
-    if (suppressNextToggleRef?.current) return;
-    setIsExpanded((prev) => !prev);
-  }, [suppressNextToggleRef]);
+  // A click opens/closes this game and tells the list, which keeps only one
+  // game open at a time.
+  // Another game was opened: close this one.
+  useEffect(() => {
+    if (openGameId && openGameId !== game.id) setIsExpanded(false);
+  }, [openGameId, game.id]);
 
-  const handleStar = useCallback(
-    (teamId) => setStarredTeamId((prev) => (prev === teamId ? null : teamId)),
-    [setStarredTeamId]
+  // A hidden game can't be opened; hiding an open game closes it.
+  useEffect(() => {
+    if (hidden) setIsExpanded(false);
+  }, [hidden]);
+
+  const toggle = useCallback(() => {
+    if (suppressNextToggleRef?.current || hidden) return;
+    const next = !isExpanded;
+    setIsExpanded(next);
+    onUserToggle?.(game.id, next);
+  }, [suppressNextToggleRef, hidden, isExpanded, onUserToggle, game.id]);
+
+  // In HIDE GAMES mode a tap anywhere on the game hides/unhides it instead of opening it.
+  const handleHideClick = useCallback(
+    (e) => {
+      if (!hideMode) return;
+      e.preventDefault();
+      e.stopPropagation();
+      onToggleHidden?.(game.id);
+    },
+    [hideMode, onToggleHidden, game.id],
   );
 
   const awayTeam = teamsById[game.away?.teamId] || game.away?.team;
   const homeTeam = teamsById[game.home?.teamId] || game.home?.team;
+
+  // The ring around an open game swirls in the two teams' colours.
+  const [awaySolid, awayLight] = getTeamRingColors(game.away?.team);
+  const [homeSolid, homeLight] = getTeamRingColors(game.home?.team);
+  const ringStyle = {
+    '--ring-away': awaySolid,
+    '--ring-away-light': awayLight,
+    '--ring-home': homeSolid,
+    '--ring-home-light': homeLight,
+  };
 
   const renderPanel = () => {
     switch (panelKey) {
@@ -147,69 +177,88 @@ const GameCard = memo(function GameCard({
 
   const bugProps = {
     game,
-    starredTeamId,
-    onStar: handleStar,
     onToggle: toggle,
     showLinescore: isExpanded,
-    betMode,
   };
 
   return (
-    <div className="game-container">
-      {state === 'in' ? (
-        <LiveScoreBug {...bugProps} />
-      ) : state === 'post' ? (
-        <FinalScoreBug {...bugProps} />
-      ) : (
-        <PreGameScoreBug {...bugProps} />
+    <div
+      className={`game-slot ${isExpanded ? 'open' : ''} ${hideMode ? 'hide-mode' : ''} ${hidden ? 'hidden-game' : ''}`}
+      data-game-id={game.id}
+      style={ringStyle}
+    >
+      {hideMode && (
+        <label className="hide-check">
+          <input
+            type="checkbox"
+            checked={hidden}
+            onChange={() => onToggleHidden?.(game.id)}
+            aria-label={`Hide ${game.away?.team?.abbreviation || ''} at ${game.home?.team?.abbreviation || ''}`}
+          />
+        </label>
       )}
+      <div className="game-slot-body" onClickCapture={handleHideClick}>
+        {hidden && <div className="hidden-overlay">HIDDEN</div>}
+        <div className="game-slot-content">
+          {state === 'in' ? (
+            <LiveScoreBug {...bugProps} />
+          ) : state === 'post' ? (
+            <FinalScoreBug {...bugProps} />
+          ) : (
+            <PreGameScoreBug {...bugProps} />
+          )}
 
-      <div
-        className="game-data-container stat-toggle-container"
-        style={{
-          overflow: 'hidden',
-          height: isExpanded ? `${height}px` : '0px',
-          opacity: isExpanded ? 1 : 0,
-          padding: isExpanded ? '5px' : '0 5px',
-          marginBottom: isExpanded ? '7px' : '0',
-          borderWidth: isExpanded ? '2px' : '0px',
-          pointerEvents: isExpanded ? 'auto' : 'none',
-          transition: 'height 0.35s ease, opacity 0.25s ease, padding 0.25s ease, margin 0.25s ease',
-          boxSizing: 'content-box',
-        }}
-      >
-        <div ref={innerRef}>
-          <div className="panel-controls">
-            <div className="panel-select-wrapper">
-              <select
-                value={panelKey}
-                onChange={(e) => setPanelKey(e.target.value)}
-                className="panel-select"
-                aria-label="Choose stats view"
-              >
-                {panelOptions.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-              <span className="panel-select-arrow">▼</span>
-            </div>
+          <div
+            className="game-data-container stat-toggle-container"
+            style={{
+              overflow: 'hidden',
+              height: isExpanded ? `${height}px` : '0px',
+              opacity: isExpanded ? 1 : 0,
+              padding: isExpanded ? '5px' : '0 5px',
+              marginBottom: isExpanded ? '7px' : '0',
+              borderWidth: isExpanded ? '2px' : '0px',
+              pointerEvents: isExpanded ? 'auto' : 'none',
+              transition: 'height 0.35s ease, opacity 0.25s ease, padding 0.25s ease, margin 0.25s ease',
+              boxSizing: 'content-box',
+            }}
+          >
+            <div ref={innerRef}>
+              {SHOW_PANEL_CONTROLS && (
+                <div className="panel-controls">
+                  <div className="panel-select-wrapper">
+                    <select
+                      value={panelKey}
+                      onChange={(e) => setPanelKey(e.target.value)}
+                      className="panel-select"
+                      aria-label="Choose stats view"
+                    >
+                      {panelOptions.map((o) => (
+                        <option key={o.value} value={o.value}>
+                          {o.label}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="panel-select-arrow">▼</span>
+                  </div>
 
-            <div className="panel-sync-buttons">
-              <button type="button" style={controlButtonStyle} onClick={() => onBroadcast('set-all', game.id, panelKey)}>
-                SET
-              </button>
-              <button type="button" style={controlButtonStyle} onClick={() => onBroadcast('open-all', game.id, panelKey)}>
-                OPEN
-              </button>
-              <button type="button" style={controlButtonStyle} onClick={() => onBroadcast('close-all', game.id)}>
-                CLOSE
-              </button>
+                  <div className="panel-sync-buttons">
+                    <button
+                      type="button"
+                      style={controlButtonStyle}
+                      onClick={() => onBroadcast('set-all', game.id, panelKey)}
+                    >
+                      SET
+                    </button>
+                    <button type="button" style={controlButtonStyle} onClick={() => onBroadcast('close-all', game.id)}>
+                      CLOSE
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="stat-section">{hasOpened ? renderPanel() : null}</div>
             </div>
           </div>
-
-          <div className="stat-section">{hasOpened ? renderPanel() : null}</div>
         </div>
       </div>
     </div>

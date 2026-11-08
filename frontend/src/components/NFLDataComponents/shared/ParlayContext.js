@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import usePersistentState from './usePersistentState';
 import { useLongPress } from '../ScoreBug/TeamCell';
 
@@ -36,6 +36,9 @@ export const ParlayProvider = ({ children }) => {
 const NO_PARLAY = { legs: [], has: () => false, toggle: () => {}, remove: () => {}, clear: () => {} };
 export const useParlay = () => useContext(ParlayContext) || NO_PARLAY;
 
+// Nothing happens for the first half second of a press (so scrolling or a
+// quick tap never selects anything); then the gold fill runs and the pick is saved.
+const HOLD_DELAY_MS = 500;
 const HOLD_MS = 450;
 
 // Wraps a pick: press and hold to add it to (or remove it from) the parlay.
@@ -45,6 +48,8 @@ export const Holdable = ({ leg, as: Tag = 'div', className = '', children, ...re
   const [holding, setHolding] = useState(false);
   const legRef = useRef(leg);
   legRef.current = leg;
+  const delayRef = useRef(null);
+  useEffect(() => () => clearTimeout(delayRef.current), []);
 
   const longPress = useLongPress(() => {
     setHolding(false);
@@ -56,6 +61,7 @@ export const Holdable = ({ leg, as: Tag = 'div', className = '', children, ...re
   if (!leg) return <Tag className={className} {...rest}>{children}</Tag>;
 
   const stop = () => {
+    clearTimeout(delayRef.current);
     setHolding(false);
     longPress.clear();
   };
@@ -64,8 +70,11 @@ export const Holdable = ({ leg, as: Tag = 'div', className = '', children, ...re
     <Tag
       className={`${className} holdable ${has(leg.id) ? 'selected' : ''} ${holding ? 'holding' : ''}`}
       onPointerDown={() => {
-        setHolding(true);
-        longPress.start();
+        clearTimeout(delayRef.current);
+        delayRef.current = setTimeout(() => {
+          setHolding(true);
+          longPress.start();
+        }, HOLD_DELAY_MS);
       }}
       onPointerUp={stop}
       onPointerLeave={stop}
