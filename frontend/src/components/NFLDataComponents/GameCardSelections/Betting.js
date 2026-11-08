@@ -588,7 +588,9 @@ const LINES_REFRESH_MS = 5 * 60 * 1000;
 const Betting = ({ game, rankings, isOpen = true }) => {
   const isFinal = game.status.state === 'post';
   const started = hasStarted(game);
-  const [tab, setTab] = useState('lines');
+  // Live and finished games open on BOX SCORE (scoring plays); upcoming ones on
+  // LINES. The panel is rebuilt each time a game opens, so this applies to every open.
+  const [tab, setTab] = useState(game.status.state === 'pre' ? 'lines' : 'boxscore');
   // counts openings, so BOX SCORE starts on SCORING PLAYS each time the game opens
   const [openCount, setOpenCount] = useState(0);
   useEffect(() => {
