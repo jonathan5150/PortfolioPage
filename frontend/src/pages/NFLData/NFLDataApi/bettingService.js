@@ -51,7 +51,12 @@ export const getTeamBettingTrends = async (teamId, game) => {
 
 // The engine's winner / spread / total picks for a finished game, made from
 // what was known before kickoff, and how each one did.
+// Graded the same way as the LINES tab: the picks and lines saved ~30 minutes
+// before kickoff when this device has them, otherwise rebuilt from the feeds.
 export const getGradedLinePicks = async (game) => {
+  const savedPicks = frozenOdds(game, 'picks');
+  const savedLines = frozenOdds(game, 'lines');
+  if (savedPicks && savedLines) return gradeLinePicks(savedPicks, game, savedLines);
   const quiet = (p) => p.catch(() => null);
   const [odds, predictor, awayTrends, homeTrends] = await Promise.all([
     quiet(getEventOdds(game.id, { final: true })),
@@ -59,9 +64,9 @@ export const getGradedLinePicks = async (game) => {
     quiet(getTeamBettingTrends(game.away?.teamId, game)),
     quiet(getTeamBettingTrends(game.home?.teamId, game)),
   ]);
-  const lines = frozenOdds(game, 'lines') || odds;
+  const lines = savedLines || odds;
   if (!lines) return null;
-  const picks = buildLinePicks({ game, odds: lines, predictor, awayTrends, homeTrends });
+  const picks = savedPicks || buildLinePicks({ game, odds: lines, predictor, awayTrends, homeTrends });
   return gradeLinePicks(picks, game, lines);
 };
 

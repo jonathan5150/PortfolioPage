@@ -678,10 +678,20 @@ const Betting = ({ game, rankings, isOpen = true }) => {
     [players, lines.loading, bookOdds],
   );
 
-  const linePicks = useMemo(
+  const currentPicks = useMemo(
     () =>
       research.data && odds ? buildLinePicks({ game, odds, predictor: lines.data?.predictor, ...research.data }) : null,
     [research.data, game, odds, lines.data],
+  );
+  // Before kickoff the picks are saved with the odds; after kickoff LINES shows
+  // (and grades) the picks as they stood ~30 minutes before the game, the same
+  // ones the weekly prediction record counts.
+  useEffect(() => {
+    if (!started && currentPicks) saveOddsSnapshot(game, 'picks', currentPicks);
+  }, [started, currentPicks, game]);
+  const linePicks = useMemo(
+    () => (started && frozenOdds(game, 'picks')) || currentPicks,
+    [started, currentPicks, game],
   );
   const grades = useMemo(
     () => (isFinal && linePicks ? gradeLinePicks(linePicks, game, odds) : null),

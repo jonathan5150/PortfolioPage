@@ -14,8 +14,14 @@ const MARKETS = [
 ];
 
 // A finished game's grades never change, so they're kept in localStorage and
-// later visits don't refetch anything. Bump the version when the pick rules change.
-const GRADES_KEY = 'gradedPicks:v1';
+// later visits don't refetch anything. Bump the version when the pick rules or
+// grading change (v1 could hold grades made against in-game "Live Odds" lines).
+const GRADES_KEY = 'gradedPicks:v2';
+try {
+  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v1');
+} catch {
+  // storage blocked
+}
 const gradeOf = async (game) => {
   const saved = readPreference(GRADES_KEY, {});
   if (saved[game.id]) return saved[game.id];
