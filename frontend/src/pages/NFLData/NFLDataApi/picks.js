@@ -61,8 +61,8 @@ const spreadWords = (line) => {
 // Backtested on every regular-season game from 2019-2025 at closing prices,
 // then checked on 2026, which played no part in choosing them (see
 // scripts/backtest). Betting every market of every game lost money in all
-// three markets, so the engine now bets only the spots that paid over that
-// history and passes on the rest:
+// three markets, so the engine now only BETS the spots that paid over that
+// history (every other pick is a lean, see below):
 //   moneyline - "value": a 25/75 blend of ESPN FPI and the market's own odds
 //               beats the price's implied chance by 1+ point (no dogs past +200)
 //   spread    - home underdogs of 6.5+ that FPI has within a point of covering,
@@ -164,20 +164,12 @@ export const totalBet = ({ game, odds, awayTrends, homeTrends }) => {
   return { side, byProjection, byForm, proj, form };
 };
 
-// A market the engine sits out.
-const pass = (key, title, headline, summary) => ({
-  key,
-  title,
-  pass: true,
-  headline,
-  summary,
-  side: null,
-  strong: false,
-  odds: null,
-  pick: null,
-  confidence: 0,
-  reasons: [],
-});
+// Every market of every game gets a pick. Where one of the rules above fires
+// it's a BET (\`bet: true\`): those are the picks the money results count. The
+// rest are LEANS, the side that has been right most often since 2019 when no
+// rule applies (blended favourite to win, road team on the spread, the under);
+// they count in the prediction record but none of them beat the bookmaker's
+// margin, so they aren't bets.
 
 // ---------- winner ----------
 
@@ -188,16 +180,31 @@ export const pickWinner = (ctx) => {
   const market = marketHomeProbability(ctx.odds);
 
   if (!value) {
-    const fav = home.ml <= away.ml ? home : away;
-    const favChance = market === null ? null : Math.round(fav === home ? market : 100 - market);
-    return pass(
-      'winner',
-      'WINNER',
-      'NO MONEYLINE BET',
-      `No value on either side. The ${fav.name} are ${fmtOdds(fav.ml)}${
-        favChance !== null ? ` (about ${favChance}% to win)` : ''
-      }, and our numbers agree with that price.`,
-    );
+    // lean: the favourite by a 25/75 FPI / market blend
+    const pHome =
+      market === null
+        ? home.ml <= away.ml
+          ? 60
+          : 40
+        : home.prob !== null
+          ? VALUE_BLEND * home.prob + (1 - VALUE_BLEND) * market
+          : market;
+    const lean = pHome >= 50 ? home : away;
+    const chance = Math.round(lean === home ? pHome : 100 - pHome);
+    return {
+      headline: `${lean.nickname} TO WIN`,
+      side: lean.side,
+      bet: false,
+      summary: `Lean ${lean.name}: we have them about ${chance}% to win, but at ${fmtOdds(lean.ml)} the price already says so. No value, so not a bet.`,
+      strong: false,
+      key: 'winner',
+      title: 'WINNER',
+      pick: lean.team?.displayName || lean.abbr,
+      pickAbbr: lean.abbr,
+      odds: `ML ${fmtOdds(lean.ml)}`,
+      confidence: chance,
+      reasons: [],
+    };
   }
 
   const pick = value.side === 'home' ? home : away;
@@ -214,6 +221,7 @@ export const pickWinner = (ctx) => {
   return {
     headline: `${pick.nickname} TO WIN`,
     side: pick.side,
+    bet: true,
     summary: sentences.join(' '),
     strong: value.edge >= 5,
     key: 'winner',
@@ -235,15 +243,21 @@ export const pickSpread = (ctx) => {
   const bet = spreadBet(ctx);
 
   if (!bet) {
-    const fav = homeSpread < 0 ? home : away;
-    return pass(
-      'spread',
-      'SPREAD',
-      'NO SPREAD BET',
-      homeSpread === 0
-        ? 'No spread bet on a pick-em line.'
-        : `No edge on ${fav.abbr} ${fmtLine(fav.line)}. We only bet big home underdogs and primetime underdogs, the spots that have paid over time.`,
-    );
+    // lean: the road team
+    return {
+      headline: `${away.nickname} TO COVER ${fmtLine(away.line)}`,
+      side: 'away',
+      bet: false,
+      summary: `Lean ${away.name} ${fmtLine(away.line)}: road teams have covered 52% of the time since 2019 when nothing else stands out. Not strong enough to bet.`,
+      strong: false,
+      key: 'spread',
+      title: 'SPREAD',
+      pick: `${away.abbr} ${fmtLine(away.line)}`,
+      pickAbbr: away.abbr,
+      odds: realPrice(away.spreadOdds) ? fmtOdds(away.spreadOdds) : null,
+      confidence: 52,
+      reasons: [],
+    };
   }
 
   const pick = bet.side === 'home' ? home : away;
@@ -266,6 +280,7 @@ export const pickSpread = (ctx) => {
   return {
     headline: `${pick.nickname} TO COVER ${fmtLine(pick.line)}`,
     side: pick.side,
+    bet: true,
     summary: sentences.join(' '),
     strong: bet.reason === 'homeDog',
     key: 'spread',
@@ -304,14 +319,22 @@ export const pickTotal = (ctx) => {
   const proj = projectScores(ctx.awayTrends, ctx.homeTrends);
 
   if (!bet) {
-    return pass(
-      'total',
-      'OVER/UNDER',
-      'NO TOTAL BET',
-      proj
-        ? `Scoring averages put this around ${Math.round(proj.total)} against ${line}: not far enough off to fade either way.`
-        : `Not enough games yet to find an edge on ${line}.`,
-    );
+    // lean: the under
+    return {
+      headline: `UNDER ${line}`,
+      side: 'under',
+      bet: false,
+      summary: `Lean under: unders have hit 52% of the time since 2019 when nothing else stands out.${
+        proj ? ` Scoring averages put this around ${Math.round(proj.total)}.` : ''
+      } Not strong enough to bet.`,
+      strong: false,
+      key: 'total',
+      title: 'OVER/UNDER',
+      pick: `UNDER ${line}`,
+      odds: realPrice(odds.total.underOdds) ? fmtOdds(odds.total.underOdds) : null,
+      confidence: 52,
+      reasons: [],
+    };
   }
 
   const over = bet.side === 'over';
@@ -332,6 +355,7 @@ export const pickTotal = (ctx) => {
   return {
     headline: `${over ? 'OVER' : 'UNDER'} ${line}`,
     side: bet.side,
+    bet: true,
     summary: sentences.join(' '),
     strong: Boolean(bet.byProjection && bet.byForm),
     key: 'total',
@@ -620,7 +644,7 @@ export const buildLinePicks = ({ game, odds, predictor, awayTrends, homeTrends }
 // How a line pick did once the game is final: 'W', 'L', 'P' (push) or null
 // when there's no score or line to grade it against.
 export const gradeLinePick = (pick, game, odds) => {
-  if (!pick || pick.pass || !pick.side || game?.status?.state !== 'post') return null;
+  if (!pick || !pick.side || game?.status?.state !== 'post') return null;
   const score = { away: Number(game.away?.score), home: Number(game.home?.score) };
   if (!Number.isFinite(score.away) || !Number.isFinite(score.home)) return null;
   const result = (n) => (n > 0 ? 'W' : n < 0 ? 'L' : 'P');
@@ -680,8 +704,8 @@ export const linePickBets = (linePicks, game, odds) => {
     if (!pick || !result || price === null || price === undefined) return null;
     return { key, label, price, result };
   };
-  // markets the engine passed on aren't bets
-  const live = (pick) => (pick && !pick.pass && pick.side ? pick : null);
+  // only the engine's BETS count as money; leans are picks, not bets
+  const live = (pick) => (pick && pick.bet && pick.side ? pick : null);
   const winner = live(linePicks.winner);
   const spread = live(linePicks.spread);
   const total = live(linePicks.total);

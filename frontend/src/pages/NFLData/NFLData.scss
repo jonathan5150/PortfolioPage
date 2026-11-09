@@ -577,6 +577,12 @@
   border-top: 1px solid rgba(245, 209, 107, 0.5);
 }
 
+.nfl-data-container .season-note {
+  margin: -2px 0 4px;
+  font-size: 9.5px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
 .nfl-data-container .season-row {
   display: grid;
   grid-template-columns: 1fr auto 40px 72px;
@@ -1881,18 +1887,37 @@
   white-space: nowrap;
 }
 
-/* a market the engine sits out: muted, no odds pill, nothing to add to a parlay */
-.nfl-data-container .pick-line.pass {
-  background: rgba(255, 255, 255, 0.02);
-  border-style: dashed;
+/* BET / LEAN tag in front of each pick's headline. Leans are quieter: they're
+   the likelier side, not a bet the engine would make. */
+.nfl-data-container .pick-title-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
 }
 
-.nfl-data-container .pick-line.pass .pick-headline {
-  color: rgba(255, 255, 255, 0.5);
+.nfl-data-container .pick-kind {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
-.nfl-data-container .pick-line.pass .pick-because {
-  color: rgba(255, 255, 255, 0.55);
+.nfl-data-container .pick-kind.bet {
+  border: 1px solid #c49410;
+  background: rgba(196, 148, 16, 0.25);
+  color: #f5d16b;
+}
+
+.nfl-data-container .pick-kind.lean {
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.nfl-data-container .pick-line.lean .pick-because {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .nfl-data-container .pick-because {

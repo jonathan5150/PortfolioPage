@@ -19,12 +19,14 @@ const MARKETS = [
 // A finished game's grades never change, so they're kept in localStorage and
 // later visits don't refetch anything. Bump the version when the pick rules or
 // grading change (v1 could hold grades made against in-game "Live Odds" lines;
-// v2 had no bets; v3 was graded with the old bet-every-game engine).
-const GRADES_KEY = 'gradedPicks:v4';
+// v2 had no bets; v3 was graded with the old bet-every-game engine; v4 had
+// no leans).
+const GRADES_KEY = 'gradedPicks:v5';
 try {
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v1');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v2');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v3');
+  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v4');
 } catch {
   // storage blocked
 }
@@ -161,6 +163,7 @@ const SeasonTotals = ({ stake }) => {
   return (
     <div className="season-totals">
       <div className="prediction-record-title">SEASON TO DATE · {grades.length} GAMES</div>
+      <div className="season-note">Record: every pick · Profit: bets only</div>
       {[...rows, { key: 'all', label: 'Total', ...all }].map((r) => (
         <div key={r.key} className={`season-row ${r.key === 'all' ? 'total' : ''}`}>
           <span>{r.label}</span>
@@ -186,7 +189,7 @@ const BetResults = ({ finished, gradedById }) => {
   const [showBets, setShowBets] = useState(false);
   return (
     <div className="bet-results">
-      <div className="prediction-record-title">BETTING RESULTS · ${stake} PER BET</div>
+      <div className="prediction-record-title">BETTING RESULTS · ${stake} PER BET · BETS ONLY</div>
       <div className="bet-filter">
         {BET_FILTERS.map((f) => (
           <button
@@ -318,7 +321,7 @@ const PredictionRecord = ({ games }) => {
         </button>
         <SlideOpen open={open} className="model-results-body">
           <div className="model-results-content">
-            <div className="prediction-record-title">PREDICTION RECORD · FINISHED GAMES</div>
+            <div className="prediction-record-title">PREDICTION RECORD · EVERY PICK</div>
             {!finished.length ? (
               <div className="prediction-record-loading">No finished games this week yet.</div>
             ) : !graded.data ? (
