@@ -25,6 +25,9 @@ import {
   pickTotal,
   marginFromProbability,
   weatherEffect,
+  isPrimetime,
+  gradeLinePicks,
+  linePickBets,
 } from './picks';
 import { parseStartingQb, parseTeamLeaders, parseCoreAthlete } from './espnParsers';
 import { isUnavailable } from './espnService';
@@ -206,46 +209,71 @@ describe('picks', () => {
     expect(marginFromProbability(50)).toBeCloseTo(0);
   });
 
-  test('winner follows FPI and explains why', () => {
-    const w = pickWinner({
-      game: g,
-      odds,
-      predictor: { away: 20, home: 80 },
-      awayTrends: trend(8, { su: 'L', pf: 17, pa: 26 }),
-      homeTrends: trend(8, { pf: 28, pa: 18 }),
-    });
-    expect(w.pick).toBe('Kansas City Chiefs');
-    expect(w.odds).toBe('ML -535');
-    expect(w.reasons[0]).toBe("ESPN's FPI gives KC an 80% chance to win.");
-    expect(w.reasons.length).toBeLessThanOrEqual(4);
-    expect(w.reasons.join(' ')).toContain('KC is 8-0 this season');
+  // a closer game than the KC -9.5 fixture: home -3.5, -170 / +150, total 44.5
+  const closeOdds = {
+    homeSpread: -3.5,
+    home: { moneyLine: -170, spreadLine: -3.5, spreadOdds: -110 },
+    away: { moneyLine: 150, spreadLine: 3.5, spreadOdds: -105 },
+    total: { line: 44.5, overOdds: -110, underOdds: -110 },
+  };
+  const week9 = { ...g, week: 9, seasonType: 2 };
+
+  test('winner: passes when the price is fair, bets value when the blend beats it', () => {
+    // FPI agrees with KC -535: no value on either side
+    const fair = pickWinner({ game: g, odds, predictor: { away: 20, home: 80 } });
+    expect(fair).toMatchObject({ pass: true, headline: 'NO MONEYLINE BET', side: null });
+
+    // FPI likes the +150 dog well past its price: 25% FPI / 75% market still clears it
+    const w = pickWinner({ game: g, odds: closeOdds, predictor: { away: 55, home: 45 } });
+    expect(w.pass).toBeUndefined();
+    expect(w.headline).toBe('JETS TO WIN');
+    expect(w.odds).toBe('ML +150');
+    expect(w.summary).toContain('at +150 the price only needs 40%');
   });
 
-  test('spread takes the points when the favorite is overpriced', () => {
-    // FPI 60% ~ KC by 2.6 and scoring averages ~ even, but KC is -9.5
-    const s = pickSpread({
-      game: g,
-      odds,
-      predictor: { away: 40, home: 60 },
-      awayTrends: trend(6, { pf: 22, pa: 22 }),
-      homeTrends: trend(6, { pf: 23, pa: 22 }),
-    });
-    expect(s.pick).toBe('NYJ +9.5');
-    expect(s.odds).toBe('-102');
-    expect(s.reasons.length).toBeGreaterThan(0);
+  test('winner: never bets a dog longer than +200', () => {
+    // FPI loves NYJ, but at +400 it's outside the range that held up
+    expect(pickWinner({ game: g, odds, predictor: { away: 60, home: 40 } }).pass).toBe(true);
   });
 
-  test('total leans over when scoring and history point over, and reports weather', () => {
-    const t = pickTotal({
-      game: g,
-      odds,
-      predictor: null,
-      awayTrends: trend(6, { pf: 30, pa: 28, ou: 'O' }),
-      homeTrends: trend(6, { pf: 31, pa: 27, ou: 'O' }),
+  test('spread: big home dogs FPI has close, and primetime underdogs; otherwise pass', () => {
+    const homeDog = { ...closeOdds, homeSpread: 7, home: { ...closeOdds.home, spreadLine: 7 }, away: { ...closeOdds.away, spreadLine: -7 } };
+    const s = pickSpread({ game: g, odds: homeDog, predictor: { away: 55, home: 45 } });
+    expect(s.headline).toBe('CHIEFS TO COVER +7');
+    expect(s.summary).toContain('Big home underdogs');
+
+    // Monday 8:15 PM ET: take the underdog
+    const monday = { ...g, date: '2026-11-10T01:15Z' };
+    const prime = pickSpread({ game: monday, odds: closeOdds, predictor: { away: 40, home: 60 } });
+    expect(prime.headline).toBe('JETS TO COVER +3.5');
+    expect(prime.summary).toContain('Primetime underdogs');
+
+    // Sunday 1 PM, ordinary line: no bet
+    expect(pickSpread({ game: g, odds: closeOdds, predictor: { away: 40, home: 60 } })).toMatchObject({
+      pass: true,
+      headline: 'NO SPREAD BET',
     });
-    expect(t.pick).toBe('OVER 48.5');
-    expect(t.odds).toBe('-102');
-    expect(t.reasons.join(' ')).toContain('Sunny, 60°F');
+  });
+
+  test('primetime means night, Monday or Thursday games (Eastern time)', () => {
+    expect(isPrimetime({ date: '2026-11-08T18:00Z' })).toBe(false); // Sun 1 PM
+    expect(isPrimetime({ date: '2026-11-09T01:20Z' })).toBe(true); // Sun 8:20 PM
+    expect(isPrimetime({ date: '2026-11-06T01:15Z' })).toBe(true); // Thu 8:15 PM
+  });
+
+  test('total: fades a projection 5+ points off the line and over/under streaks', () => {
+    const hot = trend(6, { pf: 30, pa: 28, ou: 'O' });
+    const hot2 = trend(6, { pf: 31, pa: 27, ou: 'O' });
+    const t = pickTotal({ game: week9, odds, awayTrends: hot, homeTrends: hot2 });
+    // averages say ~58 against 48.5 and every game went over: both say fade it
+    expect(t.headline).toBe('UNDER 48.5');
+    expect(t.strong).toBe(true);
+    expect(t.summary).toContain('Gaps that big usually close');
+
+    // averages near the line and a mixed over/under history: no bet
+    const even = (ou) => trend(6, { pf: 24, pa: 24, ou });
+    const quiet = pickTotal({ game: week9, odds, awayTrends: even('O'), homeTrends: even('U') });
+    expect(quiet).toMatchObject({ pass: true, headline: 'NO TOTAL BET' });
   });
 
   test('weather adjustments', () => {
@@ -254,27 +282,12 @@ describe('picks', () => {
     expect(weatherEffect({ weather: { text: 'Cloudy', temperature: 30 } }).adj).toBeLessThan(0);
   });
 
-  test('line picks: one-line headline and reason, gold flag when FPI beats the moneyline', () => {
-    const picks = buildLinePicks({
-      game: g,
-      odds,
-      predictor: { away: 35, home: 65 }, // NYJ +400 implies 20%
-      awayTrends: trend(6),
-      homeTrends: trend(6),
-    });
-    expect(picks.winner.headline).toBe('CHIEFS TO WIN');
-    expect(picks.winner.summary).toContain("ESPN's model likes the Chiefs here, 65% to win.");
-    expect(picks.winner.strong).toBe(false); // KC -535 implies 84% > 65%
-    expect(picks.spread.headline).toBe('JETS TO COVER +9.5');
-    expect(picks.spread.summary).toBe(
-      "Getting 9.5 points is a lot of cushion. We only see the Jets losing by about 2. They've covered 6 of 6 games this year."
-    );
-    expect(picks.spread.strong).toBe(true);
-    expect(picks.total.headline).toMatch(/^(OVER|UNDER) 48.5$/);
-
-    const underdog = buildLinePicks({ game: g, odds, predictor: { away: 55, home: 45 }, awayTrends: null, homeTrends: null });
-    expect(underdog.winner.headline).toBe('JETS TO WIN');
-    expect(underdog.winner.strong).toBe(true); // 55% vs 20% implied
+  test('passed markets are not graded or counted as bets', () => {
+    const final = { ...g, status: { state: 'post' }, away: { ...g.away, score: '20' }, home: { ...g.home, score: '24' } };
+    const picks = buildLinePicks({ game: final, odds, predictor: { away: 20, home: 80 }, awayTrends: null, homeTrends: null });
+    expect(picks.winner.pass).toBe(true);
+    expect(gradeLinePicks(picks, final, odds).winner).toBeNull();
+    expect(linePickBets(picks, final, odds).map((b) => b.key)).not.toContain('winner');
   });
 
   test("player picks are touchdown calls with the book's anytime TD odds", () => {

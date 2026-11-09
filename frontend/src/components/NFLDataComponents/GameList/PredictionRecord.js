@@ -19,11 +19,12 @@ const MARKETS = [
 // A finished game's grades never change, so they're kept in localStorage and
 // later visits don't refetch anything. Bump the version when the pick rules or
 // grading change (v1 could hold grades made against in-game "Live Odds" lines;
-// v2 had no bets).
-const GRADES_KEY = 'gradedPicks:v3';
+// v2 had no bets; v3 was graded with the old bet-every-game engine).
+const GRADES_KEY = 'gradedPicks:v4';
 try {
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v1');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v2');
+  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v3');
 } catch {
   // storage blocked
 }

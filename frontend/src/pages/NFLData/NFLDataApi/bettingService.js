@@ -12,7 +12,7 @@ import {
 } from './espnService';
 import { parseEventOdds, parsePredictor, gradeGame, computeTeamTrends } from './betting';
 import { buildLinePicks, gradeLinePicks, linePickBets, teamResultHistory } from './picks';
-import { frozenOdds } from './oddsSnapshots';
+import { frozenOdds, PICKS_SNAPSHOT } from './oddsSnapshots';
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -63,7 +63,7 @@ export const getTeamResultHistory = async (teamId, game) => {
 // Graded the same way as the LINES tab: the picks and lines saved ~30 minutes
 // before kickoff when this device has them, otherwise rebuilt from the feeds.
 export const getGradedLinePicks = async (game) => {
-  const savedPicks = frozenOdds(game, 'picks');
+  const savedPicks = frozenOdds(game, PICKS_SNAPSHOT);
   const savedLines = frozenOdds(game, 'lines');
   const graded = (picks, lines) => ({ ...gradeLinePicks(picks, game, lines), bets: linePickBets(picks, game, lines) });
   if (savedPicks && savedLines) return graded(savedPicks, savedLines);

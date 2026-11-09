@@ -1,19 +1,11 @@
 // Pick engine for the Betting tab. Pure functions: given lines, ESPN FPI,
 // each team's graded season results, weather, defensive rankings and player
 // game logs + prop lines, it returns a pick and short reasons for each market.
-import { fmtLine, fmtOdds, recordText, impliedProbability } from './betting';
+import { fmtLine, fmtOdds, impliedProbability } from './betting';
 import { playerMarketsFor, BOOK } from './sportsbookOdds';
 
 const round1 = (n) => Math.round(n * 10) / 10;
 const fmt1 = (n) => (n === null || n === undefined ? '—' : round1(n).toFixed(1).replace(/\.0$/, ''));
-
-// "a 60%" / "an 80%" / "an 11%"
-const article = (n) => (/^(8|11|18)/.test(String(Math.round(n))) ? 'an' : 'a');
-
-const rate = (rec, a = 'W', b = 'L') => {
-  const n = (rec?.[a] || 0) + (rec?.[b] || 0);
-  return n ? { rate: (rec[a] || 0) / n, n } : null;
-};
 
 // Win probability (%) -> expected margin in points (logistic fit to NFL lines).
 export const marginFromProbability = (p) => {
@@ -52,8 +44,6 @@ const projectScores = (awayTrends, homeTrends) => {
   return { away, home, total: away + home, homeMargin: home - away };
 };
 
-const lastN = (trends, n = 5) => (trends?.last5 || []).slice(-n);
-
 const pts = (n) => Math.round(Math.abs(n) * 2) / 2; // nearest half point
 const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
@@ -67,189 +57,224 @@ const spreadWords = (line) => {
   return `${n} points`;
 };
 
-const joinClauses = (clauses) =>
-  clauses.length <= 1 ? clauses.join('') : `${clauses.slice(0, -1).join(', ')} and ${clauses[clauses.length - 1]}`;
-const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+// ---------- betting rules ----------
+// Backtested on every regular-season game from 2019-2025 at closing prices,
+// then checked on 2026, which played no part in choosing them (see
+// scripts/backtest). Betting every market of every game lost money in all
+// three markets, so the engine now bets only the spots that paid over that
+// history and passes on the rest:
+//   moneyline - "value": a 25/75 blend of ESPN FPI and the market's own odds
+//               beats the price's implied chance by 1+ point (no dogs past +200)
+//   spread    - home underdogs of 6.5+ that FPI has within a point of covering,
+//               and underdogs in primetime games (public money pads favourites)
+//   total     - fade the obvious: when season scoring averages sit 5+ points
+//               off the total (week 4 on), or both teams' games keep going over
+//               (or under), bet the other way.
+
+const VALUE_BLEND = 0.25;
+const VALUE_EDGE = 1;
+const VALUE_MAX_DOG = 200;
+const HOME_DOG_LINE = 6.5;
+const HOME_DOG_FPI = 1;
+const TOTAL_FADE_POINTS = 5;
+const TOTAL_FADE_WEEK = 4;
+const TOTAL_FORM = 0.2;
+
+const realPrice = (n) => n !== null && n !== undefined && Math.abs(n) >= 100;
+
+// The market's win chance for the home team with the bookmaker's margin removed.
+export const marketHomeProbability = (odds) => {
+  const h = odds?.home?.moneyLine;
+  const a = odds?.away?.moneyLine;
+  if (!realPrice(h) || !realPrice(a)) return null;
+  const ph = impliedProbability(h);
+  const pa = impliedProbability(a);
+  return (ph / (ph + pa)) * 100;
+};
+
+// The moneyline side worth betting, or null.
+export const moneylineValue = ({ odds, predictor }) => {
+  const market = marketHomeProbability(odds);
+  if (market === null || !predictor || predictor.home === null || predictor.home === undefined) return null;
+  const pHome = VALUE_BLEND * predictor.home + (1 - VALUE_BLEND) * market;
+  const best = ['home', 'away']
+    .map((side) => {
+      const ml = odds[side].moneyLine;
+      const chance = side === 'home' ? pHome : 100 - pHome;
+      const implied = impliedProbability(ml);
+      return { side, ml, chance, implied, edge: chance - implied };
+    })
+    .sort((x, y) => y.edge - x.edge)[0];
+  return best.edge >= VALUE_EDGE && best.ml <= VALUE_MAX_DOG ? best : null;
+};
+
+// Night games, Monday and Thursday games (US Eastern time).
+export const isPrimetime = (game) => {
+  if (!game?.date) return false;
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    weekday: 'short',
+    hour: 'numeric',
+    hourCycle: 'h23',
+  }).formatToParts(new Date(game.date));
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value);
+  const day = parts.find((p) => p.type === 'weekday')?.value;
+  return hour >= 19 || day === 'Mon' || day === 'Thu';
+};
+
+const clampP = (p) => Math.min(Math.max(p, 1), 99);
+
+// The spread side worth betting, or null.
+export const spreadBet = ({ game, odds, predictor }) => {
+  const s = odds?.homeSpread;
+  if (s === null || s === undefined) return null;
+  const fpiHomeMargin =
+    predictor?.home !== null && predictor?.home !== undefined ? marginFromProbability(clampP(predictor.home)) : null;
+  if (s >= HOME_DOG_LINE && fpiHomeMargin !== null && fpiHomeMargin + s >= HOME_DOG_FPI) {
+    return { side: 'home', reason: 'homeDog', fpiHomeMargin };
+  }
+  if (s !== 0 && isPrimetime(game)) return { side: s > 0 ? 'home' : 'away', reason: 'primetime', fpiHomeMargin };
+  return null;
+};
+
+// Both teams' over / under record so far, combined.
+const ouForm = (awayTrends, homeTrends) => {
+  const O = (awayTrends?.ou?.O || 0) + (homeTrends?.ou?.O || 0);
+  const U = (awayTrends?.ou?.U || 0) + (homeTrends?.ou?.U || 0);
+  return { O, U, rate: O + U >= 6 ? O / (O + U) : null };
+};
+
+// The total side worth betting, or null.
+export const totalBet = ({ game, odds, awayTrends, homeTrends }) => {
+  const line = odds?.total?.line;
+  if (line === null || line === undefined) return null;
+  const proj = projectScores(awayTrends, homeTrends);
+  const enoughGames = awayTrends?.games >= 3 && homeTrends?.games >= 3;
+  const lateEnough = game?.seasonType === 3 || (game?.week || 0) >= TOTAL_FADE_WEEK;
+  let byProjection = null;
+  if (proj && enoughGames && lateEnough && Math.abs(proj.total - line) >= TOTAL_FADE_POINTS) {
+    byProjection = proj.total > line ? 'under' : 'over';
+  }
+  const form = ouForm(awayTrends, homeTrends);
+  let byForm = null;
+  if (form.rate !== null && Math.abs(form.rate - 0.5) >= TOTAL_FORM) byForm = form.rate > 0.5 ? 'under' : 'over';
+  if (byProjection && byForm && byProjection !== byForm) return null;
+  const side = byProjection || byForm;
+  if (!side) return null;
+  return { side, byProjection, byForm, proj, form };
+};
+
+// A market the engine sits out.
+const pass = (key, title, headline, summary) => ({
+  key,
+  title,
+  pass: true,
+  headline,
+  summary,
+  side: null,
+  strong: false,
+  odds: null,
+  pick: null,
+  confidence: 0,
+  reasons: [],
+});
 
 // ---------- winner ----------
 
 export const pickWinner = (ctx) => {
   const [away, home] = sides(ctx);
-  let pick;
-  if (away.prob !== null && home.prob !== null) pick = home.prob >= away.prob ? home : away;
-  else if (away.ml !== null && home.ml !== null) pick = home.ml <= away.ml ? home : away;
-  else if (away.trends && home.trends)
-    pick = home.trends.ppg - home.trends.papg >= away.trends.ppg - away.trends.papg ? home : away;
-  else return null;
-  const opp = pick === home ? away : home;
+  if (away.ml === null || home.ml === null) return null;
+  const value = moneylineValue(ctx);
+  const market = marketHomeProbability(ctx.odds);
 
-  const reasons = [];
-  if (pick.prob !== null)
-    reasons.push(`ESPN's FPI gives ${pick.abbr} ${article(pick.prob)} ${fmt1(pick.prob)}% chance to win.`);
-  if (pick.trends && opp.trends) {
-    reasons.push(
-      `${pick.abbr} is ${recordText(pick.trends.su, ['W', 'L', 'T'])} this season; ${opp.abbr} is ${recordText(opp.trends.su, ['W', 'L', 'T'])}.`,
+  if (!value) {
+    const fav = home.ml <= away.ml ? home : away;
+    const favChance = market === null ? null : Math.round(fav === home ? market : 100 - market);
+    return pass(
+      'winner',
+      'WINNER',
+      'NO MONEYLINE BET',
+      `No value on either side. The ${fav.name} are ${fmtOdds(fav.ml)}${
+        favChance !== null ? ` (about ${favChance}% to win)` : ''
+      }, and our numbers agree with that price.`,
     );
-    const pm = pick.trends.ppg - pick.trends.papg;
-    const om = opp.trends.ppg - opp.trends.papg;
-    if (Number.isFinite(pm) && Number.isFinite(om) && pm > om) {
-      reasons.push(
-        `${pick.abbr} has a ${pm >= 0 ? '+' : ''}${fmt1(pm)} point differential per game, vs ${om >= 0 ? '+' : ''}${fmt1(om)} for ${opp.abbr}.`,
-      );
-    }
-    const recent = lastN(pick.trends);
-    const wins = recent.filter((g) => g.su === 'W').length;
-    if (recent.length >= 3 && wins >= Math.ceil(recent.length * 0.6)) {
-      reasons.push(`${pick.abbr} has won ${wins} of its last ${recent.length}.`);
-    }
-    const os = opp.trends.suStreak;
-    if (os?.type === 'L' && os.count >= 2) reasons.push(`${opp.abbr} has lost ${os.count} straight.`);
   }
-  if (pick.isHome) reasons.push(`${pick.abbr} has home-field advantage.`);
 
-  // A short, readable case for the LINES tab.
-  const sentences = [];
-  if (pick.prob !== null) {
-    const p = Math.round(pick.prob);
-    if (p >= 75) sentences.push(`ESPN's model gives the ${pick.name} a ${p}% shot. This one shouldn't be close.`);
-    else if (p >= 60) sentences.push(`ESPN's model likes the ${pick.name} here, ${p}% to win.`);
-    else sentences.push(`Close to a coin flip, but ESPN's model leans ${pick.name} (${p}%).`);
+  const pick = value.side === 'home' ? home : away;
+  const chance = Math.round(value.chance);
+  const implied = Math.round(value.implied);
+  const sentences = [
+    `We give the ${pick.name} a ${chance}% chance to win; at ${fmtOdds(value.ml)} the price only needs ${implied}%.`,
+  ];
+  if (pick.prob !== null && market !== null) {
+    const mk = Math.round(pick === home ? market : 100 - market);
+    sentences.push(`ESPN's FPI has them at ${Math.round(pick.prob)}%, the betting market at ${mk}%.`);
   }
-  const clauses = [];
-  if (pick.trends && opp.trends) {
-    const pm = pick.trends.ppg - pick.trends.papg;
-    const om = opp.trends.ppg - opp.trends.papg;
-    if (Number.isFinite(pm) && Number.isFinite(om) && pm > om) {
-      if (pm > 0) clauses.push(`they're outscoring teams by ${fmt1(pm)} a game`);
-      if (om < 0) clauses.push(`the ${opp.name} are getting outscored by ${fmt1(-om)}`);
-    }
-    const ps = pick.trends.suStreak;
-    const os = opp.trends.suStreak;
-    if (ps?.type === 'W' && ps.count >= 2) clauses.push(`they've won ${ps.count} straight`);
-    else if (os?.type === 'L' && os.count >= 2) clauses.push(`the ${opp.name} have dropped ${os.count} in a row`);
-  }
-  if (pick.isHome) clauses.push('they get the home crowd');
-  if (clauses.length) sentences.push(`${capitalize(joinClauses(clauses.slice(0, 3)))}.`);
-  if (!sentences.length) sentences.push(`The betting market has the ${pick.name} as the favorite.`);
-
-  // "Strong" when our win chance clearly beats what the moneyline implies.
-  const implied = impliedProbability(pick.ml);
-  const strong = pick.prob !== null && implied !== null && pick.prob - implied >= 5;
 
   return {
     headline: `${pick.nickname} TO WIN`,
     side: pick.side,
     summary: sentences.join(' '),
-    strong,
+    strong: value.edge >= 5,
     key: 'winner',
     title: 'WINNER',
     pick: pick.team?.displayName || pick.abbr,
     pickAbbr: pick.abbr,
-    odds: pick.ml !== null ? `ML ${fmtOdds(pick.ml)}` : null,
-    confidence: pick.prob,
-    reasons: reasons.slice(0, 4),
+    odds: `ML ${fmtOdds(value.ml)}`,
+    confidence: value.chance,
+    reasons: sentences,
   };
 };
 
 // ---------- spread ----------
 
 export const pickSpread = (ctx) => {
-  const { odds, awayTrends, homeTrends } = ctx;
-  const homeSpread = odds?.homeSpread;
+  const homeSpread = ctx.odds?.homeSpread;
   if (homeSpread === null || homeSpread === undefined) return null;
   const [away, home] = sides(ctx);
-  const proj = projectScores(awayTrends, homeTrends);
+  const bet = spreadBet(ctx);
 
-  // Each signal: points by which HOME beats the number (negative = away covers).
-  const signals = [];
-  if (home.prob !== null) signals.push(marginFromProbability(home.prob) + homeSpread);
-  if (proj) signals.push(proj.homeMargin + homeSpread);
-  let edge = signals.length ? signals.reduce((a, b) => a + b, 0) / signals.length : 0;
-  const homeAts = rate(homeTrends?.ats);
-  const awayAts = rate(awayTrends?.ats);
-  if (homeAts?.n >= 3 && awayAts?.n >= 3) edge += (homeAts.rate - awayAts.rate) * 4;
-  if (!signals.length && !(homeAts && awayAts)) edge = homeSpread; // no data: take the points
-
-  const pick = edge > 0 ? home : away;
-  const opp = pick === home ? away : home;
-  const fav = homeSpread < 0 ? home : away;
-
-  const reasons = [];
-  if (home.prob !== null) {
-    const m = marginFromProbability(home.prob);
-    const favByFpi = m >= 0 ? home : away;
-    reasons.push(
-      `FPI's win odds point to ${favByFpi.abbr} by about ${fmt1(Math.abs(m))}; the line has ${fav.abbr} by ${Math.abs(homeSpread)}.`,
+  if (!bet) {
+    const fav = homeSpread < 0 ? home : away;
+    return pass(
+      'spread',
+      'SPREAD',
+      'NO SPREAD BET',
+      homeSpread === 0
+        ? 'No spread bet on a pick-em line.'
+        : `No edge on ${fav.abbr} ${fmtLine(fav.line)}. We only bet big home underdogs and primetime underdogs, the spots that have paid over time.`,
     );
   }
-  if (proj) {
-    const leader = proj.homeMargin >= 0 ? home : away;
-    reasons.push(`Season scoring averages project ${leader.abbr} by ${fmt1(Math.abs(proj.homeMargin))}.`);
-  }
-  // Only cite ATS records that support the pick.
-  const pickAts = rate(pick.trends?.ats);
-  if (pickAts?.n >= 3 && pickAts.rate >= 0.5) {
-    const role = pick.line < 0 ? 'favorite' : pick.line > 0 ? 'underdog' : null;
-    const roleRec = role ? (pick.line < 0 ? pick.trends.atsFav : pick.trends.atsDog) : null;
-    const roleText =
-      roleRec && rate(roleRec)?.n >= 2
-        ? ` (${recordText(roleRec)} as ${role === 'favorite' ? 'a favorite' : 'an underdog'})`
-        : '';
-    reasons.push(`${pick.abbr} is ${recordText(pick.trends.ats)} against the spread this season${roleText}.`);
-  }
-  const oppAts = rate(opp.trends?.ats);
-  if (oppAts?.n >= 3 && oppAts.rate < 0.45) {
-    reasons.push(`${opp.abbr} has covered only ${opp.trends.ats.W || 0} of ${oppAts.n} games.`);
-  }
 
-  // Expected margin for the picked team, from the same signals.
-  const homeExpect = [];
-  if (home.prob !== null) homeExpect.push(marginFromProbability(home.prob));
-  if (proj) homeExpect.push(proj.homeMargin);
-  const homeMargin = homeExpect.length ? homeExpect.reduce((a, b) => a + b, 0) / homeExpect.length : null;
-  const pickMargin = homeMargin === null ? null : pick === home ? homeMargin : -homeMargin;
-  const lines = [];
-  if (pickMargin === null) {
-    lines.push(
-      pick.line > 0
-        ? `Taking ${spreadWords(pick.line)} in a game the numbers see as tight.`
-        : `Laying ${spreadWords(pick.line)} with the better team.`,
-    );
-  } else if (pick.line < 0) {
-    const cushion = pickMargin - Math.abs(pick.line);
-    lines.push(
-      cushion >= 3
-        ? `We have the ${pick.name} winning by about ${pts(pickMargin)}, comfortably more than ${spreadWords(pick.line)}.`
-        : `We have the ${pick.name} winning by about ${pts(pickMargin)}, just enough to clear ${spreadWords(pick.line)}.`,
-    );
-  } else if (pickMargin >= 0) {
-    lines.push(
-      `Upset alert: our numbers have the ${pick.name} winning this outright, so getting ${spreadWords(pick.line)} is a bonus.`,
+  const pick = bet.side === 'home' ? home : away;
+  const fpiMargin = bet.fpiHomeMargin === null ? null : pick === home ? bet.fpiHomeMargin : -bet.fpiHomeMargin;
+  const sentences = [];
+  if (bet.reason === 'homeDog') {
+    sentences.push(
+      `Big home underdogs that ESPN's model has close have covered 56% of the time since 2019.`,
+      fpiMargin >= 0
+        ? `FPI even has the ${pick.name} winning, and they're getting ${spreadWords(pick.line)}.`
+        : `FPI only has the ${pick.name} losing by about ${pts(-fpiMargin)}, inside ${spreadWords(pick.line)}.`,
     );
   } else {
-    lines.push(
-      `Getting ${spreadWords(pick.line)} is a lot of cushion. We only see the ${pick.name} losing by about ${pts(-pickMargin)}.`,
+    sentences.push(
+      `Primetime underdogs have covered 54% of the time since 2019: national TV games pull public money onto the favorite, which pads the line.`,
+      `Taking ${spreadWords(pick.line)} with the ${pick.name}.`,
     );
   }
-  if (pickAts?.n >= 3 && pickAts.rate >= 0.5) {
-    lines.push(`They've covered ${pick.trends.ats.W || 0} of ${plural(pickAts.n, 'game')} this year.`);
-  } else if (oppAts?.n >= 3 && oppAts.rate < 0.45) {
-    lines.push(`The ${opp.name} have covered just ${opp.trends.ats.W || 0} of ${oppAts.n}.`);
-  }
-  const summary = lines.join(' ');
 
   return {
     headline: `${pick.nickname} TO COVER ${fmtLine(pick.line)}`,
     side: pick.side,
-    summary,
-    strong: Math.abs(edge) >= 4,
+    summary: sentences.join(' '),
+    strong: bet.reason === 'homeDog',
     key: 'spread',
     title: 'SPREAD',
     pick: `${pick.abbr} ${fmtLine(pick.line)}`,
     pickAbbr: pick.abbr,
-    odds: pick.spreadOdds !== null ? fmtOdds(pick.spreadOdds) : null,
-    confidence: Math.min(Math.abs(edge) / 7, 1) * 100,
-    reasons: reasons.slice(0, 4),
+    odds: realPrice(pick.spreadOdds) ? fmtOdds(pick.spreadOdds) : null,
+    confidence: bet.reason === 'homeDog' ? 56 : 54,
+    reasons: sentences,
   };
 };
 
@@ -272,80 +297,49 @@ export const weatherEffect = (game) => {
 };
 
 export const pickTotal = (ctx) => {
-  const { game, odds, awayTrends, homeTrends } = ctx;
+  const { odds } = ctx;
   const line = odds?.total?.line;
   if (line === null || line === undefined) return null;
-  const [away, home] = sides(ctx);
-  const proj = projectScores(awayTrends, homeTrends);
-  const weather = weatherEffect(game);
+  const bet = totalBet(ctx);
+  const proj = projectScores(ctx.awayTrends, ctx.homeTrends);
 
-  const O = (awayTrends?.ou?.O || 0) + (homeTrends?.ou?.O || 0);
-  const U = (awayTrends?.ou?.U || 0) + (homeTrends?.ou?.U || 0);
-  const overRate = O + U >= 4 ? O / (O + U) : 0.5;
-
-  const score = (proj ? proj.total - line : 0) + (overRate - 0.5) * 8 + weather.adj;
-  const over = score > 0;
-
-  const reasons = [];
-  if (proj) {
-    reasons.push(
-      `Scoring averages project about ${fmt1(proj.total)} points (${away.abbr} ${fmt1(proj.away)}, ${home.abbr} ${fmt1(proj.home)}) against a total of ${line}.`,
+  if (!bet) {
+    return pass(
+      'total',
+      'OVER/UNDER',
+      'NO TOTAL BET',
+      proj
+        ? `Scoring averages put this around ${Math.round(proj.total)} against ${line}: not far enough off to fade either way.`
+        : `Not enough games yet to find an edge on ${line}.`,
     );
   }
-  [away, home].forEach((s) => {
-    if (s.trends?.games >= 2 && s.trends.ppg !== null) {
-      const gameAvg = s.trends.ppg + s.trends.papg;
-      const o = s.trends.ou.O || 0;
-      const u = s.trends.ou.U || 0;
-      const ouText = o + u ? ` (${o} over${o === 1 ? '' : 's'}, ${u} under${u === 1 ? '' : 's'})` : '';
-      reasons.push(`${s.abbr} games average ${fmt1(gameAvg)} total points${ouText}.`);
-    }
-  });
-  if (weather.text) reasons.push(weather.text);
 
-  const lines = [];
-  if (proj) {
-    const diff = proj.total - line;
-    if (over) {
-      lines.push(
-        diff >= 4
-          ? `These offenses project for about ${Math.round(proj.total)} points, well clear of ${line}.`
-          : `Scoring averages put this around ${Math.round(proj.total)}, a touch over ${line}.`,
-      );
-    } else {
-      lines.push(
-        diff <= -4
-          ? `We project about ${Math.round(proj.total)} total points, well short of ${line}.`
-          : `We project about ${Math.round(proj.total)}, a little under ${line}.`,
-      );
-    }
+  const over = bet.side === 'over';
+  const sentences = [];
+  if (bet.byProjection) {
+    sentences.push(
+      `Season scoring averages say about ${Math.round(bet.proj.total)} points against a total of ${line}. Gaps that big usually close, so we take the ${bet.side}.`,
+    );
   }
-  if (O + U >= 4) {
-    const hits = over ? O : U;
-    if (hits / (O + U) >= 0.55)
-      lines.push(`The ${over ? 'over' : 'under'} has cashed in ${hits} of ${O + U} of these teams' games.`);
+  if (bet.byForm) {
+    const streakSide = over ? 'under' : 'over';
+    const hits = over ? bet.form.U : bet.form.O;
+    sentences.push(
+      `These teams' games have gone ${streakSide} ${hits} of ${bet.form.O + bet.form.U} times. The market overreacts to runs like that, so we fade it.`,
+    );
   }
-  const w = game.weather;
-  if (/snow|sleet|ice/i.test(w?.text || '')) lines.push('Snow in the forecast should turn this into a grind.');
-  else if (/rain|shower|storm|thunder/i.test(w?.text || ''))
-    lines.push('Rain means a slick ball and a lot more running.');
-  else if (w?.temperature !== null && w?.temperature !== undefined && w.temperature <= 35)
-    lines.push(`A ${Math.round(w.temperature)}° kickoff won't do the offenses any favors.`);
-  else if (game.indoor && over) lines.push('Dome conditions: fast track, no weather excuses.');
-  if (!lines.length) lines.push(over ? 'A slight lean to the over.' : 'A slight lean to the under.');
-  const summary = lines.join(' ');
 
   return {
     headline: `${over ? 'OVER' : 'UNDER'} ${line}`,
-    side: over ? 'over' : 'under',
-    summary,
-    strong: Math.abs(score) >= 5,
+    side: bet.side,
+    summary: sentences.join(' '),
+    strong: Boolean(bet.byProjection && bet.byForm),
     key: 'total',
     title: 'OVER/UNDER',
     pick: `${over ? 'OVER' : 'UNDER'} ${line}`,
     odds: fmtOdds(over ? odds.total.overOdds : odds.total.underOdds),
-    confidence: Math.min(Math.abs(score) / 8, 1) * 100,
-    reasons: reasons.slice(0, 4),
+    confidence: bet.byProjection && bet.byForm ? 60 : 57,
+    reasons: sentences,
   };
 };
 
@@ -626,7 +620,7 @@ export const buildLinePicks = ({ game, odds, predictor, awayTrends, homeTrends }
 // How a line pick did once the game is final: 'W', 'L', 'P' (push) or null
 // when there's no score or line to grade it against.
 export const gradeLinePick = (pick, game, odds) => {
-  if (!pick || game?.status?.state !== 'post') return null;
+  if (!pick || pick.pass || !pick.side || game?.status?.state !== 'post') return null;
   const score = { away: Number(game.away?.score), home: Number(game.home?.score) };
   if (!Number.isFinite(score.away) || !Number.isFinite(score.home)) return null;
   const result = (n) => (n > 0 ? 'W' : n < 0 ? 'L' : 'P');
@@ -686,12 +680,17 @@ export const linePickBets = (linePicks, game, odds) => {
     if (!pick || !result || price === null || price === undefined) return null;
     return { key, label, price, result };
   };
-  const winner = linePicks.winner;
-  const spread = linePicks.spread;
-  const total = linePicks.total;
-  const priceOr = (n) => (n === null || n === undefined ? STANDARD_PRICE : n);
+  // markets the engine passed on aren't bets
+  const live = (pick) => (pick && !pick.pass && pick.side ? pick : null);
+  const winner = live(linePicks.winner);
+  const spread = live(linePicks.spread);
+  const total = live(linePicks.total);
+  const real = (n) => n !== null && n !== undefined && Math.abs(n) >= 100;
+  const priceOr = (n) => (real(n) ? n : STANDARD_PRICE);
   return [
-    winner && bet('winner', `${abbr(winner.side)} ML`, odds?.[winner.side]?.moneyLine),
+    winner &&
+      real(odds?.[winner.side]?.moneyLine) &&
+      bet('winner', `${abbr(winner.side)} ML`, odds[winner.side].moneyLine),
     spread &&
       bet(
         'spread',
