@@ -439,6 +439,56 @@ export const touchdownHistory = (games, position, season) =>
     })
     .reverse();
 
+// A team's results before `game` this season, oldest to newest, shaped like a
+// player's touchdown history: date and opponent over a W / L / T block.
+export const teamResultHistory = (schedule, teamId, game) => {
+  const cutoff = game?.date ? new Date(game.date).getTime() : Infinity;
+  const rows = (schedule || [])
+    .filter((g) => g.status?.state === 'post' && g.id !== game?.id && new Date(g.date).getTime() < cutoff)
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((g) => {
+      const home = g.home?.teamId === teamId;
+      const us = home ? g.home : g.away;
+      const them = home ? g.away : g.home;
+      const ours = Number(us?.score);
+      const theirs = Number(them?.score);
+      const result = ours > theirs ? 'W' : ours < theirs ? 'L' : 'T';
+      const date = g.date ? new Date(g.date).toLocaleDateString([], { month: 'numeric', day: 'numeric' }) : '';
+      const opp = `${home ? 'vs' : '@'} ${them?.team?.abbreviation || ''}`.trim();
+      return {
+        id: g.id,
+        week: g.seasonType === 2 ? g.week : null,
+        result,
+        date,
+        opp,
+        label: `${date} ${opp}: ${result} ${ours}-${theirs}`.trim(),
+      };
+    });
+
+  // A regular-season week before this game with no game in it was the bye:
+  // it gets its own cell, in its week's place.
+  const lastWeek = game?.seasonType === 2 ? (game.week || 1) - 1 : game?.seasonType === 3 ? 18 : 0;
+  const played = new Set(rows.map((r) => r.week).filter(Boolean));
+  if (!played.size) return rows;
+  for (let week = 1; week <= lastWeek; week += 1) {
+    if (!played.has(week)) {
+      const bye = {
+        id: `bye-${week}`,
+        week,
+        result: 'BYE',
+        bye: true,
+        date: `WK ${week}`,
+        opp: 'BYE',
+        label: `Week ${week}: bye`,
+      };
+      const at = rows.findIndex((r) => r.week && r.week > week);
+      if (at < 0) rows.push(bye);
+      else rows.splice(at, 0, bye);
+    }
+  }
+  return rows;
+};
+
 // A player's pick is just their touchdown chance (and the book's anytime TD price).
 export const pickPlayer = ({ player, position, season, oppId, oppAbbr, rankings, bookOdds, teamPoints }) => {
   if (!player) return null;

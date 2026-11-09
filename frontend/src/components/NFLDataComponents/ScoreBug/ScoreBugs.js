@@ -99,6 +99,9 @@ const KickoffBar = ({ game, label, altLabel }) => {
   );
 };
 
+const startTime = (game) =>
+  game.date ? new Date(game.date).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }) : 'TBD';
+
 const ordinal = (n) => (n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`);
 export const formatPeriod = (period) => (period > 4 ? (period === 5 ? 'OT' : `${period - 4}OT`) : `Q${period}`);
 
@@ -108,16 +111,6 @@ const passingLeader = (competitor) => competitor?.leaders?.find((l) => /passing/
 const qbStatLine = (value) => String(value || '').replace(/^\s*\d+\/\d+\s*,\s*/, '');
 
 // ---------- Pre-game ----------
-
-// The label a game is grouped under: its start time, or Live / Final.
-export const slotLabel = (game) => {
-  if (game.status.state === 'post') return 'Final';
-  if (game.status.state === 'in') return 'Live';
-  if (game.status.isPostponed) return game.status.shortDetail || 'Postponed';
-  return game.date
-    ? new Date(game.date).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })
-    : 'TBD';
-};
 
 const playersBoxStyle = (corner) => ({
   ...infoBoxStyle(corner),
@@ -244,6 +237,10 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
   // right: quarter and clock. The play underneath gets the full width.
   const hasDown = !status.isHalftime && s?.down >= 1 && s?.down <= 4;
   const downText = hasDown ? situationText(s, status) : '';
+  // "LAR @ SF 13": the team with the ball, then where the ball is.
+  const possessor = ['away', 'home'].find((side) => s?.possessionTeamId && s.possessionTeamId === game[side]?.teamId);
+  const possessorAbbr = possessor ? game[possessor]?.team?.abbreviation : null;
+  const ballText = s?.possessionText ? `${possessorAbbr ? `${possessorAbbr} @ ` : ''}${s.possessionText}` : '';
   const clockText = status.isHalftime ? 'Halftime' : `${formatPeriod(status.period)} ${status.displayClock}`;
 
   return (
@@ -254,7 +251,6 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
           side={side}
           competitor={game[side]}
           score={game[side]?.score ?? 0}
-          hasPossession={s?.possessionTeamId && s.possessionTeamId === game[side]?.teamId}
           expanded={showLinescore}
         />
       ))}
@@ -266,7 +262,7 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
         <div className="live-play-top">
           <span className="ellipsis">
             {downText}
-            {hasDown && s?.possessionText ? ` · ${s.possessionText}` : ''}
+            {hasDown && ballText ? ` · ${ballText}` : ''}
             {hasDown && s?.isRedZone && <span className="red-zone-tag">RZ</span>}
           </span>
           <span className="live-play-clock">
@@ -278,7 +274,7 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
 
       <InfoDrawer open={showLinescore}>
         <Linescore game={game} />
-        <KickoffBar game={game} label={status.shortDetail || 'Live'} />
+        <KickoffBar game={game} label={startTime(game)} />
       </InfoDrawer>
     </div>
   );
