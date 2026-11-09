@@ -3508,3 +3508,16 @@
   left: 50%;
   transform: translateX(-50%);
 }
+
+/* EACH BET list: picks the engine only leaned on */
+.nfl-data-container .bet-lean-tag {
+  margin-left: 5px;
+  padding: 0 4px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.55);
+  vertical-align: 1px;
+}

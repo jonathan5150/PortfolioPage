@@ -702,10 +702,10 @@ export const linePickBets = (linePicks, game, odds) => {
     const pick = linePicks[key];
     const result = gradeLinePick(pick, game, odds);
     if (!pick || !result || price === null || price === undefined) return null;
-    return { key, label, price, result };
+    return { key, label, price, result, bet: pick.bet !== false };
   };
-  // only the engine's BETS count as money; leans are picks, not bets
-  const live = (pick) => (pick && pick.bet && pick.side ? pick : null);
+  // every pick is simulated as a bet (BETS and LEANS alike); `bet` says which it was
+  const live = (pick) => (pick && pick.side ? pick : null);
   const winner = live(linePicks.winner);
   const spread = live(linePicks.spread);
   const total = live(linePicks.total);
