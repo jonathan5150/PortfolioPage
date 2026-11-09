@@ -7,6 +7,7 @@ import { ParlayProvider } from '../shared/ParlayContext';
 import ParlayBar from '../ParlayBar/ParlayBar';
 import PredictionRecord from './PredictionRecord';
 import SlideOpen from '../shared/SlideOpen';
+import LastUpdated from '../shared/LastUpdated';
 import { readCookie, writeCookie } from '../shared/cookies';
 
 const MERGE_WINDOW_MS = 30 * 60 * 1000;
@@ -293,6 +294,7 @@ const GameList = ({
         </div>
 
         <PredictionRecord games={weekGames || games} />
+        <LastUpdated />
         {hideMode ? (
           <button type="button" className="hide-done-bar" onClick={() => setHideMode(false)}>
             DONE

@@ -311,28 +311,58 @@ export const weatherEffect = (game) => {
   return { adj: 0, text: `${where}: no weather concerns.` };
 };
 
+// The over/under lean for games no betting rule covers: a score where over is
+// positive. It fades the season-scoring projection (gaps from the line tend to
+// close), fades the size of the total (big totals go under, small ones over)
+// and nudges dome games over. Weights picked on 2019-2025 (53.8% right on
+// every game, vs 51.9% for "always under"); 2026 held out: 56.7%.
+const LEAN_GAP_WEIGHT = -0.15;
+const LEAN_LINE_WEIGHT = -0.15;
+const LEAN_LINE_PIVOT = 44;
+const LEAN_DOME = 1;
+export const totalLean = ({ game, odds, awayTrends, homeTrends }) => {
+  const line = odds?.total?.line;
+  if (line === null || line === undefined) return null;
+  const proj = awayTrends?.games >= 3 && homeTrends?.games >= 3 ? projectScores(awayTrends, homeTrends) : null;
+  const gap = proj ? proj.total - line : 0;
+  const score = LEAN_GAP_WEIGHT * gap + LEAN_LINE_WEIGHT * (line - LEAN_LINE_PIVOT) + (game?.indoor ? LEAN_DOME : 0);
+  return { side: score > 0 ? 'over' : 'under', score, proj };
+};
+
 export const pickTotal = (ctx) => {
   const { odds } = ctx;
   const line = odds?.total?.line;
   if (line === null || line === undefined) return null;
   const bet = totalBet(ctx);
-  const proj = projectScores(ctx.awayTrends, ctx.homeTrends);
 
   if (!bet) {
-    // lean: the under
+    const lean = totalLean(ctx);
+    const leanOver = lean.side === 'over';
+    const why = [];
+    if (lean.proj) {
+      const diff = Math.round(lean.proj.total - line);
+      if (Math.abs(diff) >= 2)
+        why.push(
+          `scoring averages say about ${Math.round(lean.proj.total)}, and gaps like that tend to close the other way`,
+        );
+    }
+    if (line >= 47) why.push(`${line} is a big number, and big totals go under more often`);
+    else if (line <= 41) why.push(`${line} is a low number, and low totals go over more often`);
+    if (ctx.game?.indoor) why.push('a dome game, which helps scoring');
     return {
-      headline: `UNDER ${line}`,
-      side: 'under',
+      headline: `${leanOver ? 'OVER' : 'UNDER'} ${line}`,
+      side: lean.side,
       bet: false,
-      summary: `Lean under: unders have hit 52% of the time since 2019 when nothing else stands out.${
-        proj ? ` Scoring averages put this around ${Math.round(proj.total)}.` : ''
-      } Not strong enough to bet.`,
+      summary: `Lean ${lean.side}${why.length ? `: ${why.join('; ')}` : ''}. Not strong enough to bet.`,
       strong: false,
       key: 'total',
       title: 'OVER/UNDER',
-      pick: `UNDER ${line}`,
-      odds: realPrice(odds.total.underOdds) ? fmtOdds(odds.total.underOdds) : null,
-      confidence: 52,
+      pick: `${leanOver ? 'OVER' : 'UNDER'} ${line}`,
+      odds: (() => {
+        const price = leanOver ? odds.total.overOdds : odds.total.underOdds;
+        return realPrice(price) ? fmtOdds(price) : null;
+      })(),
+      confidence: 54,
       reasons: [],
     };
   }
