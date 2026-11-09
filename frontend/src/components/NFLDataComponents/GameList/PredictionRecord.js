@@ -21,12 +21,13 @@ const MARKETS = [
 // grading change (v1 could hold grades made against in-game "Live Odds" lines;
 // v2 had no bets; v3 was graded with the old bet-every-game engine; v4 had
 // no leans).
-const GRADES_KEY = 'gradedPicks:v5';
+const GRADES_KEY = 'gradedPicks:v6';
 try {
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v1');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v2');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v3');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v4');
+  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v5');
 } catch {
   // storage blocked
 }
@@ -188,7 +189,7 @@ const BetResults = ({ finished, gradedById }) => {
   const [showBets, setShowBets] = useState(false);
   return (
     <div className="bet-results">
-      <div className="prediction-record-title">BETTING RESULTS · ${stake} PER BET · BETS ONLY</div>
+      <div className="prediction-record-title">BETTING RESULTS · ${stake} PER BET · EVERY PICK</div>
       <div className="bet-filter">
         {BET_FILTERS.map((f) => (
           <button
@@ -242,7 +243,10 @@ const BetResults = ({ finished, gradedById }) => {
                       <div className="bet-game-label">{matchup(game)}</div>
                       {bets.map((b) => (
                         <div key={b.key} className="bet-row">
-                          <span className="bet-label">{b.label}</span>
+                          <span className="bet-label">
+                            {b.label}
+                            {!b.bet && <span className="bet-lean-tag">LEAN</span>}
+                          </span>
                           <span>{money(stake)}</span>
                           <span>{fmtOdds(b.price)}</span>
                           <span className={`bet-return ${tone(b.profit)}`}>{money(b.back)}</span>

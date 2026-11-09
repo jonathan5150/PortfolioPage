@@ -285,12 +285,12 @@ describe('picks', () => {
     expect(weatherEffect({ weather: { text: 'Cloudy', temperature: 30 } }).adj).toBeLessThan(0);
   });
 
-  test('leans are graded in the record but not counted as bets', () => {
+  test('leans are graded and simulated as bets, flagged as leans', () => {
     const final = { ...g, status: { state: 'post' }, away: { ...g.away, score: '20' }, home: { ...g.home, score: '24' } };
     const picks = buildLinePicks({ game: final, odds, predictor: { away: 20, home: 80 }, awayTrends: null, homeTrends: null });
     expect(picks.winner.bet).toBe(false);
     expect(gradeLinePicks(picks, final, odds).winner).toBe('W'); // KC won 24-20
-    expect(linePickBets(picks, final, odds).map((b) => b.key)).not.toContain('winner');
+    expect(linePickBets(picks, final, odds).find((b) => b.key === 'winner')).toMatchObject({ bet: false, result: 'W' });
   });
 
   test("player picks are touchdown calls with the book's anytime TD odds", () => {
@@ -660,9 +660,9 @@ describe('flat-stake bets', () => {
       total: { key: 'total', side: 'under', bet: true },
     };
     expect(linePickBets(picks, game, odds)).toEqual([
-      { key: 'winner', label: 'KC ML', price: -170, result: 'W' },
-      { key: 'spread', label: 'KC -3.5', price: -110, result: 'W' },
-      { key: 'total', label: 'UNDER 47.5', price: -110, result: 'W' },
+      { key: 'winner', label: 'KC ML', price: -170, result: 'W', bet: true },
+      { key: 'spread', label: 'KC -3.5', price: -110, result: 'W', bet: true },
+      { key: 'total', label: 'UNDER 47.5', price: -110, result: 'W', bet: true },
     ]);
   });
 });
