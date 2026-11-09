@@ -6,6 +6,7 @@ import { viewportStyle, sectionTitleStyle, messageStyle } from '../shared/tableS
 import { BOX_SCORE_SECTIONS, buildCategoryTable } from './boxScoreColumns';
 import { formatPeriod } from '../ScoreBug/ScoreBugs';
 import TeamToggle from '../shared/TeamToggle';
+import { getTeamTextColor } from '../shared/teamColors';
 
 const ScoringPlays = ({ summary, teamsById }) => {
   if (!summary.scoringPlays.length) return null;
@@ -17,7 +18,13 @@ const ScoringPlays = ({ summary, teamsById }) => {
           <span className="scoring-play-meta">
             {play.period ? formatPeriod(play.period) : ''} {play.clock}
           </span>
-          <span className="scoring-play-team">{teamsById[play.teamId]?.abbreviation || play.type}</span>
+          {/* the scoring team's abbreviation in a vivid team colour, readable on the dark rows */}
+          <span
+            className="scoring-play-team"
+            style={teamsById[play.teamId] ? { color: getTeamTextColor(teamsById[play.teamId]) } : undefined}
+          >
+            {teamsById[play.teamId]?.abbreviation || play.type}
+          </span>
           <span className="scoring-play-text" title={play.text}>
             {play.text}
           </span>
@@ -94,6 +101,7 @@ const BoxScore = ({ game, summaryState, withToggle = false }) => {
             teamSide={view}
             onChange={setView}
             below={{ key: 'scoring', label: 'SCORING PLAYS' }}
+            filled
           />
         </div>
         {view === 'scoring' ? (

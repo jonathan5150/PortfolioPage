@@ -94,9 +94,36 @@ export const getTeamBorderColor = (team) => {
   return color ? washOut(color, 0.2) : 'rgb(85, 85, 85)';
 };
 
-// Solid team colour plus a lighter shade of it, for the swirling ring around an open game.
+// Solid team colour plus a lighter shade of it (the open game's border, and
+// team-coloured text on dark rows).
 export const getTeamRingColors = (team) => {
   const base = getTeamColor(team) || 'rgba(140, 140, 140, 1)';
   const solid = base.replace(/[\d.]+\)$/, '1)');
   return [solid, washOut(solid, 0.45)];
+};
+
+// Team-coloured text on the dark rows (scoring plays, LINES history): the team
+// colour lifted to a readable brightness with moderate saturation, so navy and
+// dark red teams still read as their colour without looking washed out.
+export const getTeamTextColor = (team) => {
+  const base = getTeamColor(team) || 'rgba(160, 160, 160, 1)';
+  const [r, g, b] = base.match(/[\d.]+/g).map((v) => Number(v) / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const d = max - min;
+  let h = 0;
+  if (d) {
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  const l0 = (max + min) / 2;
+  const s0 = d ? d / (1 - Math.abs(2 * l0 - 1)) : 0;
+  // greys stay grey; colours sit at 35-42% saturation and 64-70% lightness:
+  // clearly the team colour, without glowing
+  const sat = s0 < 0.08 ? s0 : Math.min(Math.max(s0, 0.35), 0.42);
+  const light = Math.min(Math.max(l0, 0.64), 0.7);
+  return `hsl(${Math.round(h)}, ${Math.round(sat * 100)}%, ${Math.round(light * 100)}%)`;
 };

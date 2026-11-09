@@ -1,14 +1,68 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import NFLDataNavbar from '../NFLDataNavbar/NFLDataNavbar';
 import GameCard from '../GameCard/GameCard';
-import { slotLabel } from '../ScoreBug/ScoreBugs';
 import LoadingField from '../shared/LoadingField';
 import usePersistentState from '../shared/usePersistentState';
 import { ParlayProvider } from '../shared/ParlayContext';
 import ParlayBar from '../ParlayBar/ParlayBar';
 import PredictionRecord from './PredictionRecord';
+import SlideOpen from '../shared/SlideOpen';
+import { deleteCookie, readCookie, writeCookie } from '../shared/cookies';
 
 const MERGE_WINDOW_MS = 30 * 60 * 1000;
+
+// The list is split into FINAL, LIVE and UPCOMING, and each part groups its
+// games by start time.
+const SECTIONS = [
+  { key: 'post', label: 'FINAL' },
+  { key: 'in', label: 'LIVE' },
+  { key: 'pre', label: 'UPCOMING' },
+];
+
+// Which sections are collapsed is remembered per week in a cookie, so
+// collapsing FINAL this week doesn't collapse it in any other week.
+const collapsedCookie = (season, seasonType, week) => `nflCollapsed_${season}-${seasonType}-${week}`;
+const readCollapsed = (name) => new Set((readCookie(name) || '').split(',').filter(Boolean));
+
+const startLabel = (game) => {
+  if (game.status.isPostponed) return game.status.shortDetail || 'Postponed';
+  return game.date
+    ? new Date(game.date).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })
+    : 'TBD';
+};
+
+// Kickoffs on the same day within half an hour of each other (Sunday's 3:05
+// and 3:25 games) share one group: "SUN 3:05 PM / 3:25 PM".
+const timeSlots = (games) => {
+  const byLabel = new Map();
+  [...games]
+    .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
+    .forEach((game) => {
+      const label = startLabel(game);
+      if (!byLabel.has(label)) byLabel.set(label, []);
+      byLabel.get(label).push(game);
+    });
+
+  const merged = [];
+  [...byLabel.entries()].forEach(([label, slotGames]) => {
+    const first = slotGames[0];
+    const start = !first.status.isPostponed && first.date ? new Date(first.date) : null;
+    const prev = merged[merged.length - 1];
+    if (
+      start &&
+      prev?.lastStart &&
+      prev.lastStart.toDateString() === start.toDateString() &&
+      start - prev.lastStart <= MERGE_WINDOW_MS
+    ) {
+      prev.games.push(...slotGames);
+      prev.label = `${prev.label} / ${start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+      prev.lastStart = start;
+    } else {
+      merged.push({ label, games: [...slotGames], lastStart: start });
+    }
+  });
+  return merged;
+};
 
 const GameList = ({
   loading,
@@ -34,7 +88,6 @@ const GameList = ({
   isWeekMenuOpen,
   setIsWeekMenuOpen,
   rankings,
-  hasLiveGames,
   lastUpdated,
 }) => {
   // SET / OPEN / CLOSE buttons on one card broadcast to every card.
@@ -78,37 +131,37 @@ const GameList = ({
   // game open shouldn't leave the new week faded).
   const hasOpenGame = Boolean(openGameId) && shownGames.some((g) => g.id === openGameId);
 
-  // Kickoffs on the same day within half an hour of each other (Sunday's 3:05
-  // and 3:25 games) share one group: "SUN 3:05 PM / 3:25 PM".
-  const slots = useMemo(() => {
-    const byLabel = new Map();
-    shownGames.forEach((game) => {
-      const label = slotLabel(game);
-      if (!byLabel.has(label)) byLabel.set(label, []);
-      byLabel.get(label).push(game);
-    });
+  const cookieName = collapsedCookie(season, seasonType, week);
+  const [collapsed, setCollapsed] = useState(() => readCollapsed(cookieName));
+  useEffect(() => setCollapsed(readCollapsed(cookieName)), [cookieName]);
+  const toggleSection = useCallback(
+    (key, sectionGames) => {
+      setCollapsed((prev) => {
+        const next = new Set(prev);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        if (next.size) writeCookie(cookieName, [...next].join(','));
+        else deleteCookie(cookieName);
+        return next;
+      });
+      // collapsing the section that holds the open game closes that game
+      if (sectionGames.some((g) => g.id === openGameId)) setOpenGameId(null);
+    },
+    [cookieName, openGameId],
+  );
 
-    const merged = [];
-    [...byLabel.entries()].forEach(([label, slotGames]) => {
-      const first = slotGames[0];
-      const upcoming = first.status.state === 'pre' && !first.status.isPostponed && Boolean(first.date);
-      const start = upcoming ? new Date(first.date) : null;
-      const prev = merged[merged.length - 1];
-      if (
-        start &&
-        prev?.lastStart &&
-        prev.lastStart.toDateString() === start.toDateString() &&
-        start - prev.lastStart <= MERGE_WINDOW_MS
-      ) {
-        prev.games.push(...slotGames);
-        prev.label = `${prev.label} / ${start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
-        prev.lastStart = start;
-      } else {
-        merged.push({ label, games: [...slotGames], lastStart: start });
-      }
-    });
-    return merged;
-  }, [shownGames]);
+  const sections = useMemo(
+    () =>
+      SECTIONS.map((section) => ({
+        ...section,
+        slots: timeSlots(
+          shownGames.filter((g) =>
+            section.key === 'pre' ? !['post', 'in'].includes(g.status.state) : g.status.state === section.key,
+          ),
+        ),
+      })).filter((section) => section.slots.length > 0),
+    [shownGames],
+  );
 
   // A tap that only closes a navbar menu shouldn't also open a game card.
   const handleOutsideClose = useCallback(() => {
@@ -139,7 +192,6 @@ const GameList = ({
           isWeekMenuOpen={isWeekMenuOpen}
           setIsWeekMenuOpen={setIsWeekMenuOpen}
           onOutsideClose={handleOutsideClose}
-          hasLiveGames={hasLiveGames}
           hideMode={hideMode}
           onToggleHideMode={toggleHideMode}
         />
@@ -156,45 +208,71 @@ const GameList = ({
                   : 'Every game this week is hidden. Use HIDE GAMES to bring them back.'}
             </p>
           ) : (
-            slots.map((slot) => (
-              <div key={slot.label} className="game-container game-group">
-                <div className="game-group-time">{slot.label}</div>
-                {slot.games.map((game) => (
-                  <GameCard
-                    key={game.id}
-                    game={game}
-                    teamsById={teamsById}
-                    season={season}
-                    currentSeason={currentSeason}
-                    rankings={rankings}
-                    syncCommand={syncCommand}
-                    onBroadcast={broadcast}
-                    suppressNextToggleRef={suppressNextToggleRef}
-                    isOpen={openGameId === game.id}
-                    onUserToggle={handleUserToggle}
-                    hideMode={hideMode}
-                    hidden={hiddenSet.has(game.id)}
-                    onToggleHidden={toggleHidden}
-                  />
-                ))}
+            sections.map((section) => (
+              // the gold box holds the heading and, when open, that section's games
+              <div key={section.key} className={`game-section ${collapsed.has(section.key) ? 'collapsed' : ''}`}>
+                <button
+                  type="button"
+                  className={`game-section-label ${section.key} ${collapsed.has(section.key) ? 'collapsed' : ''}`}
+                  aria-expanded={!collapsed.has(section.key)}
+                  onClick={() =>
+                    toggleSection(
+                      section.key,
+                      section.slots.flatMap((slot) => slot.games),
+                    )
+                  }
+                >
+                  {/* the name sits dead centre with its arrow just off its right side;
+                      the game count is pinned to the far right */}
+                  <span className="game-section-name">
+                    {section.label}
+                    <span className="gold-caret" aria-hidden="true" />
+                  </span>
+                  <span className="game-section-count">
+                    {section.slots.reduce((n, slot) => n + slot.games.length, 0)}
+                  </span>
+                </button>
+                <SlideOpen open={!collapsed.has(section.key)} className="game-section-body">
+                  {section.slots.map((slot) => (
+                    <div key={slot.label} className="game-container game-group">
+                      <div className="game-group-time">{slot.label}</div>
+                      {slot.games.map((game) => (
+                        <GameCard
+                          key={game.id}
+                          game={game}
+                          teamsById={teamsById}
+                          season={season}
+                          currentSeason={currentSeason}
+                          rankings={rankings}
+                          syncCommand={syncCommand}
+                          onBroadcast={broadcast}
+                          suppressNextToggleRef={suppressNextToggleRef}
+                          isOpen={openGameId === game.id}
+                          onUserToggle={handleUserToggle}
+                          hideMode={hideMode}
+                          hidden={hiddenSet.has(game.id)}
+                          onToggleHidden={toggleHidden}
+                        />
+                      ))}
+                    </div>
+                  ))}
+                </SlideOpen>
               </div>
             ))
           )}
         </div>
 
-        <div className="games-count-outer">
-          <div className="games-count-inner">
-            Games Displayed: {shownGames.length}/{totalGames}
-            {lastUpdated && (
-              <span className="last-updated">
-                {' '}
-                · updated{' '}
-                {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
-              </span>
-            )}
-          </div>
-        </div>
         <PredictionRecord games={weekGames || games} />
+        <div className="gold-box games-count-box">
+          <div className="gold-box-text">
+            GAMES DISPLAYED {shownGames.length}/{totalGames}
+          </div>
+          {lastUpdated && (
+            <div className="last-updated">
+              updated {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
+            </div>
+          )}
+        </div>
         {hideMode ? (
           <button type="button" className="hide-done-bar" onClick={() => setHideMode(false)}>
             DONE

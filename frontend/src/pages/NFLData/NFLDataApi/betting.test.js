@@ -651,6 +651,52 @@ describe('flat-stake bets', () => {
   });
 });
 
+describe('teamResultHistory', () => {
+  // eslint-disable-next-line global-require
+  const { teamResultHistory } = require('./picks');
+  const g = (id, date, away, home, as, hs, state = 'post') => ({
+    id,
+    date,
+    status: { state },
+    away: { teamId: away, score: as, team: { abbreviation: away } },
+    home: { teamId: home, score: hs, team: { abbreviation: home } },
+  });
+  it('lists finished games before this one, oldest first, from the team side', () => {
+    const schedule = [
+      g('2', '2026-09-20T17:00:00Z', 'KC', 'BUF', '20', '24'),
+      g('1', '2026-09-13T17:00:00Z', 'BUF', 'MIA', '30', '10'),
+      g('3', '2026-09-27T17:00:00Z', 'BUF', 'NYJ', '17', '17'),
+      g('4', '2026-10-04T17:00:00Z', 'NE', 'BUF', '0', '0', 'pre'),
+    ];
+    const rows = teamResultHistory(schedule, 'BUF', { id: '4', date: '2026-10-04T17:00:00Z' });
+    expect(rows.map((r) => [r.opp, r.result])).toEqual([
+      ['@ MIA', 'W'],
+      ['vs KC', 'W'],
+      ['@ NYJ', 'T'],
+    ]);
+  });
+});
+
+describe('teamResultHistory byes', () => {
+  // eslint-disable-next-line global-require
+  const { teamResultHistory } = require('./picks');
+  const g = (id, week, away, home, as, hs) => ({
+    id,
+    week,
+    seasonType: 2,
+    date: `2026-09-${10 + week}T17:00:00Z`,
+    status: { state: 'post' },
+    away: { teamId: away, score: as, team: { abbreviation: away } },
+    home: { teamId: home, score: hs, team: { abbreviation: home } },
+  });
+  it('adds a BYE cell for a regular-season week with no game', () => {
+    const schedule = [g('1', 1, 'BUF', 'MIA', '30', '10'), g('3', 3, 'KC', 'BUF', '20', '24')];
+    const rows = teamResultHistory(schedule, 'BUF', { id: '4', week: 4, seasonType: 2, date: '2026-09-30T17:00:00Z' });
+    expect(rows.map((r) => r.result)).toEqual(['W', 'BYE', 'W']);
+    expect(rows[1]).toMatchObject({ bye: true, week: 2 });
+  });
+});
+
 describe('odds frozen at kickoff', () => {
   // eslint-disable-next-line global-require
   const { saveOddsSnapshot, frozenOdds, hasStarted } = require('./oddsSnapshots');

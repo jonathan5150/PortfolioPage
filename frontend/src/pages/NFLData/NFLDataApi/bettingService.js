@@ -11,7 +11,7 @@ import {
   isUnavailable,
 } from './espnService';
 import { parseEventOdds, parsePredictor, gradeGame, computeTeamTrends } from './betting';
-import { buildLinePicks, gradeLinePicks, linePickBets } from './picks';
+import { buildLinePicks, gradeLinePicks, linePickBets, teamResultHistory } from './picks';
 import { frozenOdds } from './oddsSnapshots';
 
 const MINUTE = 60 * 1000;
@@ -47,6 +47,15 @@ export const getTeamBettingTrends = async (teamId, game) => {
   // A game without a line still counts toward scoring and straight-up records.
   const graded = schedule.map((g, i) => (results[i].ok ? results[i].value : gradeGame(teamId, g, null)));
   return computeTeamTrends(graded);
+};
+
+// A team's wins and losses this season before `game` (playoff games included
+// once the playoffs have started), for the LINES tab.
+export const getTeamResultHistory = async (teamId, game) => {
+  const requests = [getTeamSchedule(teamId, game.season, 2)];
+  if (game.seasonType === 3) requests.push(getTeamSchedule(teamId, game.season, 3));
+  const schedule = (await Promise.all(requests)).flat();
+  return teamResultHistory(schedule, teamId, game);
 };
 
 // The engine's winner / spread / total picks for a finished game, made from

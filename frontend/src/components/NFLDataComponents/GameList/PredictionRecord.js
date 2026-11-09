@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useAsyncData from '../shared/useAsyncData';
-import useInView from '../shared/useInView';
 import { readPreference, writePreference } from '../shared/usePersistentState';
+import SlideOpen from '../shared/SlideOpen';
 import { getGradedLinePicks } from '../../../pages/NFLData/NFLDataApi/bettingService';
 import { runWithConcurrency } from '../../../pages/NFLData/NFLDataApi/http';
 import { betReturn } from '../../../pages/NFLData/NFLDataApi/picks';
@@ -181,20 +181,10 @@ const BetResults = ({ finished, gradedById }) => {
   const [stake, setStake] = useState(STAKES[0]);
   const days = betDays(finished, gradedById, filter, stake);
   const week = days.reduce((sum, d) => sum + d.profit, 0);
-  // Closed until asked for: a button opens and closes the list.
-  const [open, setOpen] = useState(false);
-  const toggle = (
-    <button type="button" className={`bet-results-toggle ${open ? 'open' : ''}`} onClick={() => setOpen((o) => !o)}>
-      {open ? 'HIDE BETTING RESULTS' : 'SHOW BETTING RESULTS'}
-      <span className="bet-results-caret" aria-hidden="true" />
-    </button>
-  );
-
-  if (!open) return <div className="bet-results">{toggle}</div>;
-
+  // Just each day's profit and the week's until EACH BET is opened.
+  const [showBets, setShowBets] = useState(false);
   return (
     <div className="bet-results">
-      {toggle}
       <div className="prediction-record-title">BETTING RESULTS · ${stake} PER BET</div>
       <div className="bet-filter">
         {BET_FILTERS.map((f) => (
@@ -224,40 +214,58 @@ const BetResults = ({ finished, gradedById }) => {
         <div className="prediction-record-loading">No graded bets yet.</div>
       ) : (
         <>
-          <div className="bet-row bet-head">
-            <span>BET</span>
-            <span>WAGER</span>
-            <span>ODDS</span>
-            <span>RETURN</span>
-          </div>
-          {days.map((day) => (
-            <div key={day.key} className="bet-day">
-              <div className="bet-day-label">{day.label}</div>
-              {day.games.map(({ game, bets }) => (
-                <div key={game.id} className="bet-game">
-                  <div className="bet-game-label">{matchup(game)}</div>
-                  {bets.map((b) => (
-                    <div key={b.key} className="bet-row">
-                      <span className="bet-label">{b.label}</span>
-                      <span>{money(stake)}</span>
-                      <span>{fmtOdds(b.price)}</span>
-                      <span className={`bet-return ${tone(b.profit)}`}>{money(b.back)}</span>
-                    </div>
-                  ))}
-                </div>
-              ))}
-              <div className="bet-row bet-total">
-                <span>{day.label} PROFIT</span>
+          <button
+            type="button"
+            className={`bet-each-toggle ${showBets ? 'open' : ''}`}
+            aria-expanded={showBets}
+            onClick={() => setShowBets((v) => !v)}
+          >
+            {showBets ? 'HIDE EACH BET' : 'SHOW EACH BET'}
+            <span className="bet-results-caret" aria-hidden="true" />
+          </button>
+          {!showBets &&
+            days.map((day) => (
+              <div key={day.key} className="bet-row bet-day-summary">
+                <span>{day.label}</span>
                 <span className={`bet-return ${tone(day.profit)}`}>{signedMoney(day.profit)}</span>
               </div>
-            </div>
-          ))}
-          {days.length > 1 && (
-            <div className="bet-row bet-total bet-week">
-              <span>WEEK PROFIT</span>
-              <span className={`bet-return ${tone(week)}`}>{signedMoney(week)}</span>
-            </div>
+            ))}
+          {showBets && (
+            <>
+              <div className="bet-row bet-head">
+                <span>BET</span>
+                <span>WAGER</span>
+                <span>ODDS</span>
+                <span>RETURN</span>
+              </div>
+              {days.map((day) => (
+                <div key={day.key} className="bet-day">
+                  <div className="bet-day-label">{day.label}</div>
+                  {day.games.map(({ game, bets }) => (
+                    <div key={game.id} className="bet-game">
+                      <div className="bet-game-label">{matchup(game)}</div>
+                      {bets.map((b) => (
+                        <div key={b.key} className="bet-row">
+                          <span className="bet-label">{b.label}</span>
+                          <span>{money(stake)}</span>
+                          <span>{fmtOdds(b.price)}</span>
+                          <span className={`bet-return ${tone(b.profit)}`}>{money(b.back)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                  <div className="bet-row bet-total">
+                    <span>{day.label} PROFIT</span>
+                    <span className={`bet-return ${tone(day.profit)}`}>{signedMoney(day.profit)}</span>
+                  </div>
+                </div>
+              ))}
+            </>
           )}
+          <div className="bet-row bet-total bet-week">
+            <span>WEEK PROFIT</span>
+            <span className={`bet-return ${tone(week)}`}>{signedMoney(week)}</span>
+          </div>
         </>
       )}
       <SeasonTotals stake={stake} />
@@ -268,9 +276,9 @@ const BetResults = ({ finished, gradedById }) => {
 const PredictionRecord = ({ games }) => {
   const finished = useMemo(() => (games || []).filter((g) => g.status?.state === 'post'), [games]);
   const ids = finished.map((g) => g.id).join(',');
-  // The record sits at the bottom of the list: grading waits until it's near
-  // the screen, so it never competes with a game being opened.
-  const [ref, inView] = useInView({ rootMargin: '300px' });
+  // Everything here stays closed until the button is pressed, and nothing is
+  // graded until then, so it never competes with a game being opened.
+  const [open, setOpen] = useState(false);
 
   const graded = useAsyncData(
     async () => {
@@ -281,10 +289,8 @@ const PredictionRecord = ({ games }) => {
       return results.map((r, i) => (r.ok && r.value ? { ...r.value, id: finished[i].id } : null)).filter(Boolean);
     },
     [ids],
-    { enabled: finished.length > 0 && inView },
+    { enabled: finished.length > 0 && open },
   );
-
-  if (!finished.length) return null;
 
   const rows = MARKETS.map(({ key, label }) => {
     const rec = { W: 0, L: 0 };
@@ -297,25 +303,41 @@ const PredictionRecord = ({ games }) => {
   const total = rows.reduce((acc, r) => ({ W: acc.W + r.W, L: acc.L + r.L }), { W: 0, L: 0 });
 
   return (
-    <div className="games-count-outer prediction-record-outer" ref={ref}>
-      <div className="games-count-inner prediction-record">
-        <div className="prediction-record-title">PREDICTION RECORD · FINISHED GAMES</div>
-        {!graded.data ? (
-          <div className="prediction-record-loading">Grading this week's picks…</div>
-        ) : (
-          <div className="prediction-record-rows">
-            {[...rows, { key: 'all', label: 'Total', ...total }].map((r) => (
-              <div key={r.key} className={`prediction-record-row ${r.key === 'all' ? 'total' : ''}`}>
-                <span className="prediction-record-label">{r.label}</span>
-                <span className="prediction-record-wl">
-                  {r.W}-{r.L}
-                </span>
-                <span className="prediction-record-pct">{pct(r)}</span>
+    <div className="gold-box prediction-record-outer">
+      <div className="prediction-record">
+        <button
+          type="button"
+          className={`bet-results-toggle gold-box-text ${open ? 'open' : ''}`}
+          onClick={() => setOpen((o) => !o)}
+        >
+          <span className="game-section-name">
+            {open ? 'HIDE MODEL RESULTS' : 'SHOW MODEL RESULTS'}
+            <span className="gold-caret" aria-hidden="true" />
+          </span>
+        </button>
+        <SlideOpen open={open} className="model-results-body">
+          <div className="model-results-content">
+            <div className="prediction-record-title">PREDICTION RECORD · FINISHED GAMES</div>
+            {!finished.length ? (
+              <div className="prediction-record-loading">No finished games this week yet.</div>
+            ) : !graded.data ? (
+              <div className="prediction-record-loading">Grading this week's picks…</div>
+            ) : (
+              <div className="prediction-record-rows">
+                {[...rows, { key: 'all', label: 'Total', ...total }].map((r) => (
+                  <div key={r.key} className={`prediction-record-row ${r.key === 'all' ? 'total' : ''}`}>
+                    <span className="prediction-record-label">{r.label}</span>
+                    <span className="prediction-record-wl">
+                      {r.W}-{r.L}
+                    </span>
+                    <span className="prediction-record-pct">{pct(r)}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+            {(graded.data || !finished.length) && <BetResults finished={finished} gradedById={gradedById} />}
           </div>
-        )}
-        {graded.data && <BetResults finished={finished} gradedById={gradedById} />}
+        </SlideOpen>
       </div>
     </div>
   );

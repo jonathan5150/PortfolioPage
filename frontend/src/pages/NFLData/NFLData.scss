@@ -70,6 +70,80 @@
   margin-top: 10px;
 }
 
+/* FINAL / LIVE / UPCOMING: each part of the list sits in a thin gold box with
+   a centred heading; tapping the heading collapses the box to just that. */
+.nfl-data-container .game-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  width: 95%;
+  margin-bottom: 6px;
+  padding: 0 4px;
+  border: 1px solid rgba(245, 209, 107, 0.7);
+  border-radius: 8px;
+  background: rgba(41, 41, 41, 0.5);
+}
+
+.nfl-data-container .game-section:first-child {
+  margin-top: 10px;
+}
+
+
+/* SlideOpen: grows open and shrinks shut (grid rows animate between 0 and the
+   content's height) - the game sections and MODEL RESULTS */
+.nfl-data-container .slide-open {
+  display: grid;
+  grid-template-rows: 0fr;
+  width: 100%;
+  opacity: 0;
+  transition: grid-template-rows 0.5s ease, opacity 0.4s ease;
+}
+
+.nfl-data-container .slide-open.open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.nfl-data-container .slide-open-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.nfl-data-container .game-section-body .slide-open-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.nfl-data-container .game-section .game-container {
+  width: 100%;
+  margin: 0 0 4px;
+}
+
+/* the space under the last group slides away with the games, so a closed box
+   is just its heading */
+.nfl-data-container .game-section .game-container:last-child {
+  margin-bottom: 4px;
+}
+
+.nfl-data-container .game-section-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 0;
+  padding: 6px 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #f5d16b;
+  cursor: pointer;
+}
+
 /* games that start together share one container, headed by the start time */
 .nfl-data-container .game-group {
   padding-top: 4px;
@@ -101,114 +175,77 @@
   background: rgba(255, 255, 255, 0.025);
 }
 
-/* Open game: a 3px ring that swirls around the game and everything that
-   drops out of it: a dark gap, the away team's colours, another dark gap,
-   then the home team's colours, chasing each other like snakes.
-   The ring is a spinning conic gradient masked down to just the border. */
-@property --ring-angle {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@keyframes nflRingSpin {
-  to {
-    --ring-angle: 360deg;
-  }
-}
-
+/* Open game: a 3px border around the game and everything that drops out of
+   it. The left side is the away team's colour and the right side the home
+   team's, both dimming towards the bottom but still coloured all the way round. */
 .nfl-data-container .game-slot {
   position: relative;
 }
 
-/* The ring is four thin strips (top and bottom carry the rounded corners), each
-   painting the same spinning conic gradient centred on the whole game. Only
-   the 3px border repaints per frame instead of a gradient the size of the
-   whole open game, which is what made phones stutter. */
 .nfl-data-container .game-ring {
   position: absolute;
-  inset: -2px 4px; /* the ring's inside edge hugs the team cells and the panel below */
+  inset: -2px 4px; /* the border's inside edge hugs the team cells and the panel below */
   z-index: 5;
-  container-type: size; /* lets the strips find the ring's centre (cqw / cqh) */
+  box-sizing: border-box;
+  padding: 3px;
+  border-radius: 10px;
+  background: linear-gradient(to bottom, rgba(24, 24, 24, 0) 0, rgba(24, 24, 24, 0) 20%, rgba(24, 24, 24, 0.55) 100%),
+    linear-gradient(to right, var(--ring-away, #888) 0 50%, var(--ring-home, #888) 50% 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
 }
 
+/* Breathing: while a game is open its border slowly swells brighter and fades
+   back, with a soft glow in each team's colour spilling off its own side.
+   Only opacity animates, so it stays smooth on phones. */
+@keyframes nflRingBreathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@keyframes nflGlowBreathe {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
 .nfl-data-container .game-slot.open .game-ring {
   opacity: 1;
+  animation: nflRingBreathe 3.6s ease-in-out infinite;
 }
 
-.nfl-data-container .game-ring > i {
+.nfl-data-container .game-slot::after {
+  content: '';
   position: absolute;
-  display: block;
-  box-sizing: border-box;
-  background: conic-gradient(
-    from var(--ring-angle) at var(--cx) var(--cy),
-    #111 0deg 25deg,
-    var(--ring-away, #888) 50deg,
-    var(--ring-away-light, #bbb) 90deg,
-    var(--ring-away, #888) 130deg,
-    #111 155deg 205deg,
-    var(--ring-home, #888) 230deg,
-    var(--ring-home-light, #bbb) 270deg,
-    var(--ring-home, #888) 310deg,
-    #111 335deg 360deg
-  );
+  inset: -2px 4px;
+  z-index: 4;
+  border-radius: 10px;
+  box-shadow: -5px 0 14px -6px var(--ring-away, #888), 5px 0 14px -6px var(--ring-home, #888);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
 }
 
-.nfl-data-container .game-slot.open .game-ring > i {
-  animation: nflRingSpin 13s linear infinite;
-}
-
-/* top / bottom: 10px tall with the rounded corners, hollowed to a 3px line */
-.nfl-data-container .ring-top,
-.nfl-data-container .ring-bottom {
-  left: 0;
-  right: 0;
-  height: 10px;
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-}
-
-.nfl-data-container .ring-top {
-  top: 0;
-  padding: 3px 3px 0;
-  border-radius: 10px 10px 0 0;
-  --cx: 50cqw;
-  --cy: 50cqh;
-}
-
-.nfl-data-container .ring-bottom {
-  bottom: 0;
-  padding: 0 3px 3px;
-  border-radius: 0 0 10px 10px;
-  --cx: 50cqw;
-  --cy: calc(10px - 50cqh);
-}
-
-/* left / right: plain 3px lines between the corners */
-.nfl-data-container .ring-left,
-.nfl-data-container .ring-right {
-  top: 10px;
-  bottom: 10px;
-  width: 3px;
-  --cy: calc(50cqh - 10px);
-}
-
-.nfl-data-container .ring-left {
-  left: 0;
-  --cx: 50cqw;
-}
-
-.nfl-data-container .ring-right {
-  right: 0;
-  --cx: calc(3px - 50cqw);
+.nfl-data-container .game-slot.open::after {
+  animation: nflGlowBreathe 3.6s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nfl-data-container .game-slot.open .game-ring > i {
+  .nfl-data-container .game-slot.open .game-ring,
+  .nfl-data-container .game-slot.open::after {
     animation: none;
   }
 }
@@ -320,24 +357,6 @@
   padding: 5px 15px;
 }
 
-.nfl-data-container .games-count-outer {
-  padding: 4px;
-  border: 1px solid #555555;
-  border-radius: 8px;
-  background-color: rgba(41, 41, 41, 0.85);
-  display: inline-block;
-  margin-bottom: 15px;
-}
-
-.nfl-data-container .games-count-inner {
-  padding: 6px 12px;
-  border: 2px solid rgb(85, 85, 85);
-  border-radius: 6px;
-  background-color: rgba(70, 70, 70, 0.8);
-  color: white;
-  font-size: 12px;
-}
-
 .nfl-data-container .last-updated {
   opacity: 0.6;
 }
@@ -345,7 +364,7 @@
 /* ---------- weekly prediction record ---------- */
 
 .nfl-data-container .prediction-record {
-  min-width: 230px;
+  box-sizing: border-box;
   font-family: 'DM Sans', sans-serif;
 }
 
@@ -460,6 +479,36 @@
   border-color: #f5d16b;
   color: #f5d16b;
   background: rgba(245, 209, 107, 0.1);
+}
+
+/* SHOW / HIDE EACH BET: the per-bet list under the day totals */
+.nfl-data-container .bet-each-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  margin: 2px 0 6px;
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.8);
+  font-family: inherit;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+.nfl-data-container .bet-each-toggle.open .bet-results-caret {
+  transform: rotate(180deg);
+}
+
+.nfl-data-container .bet-row.bet-day-summary {
+  grid-template-columns: 1fr auto;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .nfl-data-container .bet-row {
@@ -823,7 +872,7 @@
   /* turf with faint yard lines */
   background:
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 26px),
-    linear-gradient(135deg, rgba(22, 58, 40, 0.92), rgba(24, 24, 24, 0.92) 70%);
+    linear-gradient(135deg, rgba(42, 92, 64, 0.92), rgba(58, 58, 58, 0.92) 70%);
   border: 1.5px solid rgba(196, 148, 16, 0.65);
   box-shadow: 0 0 18px rgba(196, 148, 16, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.45);
 }
@@ -945,15 +994,6 @@
   letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.65);
   white-space: nowrap;
-}
-
-.nfl-data-container .live-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #d94848;
-  display: inline-block;
-  animation: nflPulse 1.6s infinite;
 }
 
 /* HIDE TEAMS sits just left of the WEEK control, which is centred on the
@@ -1347,7 +1387,7 @@
   z-index: 2;
 }
 
-.nfl-data-container .team-info-container > *:not(.team-logo-watermark):not(.possession-flag) {
+.nfl-data-container .team-info-container > *:not(.team-logo-watermark) {
   position: relative;
   z-index: 1;
 }
@@ -1426,7 +1466,7 @@
   z-index: 0;
   pointer-events: none;
   -webkit-user-drag: none;
-  transition: transform 0.7s ease, opacity 0.7s ease;
+  transition: transform 0.7s ease, opacity 0.7s ease, filter 0.7s ease;
 }
 
 .nfl-data-container .team-cell.expanded .team-logo-watermark {
@@ -1458,26 +1498,6 @@
   justify-content: center;
   color: white;
   position: relative;
-}
-
-.nfl-data-container .possession-flag {
-  position: absolute;
-  top: 0;
-  z-index: 3;
-  width: 12px;
-  height: 12px;
-  background: #e3b341;
-  pointer-events: none;
-}
-
-.nfl-data-container .possession-flag.away {
-  right: 0;
-  clip-path: polygon(0 0, 100% 0, 100% 100%);
-}
-
-.nfl-data-container .possession-flag.home {
-  left: 0;
-  clip-path: polygon(0 0, 100% 0, 0 100%);
 }
 
 .nfl-data-container .team-record {
@@ -1539,20 +1559,12 @@
   min-width: 0;
 }
 
-.nfl-data-container .marquee.scrolling {
-  mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 8px), transparent 100%);
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8px, #000 calc(100% - 8px), transparent 100%);
-}
-
 .nfl-data-container .marquee-track {
   display: inline-flex;
 }
 
 .nfl-data-container .marquee.scrolling .marquee-track {
-  animation-name: nflMarquee;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  will-change: transform;
+  will-change: transform; /* animated from Marquee.js */
 }
 
 .nfl-data-container .marquee-text {
@@ -1560,20 +1572,6 @@
   white-space: nowrap;
 }
 
-@keyframes nflMarquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(var(--marquee-distance));
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nfl-data-container .marquee.scrolling .marquee-track {
-    animation: none;
-  }
-}
 
 /* ---------- linescore ---------- */
 
@@ -2011,6 +2009,13 @@
   color: #ffffff;
   background: rgba(255, 255, 255, 0.1);
   border-color: #c49410; /* gold while selected; the team buttons above lose theirs */
+}
+
+/* BOX SCORE: SCORING PLAYS turns gold only while selected: a darker gold border
+   around a faint gold tint */
+.nfl-data-container .team-toggle-below.filled.active {
+  background: rgba(168, 128, 18, 0.22);
+  border-color: #a8800f;
 }
 
 .nfl-data-container .search-team-toggle img {
@@ -2514,6 +2519,84 @@
 .nfl-data-container .td-history-game.hit {
   background: linear-gradient(180deg, #f5d16b, #c49410);
   border-color: #f5d16b;
+}
+
+/* LINES: each team's recent results in the touchdown-history style */
+/* same inset and spacing as the moneyline / spread / O/U cards below */
+.nfl-data-container .team-results-history {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0 8px;
+  margin: 4px 0 5px;
+}
+
+/* one row per team: the abbreviation stays put on the left; the games scroll
+   sideways once there are eight or more, starting at the newest on the right */
+.nfl-data-container .team-results {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nfl-data-container .team-results-abbr {
+  flex: none;
+  width: 32px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: left;
+}
+
+.nfl-data-container .team-results-scroll {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nfl-data-container .team-results-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* narrow blocks lined up against the right edge (newest on the right) */
+.nfl-data-container .team-results-scroll .td-history-games {
+  width: max-content;
+  min-width: 100%;
+  justify-content: flex-end;
+}
+
+.nfl-data-container .team-results-scroll .td-history-col {
+  flex: 0 0 31px;
+}
+
+/* when they don't all fit, the older games fade out on the left */
+.nfl-data-container .team-results-scroll.overflows {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px);
+  mask-image: linear-gradient(90deg, transparent 0, #000 22px);
+}
+
+.nfl-data-container .team-results-logo {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+/* a bye week: an empty dashed cell */
+.nfl-data-container .td-history-game.team-result.bye {
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
+}
+
+/* wins use the gold "scored" block; losses stay plain grey, so their letter is light */
+.nfl-data-container .td-history-game.team-result:not(.hit) {
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .nfl-data-container .td-stats {
@@ -3056,7 +3139,186 @@
 }
 
 @media only screen and (min-width: 768px) {
-  .nfl-data-container .game-container {
+  .nfl-data-container .game-container,
+  .nfl-data-container .game-section {
     width: 100%;
+  }
+
+  .nfl-data-container .gold-box {
+    width: 94%;
+  }
+}
+
+/* ---------- gold boxes ----------
+   FINAL / LIVE / UPCOMING headings, MODEL RESULTS, Games Displayed and the
+   navbar buttons share one look: a thin gold border on a dark box with bold,
+   widely spaced gold capitals. */
+
+.nfl-data-container .game-section-label,
+.nfl-data-container .gold-box-text,
+.nfl-data-container .nfl-control-button {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f5d16b;
+}
+
+/* heading row: name centred, arrow just off its right side, count far right */
+.nfl-data-container .game-section-label {
+  position: relative;
+}
+
+/* closed, every gold box is the same 34px tall as the navbar buttons:
+   32px rows inside a 1px border */
+.nfl-data-container .game-section .game-section-label,
+.nfl-data-container .gold-box .bet-results-toggle {
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0;
+}
+
+.nfl-data-container .game-section-name {
+  position: relative;
+  display: inline-block;
+}
+
+.nfl-data-container .gold-caret {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 4px);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  transform: translateY(-50%) rotate(180deg); /* open: points up */
+  transition: transform 0.25s ease;
+}
+
+.nfl-data-container .game-section-label.collapsed .gold-caret,
+.nfl-data-container .bet-results-toggle:not(.open) .gold-caret {
+  transform: translateY(-50%); /* closed: points down */
+}
+
+.nfl-data-container .game-section-count {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  min-width: 18px;
+  padding: 0 6px;
+  border-radius: 8px;
+  background: rgba(245, 209, 107, 0.18);
+  font-size: 10px;
+  letter-spacing: 0;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* MODEL RESULTS and Games Displayed: slightly narrower than the game sections */
+.nfl-data-container .gold-box {
+  display: block;
+  box-sizing: border-box;
+  width: 88%;
+  margin: 0 auto 6px;
+  padding: 0 8px;
+  border: 1px solid rgba(245, 209, 107, 0.7);
+  border-radius: 8px;
+  background: rgba(41, 41, 41, 0.85);
+  text-align: center;
+}
+
+.nfl-data-container .gold-box .bet-results-toggle {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 6px 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+}
+
+
+
+/* everything under SHOW / HIDE MODEL RESULTS sits in one container styled like
+   a game's start-time container (same border, corners and inset) */
+.nfl-data-container .gold-box.prediction-record-outer {
+  padding: 0 4px;
+}
+
+.nfl-data-container .model-results-content {
+  box-sizing: border-box;
+  margin-bottom: 4px;
+  padding: 8px 8px 10px;
+  border: 1.5px solid #555555;
+  border-radius: 6px;
+  background-color: rgba(41, 41, 41, 0.85);
+}
+
+.nfl-data-container .games-count-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 8px;
+  margin-bottom: 15px;
+}
+
+/* a 32px row inside the 1px border, like the other gold boxes */
+.nfl-data-container .games-count-box > * {
+  line-height: 32px;
+}
+
+.nfl-data-container .games-count-box .last-updated {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.55);
+  opacity: 1;
+  white-space: nowrap;
+}
+
+/* navbar: HIDE TEAMS, the week picker and HIDE GAMES */
+.nfl-data-container .nfl-control-button,
+.nfl-data-container .teams-dropdown-wrapper > .nfl-control-button,
+.nfl-data-container .hide-games-button {
+  padding: 8px 14px;
+  border: 1px solid rgba(245, 209, 107, 0.7);
+  border-radius: 7px;
+  background: rgba(41, 41, 41, 0.85);
+  box-shadow: none;
+  font-size: 14px;
+}
+
+.nfl-data-container .week-control {
+  box-shadow: none;
+}
+
+.nfl-data-container .week-control > .week-step {
+  padding: 8px 11px;
+  font-size: 11px;
+}
+
+.nfl-data-container .week-control > .nfl-control-button:disabled {
+  color: rgba(245, 209, 107, 0.3);
+}
+
+.nfl-data-container .nfl-control-button.active {
+  background: rgba(245, 209, 107, 0.18);
+  border-color: #f5d16b;
+}
+
+@media only screen and (max-width: 420px) {
+  .nfl-data-container .nfl-control-button,
+  .nfl-data-container .teams-dropdown-wrapper > .nfl-control-button,
+  .nfl-data-container .hide-games-button {
+    padding: 8px 8px;
+    font-size: 12.5px;
+    letter-spacing: 0.07em;
+  }
+
+  .nfl-data-container .week-control > .week-step {
+    padding: 8px 8px;
+    font-size: 10px;
   }
 }

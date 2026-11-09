@@ -22,7 +22,6 @@ const NFLDataNavbar = ({
   isWeekMenuOpen,
   setIsWeekMenuOpen,
   onOutsideClose,
-  hasLiveGames,
   hideMode,
   onToggleHideMode,
 }) => {
@@ -70,7 +69,6 @@ const NFLDataNavbar = ({
       <h1 className="nfl-title">
         <span className="nfl-title-badge">NFL</span>
         <span className="nfl-title-text">Stats Guide</span>
-        {hasLiveGames && <span className="live-dot" title="Games in progress – updating live" />}
       </h1>
 
       <div className="controls">

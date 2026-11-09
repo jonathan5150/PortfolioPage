@@ -138,15 +138,10 @@ const GameCard = memo(function GameCard({
   const awayTeam = teamsById[game.away?.teamId] || game.away?.team;
   const homeTeam = teamsById[game.home?.teamId] || game.home?.team;
 
-  // The ring around an open game swirls in the two teams' colours.
-  const [awaySolid, awayLight] = getTeamRingColors(game.away?.team);
-  const [homeSolid, homeLight] = getTeamRingColors(game.home?.team);
-  const ringStyle = {
-    '--ring-away': awaySolid,
-    '--ring-away-light': awayLight,
-    '--ring-home': homeSolid,
-    '--ring-home-light': homeLight,
-  };
+  // The border around an open game is drawn in the two teams' colours.
+  const [awaySolid] = getTeamRingColors(game.away?.team);
+  const [homeSolid] = getTeamRingColors(game.home?.team);
+  const ringStyle = { '--ring-away': awaySolid, '--ring-home': homeSolid };
 
   const renderPanel = () => {
     switch (panelKey) {
@@ -196,14 +191,9 @@ const GameCard = memo(function GameCard({
           />
         </label>
       )}
-      {/* swirling ring for the open game, drawn as four thin edge strips so only
-          the 3px border repaints while it spins (see .game-ring in NFLData.scss) */}
-      <span className="game-ring" aria-hidden="true">
-        <i className="ring-top" />
-        <i className="ring-right" />
-        <i className="ring-bottom" />
-        <i className="ring-left" />
-      </span>
+      {/* border for the open game: away colour on the left, home on the right,
+          fading to grey at the bottom (see .game-ring in NFLData.scss) */}
+      <span className="game-ring" aria-hidden="true" />
       <div className="game-slot-body" onClickCapture={handleHideClick}>
         {hidden && <div className="hidden-overlay">HIDDEN</div>}
         <div className="game-slot-content">
