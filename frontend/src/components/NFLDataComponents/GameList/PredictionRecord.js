@@ -143,7 +143,7 @@ const useSeasonGrades = () => {
 };
 
 // The model's season record and flat-bet profit for each market, at `stake`.
-const SeasonTotals = ({ stake, minOdds }) => {
+const SeasonTotals = ({ stake, minOdds, filter }) => {
   const { grades, done, total, error } = useSeasonGrades();
   if (error && !grades) return <div className="prediction-record-loading">Couldn't load the season's games.</div>;
   if (!grades) {
@@ -172,7 +172,11 @@ const SeasonTotals = ({ stake, minOdds }) => {
   return (
     <div className="season-totals">
       <div className="prediction-record-title">SEASON TO DATE · {grades.length} GAMES</div>
-      {[...rows, { key: 'all', label: 'Total', ...all }].map((r) => (
+      {/* the TOTAL / MONEYLINE / SPREAD / O/U buttons pick which lines show */}
+      {(filter === 'all'
+        ? [...rows, { key: 'all', label: 'Total', ...all }]
+        : rows.filter((r) => r.key === filter)
+      ).map((r) => (
         <div key={r.key} className={`season-row ${r.key === 'all' ? 'total' : ''}`}>
           <span>{r.label}</span>
           <span className="prediction-record-wl">
@@ -198,7 +202,7 @@ const BetResults = ({ finished, gradedById }) => {
   const [showBets, setShowBets] = useState(false);
   return (
     <div className="bet-results">
-      <div className="prediction-record-title">BETTING RESULTS · ${stake} PER BET · EVERY PICK</div>
+      <div className="prediction-record-title">MODEL RESULTS</div>
       <div className="bet-filter">
         {BET_FILTERS.map((f) => (
           <button
@@ -289,7 +293,7 @@ const BetResults = ({ finished, gradedById }) => {
           </div>
         </>
       )}
-      <SeasonTotals stake={stake} minOdds={minOdds} />
+      <SeasonTotals stake={stake} minOdds={minOdds} filter={filter} />
     </div>
   );
 };
