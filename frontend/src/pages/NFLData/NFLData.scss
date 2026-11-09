@@ -3521,3 +3521,29 @@
   color: rgba(255, 255, 255, 0.55);
   vertical-align: 1px;
 }
+
+/* minimum moneyline odds row: OFF, then -200 / -300 / -500 */
+.nfl-data-container .bet-min-odds {
+  margin-top: -4px;
+}
+
+/* time since the site was last deployed, at the very bottom */
+.nfl-data-container .last-updated-timer {
+  margin: 4px auto 16px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(245, 209, 107, 0.6);
+  text-align: center;
+}
+
+.nfl-data-container .last-updated-ago {
+  color: #f5d16b;
+  font-variant-numeric: tabular-nums;
+}
+
+.nfl-data-container .last-updated-sep {
+  margin: 0 8px;
+  color: rgba(245, 209, 107, 0.35);
+}

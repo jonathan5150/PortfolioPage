@@ -21,13 +21,14 @@ const MARKETS = [
 // grading change (v1 could hold grades made against in-game "Live Odds" lines;
 // v2 had no bets; v3 was graded with the old bet-every-game engine; v4 had
 // no leans).
-const GRADES_KEY = 'gradedPicks:v6';
+const GRADES_KEY = 'gradedPicks:v7';
 try {
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v1');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v2');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v3');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v4');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v5');
+  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v6');
 } catch {
   // storage blocked
 }
@@ -48,6 +49,11 @@ const BET_FILTERS = [
   { key: 'total', label: 'O/U' },
 ];
 
+// Minimum moneyline odds: with -300 picked, a moneyline bet on a team priced
+// worse than -300 (say -900) is skipped. Spreads and totals are unaffected.
+const MIN_ODDS = [null, -200, -300, -500];
+const allowed = (bet, minOdds) => !(minOdds && bet.key === 'winner' && bet.price < minOdds);
+
 const money = (n) => `$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const signedMoney = (n) => `${n > 0.004 ? '+' : n < -0.004 ? '-' : ''}${money(n)}`;
 const tone = (n) => (n > 0.004 ? 'up' : n < -0.004 ? 'down' : 'even');
@@ -56,13 +62,13 @@ const dayLabel = (date) =>
   new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
 
 // Finished games' bets, oldest kickoff first, grouped by the day they were played.
-const betDays = (finished, gradedById, filter, stake) => {
+const betDays = (finished, gradedById, filter, stake, minOdds) => {
   const days = [];
   [...finished]
     .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
     .forEach((game) => {
       const bets = (gradedById[game.id]?.bets || [])
-        .filter((b) => filter === 'all' || b.key === filter)
+        .filter((b) => (filter === 'all' || b.key === filter) && allowed(b, minOdds))
         .map((b) => {
           const back = betReturn(stake, b.price, b.result);
           return { ...b, back, profit: back - stake };
@@ -137,7 +143,7 @@ const useSeasonGrades = () => {
 };
 
 // The model's season record and flat-bet profit for each market, at `stake`.
-const SeasonTotals = ({ stake }) => {
+const SeasonTotals = ({ stake, minOdds }) => {
   const { grades, done, total, error } = useSeasonGrades();
   if (error && !grades) return <div className="prediction-record-loading">Couldn't load the season's games.</div>;
   if (!grades) {
@@ -149,10 +155,12 @@ const SeasonTotals = ({ stake }) => {
   }
   const rows = MARKETS.map(({ key, label }) => {
     const rec = { W: 0, L: 0, profit: 0 };
+    // record and profit both come from the simulated bets, so the odds filter applies to both
     grades.forEach((g) => {
-      if (g[key] === 'W' || g[key] === 'L') rec[g[key]] += 1;
       const bet = (g.bets || []).find((b) => b.key === key);
-      if (bet) rec.profit += betReturn(stake, bet.price, bet.result) - stake;
+      if (!bet || !allowed(bet, minOdds)) return;
+      if (bet.result === 'W' || bet.result === 'L') rec[bet.result] += 1;
+      rec.profit += betReturn(stake, bet.price, bet.result) - stake;
     });
     return { key, label, ...rec };
   });
@@ -183,7 +191,8 @@ const matchup = (g) => `${g.away?.team?.abbreviation || 'AWAY'} @ ${g.home?.team
 const BetResults = ({ finished, gradedById }) => {
   const [filter, setFilter] = useState('all');
   const [stake, setStake] = useState(STAKES[0]);
-  const days = betDays(finished, gradedById, filter, stake);
+  const [minOdds, setMinOdds] = useState(null);
+  const days = betDays(finished, gradedById, filter, stake, minOdds);
   const week = days.reduce((sum, d) => sum + d.profit, 0);
   // Just the week's profit until EACH BET is opened.
   const [showBets, setShowBets] = useState(false);
@@ -211,6 +220,18 @@ const BetResults = ({ finished, gradedById }) => {
             onClick={() => setStake(amount)}
           >
             ${amount} / BET
+          </button>
+        ))}
+      </div>
+      <div className="bet-filter bet-min-odds" aria-label="Minimum moneyline odds">
+        {MIN_ODDS.map((odds) => (
+          <button
+            key={odds ?? 'off'}
+            type="button"
+            className={`bet-filter-btn ${minOdds === odds ? 'active' : ''}`}
+            onClick={() => setMinOdds(odds)}
+          >
+            {odds === null ? 'OFF' : `ML ${odds}`}
           </button>
         ))}
       </div>
@@ -268,7 +289,7 @@ const BetResults = ({ finished, gradedById }) => {
           </div>
         </>
       )}
-      <SeasonTotals stake={stake} />
+      <SeasonTotals stake={stake} minOdds={minOdds} />
     </div>
   );
 };
