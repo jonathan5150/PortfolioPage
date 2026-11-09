@@ -74,30 +74,8 @@ const WATERMARK_CLOSED_SIZE = {
   IND: 0.7,
 };
 
-// A team that lost a final game goes fully gray (color wash, border and logo).
-const LOSER_WATERMARK = { filter: 'grayscale(1) brightness(0.8)', '--wm-opacity': 0.35 };
-// The Jets' logo is pushed near-white above; greyed out after a loss it needs
-// to sit darker to match the other losing logos.
-const LOSER_WATERMARK_BY_TEAM = { NYJ: { filter: 'grayscale(1) brightness(0.45)', '--wm-opacity': 0.35 } };
-
-// While a game's card is open its logos grow and brighten; they settle back when it closes.
-const LOSER_BORDER = 'rgb(110, 110, 110)';
-
-const TeamCell = ({
-  competitor,
-  side,
-  score,
-  scoreIsSpread,
-  subScore,
-  isWinner,
-  dimmed,
-  corner = 'top',
-  expanded = false,
-}) => {
+const TeamCell = ({ competitor, side, score, scoreIsSpread, subScore, isWinner, corner = 'top', expanded = false }) => {
   const team = competitor?.team;
-  // A finished game's losing side is greyed out, but opening the game brings
-  // it back to full colour; closing it greys it out again.
-  const grayed = dimmed && !expanded;
   const radius =
     corner === 'all' ? (side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0') : side === 'away' ? '6px 0 0 0' : '0 6px 0 0';
 
@@ -113,18 +91,16 @@ const TeamCell = ({
           ...getTeamBackgroundStyle(getTeamColor(team)),
           borderRadius: radius,
           transition: 'border-radius 0.3s ease, opacity 0.5s ease, filter 0.5s ease',
-          filter: grayed ? 'grayscale(1)' : 'grayscale(0)',
         }}
       />
 
       <div
         className="team-info-container"
         style={{
-          '--cell-border': grayed ? LOSER_BORDER : getTeamBorderColor(team), // border drawn in CSS
+          '--cell-border': getTeamBorderColor(team), // border drawn in CSS
           borderRadius: radius,
           transition: 'border-radius 0.3s ease, opacity 0.5s ease',
           overflow: 'hidden',
-          opacity: grayed ? 0.6 : 1,
         }}
       >
         {team?.logo && (
@@ -134,9 +110,7 @@ const TeamCell = ({
             aria-hidden="true"
             className={`team-logo-watermark ${side}`}
             style={{
-              ...(grayed
-                ? LOSER_WATERMARK_BY_TEAM[team.abbreviation] || LOSER_WATERMARK
-                : WATERMARK_STYLE[team.abbreviation]),
+              ...WATERMARK_STYLE[team.abbreviation],
               '--wm-size': WATERMARK_SIZE[team.abbreviation] ?? 1,
               '--wm-closed-size': WATERMARK_CLOSED_SIZE[team.abbreviation] ?? WATERMARK_SIZE[team.abbreviation] ?? 1,
             }}

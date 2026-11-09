@@ -241,6 +241,8 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
   const possessor = ['away', 'home'].find((side) => s?.possessionTeamId && s.possessionTeamId === game[side]?.teamId);
   const possessorAbbr = possessor ? game[possessor]?.team?.abbreviation : null;
   const ballText = s?.possessionText ? `${possessorAbbr ? `${possessorAbbr} @ ` : ''}${s.possessionText}` : '';
+  // live win chances (after the latest play), shown in place of the play at halftime
+  const winChance = s?.winProbability || null;
   const clockText = status.isHalftime ? 'Halftime' : `${formatPeriod(status.period)} ${status.displayClock}`;
 
   return (
@@ -256,20 +258,46 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
       ))}
 
       <div
-        className="live-play-box"
-        style={{ ...infoBoxStyle('left'), gridColumn: '1 / span 2', borderRadius: '0 0 6px 6px', padding: '5px 10px' }}
+        className={`live-play-box ${status.isHalftime ? 'halftime' : ''}`}
+        style={{
+          ...infoBoxStyle('left'),
+          gridColumn: '1 / span 2',
+          borderRadius: '0 0 6px 6px',
+          padding: '5px 10px',
+          // halftime is a single line: no play to show
+          ...(status.isHalftime ? { minHeight: 0 } : null),
+        }}
       >
         <div className="live-play-top">
           <span className="ellipsis">
-            {downText}
-            {hasDown && ballText ? ` · ${ballText}` : ''}
-            {hasDown && s?.isRedZone && <span className="red-zone-tag">RZ</span>}
+            {status.isHalftime ? (
+              winChance && (
+                // quiet label, then each team's chance; the team that's ahead reads brighter
+                <span className="halftime-odds">
+                  <span className="halftime-label">Win probability</span>
+                  {['away', 'home'].map((side, i) => (
+                    <React.Fragment key={side}>
+                      {i > 0 && <span className="halftime-sep">·</span>}
+                      <span className={`halftime-team ${winChance[side] >= 50 ? 'ahead' : ''}`}>
+                        {game[side]?.team?.abbreviation} <b>{winChance[side].toFixed(1)}%</b>
+                      </span>
+                    </React.Fragment>
+                  ))}
+                </span>
+              )
+            ) : (
+              <>
+                {downText}
+                {hasDown && ballText ? ` · ${ballText}` : ''}
+                {hasDown && s?.isRedZone && <span className="red-zone-tag">RZ</span>}
+              </>
+            )}
           </span>
           <span className="live-play-clock">
             <span className="live-indicator">●</span> {clockText}
           </span>
         </div>
-        <Marquee className="last-play" text={playText || ' '} />
+        {!status.isHalftime && <Marquee className="last-play" text={playText || ' '} />}
       </div>
 
       <InfoDrawer open={showLinescore}>
@@ -296,7 +324,6 @@ export const FinalScoreBug = ({ game, onToggle, showLinescore }) => {
           competitor={game[side]}
           score={game[side]?.score ?? '-'}
           isWinner={side === 'away' ? awayWon : homeWon}
-          dimmed={(side === 'away' && homeWon) || (side === 'home' && awayWon)}
           expanded={showLinescore}
         />
       ))}

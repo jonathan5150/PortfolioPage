@@ -23,6 +23,7 @@ const NFLDataNavbar = ({
   setIsWeekMenuOpen,
   onOutsideClose,
   hideMode,
+  counts,
   onToggleHideMode,
 }) => {
   const teamsRef = useRef(null);
@@ -81,7 +82,12 @@ const NFLDataNavbar = ({
               setIsWeekMenuOpen(false);
             }}
           >
-            HIDE TEAMS
+            <span className="control-label">TEAMS</span>
+            {counts && (
+              <span className="control-count">
+                {counts.teamsShown}/{counts.teamsTotal}
+              </span>
+            )}
           </button>
 
           {isTeamsMenuOpen && (
@@ -157,7 +163,12 @@ const NFLDataNavbar = ({
             onToggleHideMode?.();
           }}
         >
-          HIDE GAMES
+          <span className="control-label">GAMES</span>
+          {counts && (
+            <span className="control-count">
+              {counts.gamesShown}/{counts.gamesTotal}
+            </span>
+          )}
         </button>
       </div>
     </div>

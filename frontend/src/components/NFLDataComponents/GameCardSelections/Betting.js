@@ -250,7 +250,7 @@ const WinProbability = ({ game, predictor }) => {
 };
 
 const linePickLeg = (key, pick, game, odds) => {
-  if (!pick || pick.pass) return null;
+  if (!pick) return null;
   const legs = gameLegs(game, odds);
   if (key === 'winner') return legs.ml(pick.side);
   if (key === 'spread') return legs.spread(pick.side);
@@ -287,18 +287,14 @@ const GRADE_TITLE = { W: 'The pick was right', L: 'The pick was wrong' };
 
 const PickLine = ({ pick, leg, game, grade }) => {
   if (!pick) return null;
-  // the engine sits this market out: a quiet card saying why, nothing to add to a parlay
-  if (pick.pass) {
-    return (
-      <div className="pick-line pass">
-        <span className="pick-headline">{pick.headline}</span>
-        <span className="pick-because">{pick.summary}</span>
-      </div>
-    );
-  }
+  // BET: one of the rules that made money fired. LEAN: just the likelier side.
+  const isBet = pick.bet !== false;
   return (
-    <Holdable className={`pick-line ${pick.strong ? 'strong' : ''}`} leg={leg}>
-      <PickHeadline pick={pick} game={game} />
+    <Holdable className={`pick-line ${pick.strong ? 'strong' : ''} ${isBet ? '' : 'lean'}`} leg={leg}>
+      <span className="pick-title-row">
+        <span className={`pick-kind ${isBet ? 'bet' : 'lean'}`}>{isBet ? 'BET' : 'LEAN'}</span>
+        <PickHeadline pick={pick} game={game} />
+      </span>
       <span className="pick-because">{pick.summary}</span>
       {pick.odds && (
         <span className="pick-odds" style={pick.key !== 'total' ? teamPillStyle(game[pick.side]?.team) : undefined}>

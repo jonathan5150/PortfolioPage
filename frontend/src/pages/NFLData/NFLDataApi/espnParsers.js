@@ -94,6 +94,13 @@ const parseCompetitor = (c) => ({
   leaders: parseLeaders(c?.leaders),
 });
 
+const winProbability = (p) => {
+  const home = Number(p?.homeWinPercentage);
+  const away = Number(p?.awayWinPercentage);
+  if (!Number.isFinite(home) || !Number.isFinite(away) || home + away <= 0) return null;
+  return { home: home * 100, away: away * 100 };
+};
+
 const parseSituation = (s, competitors) => {
   if (!s) return null;
   const possessionTeamId = s.possession ? String(s.possession) : null;
@@ -112,6 +119,8 @@ const parseSituation = (s, competitors) => {
     awayTimeouts: s.awayTimeouts ?? null,
     lastPlay: s.lastPlay?.text || '',
     lastPlayType: s.lastPlay?.type?.text || '',
+    // live win chances after the latest play, as percentages (null if ESPN has none)
+    winProbability: winProbability(s.lastPlay?.probability),
   };
 };
 

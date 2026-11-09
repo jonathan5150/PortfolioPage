@@ -218,25 +218,25 @@ describe('picks', () => {
   };
   const week9 = { ...g, week: 9, seasonType: 2 };
 
-  test('winner: passes when the price is fair, bets value when the blend beats it', () => {
-    // FPI agrees with KC -535: no value on either side
+  test('winner: leans the favourite when the price is fair, bets value when the blend beats it', () => {
+    // FPI agrees with KC -535: no value, so a lean on KC rather than a bet
     const fair = pickWinner({ game: g, odds, predictor: { away: 20, home: 80 } });
-    expect(fair).toMatchObject({ pass: true, headline: 'NO MONEYLINE BET', side: null });
+    expect(fair).toMatchObject({ bet: false, headline: 'CHIEFS TO WIN', side: 'home' });
 
     // FPI likes the +150 dog well past its price: 25% FPI / 75% market still clears it
     const w = pickWinner({ game: g, odds: closeOdds, predictor: { away: 55, home: 45 } });
-    expect(w.pass).toBeUndefined();
+    expect(w.bet).toBe(true);
     expect(w.headline).toBe('JETS TO WIN');
     expect(w.odds).toBe('ML +150');
     expect(w.summary).toContain('at +150 the price only needs 40%');
   });
 
   test('winner: never bets a dog longer than +200', () => {
-    // FPI loves NYJ, but at +400 it's outside the range that held up
-    expect(pickWinner({ game: g, odds, predictor: { away: 60, home: 40 } }).pass).toBe(true);
+    // FPI loves NYJ, but at +400 it's outside the range that held up: lean the favourite
+    expect(pickWinner({ game: g, odds, predictor: { away: 60, home: 40 } })).toMatchObject({ bet: false, side: 'home' });
   });
 
-  test('spread: big home dogs FPI has close, and primetime underdogs; otherwise pass', () => {
+  test('spread: bets big home dogs FPI has close and primetime underdogs; otherwise leans the road team', () => {
     const homeDog = { ...closeOdds, homeSpread: 7, home: { ...closeOdds.home, spreadLine: 7 }, away: { ...closeOdds.away, spreadLine: -7 } };
     const s = pickSpread({ game: g, odds: homeDog, predictor: { away: 55, home: 45 } });
     expect(s.headline).toBe('CHIEFS TO COVER +7');
@@ -248,10 +248,12 @@ describe('picks', () => {
     expect(prime.headline).toBe('JETS TO COVER +3.5');
     expect(prime.summary).toContain('Primetime underdogs');
 
-    // Sunday 1 PM, ordinary line: no bet
+    expect(s.bet).toBe(true);
+    expect(prime.bet).toBe(true);
+    // Sunday 1 PM, ordinary line: lean the road team
     expect(pickSpread({ game: g, odds: closeOdds, predictor: { away: 40, home: 60 } })).toMatchObject({
-      pass: true,
-      headline: 'NO SPREAD BET',
+      bet: false,
+      headline: 'JETS TO COVER +3.5',
     });
   });
 
@@ -270,10 +272,11 @@ describe('picks', () => {
     expect(t.strong).toBe(true);
     expect(t.summary).toContain('Gaps that big usually close');
 
-    // averages near the line and a mixed over/under history: no bet
+    expect(t.bet).toBe(true);
+    // averages near the line and a mixed over/under history: lean the under
     const even = (ou) => trend(6, { pf: 24, pa: 24, ou });
     const quiet = pickTotal({ game: week9, odds, awayTrends: even('O'), homeTrends: even('U') });
-    expect(quiet).toMatchObject({ pass: true, headline: 'NO TOTAL BET' });
+    expect(quiet).toMatchObject({ bet: false, headline: 'UNDER 48.5' });
   });
 
   test('weather adjustments', () => {
@@ -282,11 +285,11 @@ describe('picks', () => {
     expect(weatherEffect({ weather: { text: 'Cloudy', temperature: 30 } }).adj).toBeLessThan(0);
   });
 
-  test('passed markets are not graded or counted as bets', () => {
+  test('leans are graded in the record but not counted as bets', () => {
     const final = { ...g, status: { state: 'post' }, away: { ...g.away, score: '20' }, home: { ...g.home, score: '24' } };
     const picks = buildLinePicks({ game: final, odds, predictor: { away: 20, home: 80 }, awayTrends: null, homeTrends: null });
-    expect(picks.winner.pass).toBe(true);
-    expect(gradeLinePicks(picks, final, odds).winner).toBeNull();
+    expect(picks.winner.bet).toBe(false);
+    expect(gradeLinePicks(picks, final, odds).winner).toBe('W'); // KC won 24-20
     expect(linePickBets(picks, final, odds).map((b) => b.key)).not.toContain('winner');
   });
 
@@ -652,9 +655,9 @@ describe('flat-stake bets', () => {
       total: { line: 47.5, overOdds: -110, underOdds: -110 },
     };
     const picks = {
-      winner: { key: 'winner', side: 'home' },
-      spread: { key: 'spread', side: 'home' },
-      total: { key: 'total', side: 'under' },
+      winner: { key: 'winner', side: 'home', bet: true },
+      spread: { key: 'spread', side: 'home', bet: true },
+      total: { key: 'total', side: 'under', bet: true },
     };
     expect(linePickBets(picks, game, odds)).toEqual([
       { key: 'winner', label: 'KC ML', price: -170, result: 'W' },
