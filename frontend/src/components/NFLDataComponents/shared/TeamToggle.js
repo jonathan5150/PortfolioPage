@@ -1,14 +1,10 @@
 import React from 'react';
-import { getTeamBorderColor, getTeamColor, washOut } from './teamColors';
+import { getTeamBackgroundStyle, getTeamBorderColor, getTeamColor, washOut } from './teamColors';
 
 const teamAccent = (team) => washOut(getTeamColor(team) || 'rgba(120,120,120,0.6)', 0.15).replace(/[\d.]+\)$/, '1)');
-// BOX SCORE (`filled`): the selected team gets its team-cell border and a
-// slightly darker shade of the team colour inside.
-const teamFill = (team) => {
-  const [r, g, b] = (getTeamColor(team) || 'rgba(120,120,120,1)').match(/[\d.]+/g).map(Number);
-  const dark = (v) => Math.round(v * 0.72);
-  return `rgba(${dark(r)}, ${dark(g)}, ${dark(b)}, 0.92)`;
-};
+// BOX SCORE / TD ODDS (`filled`): the selected team gets its team-cell border and
+// the same colour wash as an opened game's team cell.
+const teamFill = (team) => getTeamBackgroundStyle(getTeamColor(team) || 'rgba(120, 120, 120, 1)').background;
 
 // Sideways away | home picker with team logos (TD ODDS and BOX SCORE).
 // `below` adds a full-width option as its own button under the two teams, e.g.

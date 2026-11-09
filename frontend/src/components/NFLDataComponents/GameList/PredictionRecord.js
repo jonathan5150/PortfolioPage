@@ -163,7 +163,6 @@ const SeasonTotals = ({ stake }) => {
   return (
     <div className="season-totals">
       <div className="prediction-record-title">SEASON TO DATE · {grades.length} GAMES</div>
-      <div className="season-note">Record: every pick · Profit: bets only</div>
       {[...rows, { key: 'all', label: 'Total', ...all }].map((r) => (
         <div key={r.key} className={`season-row ${r.key === 'all' ? 'total' : ''}`}>
           <span>{r.label}</span>
@@ -185,7 +184,7 @@ const BetResults = ({ finished, gradedById }) => {
   const [stake, setStake] = useState(STAKES[0]);
   const days = betDays(finished, gradedById, filter, stake);
   const week = days.reduce((sum, d) => sum + d.profit, 0);
-  // Just each day's profit and the week's until EACH BET is opened.
+  // Just the week's profit until EACH BET is opened.
   const [showBets, setShowBets] = useState(false);
   return (
     <div className="bet-results">
@@ -227,13 +226,6 @@ const BetResults = ({ finished, gradedById }) => {
             {showBets ? 'HIDE EACH BET' : 'SHOW EACH BET'}
             <span className="bet-results-caret" aria-hidden="true" />
           </button>
-          {!showBets &&
-            days.map((day) => (
-              <div key={day.key} className="bet-row bet-day-summary">
-                <span>{day.label}</span>
-                <span className={`bet-return ${tone(day.profit)}`}>{signedMoney(day.profit)}</span>
-              </div>
-            ))}
           {showBets && (
             <>
               <div className="bet-row bet-head">

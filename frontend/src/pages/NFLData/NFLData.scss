@@ -577,12 +577,6 @@
   border-top: 1px solid rgba(245, 209, 107, 0.5);
 }
 
-.nfl-data-container .season-note {
-  margin: -2px 0 4px;
-  font-size: 9.5px;
-  color: rgba(255, 255, 255, 0.5);
-}
-
 .nfl-data-container .season-row {
   display: grid;
   grid-template-columns: 1fr auto 40px 72px;
@@ -1416,9 +1410,10 @@
   border-color: color-mix(in srgb, var(--cell-border) 80%, white);
 }
 
+/* the opened game: its team colours turn up, richer than any closed cell */
 .nfl-data-container .team-cell.expanded .team-cell-bg {
   opacity: 1;
-  filter: none;
+  filter: saturate(1.45) brightness(1.08);
 }
 
 /* Only opacity animates: it's cheap for phones to fade. Saturation and border
@@ -1451,8 +1446,10 @@
   opacity: 0.55;
 }
 
+/* while another game is open, these borders wash out with their cells: mostly
+   grey, only a hint of the team colour, and faint */
 .nfl-data-container .has-open .game-slot:not(.open) .team-info-container {
-  border-color: color-mix(in srgb, var(--cell-border) 50%, transparent);
+  border-color: color-mix(in srgb, color-mix(in srgb, var(--cell-border) 30%, rgb(105, 105, 105)) 45%, transparent);
 }
 
 /* Oversized, faded logo behind the team text; clipped by the cell's edges.
@@ -3296,27 +3293,6 @@
   background-color: rgba(41, 41, 41, 0.85);
 }
 
-.nfl-data-container .games-count-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 8px;
-  margin-bottom: 15px;
-}
-
-/* a 32px row inside the 1px border, like the other gold boxes */
-.nfl-data-container .games-count-box > * {
-  line-height: 32px;
-}
-
-.nfl-data-container .games-count-box .last-updated {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.55);
-  opacity: 1;
-  white-space: nowrap;
-}
-
 /* navbar: HIDE TEAMS, the week picker and HIDE GAMES */
 .nfl-data-container .nfl-control-button,
 .nfl-data-container .teams-dropdown-wrapper > .nfl-control-button,
@@ -3360,4 +3336,175 @@
     padding: 8px 8px;
     font-size: 10px;
   }
+}
+
+/* TEAMS / GAMES: label on top, the count small underneath */
+.nfl-data-container .teams-dropdown-wrapper > .nfl-control-button,
+.nfl-data-container .hide-games-button {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+}
+
+.nfl-data-container .control-count {
+  margin-top: 2px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: rgba(245, 209, 107, 0.75);
+}
+
+/* the week picker stretches to the same height as the two-line buttons */
+.nfl-data-container .controls {
+  align-items: stretch;
+}
+
+/* phones: the two-line TEAMS / GAMES buttons have to fit beside
+   the week picker */
+@media only screen and (max-width: 420px) {
+  .nfl-data-container .teams-dropdown-wrapper > .nfl-control-button,
+  .nfl-data-container .hide-games-button {
+    padding: 6px 6px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+
+  .nfl-data-container .controls > .teams-dropdown-wrapper {
+    margin-right: 4px;
+  }
+
+  .nfl-data-container .controls > .hide-games-button {
+    margin-left: 4px;
+  }
+}
+
+/* halftime: one light line - a small muted label, each team's chance (the
+   leader a touch brighter), and "Halftime" on the right */
+.nfl-data-container .live-play-box.halftime .live-play-top {
+  font-weight: 400;
+}
+
+.nfl-data-container .halftime-label {
+  margin-right: 7px;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nfl-data-container .halftime-team {
+  color: rgba(255, 255, 255, 0.65);
+  font-variant-numeric: tabular-nums;
+}
+
+.nfl-data-container .halftime-team b {
+  font-weight: 600;
+}
+
+.nfl-data-container .halftime-team.ahead {
+  color: #ffffff;
+}
+
+.nfl-data-container .halftime-sep {
+  margin: 0 6px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.nfl-data-container .live-play-box.halftime .live-play-clock {
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ---------- TEAMS picker: teams as small team cells ---------- */
+.nfl-data-container .nfl-menu.teams-menu {
+  width: 262px;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+  padding: 10px 8px;
+  border: 1px solid rgba(245, 209, 107, 0.7);
+  border-radius: 8px;
+  background-color: rgba(41, 41, 41, 0.97);
+}
+
+.nfl-data-container .teams-menu .select-button {
+  padding: 6px 26px;
+  border: 1px solid rgba(245, 209, 107, 0.7);
+  background: rgba(41, 41, 41, 0.85);
+  color: #f5d16b;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.nfl-data-container .teams-menu ul.teams-menu-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  max-height: 66vh;
+  padding: 1px 2px 2px;
+}
+
+.nfl-data-container .teams-menu ul.teams-menu-grid li {
+  margin: 0;
+}
+
+.nfl-data-container .teams-menu-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 6px 0 8px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  background: var(--cell-wash);
+  cursor: pointer;
+  user-select: none;
+  transition: filter 0.25s ease, opacity 0.25s ease, border-color 0.25s ease;
+}
+
+/* not picked: greyed out like a losing team's cell */
+.nfl-data-container .teams-menu-cell.off {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+.nfl-data-container .teams-menu-cell input {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #ffffff;
+  cursor: pointer;
+}
+
+.nfl-data-container .teams-menu-abbr {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.nfl-data-container .teams-menu-logo {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+}
+
+/* the TEAMS picker is wider than the button it hangs from: centre it under the
+   whole controls row (the wrapper stops being its positioning box) */
+.nfl-data-container .controls > .teams-dropdown-wrapper {
+  position: static;
+}
+
+.nfl-data-container .teams-dropdown-wrapper > .nfl-dropdown-menu {
+  left: 50%;
+  transform: translateX(-50%);
 }

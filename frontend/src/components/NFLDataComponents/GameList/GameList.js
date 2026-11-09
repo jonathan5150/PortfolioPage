@@ -7,22 +7,27 @@ import { ParlayProvider } from '../shared/ParlayContext';
 import ParlayBar from '../ParlayBar/ParlayBar';
 import PredictionRecord from './PredictionRecord';
 import SlideOpen from '../shared/SlideOpen';
-import { deleteCookie, readCookie, writeCookie } from '../shared/cookies';
+import { readCookie, writeCookie } from '../shared/cookies';
 
 const MERGE_WINDOW_MS = 30 * 60 * 1000;
 
-// The list is split into FINAL, LIVE and UPCOMING, and each part groups its
+// The list is split into FINISHED, LIVE and UPCOMING, and each part groups its
 // games by start time.
 const SECTIONS = [
-  { key: 'post', label: 'FINAL' },
+  { key: 'post', label: 'FINISHED' },
   { key: 'in', label: 'LIVE' },
   { key: 'pre', label: 'UPCOMING' },
 ];
 
 // Which sections are collapsed is remembered per week in a cookie, so
-// collapsing FINAL this week doesn't collapse it in any other week.
+// collapsing FINISHED this week doesn't collapse it in any other week.
 const collapsedCookie = (season, seasonType, week) => `nflCollapsed_${season}-${seasonType}-${week}`;
-const readCollapsed = (name) => new Set((readCookie(name) || '').split(',').filter(Boolean));
+// null when there's no saved choice for that week yet
+const readCollapsed = (name) => {
+  const value = readCookie(name);
+  if (value === null) return null;
+  return new Set(value.split(',').filter((k) => k && k !== 'none'));
+};
 
 const startLabel = (game) => {
   if (game.status.isPostponed) return game.status.shortDetail || 'Postponed';
@@ -131,24 +136,25 @@ const GameList = ({
   // game open shouldn't leave the new week faded).
   const hasOpenGame = Boolean(openGameId) && shownGames.some((g) => g.id === openGameId);
 
+  // The user's own open / closed choice for this week (null until they make one).
   const cookieName = collapsedCookie(season, seasonType, week);
-  const [collapsed, setCollapsed] = useState(() => readCollapsed(cookieName));
-  useEffect(() => setCollapsed(readCollapsed(cookieName)), [cookieName]);
-  const toggleSection = useCallback(
-    (key, sectionGames) => {
-      setCollapsed((prev) => {
-        const next = new Set(prev);
-        if (next.has(key)) next.delete(key);
-        else next.add(key);
-        if (next.size) writeCookie(cookieName, [...next].join(','));
-        else deleteCookie(cookieName);
-        return next;
-      });
-      // collapsing the section that holds the open game closes that game
-      if (sectionGames.some((g) => g.id === openGameId)) setOpenGameId(null);
-    },
-    [cookieName, openGameId],
-  );
+  const [savedCollapsed, setSavedCollapsed] = useState(() => readCollapsed(cookieName));
+  useEffect(() => setSavedCollapsed(readCollapsed(cookieName)), [cookieName]);
+
+  // TEAMS / GAMES counts for the navbar, out of everyone playing this week.
+  // They follow the user's choices live: teams ticked in the teams menu, and
+  // games checked off in HIDE GAMES (counted as they're checked, before DONE).
+  const counts = useMemo(() => {
+    const week = weekGames || games;
+    const visible = week.filter((g) => !hiddenSet.has(g.id));
+    const selected = new Set(selectedTeams);
+    const weekTeams = new Set(week.flatMap((g) => [g.away?.teamId, g.home?.teamId]).filter(Boolean));
+    const shownTeams = new Set(
+      visible.flatMap((g) => [g.away?.teamId, g.home?.teamId]).filter((id) => id && selected.has(id)),
+    );
+    const gamesShown = visible.filter((g) => selected.has(g.away?.teamId) || selected.has(g.home?.teamId)).length;
+    return { teamsShown: shownTeams.size, teamsTotal: weekTeams.size, gamesShown, gamesTotal: totalGames };
+  }, [weekGames, games, hiddenSet, selectedTeams, totalGames]);
 
   const sections = useMemo(
     () =>
@@ -161,6 +167,29 @@ const GameList = ({
         ),
       })).filter((section) => section.slots.length > 0),
     [shownGames],
+  );
+
+  // Until the user opens or closes a section themselves, only one is open: LIVE
+  // when games are on, otherwise UPCOMING, otherwise FINISHED.
+  const defaultCollapsed = useMemo(() => {
+    const keys = sections.map((s) => s.key);
+    const open = keys.includes('in') ? 'in' : keys.includes('pre') ? 'pre' : 'post';
+    return new Set(keys.filter((k) => k !== open));
+  }, [sections]);
+  const collapsed = savedCollapsed || defaultCollapsed;
+
+  const toggleSection = useCallback(
+    (key, sectionGames) => {
+      const next = new Set(collapsed);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      setSavedCollapsed(next);
+      // remembered for this week, "none" when everything is open
+      writeCookie(cookieName, next.size ? [...next].join(',') : 'none');
+      // collapsing the section that holds the open game closes that game
+      if (sectionGames.some((g) => g.id === openGameId)) setOpenGameId(null);
+    },
+    [collapsed, cookieName, openGameId],
   );
 
   // A tap that only closes a navbar menu shouldn't also open a game card.
@@ -193,6 +222,7 @@ const GameList = ({
           setIsWeekMenuOpen={setIsWeekMenuOpen}
           onOutsideClose={handleOutsideClose}
           hideMode={hideMode}
+          counts={counts}
           onToggleHideMode={toggleHideMode}
         />
 
@@ -263,16 +293,6 @@ const GameList = ({
         </div>
 
         <PredictionRecord games={weekGames || games} />
-        <div className="gold-box games-count-box">
-          <div className="gold-box-text">
-            GAMES DISPLAYED {shownGames.length}/{totalGames}
-          </div>
-          {lastUpdated && (
-            <div className="last-updated">
-              updated {lastUpdated.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })}
-            </div>
-          )}
-        </div>
         {hideMode ? (
           <button type="button" className="hide-done-bar" onClick={() => setHideMode(false)}>
             DONE
