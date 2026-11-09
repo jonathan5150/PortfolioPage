@@ -26,7 +26,12 @@ import TeamToggle from '../shared/TeamToggle';
 import BoxScore from './BoxScore';
 import useGameSummary from '../GameCard/useGameSummary';
 import { touchdownScorers } from '../../../pages/NFLData/NFLDataApi/espnParsers';
-import { hasStarted, frozenOdds, saveOddsSnapshot } from '../../../pages/NFLData/NFLDataApi/oddsSnapshots';
+import {
+  hasStarted,
+  frozenOdds,
+  saveOddsSnapshot,
+  PICKS_SNAPSHOT,
+} from '../../../pages/NFLData/NFLDataApi/oddsSnapshots';
 
 // Betting tab (bet mode only).
 //   BOX SCORE – scoring plays and each team's player stats
@@ -245,7 +250,7 @@ const WinProbability = ({ game, predictor }) => {
 };
 
 const linePickLeg = (key, pick, game, odds) => {
-  if (!pick) return null;
+  if (!pick || pick.pass) return null;
   const legs = gameLegs(game, odds);
   if (key === 'winner') return legs.ml(pick.side);
   if (key === 'spread') return legs.spread(pick.side);
@@ -282,6 +287,15 @@ const GRADE_TITLE = { W: 'The pick was right', L: 'The pick was wrong' };
 
 const PickLine = ({ pick, leg, game, grade }) => {
   if (!pick) return null;
+  // the engine sits this market out: a quiet card saying why, nothing to add to a parlay
+  if (pick.pass) {
+    return (
+      <div className="pick-line pass">
+        <span className="pick-headline">{pick.headline}</span>
+        <span className="pick-because">{pick.summary}</span>
+      </div>
+    );
+  }
   return (
     <Holdable className={`pick-line ${pick.strong ? 'strong' : ''}`} leg={leg}>
       <PickHeadline pick={pick} game={game} />
@@ -780,10 +794,10 @@ const Betting = ({ game, rankings, isOpen = true }) => {
   // (and grades) the picks as they stood ~30 minutes before the game, the same
   // ones the weekly prediction record counts.
   useEffect(() => {
-    if (!started && currentPicks) saveOddsSnapshot(game, 'picks', currentPicks);
+    if (!started && currentPicks) saveOddsSnapshot(game, PICKS_SNAPSHOT, currentPicks);
   }, [started, currentPicks, game]);
   const linePicks = useMemo(
-    () => (started && frozenOdds(game, 'picks')) || currentPicks,
+    () => (started && frozenOdds(game, PICKS_SNAPSHOT)) || currentPicks,
     [started, currentPicks, game],
   );
   const grades = useMemo(

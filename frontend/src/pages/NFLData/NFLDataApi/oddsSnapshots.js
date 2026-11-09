@@ -31,7 +31,7 @@ export const hasStarted = (game, now = Date.now()) =>
   game?.status?.state === 'in' || game?.status?.state === 'post' || now >= kickoffOf(game);
 
 // kind: 'lines' (ESPN / DraftKings game lines), 'td' (anytime TD prices) or
-// 'picks' (the engine's winner / spread / total picks, as shown on LINES).
+// PICKS_SNAPSHOT (the engine's winner / spread / total picks, as shown on LINES).
 // Keeps two copies per game: the latest one taken 30+ minutes before kickoff
 // ("anchor"), and the first one taken inside that last half hour ("late", only
 // used if this device never saw the game earlier).
@@ -54,3 +54,7 @@ export const frozenOdds = (game, kind) => {
   const saved = read()[game?.id]?.[kind];
   return saved?.anchor?.odds || saved?.late?.odds || null;
 };
+
+// Snapshot kind for the engine's line picks. Versioned: picks saved by an older
+// engine are ignored instead of shown and graded as if the current one made them.
+export const PICKS_SNAPSHOT = 'picks:v2';

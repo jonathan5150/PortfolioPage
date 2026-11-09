@@ -1881,6 +1881,20 @@
   white-space: nowrap;
 }
 
+/* a market the engine sits out: muted, no odds pill, nothing to add to a parlay */
+.nfl-data-container .pick-line.pass {
+  background: rgba(255, 255, 255, 0.02);
+  border-style: dashed;
+}
+
+.nfl-data-container .pick-line.pass .pick-headline {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nfl-data-container .pick-line.pass .pick-because {
+  color: rgba(255, 255, 255, 0.55);
+}
+
 .nfl-data-container .pick-because {
   grid-column: 1 / -1;
   grid-row: 2;
