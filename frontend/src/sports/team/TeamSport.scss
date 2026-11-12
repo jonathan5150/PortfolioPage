@@ -1,0 +1,249 @@
+/* Extras for the NBA / MLB pages; everything else comes from NFLData.scss. */
+
+/* ---------- box score / game log tables ---------- */
+.nfl-data-container .league-box-group {
+  margin: 6px 8px 8px;
+}
+
+.nfl-data-container .league-box-title {
+  margin: 2px 0 4px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #f5d16b;
+  text-align: left;
+}
+
+.nfl-data-container .league-box-scroll {
+  overflow-x: auto;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.04);
+  -webkit-overflow-scrolling: touch;
+}
+
+.nfl-data-container .league-box-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.nfl-data-container .league-box-table th,
+.nfl-data-container .league-box-table td {
+  padding: 5px 6px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.nfl-data-container .league-box-table th {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.nfl-data-container .league-box-table .league-box-name {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+  background: rgb(52, 52, 52);
+}
+
+.nfl-data-container .league-box-table tr.starter .league-box-name {
+  font-weight: 700;
+}
+
+.nfl-data-container .league-box-pos {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.nfl-data-container .league-box-totals td {
+  font-weight: 800;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.nfl-data-container .league-win {
+  color: #f5d16b;
+  font-weight: 700;
+}
+
+.nfl-data-container .league-loss {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---------- PLAYERS roster ---------- */
+.nfl-data-container .league-roster {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 420px;
+  margin: 6px 8px 8px;
+  overflow-y: auto;
+}
+
+.nfl-data-container .league-roster-row {
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+}
+
+.nfl-data-container .league-roster-row.open {
+  border-color: rgba(245, 209, 107, 0.6);
+}
+
+.nfl-data-container .league-roster-row .league-box-scroll {
+  margin: 0 6px 6px;
+}
+
+.nfl-data-container .league-roster-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  background: none;
+  color: #ffffff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.nfl-data-container .league-roster-name {
+  font-weight: 700;
+}
+
+.nfl-data-container .league-roster-pos {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.nfl-data-container .league-roster-injured {
+  margin-left: 6px;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(217, 72, 72, 0.25);
+  color: #ff9a9a;
+  font-size: 8.5px;
+  font-weight: 800;
+}
+
+/* ---------- pregame starters (MLB pitchers / NBA leading scorer) ---------- */
+.nfl-data-container .league-starter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  margin: 0 2px 2px;
+  padding: 5px 8px 5px 5px;
+  border: 2px solid #555;
+  border-radius: 0 0 6px 6px;
+  background: rgba(70, 70, 70, 1);
+  color: #ffffff;
+  font-size: 11px;
+  text-align: left;
+}
+
+.nfl-data-container .league-starter-photo {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.nfl-data-container .league-starter-text {
+  min-width: 0;
+}
+
+/* ---------- info bar: time, venue, TV ---------- */
+.nfl-data-container .league-info-bar {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+/* ---------- live MLB: bases and count ---------- */
+.nfl-data-container .league-live-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nfl-data-container .league-bases {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  width: 24px;
+  height: 16px;
+}
+
+.nfl-data-container .league-bases .base {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  transform: rotate(45deg);
+}
+
+.nfl-data-container .league-bases .base.on {
+  background: #f5d16b;
+  border-color: #f5d16b;
+}
+
+.nfl-data-container .league-bases .second {
+  top: 0;
+  left: 8px;
+}
+
+.nfl-data-container .league-bases .third {
+  top: 7px;
+  left: 1px;
+}
+
+.nfl-data-container .league-bases .first {
+  top: 7px;
+  left: 15px;
+}
+
+.nfl-data-container .league-count {
+  font-variant-numeric: tabular-nums;
+}
+
+/* MLB box scores have 9+ innings: tighter cells */
+.nfl-data-container .linescore-innings .linescore-cell {
+  font-size: 11px;
+}
+
+/* ---------- model results note, day picker ---------- */
+.nfl-data-container .league-model-note {
+  margin-top: 8px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.nfl-data-container .league-day-picker {
+  padding: 8px;
+  border: 1px solid rgba(245, 209, 107, 0.7);
+  border-radius: 8px;
+  background: rgba(32, 32, 32, 0.98);
+}
+
+.nfl-data-container .league-day-picker input {
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(60, 60, 60, 0.9);
+  color: #ffffff;
+  font-family: 'DM Sans', sans-serif;
+  color-scheme: dark;
+}

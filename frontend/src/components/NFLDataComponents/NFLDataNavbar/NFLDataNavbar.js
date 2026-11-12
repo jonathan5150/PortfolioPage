@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import TeamsMenu from './NFLDataNavbarComponents/TeamsMenu';
 import WeekMenu from './NFLDataNavbarComponents/WeekMenu';
+import SportSwitcher from '../../../sports/SportSwitcher';
 
 const shortSeasonType = (seasonType) => (seasonType === 1 ? 'PRE ' : '');
 
@@ -73,34 +74,38 @@ const NFLDataNavbar = ({
       </h1>
 
       <div className="controls">
-        <div className="teams-dropdown-wrapper" ref={teamsRef}>
-          <button
-            type="button"
-            className="nfl-control-button"
-            onClick={() => {
-              setIsTeamsMenuOpen((prev) => !prev);
-              setIsWeekMenuOpen(false);
-            }}
-          >
-            <span className="control-label">TEAMS</span>
-            {counts && (
-              <span className="control-count">
-                {counts.teamsShown}/{counts.teamsTotal}
-              </span>
-            )}
-          </button>
+        {/* sport picker, then TEAMS */}
+        <div className="controls-left">
+          <SportSwitcher current="nfl" />
+          <div className="teams-dropdown-wrapper" ref={teamsRef}>
+            <button
+              type="button"
+              className="nfl-control-button"
+              onClick={() => {
+                setIsTeamsMenuOpen((prev) => !prev);
+                setIsWeekMenuOpen(false);
+              }}
+            >
+              <span className="control-label">TEAMS</span>
+              {counts && (
+                <span className="control-count">
+                  {counts.teamsShown}/{counts.teamsTotal}
+                </span>
+              )}
+            </button>
 
-          {isTeamsMenuOpen && (
-            <div className="nfl-dropdown-menu">
-              <TeamsMenu
-                teams={teams}
-                selectedTeams={selectedTeams}
-                onTeamChange={onTeamChange}
-                onSelectAll={onSelectAll}
-                onDeselectAll={onDeselectAll}
-              />
-            </div>
-          )}
+            {isTeamsMenuOpen && (
+              <div className="nfl-dropdown-menu">
+                <TeamsMenu
+                  teams={teams}
+                  selectedTeams={selectedTeams}
+                  onTeamChange={onTeamChange}
+                  onSelectAll={onSelectAll}
+                  onDeselectAll={onDeselectAll}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="week-control" ref={weekRef}>

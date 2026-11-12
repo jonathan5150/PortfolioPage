@@ -2,6 +2,7 @@ import React from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import TeamsButton from './MLBDataNavbarComponents/TeamsButton';
+import SportSwitcher from '../../../sports/SportSwitcher';
 import TeamsMenu from './MLBDataNavbarComponents/TeamsMenu';
 
 const MLBDataNavbar = ({
@@ -71,6 +72,7 @@ const MLBDataNavbar = ({
       <div className="logo-text-overlay">MLB Stats Guide</div>
 
       <div className="controls">
+        <SportSwitcher current="mlb" />
         <div className="teams-dropdown-wrapper" ref={teamsMenuRef}>
           <TeamsButton
             onClick={() => {

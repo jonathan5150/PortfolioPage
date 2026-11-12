@@ -13,17 +13,9 @@ function SportsDataProject() {
       </p>
 
       <div>
-        <Link to="/MLBData">
+        <Link to="/sports">
           <button className="Link">
-          LINK TO MLB DATA PROJECT
-          </button>
-        </Link>
-      </div>
-
-      <div style={{ marginTop: '10px' }}>
-        <Link to="/NFLData">
-          <button className="Link">
-          LINK TO NFL DATA PROJECT
+          LINK TO SPORTS DATA PROJECT
           </button>
         </Link>
       </div>

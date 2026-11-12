@@ -76,6 +76,8 @@ const WATERMARK_CLOSED_SIZE = {
 
 const TeamCell = ({ competitor, side, score, scoreIsSpread, subScore, isWinner, corner = 'top', expanded = false }) => {
   const team = competitor?.team;
+  // the per-team logo tweaks above are for NFL teams; other leagues share abbreviations
+  const nflTuned = !team?.league || team.league === 'nfl';
   const radius =
     corner === 'all' ? (side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0') : side === 'away' ? '6px 0 0 0' : '0 6px 0 0';
 
@@ -110,9 +112,11 @@ const TeamCell = ({ competitor, side, score, scoreIsSpread, subScore, isWinner, 
             aria-hidden="true"
             className={`team-logo-watermark ${side}`}
             style={{
-              ...WATERMARK_STYLE[team.abbreviation],
-              '--wm-size': WATERMARK_SIZE[team.abbreviation] ?? 1,
-              '--wm-closed-size': WATERMARK_CLOSED_SIZE[team.abbreviation] ?? WATERMARK_SIZE[team.abbreviation] ?? 1,
+              ...(nflTuned ? WATERMARK_STYLE[team.abbreviation] : null),
+              '--wm-size': nflTuned ? (WATERMARK_SIZE[team.abbreviation] ?? 1) : 1,
+              '--wm-closed-size': nflTuned
+                ? (WATERMARK_CLOSED_SIZE[team.abbreviation] ?? WATERMARK_SIZE[team.abbreviation] ?? 1)
+                : 1,
             }}
             draggable={false}
           />

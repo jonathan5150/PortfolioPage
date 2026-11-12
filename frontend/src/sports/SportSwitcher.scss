@@ -1,0 +1,109 @@
+/* Sport picker: the same thin-gold-border look as the NFL navbar buttons,
+   self-contained so any sport's page can use it. */
+.sport-switcher {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.sport-switcher .sport-switcher-button {
+  box-shadow: none; /* beats the MLB page's global .controls button rule */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(245, 209, 107, 0.7);
+  border-radius: 7px;
+  background: rgba(41, 41, 41, 0.85);
+  color: #f5d16b;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+.sport-switcher .sport-switcher-button.open {
+  background: rgba(245, 209, 107, 0.15);
+}
+
+.sport-switcher-caret {
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  transition: transform 0.2s ease;
+}
+
+.sport-switcher-button.open .sport-switcher-caret {
+  transform: rotate(180deg);
+}
+
+.sport-switcher-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 1100;
+  min-width: 170px;
+  margin: 0;
+  padding: 5px;
+  list-style: none;
+  border: 1px solid rgba(245, 209, 107, 0.7);
+  border-radius: 8px;
+  background: rgba(32, 32, 32, 0.98);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.sport-switcher .sport-switcher-option {
+  box-shadow: none;
+  font-size: 14px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: #ffffff;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sport-switcher .sport-switcher-option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sport-switcher .sport-switcher-option.active {
+  border-color: rgba(245, 209, 107, 0.6);
+  background: rgba(245, 209, 107, 0.12);
+}
+
+.sport-switcher-option-label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #f5d16b;
+}
+
+.sport-switcher-option-name {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+@media only screen and (max-width: 420px) {
+  .sport-switcher .sport-switcher-button {
+    padding: 0 7px;
+    gap: 4px;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+}

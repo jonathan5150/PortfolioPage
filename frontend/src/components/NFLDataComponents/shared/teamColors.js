@@ -61,9 +61,14 @@ export const washOut = (rgbaColor, amount = 0.4) => {
   return `rgba(${r}, ${g}, ${b}, ${a})`;
 };
 
+// NFL teams use the hand-tuned colours above; other leagues' teams (tagged with
+// `league`, e.g. the NBA's MIA) use ESPN's own colour, so they never pick up an
+// NFL team's colour through a shared abbreviation.
+const isNfl = (team) => !team?.league || team.league === 'nfl';
+
 export const getTeamColor = (team) => {
   if (!team) return null;
-  return NFL_TEAM_COLORS[team.abbreviation] || hexToRgba(team.color) || null;
+  return (isNfl(team) && NFL_TEAM_COLORS[team.abbreviation]) || hexToRgba(team.color) || null;
 };
 
 export const getTeamBackgroundStyle = (teamColor) => {
@@ -89,7 +94,7 @@ const BORDER_OVERRIDES = {
 };
 
 export const getTeamBorderColor = (team) => {
-  if (team && BORDER_OVERRIDES[team.abbreviation]) return BORDER_OVERRIDES[team.abbreviation];
+  if (team && isNfl(team) && BORDER_OVERRIDES[team.abbreviation]) return BORDER_OVERRIDES[team.abbreviation];
   const color = getTeamColor(team);
   return color ? washOut(color, 0.2) : 'rgb(85, 85, 85)';
 };

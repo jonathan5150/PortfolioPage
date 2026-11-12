@@ -1006,7 +1006,7 @@
   position: relative;
 }
 
-.nfl-data-container .controls > .teams-dropdown-wrapper {
+.nfl-data-container .controls > .controls-left {
   grid-column: 1;
   justify-self: end;
   margin-right: 8px;
@@ -3132,7 +3132,7 @@
     padding: 5px 6px;
   }
 
-  .nfl-data-container .controls > .teams-dropdown-wrapper {
+  .nfl-data-container .controls > .controls-left {
     margin-right: 5px;
   }
 
@@ -3369,7 +3369,7 @@
     letter-spacing: 0.03em;
   }
 
-  .nfl-data-container .controls > .teams-dropdown-wrapper {
+  .nfl-data-container .controls > .controls-left {
     margin-right: 4px;
   }
 
@@ -3500,7 +3500,7 @@
 
 /* the TEAMS picker is wider than the button it hangs from: centre it under the
    whole controls row (the wrapper stops being its positioning box) */
-.nfl-data-container .controls > .teams-dropdown-wrapper {
+.nfl-data-container .controls > .controls-left {
   position: static;
 }
 
@@ -3546,4 +3546,43 @@
 .nfl-data-container .last-updated-sep {
   margin: 0 8px;
   color: rgba(245, 209, 107, 0.35);
+}
+
+/* sport picker + TEAMS share the left grid cell, side by side */
+.nfl-data-container .controls > .controls-left {
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+}
+
+/* the TEAMS picker still centres under the whole controls row */
+.nfl-data-container .controls-left .teams-dropdown-wrapper {
+  position: static;
+}
+
+/* sports that aren't built yet: just the picker, centred */
+.nfl-data-container .controls.coming-soon-controls {
+  display: flex;
+  justify-content: center;
+}
+
+.nfl-data-container .controls.coming-soon-controls > .controls-left {
+  margin: 0;
+}
+
+.nfl-data-container .coming-soon-box {
+  margin-top: 14px;
+  padding: 10px 8px;
+}
+
+.nfl-data-container .coming-soon-note {
+  margin-top: 4px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+@media only screen and (max-width: 420px) {
+  .nfl-data-container .controls > .controls-left {
+    gap: 4px;
+  }
 }
