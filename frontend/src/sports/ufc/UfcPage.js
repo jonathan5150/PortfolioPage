@@ -30,7 +30,11 @@ const segmentKey = (details) => {
   return 'main';
 };
 const timeLabel = (iso) =>
-  iso ? new Date(iso).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' }).toUpperCase() : '';
+  iso
+    ? new Date(iso)
+        .toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+        .toUpperCase()
+    : '';
 
 // A fighter shown in a team cell: last name, record, headshot, corner colour.
 const asCompetitor = (fighter, color) =>
@@ -208,7 +212,6 @@ const FightCard = ({ eventId, fight, details, odds, isOpen, onToggle }) => {
     state === 'post' ? (f?.winner ? 'W' : fight.red?.winner || fight.blue?.winner ? 'L' : 'D') : '';
   // before and during the fight: each fighter's chance to win, from the odds
   const chances = state === 'post' ? null : winChances(fight, odds);
-  const cellScore = (corner) => (chances ? `${Math.round(chances[corner])}%` : score(fight[corner]));
 
   return (
     <div className={`game-slot ufc-fight ${isOpen ? 'open' : ''}`} style={{ '--ring-away': RED, '--ring-home': BLUE }}>
@@ -219,9 +222,9 @@ const FightCard = ({ eventId, fight, details, odds, isOpen, onToggle }) => {
             <TeamCell
               side="away"
               competitor={asCompetitor(fight.red, RED)}
-              score={cellScore('red')}
-              scoreIsSpread={Boolean(chances)}
-              subScore={chances ? 'WIN PROB' : null}
+              score={score(fight.red)}
+              winProb={chances?.red}
+              moneyLine={odds?.byId[fight.red?.id]}
               isWinner={fight.red?.winner}
               corner="top"
               expanded={isOpen}
@@ -229,9 +232,9 @@ const FightCard = ({ eventId, fight, details, odds, isOpen, onToggle }) => {
             <TeamCell
               side="home"
               competitor={asCompetitor(fight.blue, BLUE)}
-              score={cellScore('blue')}
-              scoreIsSpread={Boolean(chances)}
-              subScore={chances ? 'WIN PROB' : null}
+              score={score(fight.blue)}
+              winProb={chances?.blue}
+              moneyLine={odds?.byId[fight.blue?.id]}
               isWinner={fight.blue?.winner}
               corner="top"
               expanded={isOpen}
@@ -511,6 +514,31 @@ const UfcPage = () => {
           <div className="controls">
             <div className="controls-left">
               <SportSwitcher current="ufc" />
+            </div>
+            <div className="week-control">
+              <button
+                type="button"
+                className="nfl-control-button week-step"
+                aria-label="Previous event"
+                disabled={index <= 0}
+                onClick={() => go(-1)}
+              >
+                ◀
+              </button>
+              <button type="button" className="nfl-control-button week-button ufc-event-button" title={event?.name}>
+                {shortTitle.replace(/^UFC Fight Night/i, 'FIGHT NIGHT').toUpperCase()}
+              </button>
+              <button
+                type="button"
+                className="nfl-control-button week-step"
+                aria-label="Next event"
+                disabled={index < 0 || index >= calendar.length - 1}
+                onClick={() => go(1)}
+              >
+                ▶
+              </button>
+            </div>
+            <div className="controls-right">
               <div className="teams-dropdown-wrapper" ref={fightersRef}>
                 <button type="button" className="nfl-control-button" onClick={() => setFightersOpen((o) => !o)}>
                   <span className="control-label">FIGHTERS</span>
@@ -536,35 +564,12 @@ const UfcPage = () => {
                   </div>
                 )}
               </div>
-            </div>
-            <div className="week-control">
-              <button
-                type="button"
-                className="nfl-control-button week-step"
-                aria-label="Previous event"
-                disabled={index <= 0}
-                onClick={() => go(-1)}
-              >
-                ◀
-              </button>
-              <button type="button" className="nfl-control-button week-button ufc-event-button" title={event?.name}>
-                {shortTitle.replace(/^UFC Fight Night/i, 'FIGHT NIGHT').toUpperCase()}
-              </button>
-              <button
-                type="button"
-                className="nfl-control-button week-step"
-                aria-label="Next event"
-                disabled={index < 0 || index >= calendar.length - 1}
-                onClick={() => go(1)}
-              >
-                ▶
-              </button>
-            </div>
-            <div className="nfl-control-button hide-games-button ufc-fights-count">
-              <span className="control-label">FIGHTS</span>
-              <span className="control-count">
-                {shownFights.length}/{event?.fights.length || 0}
-              </span>
+              <div className="nfl-control-button hide-games-button ufc-fights-count">
+                <span className="control-label">FIGHTS</span>
+                <span className="control-count">
+                  {shownFights.length}/{event?.fights.length || 0}
+                </span>
+              </div>
             </div>
           </div>
         </div>

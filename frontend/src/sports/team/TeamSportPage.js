@@ -322,29 +322,6 @@ const TeamSportPage = ({ lg }) => {
             <div className="controls">
               <div className="controls-left">
                 <SportSwitcher current={lg} />
-                <div className="teams-dropdown-wrapper" ref={teamsRef}>
-                  <button type="button" className="nfl-control-button" onClick={() => setTeamsOpen((o) => !o)}>
-                    <span className="control-label">TEAMS</span>
-                    <span className="control-count">
-                      {counts.teamsShown}/{counts.teamsTotal}
-                    </span>
-                  </button>
-                  {teamsOpen && (
-                    <div className="nfl-dropdown-menu">
-                      <TeamsMenu
-                        teams={teams.data || []}
-                        selectedTeams={selectedTeams}
-                        onTeamChange={(id) =>
-                          setSavedTeams(
-                            selectedTeams.includes(id) ? selectedTeams.filter((x) => x !== id) : [...selectedTeams, id],
-                          )
-                        }
-                        onSelectAll={() => setSavedTeams(allTeamIds)}
-                        onDeselectAll={() => setSavedTeams([])}
-                      />
-                    </div>
-                  )}
-                </div>
               </div>
               <div className="week-control">
                 <button
@@ -385,20 +362,45 @@ const TeamSportPage = ({ lg }) => {
                   </div>
                 )}
               </div>
-              <button
-                type="button"
-                className={`nfl-control-button hide-games-button ${hideMode ? 'active' : ''}`}
-                aria-pressed={hideMode}
-                onClick={() => {
-                  setOpenGameId(null);
-                  setHideMode((h) => !h);
-                }}
-              >
-                <span className="control-label">GAMES</span>
-                <span className="control-count">
-                  {counts.gamesShown}/{counts.gamesTotal}
-                </span>
-              </button>
+              <div className="controls-right">
+                <div className="teams-dropdown-wrapper" ref={teamsRef}>
+                  <button type="button" className="nfl-control-button" onClick={() => setTeamsOpen((o) => !o)}>
+                    <span className="control-label">TEAMS</span>
+                    <span className="control-count">
+                      {counts.teamsShown}/{counts.teamsTotal}
+                    </span>
+                  </button>
+                  {teamsOpen && (
+                    <div className="nfl-dropdown-menu">
+                      <TeamsMenu
+                        teams={teams.data || []}
+                        selectedTeams={selectedTeams}
+                        onTeamChange={(id) =>
+                          setSavedTeams(
+                            selectedTeams.includes(id) ? selectedTeams.filter((x) => x !== id) : [...selectedTeams, id],
+                          )
+                        }
+                        onSelectAll={() => setSavedTeams(allTeamIds)}
+                        onDeselectAll={() => setSavedTeams([])}
+                      />
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className={`nfl-control-button hide-games-button ${hideMode ? 'active' : ''}`}
+                  aria-pressed={hideMode}
+                  onClick={() => {
+                    setOpenGameId(null);
+                    setHideMode((h) => !h);
+                  }}
+                >
+                  <span className="control-label">GAMES</span>
+                  <span className="control-count">
+                    {counts.gamesShown}/{counts.gamesTotal}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
 

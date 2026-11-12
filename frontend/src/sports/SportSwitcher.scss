@@ -107,3 +107,11 @@
     letter-spacing: 0.06em;
   }
 }
+
+/* the current sport reads big: the button now fills half the controls row */
+.sport-switcher .sport-switcher-button .sport-switcher-label {
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}

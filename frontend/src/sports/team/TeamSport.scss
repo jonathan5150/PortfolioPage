@@ -247,3 +247,12 @@
   font-family: 'DM Sans', sans-serif;
   color-scheme: dark;
 }
+
+/* NBA live row: the last play fills the left, the clock sits on the right */
+.nfl-data-container .league-live-play {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  margin-right: 8px;
+  text-align: left;
+}

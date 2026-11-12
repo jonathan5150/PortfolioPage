@@ -11,9 +11,6 @@
   text-align: center;
   overflow-y: auto;
   overflow-x: hidden;
-  /* keep room for the scrollbar so opening a section that makes the page
-     scroll doesn't narrow (and re-centre) everything */
-  scrollbar-gutter: stable both-edges;
   position: relative;
   color: white;
   font-family: 'DM Sans', sans-serif;
@@ -49,6 +46,14 @@
   align-items: center;
   width: 100%;
   max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* the page wrapper is always full width, so opening a section with wider
+   cards never widens (and re-centres) everything else */
+.nfl-data-container > div:has(> .matchup-card) {
+  width: 100%;
 }
 
 .nfl-data-container .matchup-container {
@@ -997,6 +1002,46 @@
   letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.65);
   white-space: nowrap;
+}
+
+/* before a game: the moneyline in the top-right of the cell, the win chance
+   in the bottom-right */
+.nfl-data-container .team-odds-stack {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-shrink: 0;
+  padding: 1px 0;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.nfl-data-container .team-odds-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 3px;
+  min-height: 18px;
+  white-space: nowrap;
+}
+
+.nfl-data-container .team-odds-value {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.nfl-data-container .team-odds-label {
+  width: 31px;
+  font-size: 6px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  line-height: 1.1;
+  text-align: left;
+  color: rgba(255, 255, 255, 0.65);
 }
 
 /* HIDE TEAMS sits just left of the WEEK control, which is centred on the
@@ -3587,5 +3632,74 @@
 @media only screen and (max-width: 420px) {
   .nfl-data-container .controls > .controls-left {
     gap: 4px;
+  }
+}
+
+/* ---------- controls row: sport picker | day/week picker | TEAMS + GAMES ----------
+   The picker stays centred; the sport button fills the left half up to it, and
+   TEAMS and GAMES share the right half. */
+.nfl-data-container .controls {
+  column-gap: 5px;
+}
+
+.nfl-data-container .controls > .controls-left {
+  justify-self: stretch;
+  margin-right: 0;
+}
+
+.nfl-data-container .controls > .controls-left > .sport-switcher {
+  flex: 1;
+  min-width: 0;
+}
+
+.nfl-data-container .controls > .controls-left .sport-switcher-button {
+  width: 100%;
+}
+
+.nfl-data-container .controls > .controls-right {
+  grid-column: 3;
+  justify-self: stretch;
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+  min-width: 0;
+  position: static; /* the TEAMS picker centres under the whole row */
+}
+
+.nfl-data-container .controls-right > .teams-dropdown-wrapper {
+  position: static;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+
+.nfl-data-container .controls-right > .teams-dropdown-wrapper > .nfl-control-button,
+.nfl-data-container .controls-right > .hide-games-button {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  justify-content: center;
+}
+
+@media only screen and (max-width: 420px) {
+  .nfl-data-container .controls,
+  .nfl-data-container .controls > .controls-right {
+    column-gap: 4px;
+    gap: 4px;
+  }
+
+  .nfl-data-container .controls-right > .teams-dropdown-wrapper > .nfl-control-button,
+  .nfl-data-container .controls-right > .hide-games-button {
+    padding-left: 3px;
+    padding-right: 3px;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* narrow phones: FIGHTERS / TEAMS labels fit their half-width buttons */
+@media only screen and (max-width: 380px) {
+  .nfl-data-container .controls-right .control-label {
+    font-size: 10px;
+    letter-spacing: 0.01em;
   }
 }

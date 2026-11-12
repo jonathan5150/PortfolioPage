@@ -74,10 +74,41 @@ const WATERMARK_CLOSED_SIZE = {
   IND: 0.7,
 };
 
-const TeamCell = ({ competitor, side, score, scoreIsSpread, subScore, isWinner, corner = 'top', expanded = false }) => {
+// Before a game: the moneyline (top right) over the win chance (bottom right).
+const OddsStack = ({ winProb, moneyLine }) => (
+  <div className="team-odds-stack">
+    <div className="team-odds-row">
+      {moneyLine !== null && moneyLine !== undefined && (
+        <>
+          <span className="team-odds-value">{moneyLine > 0 ? `+${moneyLine}` : moneyLine}</span>
+          <span className="team-odds-label">ODDS</span>
+        </>
+      )}
+    </div>
+    <div className="team-odds-row">
+      <span className="team-odds-value">{Math.round(winProb)}%</span>
+      <span className="team-odds-label">WIN PROB</span>
+    </div>
+  </div>
+);
+
+const TeamCell = ({
+  competitor,
+  side,
+  score,
+  scoreIsSpread,
+  subScore,
+  winProb,
+  moneyLine,
+  isWinner,
+  corner = 'top',
+  expanded = false,
+}) => {
   const team = competitor?.team;
   // the per-team logo tweaks above are for NFL teams; other leagues share abbreviations
   const nflTuned = !team?.league || team.league === 'nfl';
+  // NBA logos read big: 30% smaller while closed, a little smaller when open
+  const leagueScale = team?.league === 'nba' ? { open: 0.85, closed: 0.7 } : null;
   const radius =
     corner === 'all' ? (side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0') : side === 'away' ? '6px 0 0 0' : '0 6px 0 0';
 
@@ -113,10 +144,10 @@ const TeamCell = ({ competitor, side, score, scoreIsSpread, subScore, isWinner, 
             className={`team-logo-watermark ${side}`}
             style={{
               ...(nflTuned ? WATERMARK_STYLE[team.abbreviation] : null),
-              '--wm-size': nflTuned ? (WATERMARK_SIZE[team.abbreviation] ?? 1) : 1,
+              '--wm-size': nflTuned ? (WATERMARK_SIZE[team.abbreviation] ?? 1) : (leagueScale?.open ?? 1),
               '--wm-closed-size': nflTuned
                 ? (WATERMARK_CLOSED_SIZE[team.abbreviation] ?? WATERMARK_SIZE[team.abbreviation] ?? 1)
-                : 1,
+                : (leagueScale?.closed ?? 1),
             }}
             draggable={false}
           />
@@ -130,10 +161,14 @@ const TeamCell = ({ competitor, side, score, scoreIsSpread, subScore, isWinner, 
             <div className="team-record">{competitor?.record || '0-0'}</div>
           </div>
 
-          <div className={`team-score ${isWinner ? 'winner' : ''} ${scoreIsSpread ? 'spread' : ''}`}>
-            {score}
-            {subScore && <div className="team-moneyline">{subScore}</div>}
-          </div>
+          {winProb !== null && winProb !== undefined ? (
+            <OddsStack winProb={winProb} moneyLine={moneyLine} />
+          ) : (
+            <div className={`team-score ${isWinner ? 'winner' : ''} ${scoreIsSpread ? 'spread' : ''}`}>
+              {score}
+              {subScore && <div className="team-moneyline">{subScore}</div>}
+            </div>
+          )}
         </div>
       </div>
     </div>

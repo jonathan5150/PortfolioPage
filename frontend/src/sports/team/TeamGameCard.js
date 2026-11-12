@@ -3,7 +3,7 @@ import TeamCell from '../../components/NFLDataComponents/ScoreBug/TeamCell';
 import Marquee from '../../components/NFLDataComponents/shared/Marquee';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
 import { getTeamColor, getTeamRingColors, washOut } from '../../components/NFLDataComponents/shared/teamColors';
-import { getLeaguePredictor } from './leagueApi';
+import { getLeagueOdds, getLeaguePredictor } from './leagueApi';
 import { BoxScorePanel, LinesPanel, PlayersPanel, useGameLines } from './TeamPanels';
 
 const accent = (team) => washOut(getTeamColor(team) || 'rgba(120,120,120,0.6)', 0.15).replace(/[\d.]+\)$/, '1)');
@@ -169,6 +169,7 @@ const ScoreBug = ({ lg, game, open, onToggle }) => {
   const s = game.situation;
   const pre = state === 'pre';
   const predictor = useAsyncData(() => getLeaguePredictor(lg, game.id), [lg, game.id], { enabled: pre });
+  const odds = useAsyncData(() => getLeagueOdds(lg, game.id), [lg, game.id], { enabled: pre });
 
   const cells = ['away', 'home'].map((side) => {
     const prob = predictor.data?.[side];
@@ -179,9 +180,9 @@ const ScoreBug = ({ lg, game, open, onToggle }) => {
         key={side}
         side={side}
         competitor={game[side]}
-        score={pre ? (showProb ? `${Math.round(prob)}%` : '') : (game[side]?.score ?? 0)}
-        scoreIsSpread={showProb}
-        subScore={showProb ? 'WIN PROB' : null}
+        score={pre ? '' : (game[side]?.score ?? 0)}
+        winProb={showProb ? prob : null}
+        moneyLine={odds.data?.[side]?.moneyLine}
         isWinner={state === 'post' && game[side]?.winner}
         corner={state === 'in' ? 'top' : open ? 'top' : 'all'}
         expanded={open}
@@ -219,11 +220,9 @@ const ScoreBug = ({ lg, game, open, onToggle }) => {
           ))}
         </span>
       );
-    } else {
-      const a = game.away?.score ?? 0;
-      const h = game.home?.score ?? 0;
-      left = a === h ? 'Tied' : `${(a > h ? game.away : game.home)?.team?.abbreviation} by ${Math.abs(a - h)}`;
     }
+    // NBA in play: a single row, the last play on the left and the clock on the right
+    const oneRow = lg === 'nba' && !halftime;
     const play =
       lg === 'mlb' && s?.batter
         ? `${s.batter}${s.pitcher ? ` vs ${s.pitcher}` : ''}${s.lastPlay ? ` — ${s.lastPlay}` : ''}`
@@ -244,16 +243,22 @@ const ScoreBug = ({ lg, game, open, onToggle }) => {
           gridColumn: '1 / span 2',
           borderRadius: '0 0 6px 6px',
           padding: '5px 10px',
-          minHeight: halftime ? 0 : '44px',
+          minHeight: halftime || oneRow ? 0 : '44px',
         }}
       >
         <div className="live-play-top">
-          <span className="ellipsis league-live-left">{left}</span>
+          {oneRow ? (
+            <span className="league-live-play">
+              <Marquee className="last-play" text={play || ' '} />
+            </span>
+          ) : (
+            <span className="ellipsis league-live-left">{left}</span>
+          )}
           <span className="live-play-clock">
             <span className="live-indicator">●</span> {clock}
           </span>
         </div>
-        {!halftime && <Marquee className="last-play" text={play || ' '} />}
+        {!halftime && !oneRow && <Marquee className="last-play" text={play || ' '} />}
       </div>
     );
   }
