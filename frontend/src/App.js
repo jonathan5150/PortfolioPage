@@ -1,20 +1,41 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './App.css';
 import Home from './pages/Home';
-import Resume from './pages/Resume';
-import ExcelProject from './pages/ExcelProject';
-import AlongTheWay from './pages/AlongTheWay';
-import SportsDataProject from './pages/SportsDataProject';
-import Contact from './pages/Contact';
-import HerbicideCalculatorParentPage from './pages/HerbicideCalculatorParentPage';
-import HerbicideCalculator from './pages//HerbicideCalculator/HerbicideCalculator';
-import NFLData from './pages/NFLData/NFLData';
 import Header from './components/PortfolioComponents/Header';
 import SportsHub from './sports/SportsHub';
-import TeamSportPage from './sports/team/TeamSportPage';
-import UfcPage from './sports/ufc/UfcPage';
+import LoadingField from './components/NFLDataComponents/shared/LoadingField';
 
+// Every other page is downloaded only when it's opened, so a phone opening the
+// sports pages doesn't also download and parse the whole portfolio (and the
+// other way round).
+const Resume = lazy(() => import('./pages/Resume'));
+const ExcelProject = lazy(() => import('./pages/ExcelProject'));
+const AlongTheWay = lazy(() => import('./pages/AlongTheWay'));
+const SportsDataProject = lazy(() => import('./pages/SportsDataProject'));
+const Contact = lazy(() => import('./pages/Contact'));
+const HerbicideCalculatorParentPage = lazy(() => import('./pages/HerbicideCalculatorParentPage'));
+const HerbicideCalculator = lazy(() => import('./pages/HerbicideCalculator/HerbicideCalculator'));
+const NFLData = lazy(() => import('./pages/NFLData/NFLData'));
+const TeamSportPage = lazy(() => import('./sports/team/TeamSportPage'));
+const UfcPage = lazy(() => import('./sports/ufc/UfcPage'));
+
+// while a sports page's code arrives: the same loading screen its own data
+// load shows (dark backdrop, four-sport animation)
+const SportsFallback = () => (
+  <div
+    style={{
+      position: 'fixed',
+      inset: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(41, 41, 41, 1)',
+    }}
+  >
+    <LoadingField />
+  </div>
+);
 
 function App() {
   return (
@@ -34,7 +55,7 @@ function Main() {
     '/alongtheway',
     '/sportsdataproject',
     '/contact',
-    '/herbicidecalculatorparentpage'
+    '/herbicidecalculatorparentpage',
   ];
 
   const hasHeader = headerPaths.includes(location.pathname);
@@ -43,36 +64,36 @@ function Main() {
     <div className="App">
       {hasHeader && <Header />}
       <div className="bg"></div>
-      <div
-        className="content"
-        style={{ marginTop: hasHeader ? '90px' : '0px' }}
-      >
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/resume" element={<Resume />} />
-          <Route path="/excelproject" element={<ExcelProject />} />
-          <Route path="/alongtheway" element={<AlongTheWay />} />
-          <Route path="/herbicidecalculator" element={<HerbicideCalculator />} />
-          <Route path="/herbicidecalculatorparentpage" element={<HerbicideCalculatorParentPage />} />
-          <Route path="/sportsdataproject" element={<SportsDataProject />} />
-          <Route path="/contact" element={<Contact />} />
-        </Routes>
+      <div className="content" style={{ marginTop: hasHeader ? '90px' : '0px' }}>
+        <Suspense fallback={null}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/resume" element={<Resume />} />
+            <Route path="/excelproject" element={<ExcelProject />} />
+            <Route path="/alongtheway" element={<AlongTheWay />} />
+            <Route path="/herbicidecalculator" element={<HerbicideCalculator />} />
+            <Route path="/herbicidecalculatorparentpage" element={<HerbicideCalculatorParentPage />} />
+            <Route path="/sportsdataproject" element={<SportsDataProject />} />
+            <Route path="/contact" element={<Contact />} />
+          </Routes>
+        </Suspense>
       </div>
-      <Routes>
-        {/* the sports data project: /sports opens the saved or in-season sport */}
-        <Route path="/sports" element={<SportsHub />} />
-        <Route path="/sports/nfl" element={<NFLData />} />
-        <Route path="/sports/mlb" element={<TeamSportPage key="mlb" lg="mlb" />} />
-        <Route path="/sports/nba" element={<TeamSportPage key="nba" lg="nba" />} />
-        <Route path="/sports/ufc" element={<UfcPage />} />
-        {/* old addresses */}
-        <Route path="/nfldata" element={<Navigate to="/sports/nfl" replace />} />
-        <Route path="/mlbdata" element={<Navigate to="/sports/mlb" replace />} />
-      </Routes>
+      <Suspense fallback={<SportsFallback />}>
+        <Routes>
+          {/* the sports data project: /sports opens the saved or in-season sport */}
+          <Route path="/sports" element={<SportsHub />} />
+          <Route path="/sports/nfl" element={<NFLData />} />
+          <Route path="/sports/mlb" element={<TeamSportPage key="mlb" lg="mlb" />} />
+          <Route path="/sports/nba" element={<TeamSportPage key="nba" lg="nba" />} />
+          <Route path="/sports/ufc" element={<UfcPage />} />
+          {/* old addresses */}
+          <Route path="/nfldata" element={<Navigate to="/sports/nfl" replace />} />
+          <Route path="/mlbdata" element={<Navigate to="/sports/mlb" replace />} />
+        </Routes>
+      </Suspense>
     </div>
   );
 }
-
 
 export default App;

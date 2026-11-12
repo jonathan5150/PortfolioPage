@@ -1,11 +1,14 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
 import TeamToggle from '../../components/NFLDataComponents/shared/TeamToggle';
+import TeamResultsRows from '../../components/NFLDataComponents/shared/TeamResultsRows';
+import LinesModeToggle from '../../components/NFLDataComponents/shared/LinesModeToggle';
+import { Holdable } from '../../components/NFLDataComponents/shared/ParlayContext';
+import { canBet, pickLeg, teamGameLegs } from '../parlayLegs';
 import {
   getTeamBackgroundStyle,
   getTeamBorderColor,
   getTeamColor,
-  getTeamTextColor,
   washOut,
 } from '../../components/NFLDataComponents/shared/teamColors';
 import { fmtLine, fmtOdds } from '../../pages/NFLData/NFLDataApi/betting';
@@ -13,6 +16,7 @@ import { gradeLinePicks, teamResultHistory } from '../../pages/NFLData/NFLDataAp
 import {
   LEAGUES,
   getLeagueGameLog,
+  getLeagueLiveLines,
   getLeagueOdds,
   getLeaguePredictor,
   getLeagueRoster,
@@ -20,7 +24,7 @@ import {
   getLeagueSummary,
   getLeagueTeamSchedule,
 } from './leagueApi';
-import { buildLeaguePicks } from './leaguePicks';
+import { buildLeaguePicks, restDays, scheduleGames } from './leaguePicks';
 
 const accent = (team) => washOut(getTeamColor(team) || 'rgba(120,120,120,0.6)', 0.15).replace(/[\d.]+\)$/, '1)');
 const LIVE_REFRESH_MS = 20000;
@@ -55,7 +59,9 @@ export const useGameLines = (lg, game, enabled) => {
   );
 };
 
-const LinesTable = ({ game, odds, lineLabel }) => {
+// Hold a line to add it to the parlay (games that haven't finished).
+const LinesTable = ({ lg, game, odds, lineLabel }) => {
+  const legs = canBet(game) ? teamGameLegs(lg, game, odds) : null;
   const rows = [
     { side: 'away', c: game.away, o: odds.away, t: 'O', tOdds: odds.total?.overOdds },
     { side: 'home', c: game.home, o: odds.home, t: 'U', tOdds: odds.total?.underOdds },
@@ -74,19 +80,22 @@ const LinesTable = ({ game, odds, lineLabel }) => {
             {c?.team?.logo && <img src={c.team.logo} alt="" className="bet-team-logo" draggable={false} />}
             <span className="bet-team-abbr">{c?.team?.abbreviation}</span>
           </div>
-          <div className="bet-cell">
+          <Holdable className="bet-cell" leg={legs && o?.spreadLine !== null ? legs.spread(side) : null}>
             <div className="bet-main">{fmtLine(o?.spreadLine)}</div>
             <div className="bet-sub">{fmtOdds(o?.spreadOdds)}</div>
-          </div>
-          <div className="bet-cell bet-cell-ml">
+          </Holdable>
+          <Holdable className="bet-cell bet-cell-ml" leg={legs && o?.moneyLine !== null ? legs.ml(side) : null}>
             <div className="bet-main">{fmtOdds(o?.moneyLine)}</div>
-          </div>
-          <div className="bet-cell">
+          </Holdable>
+          <Holdable
+            className="bet-cell"
+            leg={legs && odds.total?.line !== null ? legs.total(side === 'away' ? 'over' : 'under') : null}
+          >
             <div className="bet-main">
               {t} {odds.total?.line ?? '—'}
             </div>
             <div className="bet-sub">{fmtOdds(tOdds)}</div>
-          </div>
+          </Holdable>
         </div>
       ))}
     </div>
@@ -116,11 +125,11 @@ export const WinBar = ({ game, chance, title = 'WIN PROBABILITY' }) => {
   );
 };
 
-const PickCard = ({ pick, game, grade }) => {
+const PickCard = ({ pick, game, grade, leg }) => {
   if (!pick) return null;
   const team = pick.key !== 'total' ? game[pick.side]?.team : null;
   return (
-    <div className="pick-line lean">
+    <Holdable className="pick-line lean" leg={leg}>
       <span className="pick-title-row">
         <span className="pick-kind lean">LEAN</span>
         <span className="pick-headline">
@@ -131,107 +140,96 @@ const PickCard = ({ pick, game, grade }) => {
       <span className="pick-because">{pick.summary}</span>
       {pick.odds && <span className="pick-odds">{pick.odds}</span>}
       {(grade === 'W' || grade === 'L') && <span className={`pick-result ${grade === 'W' ? 'right' : 'wrong'}`} />}
-    </div>
+    </Holdable>
   );
 };
 
-// A team's recent results (last 20), newest on the right; both rows scroll together.
-const TeamResults = ({ lg, game, side, scrollRef, onScroll }) => {
-  const team = game[side]?.team;
-  const history = useAsyncData(
-    async () =>
-      teamResultHistory(
-        await getLeagueTeamSchedule(lg, game[side]?.teamId, game.season),
-        game[side]?.teamId,
-        game,
-      ).slice(-20),
-    [lg, game.id, game[side]?.teamId],
-  );
-  const games = history.data || [];
-  const [overflows, setOverflows] = useState(false);
-  useLayoutEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return undefined;
-    const measure = () => setOverflows(el.scrollWidth > el.clientWidth + 1);
-    measure();
-    el.scrollLeft = el.scrollWidth;
-    if (typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [games.length, scrollRef]);
-  if (!games.length) return null;
-  return (
-    <div className="team-results">
-      {team?.logo ? (
-        <img className="team-results-logo" src={team.logo} alt={team.abbreviation || ''} draggable={false} />
-      ) : (
-        <span className="team-results-abbr" style={{ color: getTeamTextColor(team) }}>
-          {team?.abbreviation}
-        </span>
-      )}
-      <div ref={scrollRef} className={`team-results-scroll ${overflows ? 'overflows' : ''}`} onScroll={onScroll}>
-        <div className="td-history-games">
-          {games.map((g) => (
-            <div key={g.id} className="td-history-col" title={g.label}>
-              <span className="td-history-date">{g.date}</span>
-              <span className="td-history-opp">{g.opp}</span>
-              <span className={`td-history-game team-result ${g.result === 'W' ? 'hit' : ''}`}>{g.result}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
+// Each team's recent results (last 20), newest on the right, both in one box
+// with one scroller.
 const TeamResultsHistory = ({ lg, game }) => {
-  const awayRef = useRef(null);
-  const homeRef = useRef(null);
-  const follow = (from, to) => () => {
-    const src = from.current;
-    const dst = to.current;
-    if (!src || !dst) return;
-    const fromRight = src.scrollWidth - src.clientWidth - src.scrollLeft;
-    const target = Math.max(0, dst.scrollWidth - dst.clientWidth - fromRight);
-    if (Math.abs(dst.scrollLeft - target) >= 1) dst.scrollLeft = target;
-  };
+  const load = (side) => async () =>
+    teamResultHistory(await getLeagueTeamSchedule(lg, game[side]?.teamId, game.season), game[side]?.teamId, game).slice(
+      -20,
+    );
+  const away = useAsyncData(load('away'), [lg, game.id, game.away?.teamId]);
+  const home = useAsyncData(load('home'), [lg, game.id, game.home?.teamId]);
   return (
-    <div className="team-results-history">
-      <TeamResults lg={lg} game={game} side="away" scrollRef={awayRef} onScroll={follow(awayRef, homeRef)} />
-      <TeamResults lg={lg} game={game} side="home" scrollRef={homeRef} onScroll={follow(homeRef, awayRef)} />
-    </div>
+    <TeamResultsRows
+      rows={[
+        { team: game.away?.team, games: away.data || [] },
+        { team: game.home?.team, games: home.data || [] },
+      ]}
+    />
   );
 };
 
 export const LinesPanel = ({ lg, game, lines }) => {
   const odds = lines.data?.odds;
   const predictor = lines.data?.predictor;
+  // live games: PREGAME / LIVE odds (LIVE first), refreshed while it's on
+  const isLive = game.status.state === 'in';
+  const [mode, setMode] = useState('live');
+  const tick = useTicker(isLive);
+  const liveLines = useAsyncData(() => getLeagueLiveLines(lg, game.id), [lg, game.id, tick], {
+    enabled: isLive,
+    keepPrevious: true,
+  });
+  const showLive = isLive && mode === 'live';
+  const tableOdds = !isLive ? odds : showLive ? liveLines.data?.live : liveLines.data?.pregame || odds;
+  const chance = showLive ? game.situation?.winProbability || null : predictor;
+  // NBA: days of rest for each team, from the schedules the W/L rows load anyway
+  const rest = useAsyncData(
+    async () => {
+      const [a, h] = await Promise.all([
+        getLeagueTeamSchedule(lg, game.away?.teamId, game.season),
+        getLeagueTeamSchedule(lg, game.home?.teamId, game.season),
+      ]);
+      return restDays(game, scheduleGames([...a, ...h]));
+    },
+    [lg, game.id],
+    { enabled: lg === 'nba' },
+  );
   const picks = useMemo(
-    () => (odds ? buildLeaguePicks({ lg, game, odds, predictor }) : null),
-    [lg, game, odds, predictor],
+    () => (odds ? buildLeaguePicks({ lg, game, odds, predictor, rest: rest.data }) : null),
+    [lg, game, odds, predictor, rest.data],
   );
   const grades = useMemo(
     () => (picks && game.status.state === 'post' ? gradeLinePicks(picks, game, odds) : null),
     [picks, game, odds],
   );
+  const toggle = isLive ? <LinesModeToggle mode={mode} onChange={setMode} /> : null;
   if (lines.loading && !lines.data) return <div className="bet-message">Loading lines…</div>;
-  if (!odds) {
+  if (!odds && !(showLive && tableOdds)) {
     return (
       <>
+        {toggle}
         <div className="bet-message">No betting lines are posted for this game yet.</div>
+        {showLive && <WinBar game={game} chance={chance} />}
         <TeamResultsHistory lg={lg} game={game} />
       </>
     );
   }
   return (
     <>
-      <LinesTable game={game} odds={odds} lineLabel={LEAGUES[lg].lineLabel} />
-      <WinBar game={game} chance={predictor} />
+      {toggle}
+      {tableOdds ? (
+        <LinesTable lg={lg} game={game} odds={tableOdds} lineLabel={LEAGUES[lg].lineLabel} />
+      ) : (
+        <div className="bet-message">
+          {liveLines.loading && !liveLines.data ? 'Loading live odds…' : 'No live odds posted right now.'}
+        </div>
+      )}
+      <WinBar game={game} chance={chance} />
       <TeamResultsHistory lg={lg} game={game} />
       <div className="pick-lines">
         {['winner', 'spread', 'total'].map((key) => (
-          <PickCard key={key} pick={picks?.[key]} game={game} grade={grades?.[key]} />
+          <PickCard
+            key={key}
+            pick={picks?.[key]}
+            game={game}
+            grade={grades?.[key]}
+            leg={canBet(game) && odds ? pickLeg(teamGameLegs(lg, game, odds), picks?.[key]) : null}
+          />
         ))}
       </div>
     </>

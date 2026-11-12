@@ -1,8 +1,11 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import TeamResultsRows from '../shared/TeamResultsRows';
+import LinesModeToggle from '../shared/LinesModeToggle';
 import useAsyncData from '../shared/useAsyncData';
 import useInView from '../shared/useInView';
-import { getTeamColor, getTeamBorderColor, getTeamTextColor, washOut } from '../shared/teamColors';
+import { getTeamColor, getTeamBorderColor, washOut } from '../shared/teamColors';
 import {
+  getEventLiveLines,
   getEventOdds,
   getEventPredictor,
   getTeamBettingTrends,
@@ -103,79 +106,19 @@ const tdLeg = (game, player, td) => ({
   link: td.link,
 });
 
-// Each team's results this season, oldest to newest, in the same
-// style as a player's touchdown history: date and opponent over a block that's
-// gold for a win and plain grey for a loss.
-const TeamResults = ({ game, side, scrollRef, onScroll }) => {
-  const team = game[side]?.team;
-  const history = useAsyncData(() => getTeamResultHistory(game[side]?.teamId, game), [game.id, game[side]?.teamId]);
-  const games = history.data || [];
-  // Narrow blocks sit against the right edge (newest last). When they don't all
-  // fit, the row scrolls sideways, opens on the newest, and the older games fade
-  // out on the left.
-  const [overflows, setOverflows] = useState(false);
-  useLayoutEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return undefined;
-    const measure = () => setOverflows(el.scrollWidth > el.clientWidth + 1);
-    measure();
-    el.scrollLeft = el.scrollWidth;
-    // re-check if the row's width changes (rotating the phone, resizing)
-    if (typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [games.length, scrollRef]);
-  if (!games.length) return null;
-  const wins = games.filter((g) => g.result === 'W').length;
-  const played = games.filter((g) => !g.bye).length;
-  return (
-    <div className="team-results" aria-label={`${team?.abbreviation} won ${wins} of ${played} this season`}>
-      {team?.logo ? (
-        <img className="team-results-logo" src={team.logo} alt={team.abbreviation || ''} draggable={false} />
-      ) : (
-        <span className="team-results-abbr" style={{ color: getTeamTextColor(team) }}>
-          {team?.abbreviation}
-        </span>
-      )}
-      <div ref={scrollRef} className={`team-results-scroll ${overflows ? 'overflows' : ''}`} onScroll={onScroll}>
-        <div className="td-history-games">
-          {games.map((g) => (
-            <div key={g.id} className="td-history-col" title={g.label}>
-              <span className="td-history-date">{g.date}</span>
-              <span className="td-history-opp">{g.opp}</span>
-              <span className={`td-history-game team-result ${g.result === 'W' ? 'hit' : ''} ${g.bye ? 'bye' : ''}`}>
-                {g.bye ? '–' : g.result}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Both teams' rows scroll together. They're kept aligned by distance from the
-// right edge (the newest games), since the teams may have played a different
-// number of games.
+// Each team's results this season, oldest to newest, in the same style as a
+// player's touchdown history: date and opponent over a block that's gold for a
+// win and plain grey for a loss. Both teams share one box and one scroller.
 const TeamResultsHistory = ({ game }) => {
-  const awayRef = useRef(null);
-  const homeRef = useRef(null);
-  const follow = (from, to) => () => {
-    const src = from.current;
-    const dst = to.current;
-    if (!src || !dst) return;
-    const fromRight = src.scrollWidth - src.clientWidth - src.scrollLeft;
-    const target = Math.max(0, dst.scrollWidth - dst.clientWidth - fromRight);
-    // already lined up (including the echo of our own move): nothing to do
-    if (Math.abs(dst.scrollLeft - target) < 1) return;
-    dst.scrollLeft = target;
-  };
+  const away = useAsyncData(() => getTeamResultHistory(game.away?.teamId, game), [game.id, game.away?.teamId]);
+  const home = useAsyncData(() => getTeamResultHistory(game.home?.teamId, game), [game.id, game.home?.teamId]);
   return (
-    <div className="team-results-history">
-      <TeamResults game={game} side="away" scrollRef={awayRef} onScroll={follow(awayRef, homeRef)} />
-      <TeamResults game={game} side="home" scrollRef={homeRef} onScroll={follow(homeRef, awayRef)} />
-    </div>
+    <TeamResultsRows
+      rows={[
+        { team: game.away?.team, games: away.data || [] },
+        { team: game.home?.team, games: home.data || [] },
+      ]}
+    />
   );
 };
 
@@ -309,19 +252,54 @@ const PickLine = ({ pick, leg, game, grade }) => {
   );
 };
 
+const LIVE_LINES_MS = 20000;
+
 const LinesTab = ({ game, lines, linePicks, grades }) => {
-  const lockedNote = lines.data?.frozen ? (
-    <div className="hold-hint">Lines locked at about 30 minutes before kickoff.</div>
-  ) : null;
   const odds = lines.data?.odds;
   const predictor = lines.data?.predictor;
+  // live games: PREGAME / LIVE odds (LIVE first), refreshed while it's on
+  const isLive = game.status.state === 'in';
+  const [mode, setMode] = useState('live');
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    if (!isLive) return undefined;
+    const id = setInterval(() => document.visibilityState !== 'hidden' && setTick((t) => t + 1), LIVE_LINES_MS);
+    return () => clearInterval(id);
+  }, [isLive]);
+  const liveLines = useAsyncData(() => getEventLiveLines(game.id), [game.id, tick], {
+    enabled: isLive,
+    keepPrevious: true,
+  });
+  const showLive = isLive && mode === 'live';
+  const tableOdds = !isLive ? odds : showLive ? liveLines.data?.live : odds || liveLines.data?.pregame;
+  const chance = showLive ? game.situation?.winProbability || null : predictor;
+  const lockedNote =
+    lines.data?.frozen && !showLive ? (
+      <div className="hold-hint">Lines locked at about 30 minutes before kickoff.</div>
+    ) : null;
+  const toggle = isLive ? <LinesModeToggle mode={mode} onChange={setMode} /> : null;
   if (lines.loading) return <div className="bet-message">Loading lines…</div>;
-  if (!odds) return <div className="bet-message">No betting lines are posted for this game yet.</div>;
+  if (!odds && !(showLive && tableOdds)) {
+    return (
+      <>
+        {toggle}
+        <div className="bet-message">No betting lines are posted for this game yet.</div>
+        {showLive && <WinProbability game={game} predictor={chance} />}
+      </>
+    );
+  }
 
   return (
     <>
-      <LinesTable game={game} odds={odds} />
-      <WinProbability game={game} predictor={predictor} />
+      {toggle}
+      {tableOdds ? (
+        <LinesTable game={game} odds={tableOdds} />
+      ) : (
+        <div className="bet-message">
+          {liveLines.loading && !liveLines.data ? 'Loading live odds…' : 'No live odds posted right now.'}
+        </div>
+      )}
+      <WinProbability game={game} predictor={chance} />
       {lockedNote}
       <TeamResultsHistory game={game} />
       <div className="pick-lines">

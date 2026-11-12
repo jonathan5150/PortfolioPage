@@ -2,6 +2,7 @@
 // result and odds, and fighters' tale of the tape.
 import { fetchJson, runWithConcurrency } from '../../pages/NFLData/NFLDataApi/http';
 import { parseStatus } from '../../pages/NFLData/NFLDataApi/espnParsers';
+import { parseOddsLinks } from '../../pages/NFLData/NFLDataApi/betting';
 
 const SITE = 'https://site.api.espn.com/apis/site/v2/sports/mma/ufc';
 const CORE = 'https://sports.core.api.espn.com/v2/sports/mma/leagues/ufc';
@@ -133,9 +134,15 @@ export const getUfcOdds = async (eventId, fightId, { final = false } = {}) => {
   [away, home].forEach((s) => {
     if (s?.id && s.moneyLine) byId[s.id] = s.moneyLine;
   });
+  // DraftKings bet-slip links, keyed by fighter like the prices
+  const links = parseOddsLinks(item.links);
+  const linksById = {};
+  if (away?.id && links.awayMl) linksById[away.id] = links.awayMl;
+  if (home?.id && links.homeMl) linksById[home.id] = links.homeMl;
   return {
     provider: item.provider?.name || 'Sportsbook',
     byId,
+    linksById,
     rounds: item.overUnder ?? null,
     overOdds: item.overOdds ?? null,
     underOdds: item.underOdds ?? null,

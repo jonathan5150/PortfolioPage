@@ -2,8 +2,14 @@
 // parsers as the NFL page wherever ESPN's shapes match; league-specific bits
 // (box scores, MLB's count and bases) are parsed here.
 import { fetchJson, runWithConcurrency } from '../../pages/NFLData/NFLDataApi/http';
+import { readPreference, writePreference } from '../../components/NFLDataComponents/shared/usePersistentState';
 import { parseEvent, parseTeam, parseTeamSchedule, parseStatus } from '../../pages/NFLData/NFLDataApi/espnParsers';
-import { parseEventOdds, parsePredictor } from '../../pages/NFLData/NFLDataApi/betting';
+import {
+  parseEventOdds,
+  parseLiveOdds,
+  parsePregameOdds,
+  parsePredictor,
+} from '../../pages/NFLData/NFLDataApi/betting';
 
 export const LEAGUES = {
   nba: {
@@ -123,6 +129,76 @@ export const getLeagueScoreboard = async (lg, day, { live = false } = {}) =>
     lg,
   );
 
+// ---------- a day's games, small and remembered ----------
+// Model results need every finished game's teams, start and score (for rest
+// days and grading), not whole scoreboards. A finished day never changes, so
+// its compact list is kept in localStorage and only downloaded once.
+const compactSide = (c) =>
+  c && {
+    teamId: c.teamId,
+    score: c.score,
+    winner: c.winner,
+    team: c.team && {
+      id: c.team.id,
+      abbreviation: c.team.abbreviation,
+      name: c.team.name,
+      displayName: c.team.displayName,
+      league: c.team.league,
+    },
+  };
+const compactGame = (g) => ({
+  id: g.id,
+  date: g.date,
+  status: { state: g.status.state },
+  seasonType: g.seasonType ?? null,
+  homeId: g.home?.teamId,
+  awayId: g.away?.teamId,
+  away: compactSide(g.away),
+  home: compactSide(g.home),
+});
+const dayStore = (lg) => `${lg}Days:v2`;
+export const getDayGames = async (lg, key) => {
+  const saved = readPreference(dayStore(lg), {});
+  if (saved[key]) return saved[key];
+  const board = await getLeagueScoreboard(lg, key);
+  const games = board.events.map(compactGame);
+  const today = dayKey(new Date());
+  if (key < today && games.every((g) => g.status.state === 'post')) {
+    writePreference(dayStore(lg), { ...readPreference(dayStore(lg), {}), [key]: games });
+  }
+  return games;
+};
+
+// The games in the week before `game` (for rest days).
+export const getEarlierGames = async (lg, game) => {
+  const d = new Date(game.date);
+  const keys = Array.from({ length: 7 }, (_, i) => {
+    const k = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i);
+    return dayKey(k);
+  });
+  const days = await runWithConcurrency(
+    keys.map((k) => () => getDayGames(lg, k)),
+    3,
+  );
+  return days.flatMap((r) => (r.ok ? r.value : []));
+};
+
+// Every finished regular-season (and playoff) game of the current season so far
+// (ESPN's game days up to today; preseason games left out).
+export const getSeasonFinished = async (lg) => {
+  const today = dayKey(new Date());
+  // eslint-disable-next-line no-use-before-define
+  const keys = (await ondays(lg)).filter((k) => k <= today);
+  const days = await runWithConcurrency(
+    keys.map((k) => () => getDayGames(lg, k)),
+    3,
+  );
+  const seen = new Set();
+  return days
+    .flatMap((r) => (r.ok ? r.value : []))
+    .filter((g) => g.status.state === 'post' && g.seasonType !== 1 && !seen.has(g.id) && seen.add(g.id));
+};
+
 // The nearest day with games before (dir -1) or after (dir 1) `fromDay`.
 // ESPN's calendar only lists a few dates a season and rejects date ranges, so:
 // check the next few days one by one, then whole months (offseason gaps, e.g.
@@ -161,7 +237,10 @@ export const getLeagueEventDays = async (lg, year, month) => {
   const lo = known[0];
   const hi = known[known.length - 1];
   const out = new Set(known.filter((k) => keys.includes(k)));
-  const unknown = keys.filter((k) => !lo || k < lo || k > hi);
+  let unknown = keys.filter((k) => !lo || k < lo || k > hi);
+  // offseason months are usually empty: one month-wide request settles that
+  // instead of checking every day
+  if (unknown.length && !(await firstEvent(lg, `${year}${String(month + 1).padStart(2, '0')}`))) unknown = [];
   const probed = await runWithConcurrency(
     unknown.map((k) => async () => ((await hasGames(lg, k)) ? k : null)),
     6,
@@ -259,6 +338,13 @@ export const getLeagueOdds = async (lg, eventId, { final = false } = {}) => {
     ttlMs: final ? 24 * 60 * MIN : 5 * MIN,
   });
   return parseEventOdds(json);
+};
+
+// While a game is on: the pregame line and the live one, from one download
+// that's only cached for a few seconds.
+export const getLeagueLiveLines = async (lg, eventId) => {
+  const json = await fetchJson(`${CORE(lg)}/events/${eventId}/competitions/${eventId}/odds`, { ttlMs: 10 * 1000 });
+  return { pregame: parsePregameOdds(json), live: parseLiveOdds(json) };
 };
 
 export const getLeaguePredictor = async (lg, eventId) => {

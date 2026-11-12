@@ -10,7 +10,14 @@ import {
   getStartingQbId,
   isUnavailable,
 } from './espnService';
-import { parseEventOdds, parsePredictor, gradeGame, computeTeamTrends } from './betting';
+import {
+  parseEventOdds,
+  parseLiveOdds,
+  parsePregameOdds,
+  parsePredictor,
+  gradeGame,
+  computeTeamTrends,
+} from './betting';
 import { buildLinePicks, gradeLinePicks, linePickBets, teamResultHistory } from './picks';
 import { frozenOdds, PICKS_SNAPSHOT } from './oddsSnapshots';
 
@@ -20,6 +27,13 @@ const HOUR = 60 * MINUTE;
 // Closing lines for finished games never change, so cache those for hours.
 export const getEventOdds = async (eventId, { final = false } = {}) =>
   parseEventOdds(await fetchJson(espnUrls.eventOdds(eventId), { ttlMs: final ? 6 * HOUR : MINUTE }));
+
+// While a game is on: the pregame line and the live one, from one download
+// that's only cached for a few seconds.
+export const getEventLiveLines = async (eventId) => {
+  const json = await fetchJson(espnUrls.eventOdds(eventId), { ttlMs: 10 * 1000 });
+  return { pregame: parsePregameOdds(json), live: parseLiveOdds(json) };
+};
 
 export const getEventPredictor = async (eventId) =>
   parsePredictor(await fetchJson(espnUrls.eventPredictor(eventId), { ttlMs: 10 * MINUTE }));

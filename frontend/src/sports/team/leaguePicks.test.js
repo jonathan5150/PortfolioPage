@@ -1,4 +1,4 @@
-import { buildLeaguePicks, winChance } from './leaguePicks';
+import { buildLeaguePicks, restDays, winChance } from './leaguePicks';
 import { gradeLinePicks, linePickBets } from '../../pages/NFLData/NFLDataApi/picks';
 
 const team = (abbreviation, name) => ({ abbreviation, name, displayName: name, league: 'nba' });
@@ -26,8 +26,31 @@ describe('league picks (NBA / MLB)', () => {
     expect(picks.winner).toMatchObject({ side: 'home', bet: false, headline: 'KNICKS TO WIN', odds: 'ML -250' });
     expect(picks.spread.bet).toBe(false);
     expect(picks.spread.title).toBe('SPREAD');
-    expect(picks.total).toMatchObject({ side: 'under', bet: false });
-    expect(buildLeaguePicks({ lg: 'mlb', game: game(), odds, predictor: null }).spread.title).toBe('RUN LINE');
+    expect(picks.total).toMatchObject({ side: 'over', bet: false });
+    const mlb = buildLeaguePicks({ lg: 'mlb', game: game(), odds, predictor: null });
+    expect(mlb.spread.title).toBe('RUN LINE');
+    expect(mlb.total).toMatchObject({ side: 'under', bet: false });
+  });
+
+  it('NBA: bets the home team with 2+ more days of rest, else leans home', () => {
+    const rested = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 3, away: 1 } });
+    expect(rested.spread).toMatchObject({ side: 'home', bet: true });
+    const even = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 2, away: 1 } });
+    expect(even.spread).toMatchObject({ side: 'home', bet: false });
+  });
+
+  it('NBA: the total lean follows a 3+ point drop to the under', () => {
+    const moved = { ...odds, total: { ...odds.total, openLine: 225.5 } };
+    expect(buildLeaguePicks({ lg: 'nba', game: game(), odds: moved, predictor: null }).total.side).toBe('under');
+  });
+
+  it('rest days come from the earlier games', () => {
+    const g = { date: '2026-11-10T00:00Z', home: { teamId: '1' }, away: { teamId: '2' } };
+    const earlier = [
+      { date: '2026-11-07T00:00Z', homeId: '1', awayId: '9' },
+      { date: '2026-11-09T00:00Z', homeId: '8', awayId: '2' },
+    ];
+    expect(restDays(g, earlier)).toEqual({ home: 3, away: 1 });
   });
 
   it('grades with the shared grader once the game is final', () => {

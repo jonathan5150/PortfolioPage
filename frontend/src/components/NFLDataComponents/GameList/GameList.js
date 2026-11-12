@@ -90,6 +90,7 @@ const GameList = ({
   isWeekMenuOpen,
   setIsWeekMenuOpen,
   rankings,
+  onGameOpened,
   lastUpdated,
 }) => {
   // SET / OPEN / CLOSE buttons on one card broadcast to every card.
@@ -98,6 +99,10 @@ const GameList = ({
 
   // Only one game is open at a time: opening a game closes whichever was open.
   const [openGameId, setOpenGameId] = useState(null);
+  // the first opened game asks the page for the data only open games use
+  useEffect(() => {
+    if (openGameId) onGameOpened?.();
+  }, [openGameId, onGameOpened]);
   const handleUserToggle = useCallback((gameId, open) => {
     setOpenGameId((prev) => (open ? gameId : prev === gameId ? null : prev));
   }, []);

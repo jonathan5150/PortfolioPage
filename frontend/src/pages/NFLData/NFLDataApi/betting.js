@@ -11,7 +11,6 @@ const num = (value) => {
   return Number.isFinite(n) ? n : null;
 };
 
-
 // ---------- formatting ----------
 
 export const fmtLine = (n) => {
@@ -49,7 +48,14 @@ const parseOddsSide = (t, fallbackSpread) => ({
 });
 
 // DraftKings bet-slip links in ESPN's odds item, keyed by their rel.
-const LINK_RELS = { home: 'homeMl', away: 'awayMl', homeSpread: 'homeSpread', awaySpread: 'awaySpread', over: 'over', under: 'under' };
+const LINK_RELS = {
+  home: 'homeMl',
+  away: 'awayMl',
+  homeSpread: 'homeSpread',
+  awaySpread: 'awaySpread',
+  over: 'over',
+  under: 'under',
+};
 
 export const parseOddsLinks = (links = []) => {
   const out = {};
@@ -73,9 +79,7 @@ export const parseEventOdds = (json) => {
   const items = (json?.items || [])
     .filter((i) => i && (i.details || i.overUnder !== undefined || i.spread !== undefined))
     .filter((i) => !/live odds/i.test(i.provider?.name || ''))
-    .sort(
-      (a, b) => completeness(b) - completeness(a) || (a.provider?.priority ?? 99) - (b.provider?.priority ?? 99),
-    );
+    .sort((a, b) => completeness(b) - completeness(a) || (a.provider?.priority ?? 99) - (b.provider?.priority ?? 99));
   const item = items[0];
   if (!item) return null;
 
@@ -95,6 +99,74 @@ export const parseEventOdds = (json) => {
     },
     links: parseOddsLinks(item.links),
   };
+};
+
+// ---------- pregame vs live (LINES tab's PREGAME / LIVE toggle) ----------
+
+// One book's line read from one of its snapshots: 'close' (the last pregame
+// line) or 'current' (where it stands now, i.e. in-game once a game is live).
+const fromSnapshot = (item, snap) => {
+  const side = (t) => ({
+    favorite: Boolean(t?.favorite),
+    moneyLine: num(t?.[snap]?.moneyLine?.american),
+    openMoneyLine: num(t?.open?.moneyLine?.american),
+    spreadLine: num(t?.[snap]?.pointSpread?.american),
+    openSpreadLine: num(t?.open?.pointSpread?.american),
+    spreadOdds: num(t?.[snap]?.spread?.american),
+  });
+  const away = side(item.awayTeamOdds);
+  const home = side(item.homeTeamOdds);
+  if (away.moneyLine === null && home.moneyLine === null && home.spreadLine === null) return null;
+  return {
+    provider: item.provider?.name || 'Sportsbook',
+    details: '',
+    homeSpread: home.spreadLine,
+    away,
+    home,
+    total: {
+      line: num(item?.[snap]?.total?.american),
+      openLine: num(item.open?.total?.american),
+      overOdds: num(item?.[snap]?.over?.american),
+      underOdds: num(item?.[snap]?.under?.american),
+    },
+    links: parseOddsLinks(item.links),
+  };
+};
+
+const fill = (primary, backup) => {
+  if (!primary) return backup;
+  if (!backup) return primary;
+  const pickSide = (a, b) => Object.fromEntries(Object.keys(b).map((k) => [k, a?.[k] ?? b[k]]));
+  return {
+    ...backup,
+    ...primary,
+    homeSpread: primary.homeSpread ?? backup.homeSpread,
+    away: pickSide(primary.away, backup.away),
+    home: pickSide(primary.home, backup.home),
+    total: pickSide(primary.total, backup.total),
+    links: Object.keys(primary.links || {}).length ? primary.links : backup.links,
+  };
+};
+
+// The book's pregame line once a game has started: its closing snapshot, with
+// anything missing from the usual parse.
+export const parsePregameOdds = (json) => {
+  const base = parseEventOdds(json);
+  const item = (json?.items || []).find((i) => !/live odds/i.test(i.provider?.name || '') && i.close);
+  return fill(item ? fromSnapshot(item, 'close') : null, base);
+};
+
+// In-game odds: ESPN's "Live Odds" book when one is posted, otherwise the main
+// book's current (moving) line. Null when neither is there.
+export const parseLiveOdds = (json) => {
+  const items = json?.items || [];
+  const liveItem = items.find((i) => /live odds/i.test(i.provider?.name || ''));
+  if (liveItem) {
+    const parsed = parseEventOdds({ items: [{ ...liveItem, provider: { ...liveItem.provider, name: 'Live' } }] });
+    if (parsed) return { ...parsed, provider: liveItem.provider?.name || 'Live Odds' };
+  }
+  const main = items.find((i) => !/live odds/i.test(i.provider?.name || '') && i.current);
+  return main ? fromSnapshot(main, 'current') : null;
 };
 
 // core API: events/{id}/competitions/{id}/predictor (ESPN FPI).
@@ -118,7 +190,8 @@ export const gradeGame = (teamId, game, odds) => {
   }
 
   const margin = self.score - opp.score;
-  const line = odds?.homeSpread === null || odds?.homeSpread === undefined ? null : isHome ? odds.homeSpread : -odds.homeSpread;
+  const line =
+    odds?.homeSpread === null || odds?.homeSpread === undefined ? null : isHome ? odds.homeSpread : -odds.homeSpread;
   const cover = line === null ? null : margin + line;
   const total = self.score + opp.score;
   const overUnder = odds?.total?.line ?? null;
@@ -170,11 +243,26 @@ export const computeTeamTrends = (graded) => {
     games: games.length,
     su: tally(games, 'su'),
     ats: tally(withLine, 'ats'),
-    atsFav: tally(withLine.filter((g) => g.line < 0), 'ats'),
-    atsDog: tally(withLine.filter((g) => g.line > 0), 'ats'),
-    atsHome: tally(withLine.filter((g) => g.isHome), 'ats'),
-    atsAway: tally(withLine.filter((g) => !g.isHome), 'ats'),
-    ou: tally(games.filter((g) => g.ou), 'ou'),
+    atsFav: tally(
+      withLine.filter((g) => g.line < 0),
+      'ats',
+    ),
+    atsDog: tally(
+      withLine.filter((g) => g.line > 0),
+      'ats',
+    ),
+    atsHome: tally(
+      withLine.filter((g) => g.isHome),
+      'ats',
+    ),
+    atsAway: tally(
+      withLine.filter((g) => !g.isHome),
+      'ats',
+    ),
+    ou: tally(
+      games.filter((g) => g.ou),
+      'ou',
+    ),
     ppg: avg(games.map((g) => g.pointsFor)),
     papg: avg(games.map((g) => g.pointsAgainst)),
     avgCover: avg(withLine.map((g) => g.coverMargin)),

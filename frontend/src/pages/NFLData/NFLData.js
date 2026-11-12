@@ -43,6 +43,7 @@ function NFLData() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [rankings, setRankings] = useState(null);
+  const [rankingsWanted, setRankingsWanted] = useState(false);
   const [isTeamsMenuOpen, setIsTeamsMenuOpen] = useState(false);
   const [isWeekMenuOpen, setIsWeekMenuOpen] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -159,7 +160,7 @@ function NFLData() {
   // Team rankings for the season being viewed (shared by every card).
   const rankingsSeason = selection?.season;
   useEffect(() => {
-    if (!rankingsSeason || !teams.length) return undefined;
+    if (!rankingsSeason || !teams.length || !rankingsWanted) return undefined;
     let active = true;
     setRankings(null);
     getTeamRankings(rankingsSeason, teams)
@@ -171,7 +172,7 @@ function NFLData() {
     return () => {
       active = false;
     };
-  }, [rankingsSeason, teams]);
+  }, [rankingsSeason, teams, rankingsWanted]);
 
   const teamsById = useMemo(() => Object.fromEntries(teams.map((t) => [t.id, t])), [teams]);
 
@@ -230,6 +231,7 @@ function NFLData() {
           isWeekMenuOpen={isWeekMenuOpen}
           setIsWeekMenuOpen={setIsWeekMenuOpen}
           rankings={rankings}
+          onGameOpened={() => setRankingsWanted(true)}
           hasLiveGames={pollInterval === LIVE_POLL_MS}
           lastUpdated={lastUpdated}
         />

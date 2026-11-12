@@ -3756,3 +3756,58 @@
 .nfl-data-container .ufc-fights-button .control-label {
   font-size: 15px;
 }
+
+/* TEAMS and GAMES split the right half exactly in two, whatever their labels */
+.nfl-data-container .controls > .controls-right > .teams-dropdown-wrapper,
+.nfl-data-container .controls > .controls-right > .hide-games-button {
+  /* an exact half each (minus half the gap): padding and borders sit inside */
+  flex: 0 0 calc(50% - 2px);
+  width: auto;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.nfl-data-container .controls > .controls-right > .teams-dropdown-wrapper > .nfl-control-button {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* UFC's FIGHTS button is alone there: it keeps the whole half */
+.nfl-data-container .controls > .controls-right > .hide-games-button:only-child {
+  flex: 1 1 auto;
+}
+
+/* LINES W/L history: both teams in one box. The logos column stays put; one
+   scroller holds both rows, each lined up against the right edge. */
+.nfl-data-container .team-results.team-results-combined {
+  align-items: stretch;
+}
+
+.nfl-data-container .team-results-logos,
+.nfl-data-container .team-results-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nfl-data-container .team-results-logos {
+  flex: none;
+}
+
+.nfl-data-container .team-results-logo-cell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.nfl-data-container .team-results-rows {
+  width: max-content;
+  min-width: 100%;
+}
+
+.nfl-data-container .team-results-scroll .team-results-rows > .td-history-games {
+  width: 100%;
+  min-width: 0;
+  justify-content: flex-end;
+}

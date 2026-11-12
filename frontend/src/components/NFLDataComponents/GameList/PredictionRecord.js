@@ -8,13 +8,16 @@ import { betReturn } from '../../../pages/NFLData/NFLDataApi/picks';
 import { fmtOdds } from '../../../pages/NFLData/NFLDataApi/betting';
 import { getScoreboard } from '../../../pages/NFLData/NFLDataApi/espnService';
 
-// How the pick engine did this week: moneyline, spread and over/under records
-// for every finished game, plus the combined total. Pushes don't count.
+// How the pick engine did: moneyline, spread and over/under records for every
+// finished game shown (a week for the NFL, a day for the NBA / MLB), plus the
+// combined total. Pushes don't count. The panel is shared by the sports pages:
+// each passes how to grade one game and how to find the season's games.
 const MARKETS = [
   { key: 'winner', label: 'Moneyline' },
   { key: 'spread', label: 'Spread' },
   { key: 'total', label: 'O/U' },
 ];
+const marketsFor = (spreadLabel) => MARKETS.map((m) => (m.key === 'spread' ? { ...m, label: spreadLabel } : m));
 
 // A finished game's grades never change, so they're kept in localStorage and
 // later visits don't refetch anything. Bump the version when the pick rules or
@@ -32,20 +35,23 @@ try {
 } catch {
   // storage blocked
 }
-const gradeOf = async (game) => {
-  const saved = readPreference(GRADES_KEY, {});
+
+// Grade one game, remembering the result under `key` in localStorage.
+export const cachedGrader = (key, grade) => async (game) => {
+  const saved = readPreference(key, {});
   if (saved[game.id]) return saved[game.id];
-  const grades = await getGradedLinePicks(game);
-  if (grades) writePreference(GRADES_KEY, { ...readPreference(GRADES_KEY, {}), [game.id]: grades });
+  const grades = await grade(game);
+  if (grades) writePreference(key, { ...readPreference(key, {}), [game.id]: grades });
   return grades;
 };
+const nflGrade = cachedGrader(GRADES_KEY, getGradedLinePicks);
 
 // Every pick is a flat bet (the chosen stake) at its pregame price.
 const STAKES = [10, 25, 100];
-const BET_FILTERS = [
+const betFilters = (spreadLabel) => [
   { key: 'all', label: 'TOTAL' },
   { key: 'winner', label: 'MONEYLINE' },
-  { key: 'spread', label: 'SPREAD' },
+  { key: 'spread', label: spreadLabel.toUpperCase() },
   { key: 'total', label: 'O/U' },
 ];
 
@@ -61,7 +67,7 @@ const dayKey = (date) => new Date(date).toDateString();
 const dayLabel = (date) =>
   new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
 
-// Finished games' bets, oldest kickoff first, grouped by the day they were played.
+// Finished games' bets, oldest start first, grouped by the day they were played.
 const betDays = (finished, gradedById, filter, stake, minOdds) => {
   const days = [];
   [...finished]
@@ -92,35 +98,40 @@ const pct = ({ W, L }) => (W + L ? `${Math.round((W / (W + L)) * 100)}%` : '—'
 
 const REGULAR_SEASON_WEEKS = 18;
 
-// Every finished game of the current season so far (regular season, plus the
-// playoffs once they've started), graded like this week's. Grades are cached,
-// so only the first visit fetches the older weeks. Reports progress as it goes.
-const useSeasonGrades = () => {
+// Every finished NFL game of the current season so far (regular season, plus
+// the playoffs once they've started).
+const nflSeasonGames = async () => {
+  const current = await getScoreboard();
+  const { season, seasonType, week } = current;
+  const weeks = [];
+  const regularThrough = seasonType === 3 ? REGULAR_SEASON_WEEKS : seasonType === 2 ? week : 0;
+  for (let w = 1; w <= regularThrough; w += 1) weeks.push({ season, seasonType: 2, week: w });
+  if (seasonType === 3) for (let w = 1; w <= week; w += 1) weeks.push({ season, seasonType: 3, week: w });
+  const boards = await runWithConcurrency(
+    weeks.map((params) => () => getScoreboard(params)),
+    3,
+  );
+  const seen = new Set();
+  return boards
+    .flatMap((b) => (b.ok ? b.value.events : []))
+    .filter((g) => g.status?.state === 'post' && !seen.has(g.id) && seen.add(g.id));
+};
+
+// The season's finished games, each graded like the current ones. Grades are
+// cached, so only the first visit fetches the older games. Reports progress.
+const useSeasonGrades = (loadSeason, gradeGame) => {
   const [state, setState] = useState({ grades: null, done: 0, total: 0, error: null });
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const current = await getScoreboard();
-        const { season, seasonType, week } = current;
-        const weeks = [];
-        const regularThrough = seasonType === 3 ? REGULAR_SEASON_WEEKS : seasonType === 2 ? week : 0;
-        for (let w = 1; w <= regularThrough; w += 1) weeks.push({ season, seasonType: 2, week: w });
-        if (seasonType === 3) for (let w = 1; w <= week; w += 1) weeks.push({ season, seasonType: 3, week: w });
-        const boards = await runWithConcurrency(
-          weeks.map((params) => () => getScoreboard(params)),
-          3,
-        );
-        const seen = new Set();
-        const finished = boards
-          .flatMap((b) => (b.ok ? b.value.events : []))
-          .filter((g) => g.status?.state === 'post' && !seen.has(g.id) && seen.add(g.id));
+        const finished = await loadSeason();
         if (!active) return;
         setState({ grades: null, done: 0, total: finished.length, error: null });
         let done = 0;
         const results = await runWithConcurrency(
           finished.map((g) => async () => {
-            const grade = await gradeOf(g);
+            const grade = await gradeGame(g);
             done += 1;
             if (active && done % 4 === 0) setState((prev) => ({ ...prev, done }));
             return grade;
@@ -138,13 +149,13 @@ const useSeasonGrades = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadSeason, gradeGame]);
   return state;
 };
 
 // The model's season record and flat-bet profit for each market, at `stake`.
-const SeasonTotals = ({ stake, minOdds, filter }) => {
-  const { grades, done, total, error } = useSeasonGrades();
+const SeasonTotals = ({ stake, minOdds, filter, loadSeason, gradeGame, markets }) => {
+  const { grades, done, total, error } = useSeasonGrades(loadSeason, gradeGame);
   if (error && !grades) return <div className="prediction-record-loading">Couldn't load the season's games.</div>;
   if (!grades) {
     return (
@@ -153,7 +164,7 @@ const SeasonTotals = ({ stake, minOdds, filter }) => {
       </div>
     );
   }
-  const rows = MARKETS.map(({ key, label }) => {
+  const rows = markets.map(({ key, label }) => {
     const rec = { W: 0, L: 0, profit: 0 };
     // record and profit both come from the simulated bets, so the odds filter applies to both
     grades.forEach((g) => {
@@ -192,19 +203,19 @@ const SeasonTotals = ({ stake, minOdds, filter }) => {
 
 const matchup = (g) => `${g.away?.team?.abbreviation || 'AWAY'} @ ${g.home?.team?.abbreviation || 'HOME'}`;
 
-const BetResults = ({ finished, gradedById }) => {
+const BetResults = ({ finished, gradedById, period, spreadLabel, loadSeason, gradeGame, markets }) => {
   const [filter, setFilter] = useState('all');
   const [stake, setStake] = useState(STAKES[0]);
   const [minOdds, setMinOdds] = useState(null);
   const days = betDays(finished, gradedById, filter, stake, minOdds);
-  const week = days.reduce((sum, d) => sum + d.profit, 0);
-  // Just the week's profit until EACH BET is opened.
+  const periodProfit = days.reduce((sum, d) => sum + d.profit, 0);
+  // Just the period's profit until EACH BET is opened.
   const [showBets, setShowBets] = useState(false);
   return (
     <div className="bet-results">
       <div className="prediction-record-title">MODEL RESULTS</div>
       <div className="bet-filter">
-        {BET_FILTERS.map((f) => (
+        {betFilters(spreadLabel).map((f) => (
           <button
             key={f.key}
             type="button"
@@ -288,19 +299,37 @@ const BetResults = ({ finished, gradedById }) => {
             </>
           )}
           <div className="bet-row bet-total bet-week">
-            <span>WEEK PROFIT</span>
-            <span className={`bet-return ${tone(week)}`}>{signedMoney(week)}</span>
+            <span>{period} PROFIT</span>
+            <span className={`bet-return ${tone(periodProfit)}`}>{signedMoney(periodProfit)}</span>
           </div>
         </>
       )}
-      <SeasonTotals stake={stake} minOdds={minOdds} filter={filter} />
+      <SeasonTotals
+        stake={stake}
+        minOdds={minOdds}
+        filter={filter}
+        loadSeason={loadSeason}
+        gradeGame={gradeGame}
+        markets={markets}
+      />
     </div>
   );
 };
 
-const PredictionRecord = ({ games }) => {
+// games: the games on screen (a week / a day). gradeGame(game) -> { winner,
+// spread, total, bets } (cached); loadSeason() -> the season's finished games.
+// period: 'WEEK' or 'DAY'. note: an optional line under the season totals.
+export const ModelResults = ({
+  games,
+  gradeGame = nflGrade,
+  loadSeason = nflSeasonGames,
+  period = 'WEEK',
+  spreadLabel = 'Spread',
+  note = null,
+}) => {
   const finished = useMemo(() => (games || []).filter((g) => g.status?.state === 'post'), [games]);
   const ids = finished.map((g) => g.id).join(',');
+  const markets = useMemo(() => marketsFor(spreadLabel), [spreadLabel]);
   // Everything here stays closed until the button is pressed, and nothing is
   // graded until then, so it never competes with a game being opened.
   const [open, setOpen] = useState(false);
@@ -308,16 +337,16 @@ const PredictionRecord = ({ games }) => {
   const graded = useAsyncData(
     async () => {
       const results = await runWithConcurrency(
-        finished.map((g) => () => gradeOf(g)),
+        finished.map((g) => () => gradeGame(g)),
         2,
       );
       return results.map((r, i) => (r.ok && r.value ? { ...r.value, id: finished[i].id } : null)).filter(Boolean);
     },
-    [ids],
+    [ids, gradeGame],
     { enabled: finished.length > 0 && open },
   );
 
-  const rows = MARKETS.map(({ key, label }) => {
+  const rows = markets.map(({ key, label }) => {
     const rec = { W: 0, L: 0 };
     (graded.data || []).forEach((g) => {
       if (g[key] === 'W' || g[key] === 'L') rec[g[key]] += 1;
@@ -326,6 +355,7 @@ const PredictionRecord = ({ games }) => {
   });
   const gradedById = Object.fromEntries((graded.data || []).map((g) => [g.id, g]));
   const total = rows.reduce((acc, r) => ({ W: acc.W + r.W, L: acc.L + r.L }), { W: 0, L: 0 });
+  const word = period.toLowerCase();
 
   return (
     <div className="gold-box prediction-record-outer">
@@ -344,9 +374,9 @@ const PredictionRecord = ({ games }) => {
           <div className="model-results-content">
             <div className="prediction-record-title">PREDICTION RECORD · EVERY PICK</div>
             {!finished.length ? (
-              <div className="prediction-record-loading">No finished games this week yet.</div>
+              <div className="prediction-record-loading">No finished games this {word} yet.</div>
             ) : !graded.data ? (
-              <div className="prediction-record-loading">Grading this week's picks…</div>
+              <div className="prediction-record-loading">Grading this {word}'s picks…</div>
             ) : (
               <div className="prediction-record-rows">
                 {[...rows, { key: 'all', label: 'Total', ...total }].map((r) => (
@@ -360,12 +390,25 @@ const PredictionRecord = ({ games }) => {
                 ))}
               </div>
             )}
-            {(graded.data || !finished.length) && <BetResults finished={finished} gradedById={gradedById} />}
+            {(graded.data || !finished.length) && (
+              <BetResults
+                finished={finished}
+                gradedById={gradedById}
+                period={period}
+                spreadLabel={spreadLabel}
+                loadSeason={loadSeason}
+                gradeGame={gradeGame}
+                markets={markets}
+              />
+            )}
+            {note && <div className="league-model-note">{note}</div>}
           </div>
         </SlideOpen>
       </div>
     </div>
   );
 };
+
+const PredictionRecord = ({ games }) => <ModelResults games={games} />;
 
 export default PredictionRecord;
