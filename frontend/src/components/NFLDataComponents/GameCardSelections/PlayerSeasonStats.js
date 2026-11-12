@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import SwipeTeamPanel from '../shared/SwipeTeamPanel';
 import StatTable from '../shared/StatTable';
 import useAsyncData from '../shared/useAsyncData';
-import usePersistentState, { usePersistentMapEntry } from '../shared/usePersistentState';
 import { messageStyle, sourceNoteStyle } from '../shared/tableStyles';
 import { getTeamPlayerSeasonStats } from '../../../pages/NFLData/NFLDataApi/nflDataService';
 import { SEASON_VIEWS, sortRows } from './playerStatColumns';
@@ -32,9 +31,9 @@ const TeamSeasonTable = ({ state, view, sort, onSort, team }) => {
 };
 
 const PlayerSeasonStats = ({ gameId, awayTeam, homeTeam, season, currentSeason }) => {
-  const [view, setView] = usePersistentState('seasonStatsView', 'qb');
-  const [sorts, setSorts] = usePersistentState('seasonStatsSort', {});
-  const [showing, setShowing] = usePersistentMapEntry('seasonStatsSideByGame', gameId, 'away');
+  const [view, setView] = useState('qb');
+  const [sorts, setSorts] = useState({});
+  const [showing, setShowing] = useState('away');
   const [statsSeason, setStatsSeason] = useState(season);
 
   const config = SEASON_VIEWS[view] || SEASON_VIEWS.qb;

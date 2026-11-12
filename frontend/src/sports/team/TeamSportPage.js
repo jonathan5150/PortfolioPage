@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import SportSwitcher from '../SportSwitcher';
+import DayCalendar from '../DayCalendar';
+import { relativeDay } from '../relativeDay';
 import SlideOpen from '../../components/NFLDataComponents/shared/SlideOpen';
 import LastUpdated from '../../components/NFLDataComponents/shared/LastUpdated';
 import usePersistentState from '../../components/NFLDataComponents/shared/usePersistentState';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
-import { readCookie, writeCookie } from '../../components/NFLDataComponents/shared/cookies';
 import TeamsMenu from '../../components/NFLDataComponents/NFLDataNavbar/NFLDataNavbarComponents/TeamsMenu';
 import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
 import { betReturn, gradeLinePicks, linePickBets } from '../../pages/NFLData/NFLDataApi/picks';
@@ -13,6 +14,7 @@ import {
   LEAGUES,
   dayFromKey,
   findGameDay,
+  getLeagueEventDays,
   getLeagueOdds,
   getLeaguePredictor,
   getLeagueScoreboard,
@@ -22,6 +24,7 @@ import { buildLeaguePicks } from './leaguePicks';
 import TeamGameCard from './TeamGameCard';
 import '../../pages/NFLData/NFLData.scss';
 import './TeamSport.scss';
+import '../SportTitles.scss';
 
 const SECTIONS = [
   { key: 'post', label: 'FINISHED' },
@@ -51,12 +54,6 @@ const timeSlots = (games) => {
       byLabel.get(label).push(g);
     });
   return [...byLabel.entries()].map(([label, list]) => ({ label, games: list }));
-};
-
-const readCollapsed = (name) => {
-  const v = readCookie(name);
-  if (v === null) return null;
-  return new Set(v.split(',').filter((k) => k && k !== 'none'));
 };
 
 // ---------- the day's model results ----------
@@ -261,7 +258,8 @@ const TeamSportPage = ({ lg }) => {
   );
   const cookieName = `${lg}Collapsed_${day}`;
   const [savedCollapsed, setSavedCollapsed] = useState(null);
-  useEffect(() => setSavedCollapsed(day ? readCollapsed(cookieName) : null), [cookieName, day]);
+  // not saved anywhere: every new day starts from the default view
+  useEffect(() => setSavedCollapsed(null), [cookieName]);
   const defaultCollapsed = useMemo(() => {
     const keys = sections.map((s) => s.key);
     // live games: LIVE and UPCOMING open; otherwise UPCOMING, else FINISHED
@@ -274,7 +272,6 @@ const TeamSportPage = ({ lg }) => {
     if (next.has(key)) next.delete(key);
     else next.add(key);
     setSavedCollapsed(next);
-    writeCookie(cookieName, next.size ? [...next].join(',') : 'none');
     if (list.some((g) => g.id === openGameId)) setOpenGameId(null);
   };
 
@@ -294,6 +291,21 @@ const TeamSportPage = ({ lg }) => {
       .finally(() => setStepping(false));
   };
   const [pickingDay, setPickingDay] = useState(false);
+  const dayRef = useRef(null);
+  useEffect(() => {
+    if (!pickingDay) return undefined;
+    const close = (e) => {
+      if (!dayRef.current?.contains(e.target)) setPickingDay(false);
+    };
+    document.addEventListener('pointerdown', close, true);
+    return () => document.removeEventListener('pointerdown', close, true);
+  }, [pickingDay]);
+  const loadEventDays = useCallback((y, m) => getLeagueEventDays(lg, y, m), [lg]);
+  const pickDay = (key) => {
+    setDay(key);
+    setPickingDay(false);
+    setOpenGameId(null);
+  };
 
   if (error && !board) {
     return (
@@ -315,7 +327,7 @@ const TeamSportPage = ({ lg }) => {
       <div>
         <div className="matchup-card fade-in">
           <div className="nflDataNavbar">
-            <h1 className="nfl-title">
+            <h1 className={`nfl-title sport-title-${lg}`}>
               <span className="nfl-title-badge">{league.label}</span>
               <span className="nfl-title-text">Stats Guide</span>
             </h1>
@@ -323,7 +335,7 @@ const TeamSportPage = ({ lg }) => {
               <div className="controls-left">
                 <SportSwitcher current={lg} />
               </div>
-              <div className="week-control">
+              <div className="week-control" ref={dayRef}>
                 <button
                   type="button"
                   className="nfl-control-button week-step"
@@ -349,15 +361,11 @@ const TeamSportPage = ({ lg }) => {
                 </button>
                 {pickingDay && (
                   <div className="nfl-dropdown-menu week-dropdown league-day-picker">
-                    <input
-                      type="date"
-                      value={day ? `${day.slice(0, 4)}-${day.slice(4, 6)}-${day.slice(6, 8)}` : ''}
-                      onChange={(e) => {
-                        if (!e.target.value) return;
-                        setDay(e.target.value.replace(/-/g, ''));
-                        setPickingDay(false);
-                        setOpenGameId(null);
-                      }}
+                    <DayCalendar
+                      value={day}
+                      onPick={pickDay}
+                      onToday={() => pickDay(null)}
+                      loadEventDays={loadEventDays}
                     />
                   </div>
                 )}
@@ -425,7 +433,9 @@ const TeamSportPage = ({ lg }) => {
                       onClick={() => toggleSection(section.key, list)}
                     >
                       <span className="game-section-name">
-                        {section.label}
+                        {section.key === 'pre' && day && relativeDay(dayFromKey(day)) !== 'TODAY'
+                          ? relativeDay(dayFromKey(day)) || section.label
+                          : section.label}
                         <span className="gold-caret" aria-hidden="true" />
                       </span>
                       <span className="game-section-count">{list.length}</span>

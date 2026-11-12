@@ -1,7 +1,31 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import TeamsMenu from './NFLDataNavbarComponents/TeamsMenu';
-import WeekMenu from './NFLDataNavbarComponents/WeekMenu';
 import SportSwitcher from '../../../sports/SportSwitcher';
+import DayCalendar from '../../../sports/DayCalendar';
+import { fetchJson } from '../../../pages/NFLData/NFLDataApi/http';
+
+const pad = (n) => String(n).padStart(2, '0');
+const dayKey = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+// every day key a week covers, start (inclusive) to end (exclusive)
+const weekDays = (w) => {
+  const out = new Set();
+  if (!w?.startDate) return out;
+  const end = new Date(w.endDate || w.startDate).getTime();
+  const d = new Date(w.startDate);
+  d.setHours(12, 0, 0, 0);
+  for (let i = 0; i < 10 && d.getTime() < end; i += 1) {
+    out.add(dayKey(d));
+    d.setDate(d.getDate() + 1);
+  }
+  return out;
+};
+// ESPN's NFL game days this season, YYYYMMDD
+const nflGameDays = async () => {
+  const json = await fetchJson('https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/calendar/ondays', {
+    ttlMs: 6 * 60 * 60 * 1000,
+  }).catch(() => null);
+  return (json?.eventDate?.dates || []).map((d) => String(d).slice(0, 10).replace(/-/g, ''));
+};
 
 const shortSeasonType = (seasonType) => (seasonType === 1 ? 'PRE ' : '');
 
@@ -60,6 +84,33 @@ const NFLDataNavbar = ({
   const prevWeek = currentIndex > 0 ? flatWeeks[currentIndex - 1] : null;
   const nextWeek = currentIndex >= 0 && currentIndex < flatWeeks.length - 1 ? flatWeeks[currentIndex + 1] : null;
 
+  // the calendar: game days lit gold, the shown week drawn as one gold band;
+  // picking any day jumps to the week it falls in
+  const weekOfDay = (key) => flatWeeks.find((w) => weekDays(w).has(key)) || null;
+  const selectedDays = useMemo(() => weekDays(currentWeek), [currentWeek]);
+  const loadEventDays = useMemo(
+    () => async (y, m) => {
+      const prefix = `${y}${pad(m + 1)}`;
+      const covered = new Set(flatWeeks.flatMap((w) => [...weekDays(w)]));
+      return new Set((await nflGameDays()).filter((k) => k.startsWith(prefix) && covered.has(k)));
+    },
+    [flatWeeks],
+  );
+  const pickWeek = (w) => {
+    if (!w) return;
+    onSelectWeek(w.seasonType, w.week);
+    setIsWeekMenuOpen(false);
+  };
+  const pickToday = () => {
+    const today = dayKey(new Date());
+    const now = Date.now();
+    pickWeek(
+      weekOfDay(today) ||
+        flatWeeks.find((w) => new Date(w.startDate).getTime() > now) ||
+        flatWeeks[flatWeeks.length - 1],
+    );
+  };
+
   const weekLabel = currentWeek
     ? `${/^(pre|hall)/i.test(currentWeek.label) ? '' : shortSeasonType(seasonType)}${currentWeek.label}`.toUpperCase()
     : week
@@ -112,18 +163,13 @@ const NFLDataNavbar = ({
           </button>
 
           {isWeekMenuOpen && (
-            <div className="nfl-dropdown-menu week-dropdown">
-              <WeekMenu
-                calendar={seasonCalendar}
-                seasons={seasons}
-                season={season}
-                seasonType={seasonType}
-                week={week}
-                onSelectWeek={(st, w) => {
-                  onSelectWeek(st, w);
-                  setIsWeekMenuOpen(false);
-                }}
-                onSelectSeason={onSelectSeason}
+            <div className="nfl-dropdown-menu week-dropdown league-day-picker">
+              <DayCalendar
+                value={[...selectedDays][0] || null}
+                selectedDays={selectedDays}
+                onPick={(key) => pickWeek(weekOfDay(key))}
+                onToday={pickToday}
+                loadEventDays={loadEventDays}
               />
             </div>
           )}

@@ -66,6 +66,8 @@ const WATERMARK_SIZE = {
   CLE: 0.9,
   DET: 0.9,
   MIA: 0.9,
+  TEN: 0.75,
+  PIT: 0.75,
 };
 
 // Size used only while the game is closed (open games use WATERMARK_SIZE).
@@ -74,17 +76,30 @@ const WATERMARK_CLOSED_SIZE = {
   IND: 0.7,
 };
 
-// Before a game: the moneyline (top right) over the win chance (bottom right).
+// Other leagues' logos read big next to NFL ones: a scale per league, with
+// per-team tweaks on top (size multiplier, or a style such as a brighter filter).
+const LEAGUE_LOGOS = {
+  nba: {
+    open: 0.94,
+    closed: 0.77,
+    teams: {
+      NO: { size: 1.5 },
+      OKC: { size: 1.25 },
+      UTAH: { style: { filter: 'brightness(1.9) contrast(0.9)' } },
+    },
+  },
+  mlb: { open: 0.7, closed: 0.7, teams: {} },
+};
+
+// Before a game: the moneyline over "ODDS", then the win chance over "WIN PROB".
 const OddsStack = ({ winProb, moneyLine }) => (
   <div className="team-odds-stack">
-    <div className="team-odds-row">
-      {moneyLine !== null && moneyLine !== undefined && (
-        <>
-          <span className="team-odds-value">{moneyLine > 0 ? `+${moneyLine}` : moneyLine}</span>
-          <span className="team-odds-label">ODDS</span>
-        </>
-      )}
-    </div>
+    {moneyLine !== null && moneyLine !== undefined && (
+      <div className="team-odds-row">
+        <span className="team-odds-value">{moneyLine > 0 ? `+${moneyLine}` : moneyLine}</span>
+        <span className="team-odds-label">ODDS</span>
+      </div>
+    )}
     <div className="team-odds-row">
       <span className="team-odds-value">{Math.round(winProb)}%</span>
       <span className="team-odds-label">WIN PROB</span>
@@ -107,8 +122,11 @@ const TeamCell = ({
   const team = competitor?.team;
   // the per-team logo tweaks above are for NFL teams; other leagues share abbreviations
   const nflTuned = !team?.league || team.league === 'nfl';
-  // NBA logos read big: 30% smaller while closed, a little smaller when open
-  const leagueScale = team?.league === 'nba' ? { open: 0.85, closed: 0.7 } : null;
+  const leagueLogo = LEAGUE_LOGOS[team?.league] || null;
+  const teamTweak = leagueLogo?.teams[team?.abbreviation] || null;
+  const leagueScale = leagueLogo
+    ? { open: leagueLogo.open * (teamTweak?.size ?? 1), closed: leagueLogo.closed * (teamTweak?.size ?? 1) }
+    : null;
   const radius =
     corner === 'all' ? (side === 'away' ? '6px 0 0 6px' : '0 6px 6px 0') : side === 'away' ? '6px 0 0 0' : '0 6px 0 0';
 
@@ -143,7 +161,7 @@ const TeamCell = ({
             aria-hidden="true"
             className={`team-logo-watermark ${side}`}
             style={{
-              ...(nflTuned ? WATERMARK_STYLE[team.abbreviation] : null),
+              ...(nflTuned ? WATERMARK_STYLE[team.abbreviation] : teamTweak?.style),
               '--wm-size': nflTuned ? (WATERMARK_SIZE[team.abbreviation] ?? 1) : (leagueScale?.open ?? 1),
               '--wm-closed-size': nflTuned
                 ? (WATERMARK_CLOSED_SIZE[team.abbreviation] ?? WATERMARK_SIZE[team.abbreviation] ?? 1)

@@ -6,7 +6,6 @@ import PlayerSeasonStats from '../GameCardSelections/PlayerSeasonStats';
 import PlayerGameLog from '../GameCardSelections/PlayerGameLog';
 import TeamHistory from '../GameCardSelections/TeamHistory';
 import Betting from '../GameCardSelections/Betting';
-import { usePersistentMapEntry } from '../shared/usePersistentState';
 import { getTeamRingColors } from '../shared/teamColors';
 import useGameSummary from './useGameSummary';
 
@@ -60,7 +59,7 @@ const GameCard = memo(function GameCard({
   onToggleHidden,
 }) {
   const state = game.status.state;
-  const [storedPanel, setPanelKey] = usePersistentMapEntry('panelByGame', game.id, 'betting');
+  const [storedPanel, setPanelKey] = useState('betting');
   const panelKey = SHOW_PANEL_CONTROLS ? storedPanel : 'betting';
   const panelOptions = PANEL_OPTIONS;
   const isExpanded = isOpen;

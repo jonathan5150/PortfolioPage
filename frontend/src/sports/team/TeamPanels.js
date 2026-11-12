@@ -1,7 +1,13 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
 import TeamToggle from '../../components/NFLDataComponents/shared/TeamToggle';
-import { getTeamColor, getTeamTextColor, washOut } from '../../components/NFLDataComponents/shared/teamColors';
+import {
+  getTeamBackgroundStyle,
+  getTeamBorderColor,
+  getTeamColor,
+  getTeamTextColor,
+  washOut,
+} from '../../components/NFLDataComponents/shared/teamColors';
 import { fmtLine, fmtOdds } from '../../pages/NFLData/NFLDataApi/betting';
 import { gradeLinePicks, teamResultHistory } from '../../pages/NFLData/NFLDataApi/picks';
 import {
@@ -10,6 +16,7 @@ import {
   getLeagueOdds,
   getLeaguePredictor,
   getLeagueRoster,
+  getLeagueTeamLeaders,
   getLeagueSummary,
   getLeagueTeamSchedule,
 } from './leagueApi';
@@ -298,19 +305,72 @@ export const BoxScorePanel = ({ lg, game }) => {
 
 // ---------- PLAYERS: roster, tap a player for his recent games ----------
 
+// NBA columns lead with the headline numbers: MIN, then PTS REB AST 3PT 3P%,
+// then whatever else ESPN lists.
+const NBA_LEAD = ['MIN', 'PTS', 'REB', 'AST', '3PT', '3P%'];
+const columnOrder = (lg, labels) => {
+  const all = labels.map((_, i) => i);
+  if (lg !== 'nba') return all;
+  const lead = NBA_LEAD.map((l) => labels.indexOf(l)).filter((i) => i >= 0);
+  return [...lead, ...all.filter((i) => !lead.includes(i))];
+};
+
+// LAST 5 / 10 / 20: one choice shared by every PLAYERS tab (NBA and MLB) for
+// as long as the page is open; it starts at 10 on each visit.
+const GAME_COUNTS = [5, 10, 20];
+let sharedGameCount = 10;
+const gameCountListeners = new Set();
+const useGameCount = () => {
+  const [count, setCount] = useState(sharedGameCount);
+  useEffect(() => {
+    gameCountListeners.add(setCount);
+    return () => gameCountListeners.delete(setCount);
+  }, []);
+  const update = (n) => {
+    sharedGameCount = n;
+    gameCountListeners.forEach((fn) => fn(n));
+  };
+  return [count, update];
+};
+
+const GameCountPicker = () => {
+  const [count, setCount] = useGameCount();
+  return (
+    <span className="league-count-select-wrap">
+      <select
+        className="league-count-select"
+        value={count}
+        onChange={(e) => setCount(Number(e.target.value))}
+        aria-label="How many games"
+      >
+        {GAME_COUNTS.map((n) => (
+          <option key={n} value={n}>
+            LAST {n}
+          </option>
+        ))}
+      </select>
+      <span className="league-count-caret" aria-hidden="true" />
+    </span>
+  );
+};
+
 const PlayerLog = ({ lg, player }) => {
+  const [count] = useGameCount();
   const log = useAsyncData(() => getLeagueGameLog(lg, player.id), [lg, player.id]);
   if (log.loading && !log.data) return <div className="bet-message small">Loading {player.shortName}'s games…</div>;
-  const games = (log.data?.games || []).slice(0, 10);
+  // the most recent games (as many as picked, or fewer if that's all there
+  // are), oldest at the top and the latest at the bottom
+  const games = (log.data?.games || []).slice(0, count).reverse();
   if (!games.length) return <div className="bet-message small">No games this season yet.</div>;
+  const order = columnOrder(lg, log.data.labels || []);
   return (
     <div className="league-box-scroll">
       <table className="league-box-table">
         <thead>
           <tr>
             <th className="league-box-name">GAME</th>
-            {log.data.labels.map((l) => (
-              <th key={l}>{l}</th>
+            {order.map((i) => (
+              <th key={log.data.labels[i]}>{log.data.labels[i]}</th>
             ))}
           </tr>
         </thead>
@@ -321,9 +381,9 @@ const PlayerLog = ({ lg, player }) => {
                 {g.date ? new Date(g.date).toLocaleDateString([], { month: 'numeric', day: 'numeric' }) : ''} {g.opp}{' '}
                 <span className={g.result === 'W' ? 'league-win' : 'league-loss'}>{g.result}</span>
               </td>
-              {g.stats.map((v, i) => (
+              {order.map((i) => (
                 // eslint-disable-next-line react/no-array-index-key
-                <td key={i}>{v}</td>
+                <td key={i}>{g.stats[i]}</td>
               ))}
             </tr>
           ))}
@@ -333,10 +393,26 @@ const PlayerLog = ({ lg, player }) => {
   );
 };
 
+// One player at a time: the team's headline player first (NBA points leader,
+// MLB home run leader), any other from the dropdown.
 export const PlayersPanel = ({ lg, game }) => {
   const [side, setSide] = useState('away');
-  const [openId, setOpenId] = useState(null);
-  const roster = useAsyncData(() => getLeagueRoster(lg, game[side]?.teamId), [lg, game[side]?.teamId]);
+  const [pickedId, setPickedId] = useState(null);
+  const teamId = game[side]?.teamId;
+  const roster = useAsyncData(() => getLeagueRoster(lg, teamId), [lg, teamId]);
+  const leaders = useAsyncData(() => getLeagueTeamLeaders(lg, teamId, game.date), [lg, teamId, game.date]);
+  const players = useMemo(
+    () =>
+      [...(roster.data || [])].sort((a, b) =>
+        a.name.split(' ').slice(-1)[0].localeCompare(b.name.split(' ').slice(-1)[0]),
+      ),
+    [roster.data],
+  );
+  // the best of the leaders still on the roster
+  const leaderId = (leaders.data || []).find((id) => players.some((p) => p.id === id)) || null;
+  const byId = (id) => players.find((p) => p.id === id) || null;
+  const player = byId(pickedId) || byId(leaderId) || (leaders.loading ? null : players[0]) || null;
+  const accentColor = accent(game[side]?.team);
   return (
     <div className="box-score-tab">
       <div className="td-team-toggle">
@@ -345,34 +421,58 @@ export const PlayersPanel = ({ lg, game }) => {
           teamSide={side}
           onChange={(s) => {
             setSide(s);
-            setOpenId(null);
+            setPickedId(null);
           }}
           filled
         />
       </div>
       {roster.loading && !roster.data ? (
         <div className="bet-message">Loading roster…</div>
+      ) : !players.length ? (
+        <div className="bet-message">No roster listed.</div>
       ) : (
-        <div className="league-roster">
-          {(roster.data || []).map((p) => (
-            <div key={p.id} className={`league-roster-row ${openId === p.id ? 'open' : ''}`}>
-              <button
-                type="button"
-                className="league-roster-button"
-                onClick={() => setOpenId(openId === p.id ? null : p.id)}
-              >
-                <span className="league-roster-name">
+        <div className="league-player-pick">
+          <div
+            className="league-player-select-wrap"
+            style={{
+              '--player-accent': getTeamBorderColor(game[side]?.team) || accentColor,
+              '--player-fill': getTeamBackgroundStyle(getTeamColor(game[side]?.team) || 'rgba(120, 120, 120, 1)')
+                .background,
+            }}
+          >
+            <select
+              className="league-player-select"
+              value={player?.id || ''}
+              onChange={(e) => setPickedId(e.target.value)}
+              aria-label="Player"
+            >
+              {!player && <option value="">Loading…</option>}
+              {players.map((p) => (
+                <option key={p.id} value={p.id}>
                   {p.name}
-                  {p.injured && <span className="league-roster-injured">INJ</span>}
-                </span>
-                <span className="league-roster-pos">
-                  {p.position}
+                  {p.position ? ` · ${p.position}` : ''}
                   {p.jersey ? ` #${p.jersey}` : ''}
+                  {p.injured ? ' (INJ)' : ''}
+                </option>
+              ))}
+            </select>
+            <span className="league-player-caret" aria-hidden="true" />
+          </div>
+          {player && (
+            <div className="league-roster-row open" style={{ borderColor: accentColor }}>
+              <div className="league-player-head">
+                {player.headshot && (
+                  <img src={player.headshot} alt="" className="league-player-photo" draggable={false} />
+                )}
+                <span className="league-roster-name">
+                  {player.name}
+                  {player.injured && <span className="league-roster-injured">INJ</span>}
                 </span>
-              </button>
-              {openId === p.id && <PlayerLog lg={lg} player={p} />}
+                <GameCountPicker />
+              </div>
+              <PlayerLog lg={lg} player={player} />
             </div>
-          ))}
+          )}
         </div>
       )}
     </div>

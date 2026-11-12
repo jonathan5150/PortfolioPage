@@ -209,24 +209,25 @@
 
 /* Breathing: while a game is open its border slowly swells brighter and fades
    back, with a soft glow in each team's colour spilling off its own side.
-   Only opacity animates, so it stays smooth on phones. */
+   Only opacity animates, so it stays smooth on phones. Each cycle starts at
+   its dimmest, so a freshly opened game always swells up from low. */
 @keyframes nflRingBreathe {
   0%,
   100% {
-    opacity: 1;
+    opacity: 0.45;
   }
   50% {
-    opacity: 0.45;
+    opacity: 1;
   }
 }
 
 @keyframes nflGlowBreathe {
   0%,
   100% {
-    opacity: 0.9;
+    opacity: 0;
   }
   50% {
-    opacity: 0;
+    opacity: 0.9;
   }
 }
 
@@ -1004,43 +1005,38 @@
   white-space: nowrap;
 }
 
-/* before a game: the moneyline in the top-right of the cell, the win chance
-   in the bottom-right */
+/* before a game: the moneyline over its ODDS label, a small gap, then the win
+   chance over its WIN PROB label, right-aligned in the cell */
 .nfl-data-container .team-odds-stack {
-  align-self: stretch;
+  align-self: center;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   align-items: flex-end;
+  gap: 4px;
   flex-shrink: 0;
-  padding: 1px 0;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
 }
 
 .nfl-data-container .team-odds-row {
   display: flex;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 3px;
-  min-height: 18px;
+  flex-direction: column;
+  align-items: flex-end;
   white-space: nowrap;
 }
 
 .nfl-data-container .team-odds-value {
-  font-size: 14px;
+  font-size: 11.5px;
   font-weight: 700;
-  line-height: 18px;
+  line-height: 12px;
   color: rgba(255, 255, 255, 0.95);
 }
 
 .nfl-data-container .team-odds-label {
-  width: 31px;
-  font-size: 6px;
+  font-size: 5.5px;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
-  line-height: 1.1;
-  text-align: left;
+  letter-spacing: 0.06em;
+  line-height: 7px;
   color: rgba(255, 255, 255, 0.65);
 }
 
@@ -3702,4 +3698,61 @@
     font-size: 10px;
     letter-spacing: 0.01em;
   }
+}
+
+/* the controls row never changes size: the day / week / event picker gets a
+   fixed share of the row and its label ellipsizes; the side halves are equal */
+.nfl-data-container .controls {
+  grid-template-columns: minmax(0, 1fr) 44% minmax(0, 1fr);
+}
+
+.nfl-data-container .controls > .week-control {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.nfl-data-container .controls > .week-control > .week-button {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nfl-data-container .controls > .week-control > .week-step {
+  flex: none;
+}
+
+/* TEAMS / FIGHTERS checkboxes: the same gold-on-grey box as hiding a game */
+.nfl-data-container .teams-menu-cell input {
+  width: 18px;
+  height: 18px;
+  accent-color: #c49410;
+}
+
+/* the win chance a step dimmer than the odds above it */
+.nfl-data-container .team-odds-row + .team-odds-row .team-odds-value,
+.nfl-data-container .team-odds-row:only-child .team-odds-value {
+  color: rgba(205, 205, 205, 0.82);
+}
+
+/* NFL time rows: kickoff on the left, how far off it is on the right */
+.nfl-data-container .game-group-time:has(.game-group-when) {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.nfl-data-container .game-group-when {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: rgba(245, 209, 107, 0.6);
+  white-space: nowrap;
+}
+
+/* UFC: FIGHTS is the whole right half */
+.nfl-data-container .ufc-fights-button .control-label {
+  font-size: 15px;
 }

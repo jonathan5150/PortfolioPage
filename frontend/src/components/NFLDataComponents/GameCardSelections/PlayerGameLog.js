@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import SwipeTeamPanel from '../shared/SwipeTeamPanel';
 import StatTable from '../shared/StatTable';
 import useAsyncData from '../shared/useAsyncData';
-import usePersistentState, { usePersistentMapEntry } from '../shared/usePersistentState';
 import { messageStyle } from '../shared/tableStyles';
 import { getRoster, getPlayerGameLog, getStartingQbId, SKILL_POSITIONS } from '../../../pages/NFLData/NFLDataApi/nflDataService';
 import { buildGameLogTable } from './gameLogColumns';
@@ -103,8 +102,8 @@ const TeamGameLog = ({ team, season, numGames, setNumGames, defaultPlayerId, thr
 };
 
 const PlayerGameLog = ({ gameId, game, awayTeam, homeTeam, season }) => {
-  const [numGames, setNumGames] = usePersistentState('gameLogCount', 5);
-  const [showing, setShowing] = usePersistentMapEntry('gameLogSideByGame', gameId, 'away');
+  const [numGames, setNumGames] = useState(5);
+  const [showing, setShowing] = useState('away');
 
   // Guard against stale stored values.
   useEffect(() => {

@@ -1,7 +1,7 @@
 // ESPN data for the daily-schedule leagues (NBA, MLB). Same proxy, cache and
 // parsers as the NFL page wherever ESPN's shapes match; league-specific bits
 // (box scores, MLB's count and bases) are parsed here.
-import { fetchJson } from '../../pages/NFLData/NFLDataApi/http';
+import { fetchJson, runWithConcurrency } from '../../pages/NFLData/NFLDataApi/http';
 import { parseEvent, parseTeam, parseTeamSchedule, parseStatus } from '../../pages/NFLData/NFLDataApi/espnParsers';
 import { parseEventOdds, parsePredictor } from '../../pages/NFLData/NFLDataApi/betting';
 
@@ -141,8 +141,43 @@ const firstEvent = async (lg, dates) => {
   return json?.events?.[0] || null;
 };
 const hasGames = async (lg, key) => Boolean(await firstEvent(lg, key));
+// ESPN's list of this season's game days (YYYYMMDD, sorted). Only the current
+// season, and only what's scheduled so far.
+const ondays = async (lg) => {
+  const json = await fetchJson(`${CORE(lg)}/calendar/ondays`, { ttlMs: 6 * 60 * MIN }).catch(() => null);
+  return (json?.eventDate?.dates || [])
+    .map((d) => String(d).slice(0, 10).replace(/-/g, ''))
+    .filter((k) => k.length === 8)
+    .sort();
+};
+
+// The days in one month (year, monthIndex 0-11) that have games, as a Set of
+// YYYYMMDD. Days inside ESPN's season list come from it; anything outside
+// (offseason, a future or past season) is checked one day at a time.
+export const getLeagueEventDays = async (lg, year, month) => {
+  const count = new Date(year, month + 1, 0).getDate();
+  const keys = Array.from({ length: count }, (_, i) => dayKey(new Date(year, month, i + 1)));
+  const known = await ondays(lg);
+  const lo = known[0];
+  const hi = known[known.length - 1];
+  const out = new Set(known.filter((k) => keys.includes(k)));
+  const unknown = keys.filter((k) => !lo || k < lo || k > hi);
+  const probed = await runWithConcurrency(
+    unknown.map((k) => async () => ((await hasGames(lg, k)) ? k : null)),
+    6,
+  );
+  probed.forEach((r) => r.ok && r.value && out.add(r.value));
+  return out;
+};
+
 /* eslint-disable no-await-in-loop */
 export const findGameDay = async (lg, fromDay, dir) => {
+  // inside the season ESPN has listed: its next / previous game day
+  const known = await ondays(lg);
+  if (known.length && fromDay >= known[0] && fromDay <= known[known.length - 1]) {
+    const next = dir > 0 ? known.find((k) => k > fromDay) : [...known].reverse().find((k) => k < fromDay);
+    if (next) return next;
+  }
   for (let i = 1; i <= 7; i += 1) {
     const key = shift(fromDay, dir * i);
     if (await hasGames(lg, key)) return key;
@@ -256,6 +291,27 @@ export const getLeagueRoster = async (lg, teamId) => {
       headshot: a.headshot?.href || null,
       injured: (a.injuries || []).some((i) => /out|injur|day-to-day/i.test(i.status || i.type?.description || '')),
     }));
+};
+
+// The team's headline player this season: the NBA's points-per-game leader,
+// MLB's home run leader. Falls back to last season early on (spring training,
+// opening week) when this season has no leaders yet. Athlete ids, best first,
+// so the caller can skip anyone who has since left the team.
+export const getLeagueTeamLeaders = async (lg, teamId, date) => {
+  if (!teamId) return [];
+  const d = date ? new Date(date) : new Date();
+  const season = lg === 'nba' && d.getMonth() >= 7 ? d.getFullYear() + 1 : d.getFullYear();
+  const category = lg === 'nba' ? 'pointsPerGame' : 'homeRuns';
+  const leadersIn = async (yr) => {
+    const json = await fetchJson(`${CORE(lg)}/seasons/${yr}/types/2/teams/${teamId}/leaders`, {
+      ttlMs: 60 * MIN,
+    }).catch(() => null);
+    return (json?.categories?.find((c) => c.name === category)?.leaders || [])
+      .map((l) => String(l?.athlete?.$ref || '').match(/athletes\/(\d+)/)?.[1])
+      .filter(Boolean);
+  };
+  const now = await leadersIn(season);
+  return now.length ? now : leadersIn(season - 1);
 };
 
 // A player's recent games, stats kept as ESPN shows them ("1-4" stays "1-4").

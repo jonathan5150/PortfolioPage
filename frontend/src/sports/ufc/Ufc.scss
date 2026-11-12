@@ -26,10 +26,9 @@
 }
 
 .nfl-data-container .ufc-event-button {
-  max-width: 150px;
   overflow: hidden;
   text-overflow: ellipsis;
-  cursor: default;
+  cursor: pointer;
 }
 
 /* fighter names are longer than team abbreviations: a wider, left-aligned name
@@ -193,4 +192,43 @@
   font-size: 16px;
   font-weight: 800;
   color: #ffffff;
+}
+
+/* the fighter's headshot sits in front of their name (the odds / result stay on top) */
+.nfl-data-container .ufc-fight .team-info-container > .team-text {
+  z-index: auto;
+}
+
+.nfl-data-container .ufc-fight .team-abbr-block {
+  position: relative;
+  z-index: 1;
+}
+
+.nfl-data-container .ufc-fight .team-logo-watermark {
+  --wm-opacity: 0.95;
+  z-index: 2;
+}
+
+.nfl-data-container .ufc-fight .team-odds-stack,
+.nfl-data-container .ufc-fight .team-score {
+  position: relative;
+  z-index: 3;
+}
+
+/* dimming on the text layer itself would flatten it under the headshot, so
+   dim its pieces instead */
+.nfl-data-container .ufc-fight .team-text {
+  opacity: 1 !important;
+}
+
+.nfl-data-container .ufc-fight .team-cell:not(.expanded) .team-abbr-block,
+.nfl-data-container .ufc-fight .team-cell:not(.expanded) .team-odds-stack,
+.nfl-data-container .ufc-fight .team-cell:not(.expanded) .team-score {
+  opacity: 0.85;
+}
+
+.nfl-data-container .has-open .game-slot.ufc-fight:not(.open) .team-abbr-block,
+.nfl-data-container .has-open .game-slot.ufc-fight:not(.open) .team-odds-stack,
+.nfl-data-container .has-open .game-slot.ufc-fight:not(.open) .team-score {
+  opacity: 0.55;
 }

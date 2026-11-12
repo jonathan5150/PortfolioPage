@@ -71,6 +71,18 @@ export const getUfcScoreboard = async (day, { live = false } = {}) =>
     await fetchJson(`${SITE}/scoreboard${day ? `?dates=${day}` : ''}`, { ttlMs: live ? 0 : 60 * 1000 }),
   );
 
+// The days in one month (year, monthIndex 0-11) with a UFC event, as a Set of
+// YYYYMMDD (US Eastern), from that year's event calendar.
+export const getUfcEventDays = async (year, month) => {
+  const json = await fetchJson(`${SITE}/scoreboard?dates=${year}`, { ttlMs: 6 * 60 * MIN }).catch(() => null);
+  const prefix = `${year}${String(month + 1).padStart(2, '0')}`;
+  return new Set(
+    parseUfcScoreboard(json)
+      .calendar.map((c) => c.day)
+      .filter((d) => d.startsWith(prefix)),
+  );
+};
+
 // Card segment (Main Card / Prelims / Early Prelims) and result for each fight.
 export const getUfcFightDetails = async (eventId, fights, { live = false } = {}) => {
   const results = await runWithConcurrency(

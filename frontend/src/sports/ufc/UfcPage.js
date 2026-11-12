@@ -1,19 +1,28 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import SportSwitcher from '../SportSwitcher';
+import DayCalendar from '../DayCalendar';
 import SlideOpen from '../../components/NFLDataComponents/shared/SlideOpen';
 import LastUpdated from '../../components/NFLDataComponents/shared/LastUpdated';
-import TeamsMenu from '../../components/NFLDataComponents/NFLDataNavbar/NFLDataNavbarComponents/TeamsMenu';
 import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
 import TeamCell from '../../components/NFLDataComponents/ScoreBug/TeamCell';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
-import { readCookie, writeCookie } from '../../components/NFLDataComponents/shared/cookies';
+import usePersistentState from '../../components/NFLDataComponents/shared/usePersistentState';
 import { betReturn } from '../../pages/NFLData/NFLDataApi/picks';
 import { fmtOdds, impliedProbability } from '../../pages/NFLData/NFLDataApi/betting';
 import { runWithConcurrency } from '../../pages/NFLData/NFLDataApi/http';
-import { etDay, getUfcFightDetails, getUfcFighter, getUfcOdds, getUfcScoreboard, headshotUrl } from './ufcApi';
+import {
+  etDay,
+  getUfcFightDetails,
+  getUfcFighter,
+  getUfcOdds,
+  getUfcEventDays,
+  getUfcScoreboard,
+  headshotUrl,
+} from './ufcApi';
 import '../../pages/NFLData/NFLData.scss';
 import '../team/TeamSport.scss';
 import './Ufc.scss';
+import '../SportTitles.scss';
 
 // red and blue corners stand in for team colours
 const RED = '#b3262b';
@@ -172,7 +181,7 @@ const FightPanel = ({ eventId, fight }) => {
   );
 };
 
-const FightCard = ({ eventId, fight, details, odds, isOpen, onToggle }) => {
+const FightCard = ({ eventId, fight, details, odds, isOpen, onToggle, hideMode, hidden, onToggleHidden }) => {
   const { state } = fight.status;
   const [hasOpened, setHasOpened] = useState(false);
   useEffect(() => {
@@ -214,9 +223,31 @@ const FightCard = ({ eventId, fight, details, odds, isOpen, onToggle }) => {
   const chances = state === 'post' ? null : winChances(fight, odds);
 
   return (
-    <div className={`game-slot ufc-fight ${isOpen ? 'open' : ''}`} style={{ '--ring-away': RED, '--ring-home': BLUE }}>
+    <div
+      className={`game-slot ufc-fight ${isOpen ? 'open' : ''} ${hideMode ? 'hide-mode' : ''} ${hidden ? 'hidden-game' : ''}`}
+      style={{ '--ring-away': RED, '--ring-home': BLUE }}
+    >
+      {hideMode && (
+        <label className="hide-check">
+          <input
+            type="checkbox"
+            checked={hidden}
+            onChange={() => onToggleHidden(fight.id)}
+            aria-label={`Hide ${fight.red?.name || ''} vs ${fight.blue?.name || ''}`}
+          />
+        </label>
+      )}
       <span className="game-ring" aria-hidden="true" />
-      <div className="game-slot-body">
+      <div
+        className="game-slot-body"
+        onClickCapture={(e) => {
+          if (!hideMode) return;
+          e.preventDefault();
+          e.stopPropagation();
+          onToggleHidden(fight.id);
+        }}
+      >
+        {hidden && <div className="hidden-overlay">HIDDEN</div>}
         <div className="game-slot-content">
           <div className="score-grid ufc-grid" onClick={onToggle}>
             <TeamCell
@@ -402,39 +433,19 @@ const UfcPage = () => {
     { enabled: Boolean(event) },
   );
 
-  // ---- FIGHTERS filter: every fighter on this card, main event first ----
-  const fighters = useMemo(
-    () =>
-      event
-        ? [...event.fights]
-            .sort((a, b) => b.order - a.order)
-            .flatMap((f) => [
-              f.red && { ...asCompetitor(f.red, RED).team, id: f.red.id },
-              f.blue && { ...asCompetitor(f.blue, BLUE).team, id: f.blue.id },
-            ])
-            .filter(Boolean)
-        : [],
-    [event],
+  // ---- FIGHTS: hide fights you don't care about (saved) ----
+  const [hideMode, setHideMode] = useState(false);
+  const [hiddenIds, setHiddenIds] = usePersistentState('hiddenFights', []);
+  const hiddenSet = useMemo(() => new Set(hiddenIds), [hiddenIds]);
+  const toggleHidden = useCallback(
+    (id) => setHiddenIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])),
+    [setHiddenIds],
   );
-  const allFighterIds = useMemo(() => fighters.map((f) => f.id), [fighters]);
-  const [fighterPicks, setFighterPicks] = useState({}); // event id -> picked fighter ids
-  const pickedFighters = (event && fighterPicks[event.id]) || allFighterIds;
-  const setPicked = (ids) => event && setFighterPicks((m) => ({ ...m, [event.id]: ids }));
-  const [fightersOpen, setFightersOpen] = useState(false);
-  const fightersRef = useRef(null);
-  useEffect(() => {
-    if (!fightersOpen) return undefined;
-    const close = (e) => {
-      if (!fightersRef.current?.contains(e.target)) setFightersOpen(false);
-    };
-    document.addEventListener('pointerdown', close, true);
-    return () => document.removeEventListener('pointerdown', close, true);
-  }, [fightersOpen]);
-  const shownFights = useMemo(() => {
-    if (!event) return [];
-    const picked = new Set(pickedFighters);
-    return event.fights.filter((f) => picked.has(f.red?.id) || picked.has(f.blue?.id));
-  }, [event, pickedFighters]);
+  const shownFights = useMemo(
+    () => (!event ? [] : hideMode ? event.fights : event.fights.filter((f) => !hiddenSet.has(f.id))),
+    [event, hideMode, hiddenSet],
+  );
+  const visibleCount = event ? event.fights.filter((f) => !hiddenSet.has(f.id)).length : 0;
 
   const [openId, setOpenId] = useState(null);
   const sections = useMemo(() => {
@@ -448,17 +459,14 @@ const UfcPage = () => {
 
   const cookieName = event ? `ufcCollapsed_${event.id}` : null;
   const [savedCollapsed, setSavedCollapsed] = useState(null);
-  useEffect(() => {
-    const v = cookieName ? readCookie(cookieName) : null;
-    setSavedCollapsed(v === null ? null : new Set(v.split(',').filter((k) => k && k !== 'none')));
-  }, [cookieName]);
+  // not saved anywhere: every event starts from the default view
+  useEffect(() => setSavedCollapsed(null), [cookieName]);
   const collapsed = savedCollapsed || new Set(sections.map((s) => s.key).filter((k) => k !== 'main'));
   const toggleSection = (key, fights) => {
     const next = new Set(collapsed);
     if (next.has(key)) next.delete(key);
     else next.add(key);
     setSavedCollapsed(next);
-    writeCookie(cookieName, next.size ? [...next].join(',') : 'none');
     if (fights.some((f) => f.id === openId)) setOpenId(null);
   };
 
@@ -478,12 +486,37 @@ const UfcPage = () => {
     });
     return best;
   }, [event?.date, calendar]);
+  // the event before / after: from the shown event, or (on a day with no
+  // event) from the picked day
+  const target = (dir) => {
+    if (index >= 0) return calendar[index + dir] || null;
+    if (!day) return null;
+    const list = calendar.filter((c) => (dir > 0 ? c.day > day : c.day < day));
+    return (dir > 0 ? list[0] : list[list.length - 1]) || null;
+  };
   const go = (dir) => {
-    const target = calendar[index + dir];
-    if (target) {
-      setDay(target.day);
+    const t = target(dir);
+    if (t) {
+      setDay(t.day);
       setOpenId(null);
     }
+  };
+
+  // the calendar: days, with event days lit gold
+  const [pickingDay, setPickingDay] = useState(false);
+  const dayRef = useRef(null);
+  useEffect(() => {
+    if (!pickingDay) return undefined;
+    const close = (e) => {
+      if (!dayRef.current?.contains(e.target)) setPickingDay(false);
+    };
+    document.addEventListener('pointerdown', close, true);
+    return () => document.removeEventListener('pointerdown', close, true);
+  }, [pickingDay]);
+  const pickDay = (key) => {
+    setDay(key);
+    setPickingDay(false);
+    setOpenId(null);
   };
   const onToggle = useCallback((id) => setOpenId((prev) => (prev === id ? null : id)), []);
 
@@ -507,7 +540,7 @@ const UfcPage = () => {
     <div className="nfl-data-container">
       <div className="matchup-card fade-in">
         <div className="nflDataNavbar">
-          <h1 className="nfl-title">
+          <h1 className="nfl-title sport-title-ufc">
             <span className="nfl-title-badge">UFC</span>
             <span className="nfl-title-text">Stats Guide</span>
           </h1>
@@ -515,61 +548,59 @@ const UfcPage = () => {
             <div className="controls-left">
               <SportSwitcher current="ufc" />
             </div>
-            <div className="week-control">
+            <div className="week-control" ref={dayRef}>
               <button
                 type="button"
                 className="nfl-control-button week-step"
                 aria-label="Previous event"
-                disabled={index <= 0}
+                disabled={!target(-1)}
                 onClick={() => go(-1)}
               >
                 ◀
               </button>
-              <button type="button" className="nfl-control-button week-button ufc-event-button" title={event?.name}>
-                {shortTitle.replace(/^UFC Fight Night/i, 'FIGHT NIGHT').toUpperCase()}
+              <button
+                type="button"
+                className="nfl-control-button week-button ufc-event-button"
+                title={event?.name}
+                onClick={() => setPickingDay((o) => !o)}
+              >
+                {event ? shortTitle.replace(/^UFC Fight Night/i, 'FIGHT NIGHT').toUpperCase() : 'NO EVENT'}
               </button>
               <button
                 type="button"
                 className="nfl-control-button week-step"
                 aria-label="Next event"
-                disabled={index < 0 || index >= calendar.length - 1}
+                disabled={!target(1)}
                 onClick={() => go(1)}
               >
                 ▶
               </button>
+              {pickingDay && (
+                <div className="nfl-dropdown-menu week-dropdown league-day-picker">
+                  <DayCalendar
+                    value={day}
+                    onPick={pickDay}
+                    onToday={() => pickDay(null)}
+                    loadEventDays={getUfcEventDays}
+                  />
+                </div>
+              )}
             </div>
             <div className="controls-right">
-              <div className="teams-dropdown-wrapper" ref={fightersRef}>
-                <button type="button" className="nfl-control-button" onClick={() => setFightersOpen((o) => !o)}>
-                  <span className="control-label">FIGHTERS</span>
-                  <span className="control-count">
-                    {pickedFighters.filter((id) => allFighterIds.includes(id)).length}/{allFighterIds.length}
-                  </span>
-                </button>
-                {fightersOpen && (
-                  <div className="nfl-dropdown-menu ufc-fighters-menu">
-                    <TeamsMenu
-                      teams={fighters}
-                      selectedTeams={pickedFighters}
-                      onTeamChange={(id) =>
-                        setPicked(
-                          pickedFighters.includes(id)
-                            ? pickedFighters.filter((x) => x !== id)
-                            : [...pickedFighters, id],
-                        )
-                      }
-                      onSelectAll={() => setPicked(allFighterIds)}
-                      onDeselectAll={() => setPicked([])}
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="nfl-control-button hide-games-button ufc-fights-count">
+              <button
+                type="button"
+                className={`nfl-control-button hide-games-button ufc-fights-button ${hideMode ? 'active' : ''}`}
+                aria-pressed={hideMode}
+                onClick={() => {
+                  setOpenId(null);
+                  setHideMode((h) => !h);
+                }}
+              >
                 <span className="control-label">FIGHTS</span>
                 <span className="control-count">
-                  {shownFights.length}/{event?.fights.length || 0}
+                  {visibleCount}/{event?.fights.length || 0}
                 </span>
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -589,7 +620,7 @@ const UfcPage = () => {
           {!event ? (
             <p className="noGames">No UFC event found.</p>
           ) : !sections.length ? (
-            <p className="noGames">No fights for the picked fighters.</p>
+            <p className="noGames">Every fight is hidden. Tap FIGHTS to bring some back.</p>
           ) : (
             sections.map((section) => (
               <div key={section.key} className={`game-section ${collapsed.has(section.key) ? 'collapsed' : ''}`}>
@@ -618,6 +649,9 @@ const UfcPage = () => {
                           odds={allOdds.data?.[fight.id]}
                           isOpen={openId === fight.id}
                           onToggle={() => onToggle(fight.id)}
+                          hideMode={hideMode}
+                          hidden={hiddenSet.has(fight.id)}
+                          onToggleHidden={toggleHidden}
                         />
                       </React.Fragment>
                     ))}
@@ -630,6 +664,11 @@ const UfcPage = () => {
 
         {event && <EventModelResults event={event} />}
         <LastUpdated />
+        {hideMode && (
+          <button type="button" className="hide-done-bar" onClick={() => setHideMode(false)}>
+            DONE
+          </button>
+        )}
       </div>
     </div>
   );

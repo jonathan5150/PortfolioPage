@@ -256,3 +256,170 @@
   margin-right: 8px;
   text-align: left;
 }
+
+/* the day picker is the black-and-gold calendar, which brings its own frame */
+.nfl-data-container .league-day-picker {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  z-index: 1200;
+}
+
+/* ---------- PLAYERS: one player at a time, picked from a dropdown ---------- */
+.nfl-data-container .league-player-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 4px 0;
+}
+
+.nfl-data-container .league-player-select-wrap {
+  position: relative;
+}
+
+.nfl-data-container .league-player-select {
+  width: 100%;
+  height: 34px;
+  padding: 0 30px 0 10px;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1.5px solid var(--player-accent, rgba(245, 209, 107, 0.7));
+  border-radius: 7px;
+  background: rgba(20, 20, 20, 0.92);
+  color: #ffffff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+.nfl-data-container .league-player-caret {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  margin-top: -2px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #f5d16b;
+  pointer-events: none;
+}
+
+.nfl-data-container .league-player-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+}
+
+.nfl-data-container .league-player-head .league-roster-name {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+
+.nfl-data-container .league-player-photo {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* the player picker wears the chosen team's button look: its border and fade */
+.nfl-data-container .league-player-select {
+  background: var(--player-fill, rgba(20, 20, 20, 0.92));
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.nfl-data-container .league-player-select option {
+  background: #1b1b1b;
+  color: #ffffff;
+}
+
+/* the open player's card: a little room under the table, like its sides */
+.nfl-data-container .league-player-pick .league-roster-row {
+  padding-bottom: 2px;
+}
+
+/* line the player picker and card up with the team buttons above (the toggle
+   row is inset 8px), with the same 6px gap as between the picker and card */
+.nfl-data-container .league-player-pick {
+  margin: -2px 8px 0;
+}
+
+/* a little room under the player card, like its sides (padding: a margin
+   would slip out past the tab) */
+.nfl-data-container .league-player-pick {
+  margin-bottom: 0;
+  padding-bottom: 8px;
+}
+
+/* LAST 5 / 10 / 20 */
+.nfl-data-container .league-count-select-wrap {
+  position: relative;
+  flex: none;
+}
+
+.nfl-data-container .league-count-select {
+  height: 26px;
+  padding: 0 22px 0 9px;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(245, 209, 107, 0.7);
+  border-radius: 6px;
+  background: rgba(20, 20, 20, 0.85);
+  color: #f5d16b;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color-scheme: dark;
+  cursor: pointer;
+}
+
+.nfl-data-container .league-count-select option {
+  background: #1b1b1b;
+  color: #ffffff;
+}
+
+.nfl-data-container .league-count-caret {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  width: 0;
+  height: 0;
+  margin-top: -2px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #f5d16b;
+  pointer-events: none;
+}
+
+/* MLB finished games: the linescore sits square under the team cells (no top
+   curve), with a slightly bigger gap */
+.nfl-data-container .linescore.linescore-innings.linescore-post {
+  margin-top: 2px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* MLB: the team cells reach the same outer edges as the linescore under them
+   (only the 4px gap between the two cells stays) */
+.nfl-data-container .game-slot.league-mlb .score-grid > .team-cell:nth-child(1) {
+  margin: 1px 2px 1px 0 !important;
+}
+
+.nfl-data-container .game-slot.league-mlb .score-grid > .team-cell:nth-child(2) {
+  margin: 1px 0 1px 2px !important;
+}
+
+/* ...and the live play row under them keeps the same edges */
+.nfl-data-container .game-slot.league-mlb .live-play-box {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}

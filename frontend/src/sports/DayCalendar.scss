@@ -1,0 +1,148 @@
+/* Black-and-gold month calendar (DayCalendar.js). */
+
+.day-calendar {
+  width: 268px;
+  max-width: 88vw;
+  padding: 10px 10px 9px;
+  box-sizing: border-box;
+  border: 1.5px solid rgba(245, 209, 107, 0.75);
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 50% -20%, rgba(245, 209, 107, 0.14), transparent 60%),
+    linear-gradient(180deg, #161616, #0b0b0b);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.65),
+    0 0 16px rgba(245, 209, 107, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  font-family: 'DM Sans', sans-serif;
+  color: #ffffff;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.day-calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.day-calendar-title {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #f5d16b;
+}
+
+.day-calendar-year {
+  color: rgba(245, 209, 107, 0.6);
+  font-weight: 700;
+}
+
+.day-calendar .day-calendar-nav,
+.day-calendar .day-calendar-today {
+  box-shadow: none;
+  border: 1px solid rgba(245, 209, 107, 0.55);
+  border-radius: 7px;
+  background: rgba(245, 209, 107, 0.06);
+  color: #f5d16b;
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.day-calendar .day-calendar-nav {
+  width: 30px;
+  height: 28px;
+  padding: 0;
+  font-size: 10px;
+}
+
+.day-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.day-calendar-weekday {
+  padding-bottom: 2px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-align: center;
+  color: rgba(245, 209, 107, 0.55);
+}
+
+.day-calendar .day-calendar-day {
+  box-shadow: none;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(255, 255, 255, 0.35);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* a day with games / events */
+.day-calendar .day-calendar-day.has-events {
+  border-color: rgba(245, 209, 107, 0.6);
+  background: rgba(245, 209, 107, 0.16);
+  color: #f5d16b;
+  font-weight: 800;
+}
+
+.day-calendar .day-calendar-day.today {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+
+.day-calendar .day-calendar-day.selected {
+  border-color: #f5d16b;
+  background: linear-gradient(180deg, #f5d16b, #c49410);
+  color: #111111;
+  font-weight: 900;
+  box-shadow: 0 0 10px rgba(245, 209, 107, 0.45);
+}
+
+.day-calendar-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 9px;
+}
+
+.day-calendar-status {
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: left;
+}
+
+.day-calendar-status.loading {
+  color: rgba(245, 209, 107, 0.7);
+}
+
+.day-calendar .day-calendar-today {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+/* the calendar brings its own frame: drop the dropdown's box around it */
+.nfl-data-container .nfl-dropdown-menu:has(> .day-calendar) {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  z-index: 1200;
+}

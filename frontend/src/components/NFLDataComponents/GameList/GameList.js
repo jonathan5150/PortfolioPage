@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { relativeDay } from '../../../sports/relativeDay';
 import NFLDataNavbar from '../NFLDataNavbar/NFLDataNavbar';
 import GameCard from '../GameCard/GameCard';
 import LoadingField from '../shared/LoadingField';
@@ -8,7 +9,6 @@ import ParlayBar from '../ParlayBar/ParlayBar';
 import PredictionRecord from './PredictionRecord';
 import SlideOpen from '../shared/SlideOpen';
 import LastUpdated from '../shared/LastUpdated';
-import { readCookie, writeCookie } from '../shared/cookies';
 
 const MERGE_WINDOW_MS = 30 * 60 * 1000;
 
@@ -20,21 +20,17 @@ const SECTIONS = [
   { key: 'pre', label: 'UPCOMING' },
 ];
 
-// Which sections are collapsed is remembered per week in a cookie, so
-// collapsing FINISHED this week doesn't collapse it in any other week.
-const collapsedCookie = (season, seasonType, week) => `nflCollapsed_${season}-${seasonType}-${week}`;
-// null when there's no saved choice for that week yet
-const readCollapsed = (name) => {
-  const value = readCookie(name);
-  if (value === null) return null;
-  return new Set(value.split(',').filter((k) => k && k !== 'none'));
-};
+// Which sections are collapsed only lasts while you stay on a week: every
+// week (and every visit) starts from the default view.
+const collapsedCookie = (season, seasonType, week) => `${season}-${seasonType}-${week}`;
 
+const clock = (d) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s+/g, '');
 const startLabel = (game) => {
   if (game.status.isPostponed) return game.status.shortDetail || 'Postponed';
-  return game.date
-    ? new Date(game.date).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })
-    : 'TBD';
+  if (!game.date) return 'TBD';
+  const d = new Date(game.date);
+  const weekday = d.toLocaleDateString([], { weekday: 'short' });
+  return `${weekday} ${d.getMonth() + 1}/${d.getDate()} AT ${clock(d)}`;
 };
 
 // Kickoffs on the same day within half an hour of each other (Sunday's 3:05
@@ -61,10 +57,10 @@ const timeSlots = (games) => {
       start - prev.lastStart <= MERGE_WINDOW_MS
     ) {
       prev.games.push(...slotGames);
-      prev.label = `${prev.label} / ${start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
+      prev.label = `${prev.label} / ${clock(start)}`;
       prev.lastStart = start;
     } else {
-      merged.push({ label, games: [...slotGames], lastStart: start });
+      merged.push({ label, games: [...slotGames], lastStart: start, when: relativeDay(start) });
     }
   });
   return merged;
@@ -139,8 +135,8 @@ const GameList = ({
 
   // The user's own open / closed choice for this week (null until they make one).
   const cookieName = collapsedCookie(season, seasonType, week);
-  const [savedCollapsed, setSavedCollapsed] = useState(() => readCollapsed(cookieName));
-  useEffect(() => setSavedCollapsed(readCollapsed(cookieName)), [cookieName]);
+  const [savedCollapsed, setSavedCollapsed] = useState(null);
+  useEffect(() => setSavedCollapsed(null), [cookieName]);
 
   // TEAMS / GAMES counts for the navbar, out of everyone playing this week.
   // They follow the user's choices live: teams ticked in the teams menu, and
@@ -187,11 +183,10 @@ const GameList = ({
       else next.add(key);
       setSavedCollapsed(next);
       // remembered for this week, "none" when everything is open
-      writeCookie(cookieName, next.size ? [...next].join(',') : 'none');
       // collapsing the section that holds the open game closes that game
       if (sectionGames.some((g) => g.id === openGameId)) setOpenGameId(null);
     },
-    [collapsed, cookieName, openGameId],
+    [collapsed, openGameId],
   );
 
   // A tap that only closes a navbar menu shouldn't also open a game card.
@@ -267,7 +262,10 @@ const GameList = ({
                 <SlideOpen open={!collapsed.has(section.key)} className="game-section-body">
                   {section.slots.map((slot) => (
                     <div key={slot.label} className="game-container game-group">
-                      <div className="game-group-time">{slot.label}</div>
+                      <div className="game-group-time">
+                        <span>{slot.label}</span>
+                        {slot.when && <span className="game-group-when">{slot.when}</span>}
+                      </div>
                       {slot.games.map((game) => (
                         <GameCard
                           key={game.id}

@@ -40,20 +40,22 @@ const SportSwitcher = ({ current }) => {
       </button>
       {open && (
         <ul className="sport-switcher-menu" role="listbox" aria-label="Sport">
-          {SPORTS.map((s) => (
-            <li key={s.key}>
-              <button
-                type="button"
-                role="option"
-                aria-selected={s.key === current}
-                className={`sport-switcher-option ${s.key === current ? 'active' : ''}`}
-                onClick={() => pick(s.key)}
-              >
-                <span className="sport-switcher-option-label">{s.label}</span>
-                <span className="sport-switcher-option-name">{s.name}</span>
-              </button>
-            </li>
-          ))}
+          {[...SPORTS]
+            .sort((a, b) => a.label.localeCompare(b.label))
+            .map((s) => (
+              <li key={s.key}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={s.key === current}
+                  className={`sport-switcher-option ${s.key === current ? 'active' : ''}`}
+                  onClick={() => pick(s.key)}
+                >
+                  <span className="sport-switcher-option-label">{s.label}</span>
+                  <span className="sport-switcher-option-name">{s.name}</span>
+                </button>
+              </li>
+            ))}
         </ul>
       )}
     </div>

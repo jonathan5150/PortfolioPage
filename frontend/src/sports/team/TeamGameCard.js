@@ -96,7 +96,7 @@ const Linescore = ({ lg, game }) => {
     );
   };
   return (
-    <div className={`linescore ${lg === 'mlb' ? 'linescore-innings' : ''}`}>
+    <div className={`linescore ${lg === 'mlb' ? 'linescore-innings' : ''} linescore-${state}`}>
       <div className="linescore-row linescore-head" style={{ gridTemplateColumns: columns }}>
         <div className="linescore-team" />
         {Array.from({ length: periods }, (_, i) => (
@@ -324,7 +324,7 @@ const TeamGameCard = memo(({ lg, game, isOpen, onUserToggle, hideMode, hidden, o
 
   return (
     <div
-      className={`game-slot ${isOpen ? 'open' : ''} ${hideMode ? 'hide-mode' : ''} ${hidden ? 'hidden-game' : ''}`}
+      className={`game-slot league-${lg} ${isOpen ? 'open' : ''} ${hideMode ? 'hide-mode' : ''} ${hidden ? 'hidden-game' : ''}`}
       style={{ '--ring-away': awaySolid, '--ring-home': homeSolid }}
     >
       {hideMode && (

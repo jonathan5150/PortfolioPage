@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import SwipeTeamPanel from '../shared/SwipeTeamPanel';
 import StatTable from '../shared/StatTable';
-import { usePersistentMapEntry } from '../shared/usePersistentState';
 import { viewportStyle, sectionTitleStyle, messageStyle } from '../shared/tableStyles';
 import { BOX_SCORE_SECTIONS, buildCategoryTable } from './boxScoreColumns';
 import { formatPeriod } from '../ScoreBug/ScoreBugs';
@@ -40,7 +39,7 @@ const ScoringPlays = ({ summary, teamsById }) => {
 // withToggle: the Betting panel's BOX SCORE tab. Away / home buttons with
 // SCORING PLAYS attached underneath pick what's shown, one at a time.
 const BoxScore = ({ game, summaryState, withToggle = false }) => {
-  const [showing, setShowing] = usePersistentMapEntry('boxScoreSideByGame', game.id, 'away');
+  const [showing, setShowing] = useState('away');
   // SCORING PLAYS every time the game is opened (the panel remounts this on open)
   const [view, setView] = useState('scoring');
   const { data: summary, loading, error } = summaryState;
