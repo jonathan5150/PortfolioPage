@@ -12,7 +12,7 @@ import { runWithConcurrency } from '../../pages/NFLData/NFLDataApi/http';
 import {
   LEAGUES,
   dayFromKey,
-  dayKey,
+  findGameDay,
   getLeagueOdds,
   getLeaguePredictor,
   getLeagueScoreboard,
@@ -264,8 +264,9 @@ const TeamSportPage = ({ lg }) => {
   useEffect(() => setSavedCollapsed(day ? readCollapsed(cookieName) : null), [cookieName, day]);
   const defaultCollapsed = useMemo(() => {
     const keys = sections.map((s) => s.key);
-    const openKey = keys.includes('in') ? 'in' : keys.includes('pre') ? 'pre' : 'post';
-    return new Set(keys.filter((k) => k !== openKey));
+    // live games: LIVE and UPCOMING open; otherwise UPCOMING, else FINISHED
+    const open = keys.includes('in') ? ['in', 'pre'] : keys.includes('pre') ? ['pre'] : ['post'];
+    return new Set(keys.filter((k) => !open.includes(k)));
   }, [sections]);
   const collapsed = savedCollapsed || defaultCollapsed;
   const toggleSection = (key, list) => {
@@ -277,19 +278,20 @@ const TeamSportPage = ({ lg }) => {
     if (list.some((g) => g.id === openGameId)) setOpenGameId(null);
   };
 
-  // ---- day navigation: neighbouring game days when ESPN lists them ----
-  const calendar = board?.calendar || [];
+  // ---- day navigation: the nearest earlier / later day that has games ----
+  const [stepping, setStepping] = useState(false);
   const step = (dir) => {
-    if (!day) return;
-    const later = calendar.filter((d) => (dir > 0 ? d > day : d < day)).sort();
-    const next = dir > 0 ? later[0] : later[later.length - 1];
-    if (next) setDay(next);
-    else {
-      const d = dayFromKey(day);
-      d.setDate(d.getDate() + dir);
-      setDay(dayKey(d));
-    }
-    setOpenGameId(null);
+    if (!day || stepping) return;
+    setStepping(true);
+    findGameDay(lg, day, dir)
+      .then((next) => {
+        if (next) {
+          setDay(next);
+          setOpenGameId(null);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setStepping(false));
   };
   const [pickingDay, setPickingDay] = useState(false);
 

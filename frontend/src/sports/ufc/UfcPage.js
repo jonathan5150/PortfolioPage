@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useSta
 import SportSwitcher from '../SportSwitcher';
 import SlideOpen from '../../components/NFLDataComponents/shared/SlideOpen';
 import LastUpdated from '../../components/NFLDataComponents/shared/LastUpdated';
+import TeamsMenu from '../../components/NFLDataComponents/NFLDataNavbar/NFLDataNavbarComponents/TeamsMenu';
 import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
 import TeamCell from '../../components/NFLDataComponents/ScoreBug/TeamCell';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
@@ -55,6 +56,16 @@ const fightPick = (fight, odds) => {
   const fav = r <= b ? fight.red : fight.blue;
   const price = r <= b ? r : b;
   return { fighter: fav, price, chance: impliedProbability(price) };
+};
+// each fighter's chance to win from the moneylines, with the book's margin removed
+const winChances = (fight, odds) => {
+  const r = odds?.byId[fight.red?.id];
+  const b = odds?.byId[fight.blue?.id];
+  if (!r || !b) return null;
+  const pr = impliedProbability(r);
+  const pb = impliedProbability(b);
+  if (!pr || !pb) return null;
+  return { red: (pr / (pr + pb)) * 100, blue: (pb / (pr + pb)) * 100 };
 };
 const gradeFight = (fight, pick) => {
   if (!pick || fight.status.state !== 'post') return null;
@@ -157,7 +168,7 @@ const FightPanel = ({ eventId, fight }) => {
   );
 };
 
-const FightCard = ({ eventId, fight, details, isOpen, onToggle }) => {
+const FightCard = ({ eventId, fight, details, odds, isOpen, onToggle }) => {
   const { state } = fight.status;
   const [hasOpened, setHasOpened] = useState(false);
   useEffect(() => {
@@ -195,6 +206,9 @@ const FightCard = ({ eventId, fight, details, isOpen, onToggle }) => {
         : timeLabel(fight.date);
   const score = (f) =>
     state === 'post' ? (f?.winner ? 'W' : fight.red?.winner || fight.blue?.winner ? 'L' : 'D') : '';
+  // before and during the fight: each fighter's chance to win, from the odds
+  const chances = state === 'post' ? null : winChances(fight, odds);
+  const cellScore = (corner) => (chances ? `${Math.round(chances[corner])}%` : score(fight[corner]));
 
   return (
     <div className={`game-slot ufc-fight ${isOpen ? 'open' : ''}`} style={{ '--ring-away': RED, '--ring-home': BLUE }}>
@@ -205,7 +219,9 @@ const FightCard = ({ eventId, fight, details, isOpen, onToggle }) => {
             <TeamCell
               side="away"
               competitor={asCompetitor(fight.red, RED)}
-              score={score(fight.red)}
+              score={cellScore('red')}
+              scoreIsSpread={Boolean(chances)}
+              subScore={chances ? 'WIN PROB' : null}
               isWinner={fight.red?.winner}
               corner="top"
               expanded={isOpen}
@@ -213,7 +229,9 @@ const FightCard = ({ eventId, fight, details, isOpen, onToggle }) => {
             <TeamCell
               side="home"
               competitor={asCompetitor(fight.blue, BLUE)}
-              score={score(fight.blue)}
+              score={cellScore('blue')}
+              scoreIsSpread={Boolean(chances)}
+              subScore={chances ? 'WIN PROB' : null}
               isWinner={fight.blue?.winner}
               corner="top"
               expanded={isOpen}
@@ -365,15 +383,65 @@ const UfcPage = () => {
     { enabled: Boolean(event) },
   );
 
+  // every fight's odds up front, for the win chances on the cards
+  const allOdds = useAsyncData(
+    async () => {
+      const list = await runWithConcurrency(
+        event.fights.map((f) => async () => [
+          f.id,
+          await getUfcOdds(event.id, f.id, { final: f.status.state === 'post' }).catch(() => null),
+        ]),
+        4,
+      );
+      return Object.fromEntries(list.filter((r) => r.ok).map((r) => r.value));
+    },
+    [event?.id],
+    { enabled: Boolean(event) },
+  );
+
+  // ---- FIGHTERS filter: every fighter on this card, main event first ----
+  const fighters = useMemo(
+    () =>
+      event
+        ? [...event.fights]
+            .sort((a, b) => b.order - a.order)
+            .flatMap((f) => [
+              f.red && { ...asCompetitor(f.red, RED).team, id: f.red.id },
+              f.blue && { ...asCompetitor(f.blue, BLUE).team, id: f.blue.id },
+            ])
+            .filter(Boolean)
+        : [],
+    [event],
+  );
+  const allFighterIds = useMemo(() => fighters.map((f) => f.id), [fighters]);
+  const [fighterPicks, setFighterPicks] = useState({}); // event id -> picked fighter ids
+  const pickedFighters = (event && fighterPicks[event.id]) || allFighterIds;
+  const setPicked = (ids) => event && setFighterPicks((m) => ({ ...m, [event.id]: ids }));
+  const [fightersOpen, setFightersOpen] = useState(false);
+  const fightersRef = useRef(null);
+  useEffect(() => {
+    if (!fightersOpen) return undefined;
+    const close = (e) => {
+      if (!fightersRef.current?.contains(e.target)) setFightersOpen(false);
+    };
+    document.addEventListener('pointerdown', close, true);
+    return () => document.removeEventListener('pointerdown', close, true);
+  }, [fightersOpen]);
+  const shownFights = useMemo(() => {
+    if (!event) return [];
+    const picked = new Set(pickedFighters);
+    return event.fights.filter((f) => picked.has(f.red?.id) || picked.has(f.blue?.id));
+  }, [event, pickedFighters]);
+
   const [openId, setOpenId] = useState(null);
   const sections = useMemo(() => {
     if (!event) return [];
     const by = { main: [], prelims: [], early: [] };
-    [...event.fights]
+    [...shownFights]
       .sort((a, b) => b.order - a.order) // main event first
       .forEach((f) => by[segmentKey(details.data?.[f.id])].push(f));
     return SEGMENTS.map((s) => ({ ...s, fights: by[s.key] })).filter((s) => s.fights.length);
-  }, [event, details.data]);
+  }, [event, shownFights, details.data]);
 
   const cookieName = event ? `ufcCollapsed_${event.id}` : null;
   const [savedCollapsed, setSavedCollapsed] = useState(null);
@@ -443,6 +511,31 @@ const UfcPage = () => {
           <div className="controls">
             <div className="controls-left">
               <SportSwitcher current="ufc" />
+              <div className="teams-dropdown-wrapper" ref={fightersRef}>
+                <button type="button" className="nfl-control-button" onClick={() => setFightersOpen((o) => !o)}>
+                  <span className="control-label">FIGHTERS</span>
+                  <span className="control-count">
+                    {pickedFighters.filter((id) => allFighterIds.includes(id)).length}/{allFighterIds.length}
+                  </span>
+                </button>
+                {fightersOpen && (
+                  <div className="nfl-dropdown-menu ufc-fighters-menu">
+                    <TeamsMenu
+                      teams={fighters}
+                      selectedTeams={pickedFighters}
+                      onTeamChange={(id) =>
+                        setPicked(
+                          pickedFighters.includes(id)
+                            ? pickedFighters.filter((x) => x !== id)
+                            : [...pickedFighters, id],
+                        )
+                      }
+                      onSelectAll={() => setPicked(allFighterIds)}
+                      onDeselectAll={() => setPicked([])}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
             <div className="week-control">
               <button
@@ -469,7 +562,9 @@ const UfcPage = () => {
             </div>
             <div className="nfl-control-button hide-games-button ufc-fights-count">
               <span className="control-label">FIGHTS</span>
-              <span className="control-count">{event?.fights.length || 0}</span>
+              <span className="control-count">
+                {shownFights.length}/{event?.fights.length || 0}
+              </span>
             </div>
           </div>
         </div>
@@ -488,6 +583,8 @@ const UfcPage = () => {
         <div className={`matchup-container ${openId ? 'has-open' : ''}`}>
           {!event ? (
             <p className="noGames">No UFC event found.</p>
+          ) : !sections.length ? (
+            <p className="noGames">No fights for the picked fighters.</p>
           ) : (
             sections.map((section) => (
               <div key={section.key} className={`game-section ${collapsed.has(section.key) ? 'collapsed' : ''}`}>
@@ -513,6 +610,7 @@ const UfcPage = () => {
                           eventId={event.id}
                           fight={fight}
                           details={details.data?.[fight.id]}
+                          odds={allOdds.data?.[fight.id]}
                           isOpen={openId === fight.id}
                           onToggle={() => onToggle(fight.id)}
                         />

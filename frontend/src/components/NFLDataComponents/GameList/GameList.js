@@ -174,8 +174,9 @@ const GameList = ({
   // when games are on, otherwise UPCOMING, otherwise FINISHED.
   const defaultCollapsed = useMemo(() => {
     const keys = sections.map((s) => s.key);
-    const open = keys.includes('in') ? 'in' : keys.includes('pre') ? 'pre' : 'post';
-    return new Set(keys.filter((k) => k !== open));
+    // live games: LIVE and UPCOMING open; otherwise UPCOMING, else FINISHED
+    const open = keys.includes('in') ? ['in', 'pre'] : keys.includes('pre') ? ['pre'] : ['post'];
+    return new Set(keys.filter((k) => !open.includes(k)));
   }, [sections]);
   const collapsed = savedCollapsed || defaultCollapsed;
 

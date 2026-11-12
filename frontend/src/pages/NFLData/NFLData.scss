@@ -11,6 +11,9 @@
   text-align: center;
   overflow-y: auto;
   overflow-x: hidden;
+  /* keep room for the scrollbar so opening a section that makes the page
+     scroll doesn't narrow (and re-centre) everything */
+  scrollbar-gutter: stable both-edges;
   position: relative;
   color: white;
   font-family: 'DM Sans', sans-serif;

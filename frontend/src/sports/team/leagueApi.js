@@ -123,6 +123,61 @@ export const getLeagueScoreboard = async (lg, day, { live = false } = {}) =>
     lg,
   );
 
+// The nearest day with games before (dir -1) or after (dir 1) `fromDay`.
+// ESPN's calendar only lists a few dates a season and rejects date ranges, so:
+// check the next few days one by one, then whole months (offseason gaps, e.g.
+// the World Series -> spring training in February).
+const etKey = (iso) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' })
+    .format(new Date(iso))
+    .replace(/-/g, '');
+const shift = (key, days) => {
+  const d = dayFromKey(key);
+  d.setDate(d.getDate() + days);
+  return dayKey(d);
+};
+const firstEvent = async (lg, dates) => {
+  const json = await fetchJson(`${SITE(lg)}/scoreboard?dates=${dates}&limit=1`, { ttlMs: 10 * MIN }).catch(() => null);
+  return json?.events?.[0] || null;
+};
+const hasGames = async (lg, key) => Boolean(await firstEvent(lg, key));
+/* eslint-disable no-await-in-loop */
+export const findGameDay = async (lg, fromDay, dir) => {
+  for (let i = 1; i <= 7; i += 1) {
+    const key = shift(fromDay, dir * i);
+    if (await hasGames(lg, key)) return key;
+  }
+  const from = dayFromKey(shift(fromDay, dir * 7));
+  for (let m = 0; m < 12; m += 1) {
+    const month = new Date(from.getFullYear(), from.getMonth() + dir * m, 1);
+    const ym = `${month.getFullYear()}${String(month.getMonth() + 1).padStart(2, '0')}`;
+    const first = await firstEvent(lg, ym);
+    if (first) {
+      if (dir > 0) {
+        const key = etKey(first.date);
+        if (key > shift(fromDay, 7)) return key;
+        // games this month, but only before where the day-by-day search stopped
+        for (let d = 8; d <= 40; d += 1) {
+          const k = shift(fromDay, d);
+          if (await hasGames(lg, k)) return k;
+        }
+      } else {
+        // walk back from the month's end (or from where the day search stopped)
+        const monthEnd = dayKey(new Date(month.getFullYear(), month.getMonth() + 1, 0));
+        const stop = shift(fromDay, -7);
+        let k = monthEnd < stop ? monthEnd : shift(fromDay, -8);
+        const firstDay = `${ym}01`;
+        while (k >= firstDay) {
+          if (await hasGames(lg, k)) return k;
+          k = shift(k, -1);
+        }
+      }
+    }
+  }
+  return null;
+};
+/* eslint-enable no-await-in-loop */
+
 export const getLeagueTeams = async (lg) => {
   const json = await fetchJson(`${SITE(lg)}/teams?limit=40`, { ttlMs: 24 * 60 * MIN });
   return (json?.sports?.[0]?.leagues?.[0]?.teams || [])
