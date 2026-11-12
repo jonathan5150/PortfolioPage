@@ -4,6 +4,18 @@ import './App.css';
 import Home from './pages/Home';
 import Header from './components/PortfolioComponents/Header';
 import SportsHub from './sports/SportsHub';
+// The sports pages' shared stylesheets, loaded once here in one fixed order
+// (the order they had before the pages were split into their own downloads).
+// Left to the split pages, each imports them in a different order, which the
+// production build refuses ("Conflicting order"). They're all scoped to the
+// sports pages, so loading them up front changes nothing else.
+import './pages/NFLData/NFLData.scss';
+import './components/NFLDataComponents/shared/LoadingField.scss';
+import './sports/SportSwitcher.scss';
+import './sports/DayCalendar.scss';
+import './sports/team/TeamSport.scss';
+import './sports/SportTitles.scss';
+import './sports/ufc/Ufc.scss';
 import LoadingField from './components/NFLDataComponents/shared/LoadingField';
 
 // Every other page is downloaded only when it's opened, so a phone opening the
