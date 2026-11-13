@@ -1,0 +1,475 @@
+/* Test-site style picker: the bar itself, the font override and five themes.
+   Everything here is keyed off attributes on <html> set by StylePicker.js,
+   so with "Current" selected none of these rules apply. */
+
+/* ---------- picker bar ---------- */
+
+.style-picker {
+  position: fixed;
+  left: 50%;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 14px;
+  background: rgba(20, 20, 24, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  max-width: calc(100vw - 20px);
+  box-sizing: border-box;
+}
+
+.style-picker-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.style-picker-field span {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.6);
+  padding-left: 3px;
+}
+
+.style-picker select {
+  width: 100%;
+  min-width: 140px;
+  max-width: 44vw;
+  height: 34px;
+  padding: 0 28px 0 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: linear-gradient(45deg, transparent 50%, rgba(255, 255, 255, 0.75) 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.75) 50%, transparent 50%);
+  background-position: calc(100% - 15px) 15px, calc(100% - 10px) 15px;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
+  color: #fff;
+  font-size: 14px; /* 14px+ keeps iOS from zooming in when tapped */
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.style-picker select:focus {
+  outline: 2px solid rgba(120, 170, 255, 0.7);
+  outline-offset: 1px;
+}
+
+.style-picker option {
+  color: #111;
+  background: #fff;
+}
+
+/* keep the "Last Updated" footer visible above the bar */
+html[data-style-picker] footer {
+  bottom: 74px;
+}
+
+/* ---------- font override (whole site, sports pages included) ---------- */
+
+html[data-preview-font] body,
+html[data-preview-font] body *:not(code):not(pre):not(kbd) {
+  font-family: var(--preview-font) !important;
+}
+
+/* ---------- shared theme plumbing ---------- */
+
+html[data-preview-theme] .color-blend-line {
+  border: none;
+}
+
+html[data-preview-theme] .hamburger-menu {
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+html[data-preview-theme] .hamburger-menu::before {
+  display: none;
+}
+
+html[data-preview-theme] .menu {
+  overflow: hidden;
+}
+
+html[data-preview-theme] .Link,
+html[data-preview-theme] .downloadPDF {
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+}
+
+/* ---------- 1. Midnight Glass ---------- */
+
+html[data-preview-theme='midnight-glass'] .bg {
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(56, 189, 248, 0.16), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(99, 102, 241, 0.18), transparent 60%),
+    linear-gradient(180deg, #0b1220 0%, #0f172a 100%);
+}
+
+html[data-preview-theme='midnight-glass'] .navbar {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+html[data-preview-theme='midnight-glass'] .color-blend-line {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.8), rgba(129, 140, 248, 0.8), transparent);
+}
+
+html[data-preview-theme='midnight-glass'] .header-title { color: #f1f5f9; letter-spacing: 0.04em; }
+html[data-preview-theme='midnight-glass'] .header-title-name { color: #7dd3fc; }
+
+html[data-preview-theme='midnight-glass'] .hamburger-menu {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 10px;
+  color: #e2e8f0;
+}
+
+html[data-preview-theme='midnight-glass'] .menu {
+  background: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+html[data-preview-theme='midnight-glass'] .menu a,
+html[data-preview-theme='midnight-glass'] .menu button { color: #e2e8f0; }
+
+html[data-preview-theme='midnight-glass'] .content p { color: #cbd5e1; }
+html[data-preview-theme='midnight-glass'] .content a { color: #7dd3fc; }
+html[data-preview-theme='midnight-glass'] footer { color: #94a3b8; }
+
+html[data-preview-theme='midnight-glass'] .Link,
+html[data-preview-theme='midnight-glass'] .downloadPDF {
+  background: rgba(56, 189, 248, 0.1);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  border-radius: 12px;
+  color: #e0f2fe;
+}
+
+html[data-preview-theme='midnight-glass'] .Link:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.8);
+}
+
+/* ---------- 2. Aurora ---------- */
+
+@keyframes previewAuroraDrift {
+  0% { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; }
+  50% { background-position: 30% 20%, 70% 30%, 40% 70%, 0 0; }
+  100% { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; }
+}
+
+html[data-preview-theme='aurora'] .bg {
+  background:
+    radial-gradient(60% 45% at 20% 10%, rgba(124, 58, 237, 0.45), transparent 70%),
+    radial-gradient(55% 40% at 85% 25%, rgba(20, 184, 166, 0.38), transparent 70%),
+    radial-gradient(60% 45% at 50% 95%, rgba(236, 72, 153, 0.32), transparent 70%),
+    #07070f;
+  background-size: 140% 140%, 140% 140%, 140% 140%, auto;
+  animation: previewAuroraDrift 18s ease-in-out infinite;
+}
+
+html[data-preview-theme='aurora'] .navbar {
+  background: rgba(7, 7, 15, 0.35);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+html[data-preview-theme='aurora'] .color-blend-line {
+  height: 2px;
+  background: linear-gradient(90deg, #7c3aed, #14b8a6, #ec4899);
+}
+
+html[data-preview-theme='aurora'] .header-title,
+html[data-preview-theme='aurora'] .header-title-name {
+  background: linear-gradient(90deg, #c4b5fd, #5eead4, #f9a8d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+html[data-preview-theme='aurora'] .header-title { font-weight: 700; }
+
+html[data-preview-theme='aurora'] .hamburger-menu {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  color: #fff;
+  padding: 0 10px;
+}
+
+html[data-preview-theme='aurora'] .menu {
+  background: #110d22;
+  border: 1px solid rgba(196, 181, 253, 0.3);
+  border-radius: 18px;
+  box-shadow: 0 20px 50px rgba(124, 58, 237, 0.25);
+}
+
+html[data-preview-theme='aurora'] .menu a,
+html[data-preview-theme='aurora'] .menu button { color: #ede9fe; }
+
+html[data-preview-theme='aurora'] .content p { color: #ece9f6; }
+html[data-preview-theme='aurora'] .content a { color: #5eead4; }
+html[data-preview-theme='aurora'] footer { color: rgba(255, 255, 255, 0.5); }
+
+html[data-preview-theme='aurora'] .Link,
+html[data-preview-theme='aurora'] .downloadPDF {
+  color: #fff;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background:
+    linear-gradient(rgba(15, 12, 30, 0.85), rgba(15, 12, 30, 0.85)) padding-box,
+    linear-gradient(90deg, #7c3aed, #14b8a6, #ec4899) border-box;
+}
+
+html[data-preview-theme='aurora'] .Link:hover {
+  border: 1px solid transparent;
+  box-shadow: 0 0 24px rgba(124, 58, 237, 0.45);
+}
+
+/* ---------- 3. Paper (minimal light) ---------- */
+
+html[data-preview-theme='paper'] {
+  color-scheme: light;
+}
+
+html[data-preview-theme='paper'] .bg {
+  background: #f5f4ef;
+}
+
+html[data-preview-theme='paper'] .navbar {
+  background: rgba(245, 244, 239, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+html[data-preview-theme='paper'] .color-blend-line {
+  height: 1px;
+  background: #111;
+}
+
+html[data-preview-theme='paper'] .header-title { color: #111; font-weight: 700; letter-spacing: -0.02em; }
+html[data-preview-theme='paper'] .header-title-name { color: #8a8a85; }
+
+html[data-preview-theme='paper'] .hamburger-menu {
+  background: transparent;
+  border: 1px solid #111;
+  border-radius: 0;
+  color: #111;
+}
+
+html[data-preview-theme='paper'] .hamburger-menu:hover { background: #111; color: #f5f4ef; }
+
+html[data-preview-theme='paper'] .menu {
+  background: #fff;
+  border: 1px solid #111;
+  border-radius: 0;
+  box-shadow: 6px 6px 0 #111;
+}
+
+html[data-preview-theme='paper'] .menu a,
+html[data-preview-theme='paper'] .menu button { color: #111; }
+
+html[data-preview-theme='paper'] .content,
+html[data-preview-theme='paper'] .content p { color: #1c1c1a; }
+html[data-preview-theme='paper'] .content a { color: #d9381e; }
+html[data-preview-theme='paper'] footer { color: #7a7a75; }
+
+html[data-preview-theme='paper'] .Link,
+html[data-preview-theme='paper'] .downloadPDF {
+  background: #111;
+  color: #f5f4ef;
+  border: 1px solid #111;
+  border-radius: 0;
+}
+
+html[data-preview-theme='paper'] .Link:hover {
+  background: #d9381e;
+  border: 1px solid #d9381e;
+}
+
+html[data-preview-theme='paper'] .resume-image,
+html[data-preview-theme='paper'] .image,
+html[data-preview-theme='paper'] .excel-image {
+  border-color: #d6d4cc;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+html[data-preview-theme='paper'] .style-picker {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: #111;
+  box-shadow: 4px 4px 0 #111;
+  border-radius: 0;
+}
+
+html[data-preview-theme='paper'] .style-picker-field span { color: #555; }
+
+html[data-preview-theme='paper'] .style-picker select {
+  color: #111;
+  background-color: #fff;
+  border-color: #111;
+  border-radius: 0;
+  background-image: linear-gradient(45deg, transparent 50%, #111 50%),
+    linear-gradient(135deg, #111 50%, transparent 50%);
+}
+
+/* ---------- 4. Synthwave ---------- */
+
+html[data-preview-theme='synthwave'] .bg {
+  background:
+    radial-gradient(circle at 50% 78%, rgba(255, 94, 160, 0.55) 0, rgba(255, 140, 66, 0.25) 14%, transparent 30%),
+    linear-gradient(180deg, #0d0221 0%, #261447 55%, #3b0f4f 100%);
+}
+
+html[data-preview-theme='synthwave'] .bg { overflow: hidden; }
+
+/* neon grid floor */
+html[data-preview-theme='synthwave'] .bg::after {
+  content: '';
+  position: absolute;
+  left: -50%;
+  right: -50%;
+  bottom: 0;
+  height: 42%;
+  background-image:
+    linear-gradient(rgba(255, 43, 214, 0.55) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.45) 1px, transparent 1px);
+  background-size: 48px 48px;
+  transform: perspective(320px) rotateX(62deg);
+  transform-origin: bottom;
+  -webkit-mask-image: linear-gradient(to top, black 30%, transparent 100%);
+  mask-image: linear-gradient(to top, black 30%, transparent 100%);
+}
+
+html[data-preview-theme='synthwave'] .navbar {
+  background: rgba(13, 2, 33, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+html[data-preview-theme='synthwave'] .color-blend-line {
+  height: 2px;
+  background: linear-gradient(90deg, #22d3ee, #ff2bd6);
+  box-shadow: 0 0 12px rgba(255, 43, 214, 0.9), 0 0 24px rgba(34, 211, 238, 0.5);
+}
+
+html[data-preview-theme='synthwave'] .header-title {
+  color: #fff;
+  text-shadow: 0 0 6px #ff2bd6, 0 0 16px rgba(255, 43, 214, 0.7);
+  letter-spacing: 0.06em;
+}
+
+html[data-preview-theme='synthwave'] .header-title-name {
+  color: #67e8f9;
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.8);
+}
+
+html[data-preview-theme='synthwave'] .hamburger-menu {
+  background: transparent;
+  border: 1px solid #22d3ee;
+  border-radius: 6px;
+  color: #67e8f9;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.55), inset 0 0 8px rgba(34, 211, 238, 0.3);
+}
+
+html[data-preview-theme='synthwave'] .menu {
+  background: #14042c;
+  border: 1px solid #ff2bd6;
+  border-radius: 8px;
+  box-shadow: 0 0 22px rgba(255, 43, 214, 0.5);
+}
+
+html[data-preview-theme='synthwave'] .menu a,
+html[data-preview-theme='synthwave'] .menu button { color: #fde4ff; }
+
+html[data-preview-theme='synthwave'] .content p { color: #f5e9ff; text-shadow: 0 1px 6px rgba(13, 2, 33, 0.9); }
+html[data-preview-theme='synthwave'] .content a { color: #67e8f9; }
+html[data-preview-theme='synthwave'] footer { color: #f0abfc; }
+
+html[data-preview-theme='synthwave'] .Link,
+html[data-preview-theme='synthwave'] .downloadPDF {
+  background: rgba(13, 2, 33, 0.7);
+  color: #fff;
+  border: 1px solid #ff2bd6;
+  border-radius: 6px;
+  box-shadow: 0 0 14px rgba(255, 43, 214, 0.55);
+}
+
+html[data-preview-theme='synthwave'] .Link:hover {
+  background: rgba(255, 43, 214, 0.18);
+  border: 1px solid #ff2bd6;
+  box-shadow: 0 0 26px rgba(255, 43, 214, 0.9);
+}
+
+/* ---------- 5. Ember ---------- */
+
+html[data-preview-theme='ember'] .bg {
+  background:
+    radial-gradient(900px 420px at 50% -8%, rgba(249, 115, 22, 0.22), transparent 65%),
+    linear-gradient(180deg, #17120f 0%, #0f0c0a 100%);
+}
+
+html[data-preview-theme='ember'] .navbar {
+  background: rgba(28, 22, 18, 0.9);
+}
+
+html[data-preview-theme='ember'] .color-blend-line {
+  height: 2px;
+  background: linear-gradient(90deg, #f97316, #f59e0b, #f97316);
+}
+
+html[data-preview-theme='ember'] .header-title { color: #fafaf9; font-weight: 700; }
+html[data-preview-theme='ember'] .header-title-name { color: #fdba74; }
+
+html[data-preview-theme='ember'] .hamburger-menu {
+  background: #f97316;
+  border: none;
+  border-radius: 10px;
+  color: #1c1410;
+}
+
+html[data-preview-theme='ember'] .hamburger-menu:hover { background: #fb923c; }
+
+html[data-preview-theme='ember'] .menu {
+  background: #1c1612;
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+}
+
+html[data-preview-theme='ember'] .menu a,
+html[data-preview-theme='ember'] .menu button { color: #f5f5f4; }
+
+html[data-preview-theme='ember'] .content p { color: #e7e5e4; }
+html[data-preview-theme='ember'] .content a { color: #fdba74; }
+html[data-preview-theme='ember'] footer { color: #a8a29e; }
+
+html[data-preview-theme='ember'] .Link,
+html[data-preview-theme='ember'] .downloadPDF {
+  background: #f97316;
+  color: #1c1410;
+  border: none;
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.35);
+}
+
+html[data-preview-theme='ember'] .Link:hover {
+  background: #fb923c;
+  border: none;
+}
+
+html[data-preview-theme='ember'] .style-picker {
+  border-color: rgba(251, 146, 60, 0.4);
+}
