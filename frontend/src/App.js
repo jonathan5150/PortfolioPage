@@ -106,8 +106,10 @@ function Main() {
           <Route path="/mlbdata" element={<Navigate to="/sports/mlb" replace />} />
         </Routes>
       </Suspense>
-      {/* shown on the portfolio pages; the chosen font still applies on the sports pages */}
-      <StylePicker visible={hasHeader} />
+      {/* pinned on the portfolio pages, at the end of the page on the sports pages */}
+      <StylePicker
+        mode={hasHeader ? 'fixed' : location.pathname.toLowerCase().startsWith('/sports') ? 'inline' : 'hidden'}
+      />
     </div>
   );
 }

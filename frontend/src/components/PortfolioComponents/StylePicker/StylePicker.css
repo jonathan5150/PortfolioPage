@@ -39,7 +39,7 @@
   padding-left: 3px;
 }
 
-.style-picker select {
+.style-picker select.style-picker-select {
   width: 100%;
   min-width: 140px;
   max-width: 44vw;
@@ -60,12 +60,12 @@
   cursor: pointer;
 }
 
-.style-picker select:focus {
+.style-picker select.style-picker-select:focus {
   outline: 2px solid rgba(120, 170, 255, 0.7);
   outline-offset: 1px;
 }
 
-.style-picker option {
+.style-picker select.style-picker-select option {
   color: #111;
   background: #fff;
 }
@@ -315,7 +315,7 @@ html[data-preview-theme='paper'] .style-picker {
 
 html[data-preview-theme='paper'] .style-picker-field span { color: #555; }
 
-html[data-preview-theme='paper'] .style-picker select {
+html[data-preview-theme='paper'] .style-picker select.style-picker-select {
   color: #111;
   background-color: #fff;
   border-color: #111;
@@ -472,4 +472,150 @@ html[data-preview-theme='ember'] .Link:hover {
 
 html[data-preview-theme='ember'] .style-picker {
   border-color: rgba(251, 146, 60, 0.4);
+}
+
+/* =====================================================================
+   Sports pages (everything inside .nfl-data-container: NFL, MLB, NBA, UFC)
+   Each theme sets a few colour variables; one set of rules applies them.
+   Gold betting highlights and team colours are left as they are.
+   ===================================================================== */
+
+html[data-preview-theme='midnight-glass'] {
+  --pv-page: #0b1220;
+  --pv-page-img: radial-gradient(1000px 500px at 85% -10%, rgba(56, 189, 248, 0.14), transparent 60%),
+    radial-gradient(800px 500px at -10% 105%, rgba(99, 102, 241, 0.16), transparent 60%);
+  --pv-card: rgba(15, 23, 42, 0.86);
+  --pv-card-border: rgba(148, 163, 184, 0.22);
+  --pv-inner: rgba(30, 41, 59, 0.78);
+  --pv-control: rgba(30, 41, 59, 0.92);
+  --pv-control-border: rgba(148, 163, 184, 0.32);
+  --pv-menu: #0f172a;
+  --pv-bar: rgba(15, 23, 42, 0.97);
+}
+
+html[data-preview-theme='aurora'] {
+  --pv-page: #07070f;
+  --pv-page-img: radial-gradient(60% 40% at 15% 5%, rgba(124, 58, 237, 0.38), transparent 70%),
+    radial-gradient(55% 35% at 90% 30%, rgba(20, 184, 166, 0.3), transparent 70%),
+    radial-gradient(60% 40% at 50% 100%, rgba(236, 72, 153, 0.26), transparent 70%);
+  --pv-card: rgba(17, 13, 34, 0.8);
+  --pv-card-border: rgba(196, 181, 253, 0.26);
+  --pv-inner: rgba(40, 30, 72, 0.6);
+  --pv-control: rgba(30, 24, 58, 0.92);
+  --pv-control-border: rgba(196, 181, 253, 0.32);
+  --pv-menu: #110d22;
+  --pv-bar: rgba(17, 13, 34, 0.97);
+}
+
+/* light page, dark cards: the sports pages' white text stays readable */
+html[data-preview-theme='paper'] {
+  --pv-page: #e9e7e0;
+  --pv-page-img: none;
+  --pv-card: #1d1d1b;
+  --pv-card-border: #111;
+  --pv-inner: #2a2a27;
+  --pv-control: #1d1d1b;
+  --pv-control-border: #111;
+  --pv-menu: #1d1d1b;
+  --pv-bar: #1d1d1b;
+}
+
+html[data-preview-theme='synthwave'] {
+  --pv-page: #0d0221;
+  --pv-page-img: radial-gradient(circle at 50% 100%, rgba(255, 94, 160, 0.35) 0, transparent 45%),
+    linear-gradient(180deg, #0d0221 0%, #261447 60%, #3b0f4f 100%);
+  --pv-card: rgba(20, 4, 44, 0.86);
+  --pv-card-border: rgba(255, 43, 214, 0.5);
+  --pv-inner: rgba(45, 16, 80, 0.62);
+  --pv-control: rgba(30, 8, 60, 0.92);
+  --pv-control-border: rgba(34, 211, 238, 0.5);
+  --pv-menu: #14042c;
+  --pv-bar: rgba(20, 4, 44, 0.97);
+}
+
+html[data-preview-theme='ember'] {
+  --pv-page: #120e0b;
+  --pv-page-img: radial-gradient(900px 420px at 50% -6%, rgba(249, 115, 22, 0.2), transparent 65%);
+  --pv-card: rgba(28, 22, 18, 0.9);
+  --pv-card-border: rgba(251, 146, 60, 0.3);
+  --pv-inner: rgba(46, 37, 31, 0.78);
+  --pv-control: rgba(40, 32, 26, 0.94);
+  --pv-control-border: rgba(251, 146, 60, 0.38);
+  --pv-menu: #1c1612;
+  --pv-bar: rgba(28, 22, 18, 0.97);
+}
+
+html[data-preview-theme] .nfl-data-container,
+html[data-preview-theme] .nfl-data-container.loading-background,
+html[data-preview-theme] .nfl-data-container .loading {
+  background-color: var(--pv-page);
+  background-image: var(--pv-page-img);
+  background-attachment: fixed;
+}
+
+html[data-preview-theme] .nfl-data-container .game-container,
+html[data-preview-theme] .nfl-data-container .game-section,
+html[data-preview-theme] .nfl-data-container .gold-box,
+html[data-preview-theme] .nfl-data-container .model-results-content,
+html[data-preview-theme] .nfl-data-container .noGames {
+  background-color: var(--pv-card);
+  border-color: var(--pv-card-border);
+}
+
+html[data-preview-theme] .nfl-data-container .game-data-container,
+html[data-preview-theme] .nfl-data-container .betting-panel,
+html[data-preview-theme] .nfl-data-container .linescore,
+html[data-preview-theme] .nfl-data-container .league-starter,
+html[data-preview-theme] .nfl-data-container .ufc-fight-row {
+  background: var(--pv-inner);
+  border-color: var(--pv-card-border);
+}
+
+html[data-preview-theme] .nfl-data-container .nfl-control-button,
+html[data-preview-theme] .nfl-data-container .select-button,
+html[data-preview-theme] .nfl-data-container .hide-games-button,
+html[data-preview-theme] .nfl-data-container .teams-dropdown-wrapper > .nfl-control-button,
+html[data-preview-theme] .nfl-data-container .teams-menu .select-button,
+html[data-preview-theme] .nfl-data-container .panel-select,
+html[data-preview-theme] .nfl-data-container .segment,
+html[data-preview-theme] .nfl-data-container select:not(.league-player-select):not(.style-picker-select),
+html[data-preview-theme] .nfl-data-container .league-day-picker input,
+html[data-preview-theme] .nfl-data-container .league-count-select,
+html[data-preview-theme] .sport-switcher .sport-switcher-button {
+  background-color: var(--pv-control);
+  border-color: var(--pv-control-border);
+}
+
+html[data-preview-theme] .nfl-data-container .nfl-menu,
+html[data-preview-theme] .nfl-data-container .nfl-menu.teams-menu,
+html[data-preview-theme] .nfl-data-container .league-day-picker,
+html[data-preview-theme] .sport-switcher-menu {
+  background-color: var(--pv-menu);
+  border-color: var(--pv-control-border);
+}
+
+html[data-preview-theme] .nfl-data-container select:not(.style-picker-select) option {
+  background-color: var(--pv-menu);
+}
+
+html[data-preview-theme] .nfl-data-container .parlay-bar,
+html[data-preview-theme] .nfl-data-container .hide-done-bar {
+  background-color: var(--pv-bar);
+}
+
+/* the picker itself at the end of a sports page (inline, not pinned) */
+.style-picker.style-picker-inline {
+  position: static;
+  transform: none;
+  margin: 18px auto 90px; /* clears the parlay / hide-finished bars */
+  width: fit-content;
+  flex-shrink: 0;
+  order: 9999; /* stays last even if the page adds content after it */
+}
+
+/* the sports pages style every <select> inside them; keep the picker's own look */
+.nfl-data-container .style-picker select.style-picker-select {
+  margin: 0;
+  font-weight: 400;
+  text-align: left;
 }
