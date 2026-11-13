@@ -12,7 +12,7 @@
   z-index: 2000;
   display: flex;
   gap: 8px;
-  padding: 7px 9px;
+  padding: 6px 8px;
   border-radius: 14px;
   background: rgba(20, 20, 24, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -26,14 +26,16 @@
 .style-picker-field {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   min-width: 0;
   flex: 1 1 0;
+  text-align: left;
 }
 
 .style-picker-field span {
-  font-size: 9px;
+  font-size: 8px;
   font-weight: 700;
+  line-height: 1.2;
   letter-spacing: 0.12em;
   color: rgba(255, 255, 255, 0.6);
   padding-left: 3px;
@@ -43,8 +45,9 @@
   width: 100%;
   min-width: 140px;
   max-width: 44vw;
-  height: 34px;
-  padding: 0 28px 0 10px;
+  height: 32px;
+  padding: 0 26px 0 10px;
+  margin: 0;
   border-radius: 9px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   background-color: rgba(255, 255, 255, 0.08);
@@ -65,6 +68,12 @@
   outline-offset: 1px;
 }
 
+.style-picker select.style-picker-select optgroup {
+  color: #666;
+  background: #fff;
+  font-style: normal;
+}
+
 .style-picker select.style-picker-select option {
   color: #111;
   background: #fff;
@@ -72,7 +81,7 @@
 
 /* keep the "Last Updated" footer visible above the bar */
 html[data-style-picker] footer {
-  bottom: 74px;
+  bottom: 72px;
 }
 
 /* ---------- font override (whole site, sports pages included) ---------- */
@@ -603,14 +612,16 @@ html[data-preview-theme] .nfl-data-container .hide-done-bar {
   background-color: var(--pv-bar);
 }
 
-/* the picker itself at the end of a sports page (inline, not pinned) */
-.style-picker.style-picker-inline {
-  position: static;
-  transform: none;
-  margin: 18px auto 90px; /* clears the parlay / hide-finished bars */
-  width: fit-content;
-  flex-shrink: 0;
-  order: 9999; /* stays last even if the page adds content after it */
+/* the floating bar on the sports pages: lift their own bottom bars above it
+   and leave room at the end of the page so the last games aren't hidden */
+html[data-style-picker] .nfl-data-container .parlay-bar,
+html[data-style-picker] .nfl-data-container .hide-done-bar {
+  bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+}
+
+html[data-style-picker] .nfl-data-container {
+  box-sizing: border-box;
+  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
 }
 
 /* the sports pages style every <select> inside them; keep the picker's own look */
@@ -618,4 +629,394 @@ html[data-preview-theme] .nfl-data-container .hide-done-bar {
   margin: 0;
   font-weight: 400;
   text-align: left;
+}
+
+/* =====================================================================
+   The 10 newer styles. Each sets colour variables; the shared rules below
+   apply them to the portfolio pages (the sports-page rules above already
+   read --pv-page, --pv-card, --pv-inner, --pv-control, --pv-menu, --pv-bar).
+   ===================================================================== */
+
+html[data-preview-theme='true-dark'] {
+  --pv-page: #000;
+  --pv-page-img: none;
+  --pv-nav: rgba(0, 0, 0, 0.92);
+  --pv-line: rgba(255, 255, 255, 0.14);
+  --pv-title: #fff;
+  --pv-subtitle: #8a8a8a;
+  --pv-btn-bg: #000;
+  --pv-btn-text: #fff;
+  --pv-btn-border: #2c2c2c;
+  --pv-pmenu: #0b0b0b;
+  --pv-menu-text: #f2f2f2;
+  --pv-text: #e8e8e8;
+  --pv-link: #9ecbff;
+  --pv-muted: #6b6b6b;
+  --pv-accent: #fff;
+  --pv-accent-text: #000;
+  --pv-radius: 10px;
+  --pv-card: #0a0a0a;
+  --pv-card-border: #232323;
+  --pv-inner: #141414;
+  --pv-control: #0d0d0d;
+  --pv-control-border: #2c2c2c;
+  --pv-menu: #0b0b0b;
+  --pv-bar: rgba(10, 10, 10, 0.97);
+}
+
+html[data-preview-theme='nord'] {
+  --pv-page: #2e3440;
+  --pv-page-img: radial-gradient(900px 500px at 80% -10%, rgba(136, 192, 208, 0.12), transparent 60%);
+  --pv-nav: rgba(46, 52, 64, 0.9);
+  --pv-line: linear-gradient(90deg, #88c0d0, #81a1c1, #5e81ac);
+  --pv-title: #eceff4;
+  --pv-subtitle: #88c0d0;
+  --pv-btn-bg: #3b4252;
+  --pv-btn-text: #eceff4;
+  --pv-btn-border: #4c566a;
+  --pv-pmenu: #3b4252;
+  --pv-menu-text: #eceff4;
+  --pv-text: #d8dee9;
+  --pv-link: #88c0d0;
+  --pv-muted: #7b88a1;
+  --pv-accent: #88c0d0;
+  --pv-accent-text: #2e3440;
+  --pv-radius: 8px;
+  --pv-card: rgba(59, 66, 82, 0.92);
+  --pv-card-border: #4c566a;
+  --pv-inner: rgba(67, 76, 94, 0.85);
+  --pv-control: #3b4252;
+  --pv-control-border: #4c566a;
+  --pv-menu: #3b4252;
+  --pv-bar: rgba(46, 52, 64, 0.97);
+}
+
+html[data-preview-theme='dracula'] {
+  --pv-page: #282a36;
+  --pv-page-img: radial-gradient(900px 500px at 15% -10%, rgba(189, 147, 249, 0.16), transparent 60%),
+    radial-gradient(700px 400px at 100% 100%, rgba(255, 121, 198, 0.1), transparent 60%);
+  --pv-nav: rgba(33, 34, 44, 0.92);
+  --pv-line: linear-gradient(90deg, #bd93f9, #ff79c6);
+  --pv-title: #f8f8f2;
+  --pv-subtitle: #bd93f9;
+  --pv-btn-bg: #44475a;
+  --pv-btn-text: #f8f8f2;
+  --pv-btn-border: #6272a4;
+  --pv-pmenu: #21222c;
+  --pv-menu-text: #f8f8f2;
+  --pv-text: #f8f8f2;
+  --pv-link: #8be9fd;
+  --pv-muted: #6272a4;
+  --pv-accent: #bd93f9;
+  --pv-accent-text: #282a36;
+  --pv-radius: 10px;
+  --pv-card: rgba(33, 34, 44, 0.92);
+  --pv-card-border: #44475a;
+  --pv-inner: rgba(68, 71, 90, 0.7);
+  --pv-control: #343746;
+  --pv-control-border: #6272a4;
+  --pv-menu: #21222c;
+  --pv-bar: rgba(33, 34, 44, 0.97);
+}
+
+html[data-preview-theme='terminal'] {
+  --pv-page: #030803;
+  --pv-page-img: repeating-linear-gradient(0deg, rgba(0, 255, 102, 0.035) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, rgba(0, 255, 102, 0.08), transparent 70%);
+  --pv-nav: rgba(3, 8, 3, 0.95);
+  --pv-line: #00ff66;
+  --pv-line-glow: 0 0 10px rgba(0, 255, 102, 0.8);
+  --pv-title: #00ff66;
+  --pv-subtitle: #00b347;
+  --pv-btn-bg: transparent;
+  --pv-btn-text: #00ff66;
+  --pv-btn-border: #00ff66;
+  --pv-pmenu: #020602;
+  --pv-menu-text: #00ff66;
+  --pv-text: #b6ffcf;
+  --pv-link: #00ff66;
+  --pv-muted: #1f8f4a;
+  --pv-accent: transparent;
+  --pv-accent-text: #00ff66;
+  --pv-accent-border: #00ff66;
+  --pv-accent-glow: 0 0 12px rgba(0, 255, 102, 0.45);
+  --pv-radius: 0;
+  --pv-card: rgba(0, 18, 6, 0.92);
+  --pv-card-border: rgba(0, 255, 102, 0.38);
+  --pv-inner: rgba(0, 38, 12, 0.72);
+  --pv-control: #031a09;
+  --pv-control-border: rgba(0, 255, 102, 0.45);
+  --pv-menu: #020a03;
+  --pv-bar: rgba(0, 14, 4, 0.97);
+}
+
+html[data-preview-theme='cyberpunk'] {
+  --pv-page: #0a0a0f;
+  --pv-page-img: linear-gradient(135deg, rgba(252, 238, 10, 0.07), transparent 40%),
+    radial-gradient(700px 400px at 100% 100%, rgba(0, 240, 255, 0.12), transparent 60%);
+  --pv-nav: rgba(10, 10, 15, 0.95);
+  --pv-line: #fcee0a;
+  --pv-line-height: 3px;
+  --pv-title: #fcee0a;
+  --pv-subtitle: #00f0ff;
+  --pv-btn-bg: #fcee0a;
+  --pv-btn-text: #000;
+  --pv-btn-border: #fcee0a;
+  --pv-pmenu: #111117;
+  --pv-menu-text: #fcee0a;
+  --pv-text: #e8e8f0;
+  --pv-link: #00f0ff;
+  --pv-muted: #6c6c80;
+  --pv-accent: #fcee0a;
+  --pv-accent-text: #000;
+  --pv-radius: 0;
+  --pv-card: rgba(17, 17, 23, 0.92);
+  --pv-card-border: rgba(252, 238, 10, 0.45);
+  --pv-inner: rgba(30, 30, 40, 0.82);
+  --pv-control: #14141c;
+  --pv-control-border: rgba(0, 240, 255, 0.5);
+  --pv-menu: #111117;
+  --pv-bar: rgba(14, 14, 20, 0.97);
+}
+
+html[data-preview-theme='ocean'] {
+  --pv-page: #031926;
+  --pv-page-img: radial-gradient(900px 500px at 50% -10%, rgba(0, 180, 216, 0.2), transparent 60%),
+    radial-gradient(800px 500px at 0% 110%, rgba(0, 119, 182, 0.22), transparent 60%);
+  --pv-nav: rgba(3, 25, 38, 0.85);
+  --pv-line: linear-gradient(90deg, #0077b6, #00b4d8, #90e0ef);
+  --pv-title: #caf0f8;
+  --pv-subtitle: #48cae4;
+  --pv-btn-bg: rgba(0, 180, 216, 0.12);
+  --pv-btn-text: #caf0f8;
+  --pv-btn-border: rgba(72, 202, 228, 0.45);
+  --pv-pmenu: #052a3d;
+  --pv-menu-text: #caf0f8;
+  --pv-text: #cfe9f2;
+  --pv-link: #48cae4;
+  --pv-muted: #4f7d91;
+  --pv-accent: #00b4d8;
+  --pv-accent-text: #022030;
+  --pv-radius: 12px;
+  --pv-card: rgba(4, 40, 58, 0.86);
+  --pv-card-border: rgba(72, 202, 228, 0.28);
+  --pv-inner: rgba(8, 58, 82, 0.72);
+  --pv-control: rgba(5, 45, 66, 0.94);
+  --pv-control-border: rgba(72, 202, 228, 0.4);
+  --pv-menu: #052a3d;
+  --pv-bar: rgba(3, 30, 45, 0.97);
+}
+
+html[data-preview-theme='forest'] {
+  --pv-page: #0f1a14;
+  --pv-page-img: radial-gradient(900px 500px at 20% -10%, rgba(106, 153, 78, 0.22), transparent 60%),
+    radial-gradient(700px 450px at 100% 100%, rgba(56, 102, 65, 0.25), transparent 60%);
+  --pv-nav: rgba(15, 26, 20, 0.9);
+  --pv-line: linear-gradient(90deg, #386641, #6a994e, #a7c957);
+  --pv-title: #f2e8cf;
+  --pv-subtitle: #a7c957;
+  --pv-btn-bg: #1f3326;
+  --pv-btn-text: #f2e8cf;
+  --pv-btn-border: #386641;
+  --pv-pmenu: #142219;
+  --pv-menu-text: #f2e8cf;
+  --pv-text: #e3ddc8;
+  --pv-link: #a7c957;
+  --pv-muted: #6f7f66;
+  --pv-accent: #a7c957;
+  --pv-accent-text: #142219;
+  --pv-radius: 10px;
+  --pv-card: rgba(22, 38, 28, 0.9);
+  --pv-card-border: rgba(167, 201, 87, 0.26);
+  --pv-inner: rgba(34, 56, 42, 0.76);
+  --pv-control: #1a2d21;
+  --pv-control-border: rgba(167, 201, 87, 0.36);
+  --pv-menu: #142219;
+  --pv-bar: rgba(18, 32, 24, 0.97);
+}
+
+html[data-preview-theme='sakura'] {
+  --pv-page: #1e1219;
+  --pv-page-img: radial-gradient(900px 500px at 90% -10%, rgba(255, 143, 177, 0.2), transparent 60%),
+    radial-gradient(800px 500px at 0% 105%, rgba(186, 104, 200, 0.16), transparent 60%);
+  --pv-nav: rgba(30, 18, 25, 0.88);
+  --pv-line: linear-gradient(90deg, #ffb3c6, #ff8fab, #c77dff);
+  --pv-title: #ffe5ec;
+  --pv-subtitle: #ffafcc;
+  --pv-btn-bg: rgba(255, 175, 204, 0.12);
+  --pv-btn-text: #ffe5ec;
+  --pv-btn-border: rgba(255, 175, 204, 0.42);
+  --pv-pmenu: #2a1822;
+  --pv-menu-text: #ffe5ec;
+  --pv-text: #f6dfe7;
+  --pv-link: #ffafcc;
+  --pv-muted: #9b7286;
+  --pv-accent: #ffafcc;
+  --pv-accent-text: #3a1428;
+  --pv-radius: 16px;
+  --pv-card: rgba(42, 24, 34, 0.88);
+  --pv-card-border: rgba(255, 175, 204, 0.28);
+  --pv-inner: rgba(60, 34, 48, 0.72);
+  --pv-control: #2f1b26;
+  --pv-control-border: rgba(255, 175, 204, 0.38);
+  --pv-menu: #2a1822;
+  --pv-bar: rgba(38, 22, 31, 0.97);
+}
+
+html[data-preview-theme='royal'] {
+  --pv-page: #0b1026;
+  --pv-page-img: radial-gradient(900px 450px at 50% -12%, rgba(212, 175, 55, 0.14), transparent 60%);
+  --pv-nav: rgba(11, 16, 38, 0.92);
+  --pv-line: linear-gradient(90deg, transparent, #d4af37 20%, #f4e4b0 50%, #d4af37 80%, transparent);
+  --pv-line-height: 1px;
+  --pv-title: #f4e4b0;
+  --pv-subtitle: #d4af37;
+  --pv-btn-bg: transparent;
+  --pv-btn-text: #d4af37;
+  --pv-btn-border: #d4af37;
+  --pv-pmenu: #10173a;
+  --pv-menu-text: #f4e4b0;
+  --pv-text: #e6e8f2;
+  --pv-link: #d4af37;
+  --pv-muted: #7d84a8;
+  --pv-accent: #d4af37;
+  --pv-accent-text: #0b1026;
+  --pv-radius: 4px;
+  --pv-card: rgba(16, 23, 58, 0.9);
+  --pv-card-border: rgba(212, 175, 55, 0.35);
+  --pv-inner: rgba(26, 35, 80, 0.72);
+  --pv-control: #121a42;
+  --pv-control-border: rgba(212, 175, 55, 0.42);
+  --pv-menu: #10173a;
+  --pv-bar: rgba(13, 19, 46, 0.97);
+}
+
+/* light page with dark-navy cards on the sports pages so their white text stays readable */
+html[data-preview-theme='arctic'] {
+  color-scheme: light;
+  --pv-page: #eef4f8;
+  --pv-page-img: radial-gradient(900px 500px at 80% -10%, rgba(186, 230, 253, 0.7), transparent 60%),
+    radial-gradient(700px 450px at 0% 100%, rgba(199, 210, 254, 0.5), transparent 60%);
+  --pv-nav: rgba(238, 244, 248, 0.88);
+  --pv-line: linear-gradient(90deg, #7dd3fc, #a5b4fc);
+  --pv-title: #0f2537;
+  --pv-subtitle: #5b7a93;
+  --pv-btn-bg: #fff;
+  --pv-btn-text: #0f2537;
+  --pv-btn-border: #c7d7e3;
+  --pv-pmenu: #fff;
+  --pv-menu-text: #0f2537;
+  --pv-text: #1d3446;
+  --pv-link: #0284c7;
+  --pv-muted: #7b94a8;
+  --pv-accent: #0f2537;
+  --pv-accent-text: #fff;
+  --pv-radius: 12px;
+  --pv-card: #13293d;
+  --pv-card-border: #0f2537;
+  --pv-inner: #1d3a52;
+  --pv-control: #13293d;
+  --pv-control-border: #2b4a63;
+  --pv-menu: #13293d;
+  --pv-bar: #13293d;
+}
+
+/* ---------- shared rules for the variable-based styles (portfolio pages) ---------- */
+
+html[data-preview-vars] .bg {
+  background-color: var(--pv-page);
+  background-image: var(--pv-page-img);
+}
+
+html[data-preview-vars] .navbar {
+  background: var(--pv-nav);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+html[data-preview-vars] .color-blend-line {
+  height: var(--pv-line-height, 2px);
+  background: var(--pv-line);
+  box-shadow: var(--pv-line-glow, none);
+}
+
+html[data-preview-vars] .header-title { color: var(--pv-title); font-weight: 700; }
+html[data-preview-vars] .header-title-name { color: var(--pv-subtitle); }
+
+html[data-preview-vars] .hamburger-menu {
+  background: var(--pv-btn-bg);
+  color: var(--pv-btn-text);
+  border: 1px solid var(--pv-btn-border);
+  border-radius: var(--pv-radius);
+}
+
+html[data-preview-vars] .hamburger-menu:hover { filter: brightness(1.15); }
+
+html[data-preview-vars] .menu {
+  background: var(--pv-pmenu, var(--pv-menu));
+  border: 1px solid var(--pv-btn-border);
+  border-radius: calc(var(--pv-radius) + 4px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+html[data-preview-vars] .menu a,
+html[data-preview-vars] .menu button { color: var(--pv-menu-text); }
+
+html[data-preview-vars] .content,
+html[data-preview-vars] .content p { color: var(--pv-text); }
+html[data-preview-vars] .content a { color: var(--pv-link); }
+html[data-preview-vars] footer { color: var(--pv-muted); }
+
+html[data-preview-vars] .Link,
+html[data-preview-vars] .downloadPDF {
+  background: var(--pv-accent);
+  color: var(--pv-accent-text);
+  border: 1px solid var(--pv-accent-border, var(--pv-accent));
+  border-radius: var(--pv-radius);
+  box-shadow: var(--pv-accent-glow, none);
+}
+
+html[data-preview-vars] .Link:hover {
+  background: var(--pv-accent);
+  border: 1px solid var(--pv-accent-border, var(--pv-accent));
+  filter: brightness(1.12);
+}
+
+/* style-specific touches */
+html[data-preview-theme='terminal'] .header-title,
+html[data-preview-theme='terminal'] .header-title-name { text-shadow: 0 0 8px rgba(0, 255, 102, 0.7); }
+html[data-preview-theme='terminal'] .content p { text-shadow: 0 0 6px rgba(0, 255, 102, 0.25); }
+
+html[data-preview-theme='cyberpunk'] .header-title { letter-spacing: 0.08em; text-transform: uppercase; }
+html[data-preview-theme='cyberpunk'] .Link,
+html[data-preview-theme='cyberpunk'] .downloadPDF {
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+html[data-preview-theme='royal'] .header-title { letter-spacing: 0.14em; }
+
+html[data-preview-theme='arctic'] .resume-image,
+html[data-preview-theme='arctic'] .image,
+html[data-preview-theme='arctic'] .excel-image {
+  border-color: #c7d7e3;
+  box-shadow: 0 10px 30px rgba(15, 37, 55, 0.1);
+}
+
+/* light picker bar for light styles (Paper keeps its own boxy look) */
+html[data-preview-light]:not([data-preview-theme='paper']) .style-picker {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(15, 37, 55, 0.18);
+  box-shadow: 0 8px 28px rgba(15, 37, 55, 0.18);
+}
+
+html[data-preview-light]:not([data-preview-theme='paper']) .style-picker-field span { color: #5b7a93; }
+
+html[data-preview-light]:not([data-preview-theme='paper']) .style-picker select.style-picker-select {
+  color: #0f2537;
+  background-color: #fff;
+  border-color: #c7d7e3;
+  background-image: linear-gradient(45deg, transparent 50%, #0f2537 50%),
+    linear-gradient(135deg, #0f2537 50%, transparent 50%);
 }

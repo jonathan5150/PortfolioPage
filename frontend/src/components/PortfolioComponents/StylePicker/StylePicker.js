@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import { FONT_OPTIONS, THEME_OPTIONS, isPreviewSite } from './stylePresets';
+import { FONT_OPTIONS, THEME_OPTIONS, groupOptions, isPreviewSite } from './stylePresets';
 import './StylePicker.css';
 
-// Test-site only: two dropdowns pinned to the bottom of the page that switch the
-// whole site's font and color theme, so different looks can be compared on a phone.
+// Test-site only: two dropdowns floating at the bottom of the screen on every page
+// that switch the whole site's font and colour theme, for comparing looks on a phone.
 
 const STORAGE_KEY = 'stylePreview';
 
@@ -27,10 +26,13 @@ const loadGoogleFont = (font) => {
   document.head.appendChild(link);
 };
 
+const setFlag = (root, name, on) => (on ? root.setAttribute(name, '') : root.removeAttribute(name));
+
 // Applies the choice to <html> so the CSS in StylePicker.css can react to it.
 export const applyStyleChoice = ({ font = 'default', theme = 'default' }) => {
   const root = document.documentElement;
   const fontOption = FONT_OPTIONS.find((f) => f.id === font) || FONT_OPTIONS[0];
+  const themeOption = THEME_OPTIONS.find((t) => t.id === theme) || THEME_OPTIONS[0];
 
   if (fontOption.family) {
     loadGoogleFont(fontOption);
@@ -41,44 +43,35 @@ export const applyStyleChoice = ({ font = 'default', theme = 'default' }) => {
     root.removeAttribute('data-preview-font');
   }
 
-  if (theme && theme !== 'default') root.setAttribute('data-preview-theme', theme);
+  if (themeOption.id !== 'default') root.setAttribute('data-preview-theme', themeOption.id);
   else root.removeAttribute('data-preview-theme');
+  setFlag(root, 'data-preview-vars', Boolean(themeOption.vars));
+  setFlag(root, 'data-preview-light', Boolean(themeOption.light));
 };
 
-// Sports pages render inside their own scrolling .nfl-data-container; find it
-// (it is swapped out when the page loads or the sport changes).
-const useSportsContainer = (active) => {
-  const [container, setContainer] = useState(null);
-
-  useEffect(() => {
-    if (!active) {
-      setContainer(null);
-      return undefined;
-    }
-    let frame = 0;
-    const find = () => {
-      frame = 0;
-      const el = document.querySelector('.nfl-data-container');
-      setContainer((prev) => (prev === el ? prev : el));
-    };
-    find();
-    const observer = new MutationObserver(() => {
-      if (!frame) frame = requestAnimationFrame(find);
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => {
-      observer.disconnect();
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, [active]);
-
-  return container;
+const OptionList = ({ options }) => {
+  const [loose, groups] = groupOptions(options);
+  return (
+    <>
+      {loose.map((o) => (
+        <option key={o.id} value={o.id}>
+          {o.label}
+        </option>
+      ))}
+      {groups.map(([name, items]) => (
+        <optgroup key={name} label={name}>
+          {items.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </>
+  );
 };
 
-// mode: 'fixed' = pinned to the bottom of the screen (portfolio pages)
-//       'inline' = at the end of a sports page's content (its bottom bars stay clear)
-//       'hidden' = not shown, but the saved choice still applies
-function StylePicker({ mode = 'fixed' }) {
+function StylePicker() {
   const [choice, setChoice] = useState(() => ({ font: 'default', theme: 'default', ...readSaved() }));
   const enabled = isPreviewSite();
 
@@ -92,49 +85,39 @@ function StylePicker({ mode = 'fixed' }) {
     }
   }, [choice, enabled]);
 
-  const sportsContainer = useSportsContainer(enabled && mode === 'inline');
-
-  // lets the CSS move the page footer up so the pinned bar doesn't cover it
-  const pinned = enabled && mode === 'fixed';
+  // lets the CSS make room for the bar (page footer, sports pages' bottom bars)
   useEffect(() => {
-    if (!pinned) return undefined;
+    if (!enabled) return undefined;
     document.documentElement.setAttribute('data-style-picker', '');
     return () => document.documentElement.removeAttribute('data-style-picker');
-  }, [pinned]);
+  }, [enabled]);
 
-  if (!enabled || mode === 'hidden') return null;
-  if (mode === 'inline' && !sportsContainer) return null;
+  if (!enabled) return null;
 
-  const bar = (
-    <div
-      className={`style-picker${mode === 'inline' ? ' style-picker-inline' : ''}`}
-      role="group"
-      aria-label="Preview font and style"
-    >
+  return (
+    <div className="style-picker" role="group" aria-label="Preview font and style">
       <label className="style-picker-field">
         <span>FONT</span>
-        <select className="style-picker-select" value={choice.font} onChange={(e) => setChoice((c) => ({ ...c, font: e.target.value }))}>
-          {FONT_OPTIONS.map((f) => (
-            <option key={f.id} value={f.id}>
-              {f.label}
-            </option>
-          ))}
+        <select
+          className="style-picker-select"
+          value={choice.font}
+          onChange={(e) => setChoice((c) => ({ ...c, font: e.target.value }))}
+        >
+          <OptionList options={FONT_OPTIONS} />
         </select>
       </label>
       <label className="style-picker-field">
         <span>STYLE</span>
-        <select className="style-picker-select" value={choice.theme} onChange={(e) => setChoice((c) => ({ ...c, theme: e.target.value }))}>
-          {THEME_OPTIONS.map((t) => (
-            <option key={t.id} value={t.id}>
-              {t.label}
-            </option>
-          ))}
+        <select
+          className="style-picker-select"
+          value={choice.theme}
+          onChange={(e) => setChoice((c) => ({ ...c, theme: e.target.value }))}
+        >
+          <OptionList options={THEME_OPTIONS} />
         </select>
       </label>
     </div>
   );
-
-  return mode === 'inline' ? createPortal(bar, sportsContainer) : bar;
 }
 
 export default StylePicker;

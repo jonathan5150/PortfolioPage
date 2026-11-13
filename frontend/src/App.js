@@ -106,10 +106,8 @@ function Main() {
           <Route path="/mlbdata" element={<Navigate to="/sports/mlb" replace />} />
         </Routes>
       </Suspense>
-      {/* pinned on the portfolio pages, at the end of the page on the sports pages */}
-      <StylePicker
-        mode={hasHeader ? 'fixed' : location.pathname.toLowerCase().startsWith('/sports') ? 'inline' : 'hidden'}
-      />
+      {/* floats at the bottom of every page */}
+      <StylePicker />
     </div>
   );
 }
