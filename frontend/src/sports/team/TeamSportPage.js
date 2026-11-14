@@ -11,22 +11,17 @@ import TeamsMenu from '../../components/NFLDataComponents/NFLDataNavbar/NFLDataN
 import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
 import { ParlayProvider } from '../../components/NFLDataComponents/shared/ParlayContext';
 import ParlayBar from '../../components/NFLDataComponents/ParlayBar/ParlayBar';
-import { gradeLinePicks, linePickBets } from '../../pages/NFLData/NFLDataApi/picks';
-import { ModelResults, cachedGrader } from '../../components/NFLDataComponents/GameList/PredictionRecord';
+import { ModelResults } from '../../components/NFLDataComponents/GameList/PredictionRecord';
+import DayBets, { asBetItems, leagueTicketLoader } from '../../components/NFLDataComponents/GameList/DayBets';
+import { graderFor, seasonLoaderFor } from '../../pages/NFLData/NFLDataApi/modelGrading';
 import {
   LEAGUES,
   dayFromKey,
   findGameDay,
-  getEarlierGames,
   getLeagueEventDays,
-  getLeagueOdds,
-  getLeaguePredictor,
   getLeagueScoreboard,
-  getSeasonFinished,
   getLeagueTeams,
 } from './leagueApi';
-import { buildLeaguePicks, restDays } from './leaguePicks';
-import { loadTeamModel } from '../../pages/NFLData/NFLDataApi/teamModels';
 import TeamGameCard from './TeamGameCard';
 import '../../pages/NFLData/NFLData.scss';
 import './TeamSport.scss';
@@ -64,33 +59,8 @@ const timeSlots = (games) => {
 
 // ---------- model results: the NFL panel, graded with this league's engine ----------
 
-// grades for one finished game (cached per league in localStorage; bump the
-// version when the engine changes)
-const graders = {};
-const graderFor = (lg) => {
-  if (!graders[lg]) {
-    graders[lg] = cachedGrader(`${lg}GradedPicks:v2`, async (game) => {
-      const [odds, predictor, earlier, teamModel] = await Promise.all([
-        getLeagueOdds(lg, game.id, { final: true }).catch(() => null),
-        getLeaguePredictor(lg, game.id).catch(() => null),
-        lg === 'nba' ? getEarlierGames(lg, game).catch(() => []) : [],
-        loadTeamModel(lg).catch(() => null),
-      ]);
-      if (!odds) return null;
-      const rest = lg === 'nba' ? restDays(game, earlier) : null;
-      const picks = buildLeaguePicks({ lg, game, odds, predictor, rest, teamModel });
-      return { ...gradeLinePicks(picks, game, odds), bets: linePickBets(picks, game, odds) };
-    });
-  }
-  return graders[lg];
-};
-const seasonLoaders = {};
-const seasonFor = (lg) => {
-  if (!seasonLoaders[lg]) seasonLoaders[lg] = () => getSeasonFinished(lg);
-  return seasonLoaders[lg];
-};
 const MODEL_NOTES = {
-  nba: "BET: the home team with 2+ more days of rest (covered 58% from 2022-26, 57% in the 2024-26 holdout). Winner leans are the model's value side (market plus head-to-head, rest and revenge), an underdog about half the time; no moneyline or total rule beat the closing prices.",
+  nba: "BETS: the better-rested team on the spread when it's had 2+ more days off (home teams covered 57.5% from 2022-26; road teams 52.5-53.5% in every stretch from 2007). Everything else is a lean: no moneyline or total rule beat the closing prices, so EVERY PICK includes picks we wouldn't bet.",
   mlb: "The MLB picks are leans from ESPN's model and the betting market. They haven't been backtested like the NFL and NBA models yet.",
 };
 
@@ -419,11 +389,13 @@ const TeamSportPage = ({ lg }) => {
               )}
             </div>
 
+            {day && <DayBets items={asBetItems(games)} loadTickets={leagueTicketLoader(lg)} period="DAY" />}
             {day && (
               <ModelResults
                 games={games}
                 gradeGame={graderFor(lg)}
-                loadSeason={seasonFor(lg)}
+                lg={lg}
+                loadSeason={seasonLoaderFor(lg)}
                 period="DAY"
                 spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}
                 note={MODEL_NOTES[lg]}

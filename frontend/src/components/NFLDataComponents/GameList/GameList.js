@@ -7,6 +7,7 @@ import usePersistentState from '../shared/usePersistentState';
 import { ParlayProvider } from '../shared/ParlayContext';
 import ParlayBar from '../ParlayBar/ParlayBar';
 import PredictionRecord from './PredictionRecord';
+import DayBets, { asBetItems, leagueTicketLoader } from './DayBets';
 import SlideOpen from '../shared/SlideOpen';
 import LastUpdated from '../shared/LastUpdated';
 
@@ -297,6 +298,7 @@ const GameList = ({
           )}
         </div>
 
+        <DayBets items={asBetItems(weekGames || games)} loadTickets={leagueTicketLoader('nfl')} period="WEEK" />
         <PredictionRecord games={weekGames || games} />
         <LastUpdated />
         {hideMode ? (

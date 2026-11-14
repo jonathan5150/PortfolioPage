@@ -73,18 +73,19 @@ export const getTeamResultHistory = async (teamId, game) => {
   return teamResultHistory(schedule, teamId, game);
 };
 
-// The engine's winner / spread / total picks for a finished game, made from
-// what was known before kickoff, and how each one did.
-// Graded the same way as the LINES tab: the picks and lines saved ~30 minutes
-// before kickoff when this device has them, otherwise rebuilt from the feeds.
-export const getGradedLinePicks = async (game) => {
-  const savedPicks = frozenOdds(game, PICKS_SNAPSHOT);
-  const savedLines = frozenOdds(game, 'lines');
-  const graded = (picks, lines) => ({ ...gradeLinePicks(picks, game, lines), bets: linePickBets(picks, game, lines) });
-  if (savedPicks && savedLines) return graded(savedPicks, savedLines);
+// The engine's winner / spread / total picks for a game and the lines they
+// were made against: { picks, lines }, or null without lines.
+// Once a game has started they're the picks and lines saved ~30 minutes before
+// kickoff when this device has them, otherwise rebuilt from the feeds (the
+// closing lines); before kickoff, from the current lines - the same as LINES.
+export const getNflLinePicks = async (game) => {
+  const started = game.status?.state !== 'pre';
+  const savedPicks = started ? frozenOdds(game, PICKS_SNAPSHOT) : null;
+  const savedLines = started ? frozenOdds(game, 'lines') : null;
+  if (savedPicks && savedLines) return { picks: savedPicks, lines: savedLines };
   const quiet = (p) => p.catch(() => null);
   const [odds, predictor, awayTrends, homeTrends, teamModel] = await Promise.all([
-    quiet(getEventOdds(game.id, { final: true })),
+    quiet(getEventOdds(game.id, { final: started })),
     quiet(getEventPredictor(game.id)),
     quiet(getTeamBettingTrends(game.away?.teamId, game)),
     quiet(getTeamBettingTrends(game.home?.teamId, game)),
@@ -93,7 +94,14 @@ export const getGradedLinePicks = async (game) => {
   const lines = savedLines || odds;
   if (!lines) return null;
   const picks = savedPicks || buildLinePicks({ game, odds: lines, predictor, awayTrends, homeTrends, teamModel });
-  return picks ? graded(picks, lines) : null;
+  return picks ? { picks, lines } : null;
+};
+
+// The picks for a finished game and how each one did.
+export const getGradedLinePicks = async (game) => {
+  const found = await getNflLinePicks(game);
+  if (!found) return null;
+  return { ...gradeLinePicks(found.picks, game, found.lines), bets: linePickBets(found.picks, game, found.lines) };
 };
 
 // ---------- key players (QB / RB / WR) ----------

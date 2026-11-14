@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
-// "LAST PUSH 2m 41s · SITE UPDATED 2h 14m 05s AGO": how long the latest push took
-// (from asking for it to the build finishing) and the time since, from the
-// stamp written by scripts/build-info.js. Hidden if there isn't one.
+// "SITE UPDATED 2h 14m 05s AGO": the time since the last build, from the stamp
+// written by scripts/build-info.js. Hidden if there isn't one.
 const pad = (n) => String(n).padStart(2, '0');
 const since = (ms) => {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -18,7 +17,6 @@ const since = (ms) => {
 
 const LastUpdated = () => {
   const [builtAt, setBuiltAt] = useState(null);
-  const [pushTook, setPushTook] = useState(null);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -28,8 +26,6 @@ const LastUpdated = () => {
       .then((info) => {
         const t = info?.builtAt ? Date.parse(info.builtAt) : NaN;
         if (active && Number.isFinite(t)) setBuiltAt(t);
-        const asked = info?.requestedAt ? Date.parse(info.requestedAt) : NaN;
-        if (active && Number.isFinite(asked) && Number.isFinite(t) && t > asked) setPushTook(t - asked);
       })
       .catch(() => {});
     return () => {
@@ -46,12 +42,6 @@ const LastUpdated = () => {
   if (!builtAt) return null;
   return (
     <div className="last-updated-timer" title={new Date(builtAt).toLocaleString()}>
-      {pushTook !== null && (
-        <>
-          LAST PUSH <span className="last-updated-ago">{since(pushTook)}</span>
-          <span className="last-updated-sep">·</span>
-        </>
-      )}
       SITE UPDATED <span className="last-updated-ago">{since(now - builtAt)}</span> AGO
     </div>
   );

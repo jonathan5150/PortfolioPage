@@ -1,0 +1,224 @@
+/* The site's look: Bricolage Grotesque everywhere and the "Poster" style
+   (charcoal, off-white and red, with oversized faded team logos that shrink
+   into place in colour when a game is opened).
+   public/index.html turns it on with attributes on <html>:
+     data-font, data-theme="poster", data-theme-vars, data-theme-logos */
+
+/* ---------- font override (whole site, sports pages included) ---------- */
+
+html[data-font] body,
+html[data-font] body *:not(code):not(pre):not(kbd) {
+  font-family: var(--site-font) !important;
+}
+
+/* ---------- shared theme plumbing ---------- */
+
+html[data-theme] .color-blend-line {
+  border: none;
+}
+
+html[data-theme] .hamburger-menu {
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+html[data-theme] .hamburger-menu::before {
+  display: none;
+}
+
+html[data-theme] .menu {
+  overflow: hidden;
+}
+
+html[data-theme] .Link,
+html[data-theme] .downloadPDF {
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+}
+
+/* ---------- sports pages (everything inside .nfl-data-container) ---------- */
+
+html[data-theme] .nfl-data-container,
+html[data-theme] .nfl-data-container.loading-background,
+html[data-theme] .nfl-data-container .loading {
+  background-color: var(--pv-page);
+  background-image: var(--pv-page-img);
+  background-attachment: fixed;
+}
+
+html[data-theme] .nfl-data-container .game-container,
+html[data-theme] .nfl-data-container .game-section,
+html[data-theme] .nfl-data-container .gold-box,
+html[data-theme] .nfl-data-container .model-results-content,
+html[data-theme] .nfl-data-container .noGames {
+  background-color: var(--pv-card);
+  border-color: var(--pv-card-border);
+}
+
+html[data-theme] .nfl-data-container .game-data-container,
+html[data-theme] .nfl-data-container .betting-panel,
+html[data-theme] .nfl-data-container .linescore,
+html[data-theme] .nfl-data-container .league-starter,
+html[data-theme] .nfl-data-container .ufc-fight-row {
+  background: var(--pv-inner);
+  border-color: var(--pv-card-border);
+}
+
+html[data-theme] .nfl-data-container .nfl-control-button,
+html[data-theme] .nfl-data-container .select-button,
+html[data-theme] .nfl-data-container .hide-games-button,
+html[data-theme] .nfl-data-container .teams-dropdown-wrapper > .nfl-control-button,
+html[data-theme] .nfl-data-container .teams-menu .select-button,
+html[data-theme] .nfl-data-container .panel-select,
+html[data-theme] .nfl-data-container .segment,
+html[data-theme] .nfl-data-container select:not(.league-player-select),
+html[data-theme] .nfl-data-container .league-day-picker input,
+html[data-theme] .nfl-data-container .league-count-select,
+html[data-theme] .sport-switcher .sport-switcher-button {
+  background-color: var(--pv-control);
+  border-color: var(--pv-control-border);
+}
+
+html[data-theme] .nfl-data-container .nfl-menu,
+html[data-theme] .nfl-data-container .nfl-menu.teams-menu,
+html[data-theme] .nfl-data-container .league-day-picker,
+html[data-theme] .sport-switcher-menu {
+  background-color: var(--pv-menu);
+  border-color: var(--pv-control-border);
+}
+
+html[data-theme] .nfl-data-container select option {
+  background-color: var(--pv-menu);
+}
+
+html[data-theme] .nfl-data-container .parlay-bar,
+html[data-theme] .nfl-data-container .hide-done-bar {
+  background-color: var(--pv-bar);
+}
+
+/* ---------- shared rules for the variable-based styles (portfolio pages) ---------- */
+
+html[data-theme-vars] .bg {
+  background-color: var(--pv-page);
+  background-image: var(--pv-page-img);
+}
+
+html[data-theme-vars] .navbar {
+  background: var(--pv-nav);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+html[data-theme-vars] .color-blend-line {
+  height: var(--pv-line-height, 2px);
+  background: var(--pv-line);
+  box-shadow: var(--pv-line-glow, none);
+}
+
+html[data-theme-vars] .header-title { color: var(--pv-title); font-weight: 700; }
+html[data-theme-vars] .header-title-name { color: var(--pv-subtitle); }
+
+html[data-theme-vars] .hamburger-menu {
+  background: var(--pv-btn-bg);
+  color: var(--pv-btn-text);
+  border: 1px solid var(--pv-btn-border);
+  border-radius: var(--pv-radius);
+}
+
+html[data-theme-vars] .hamburger-menu:hover { filter: brightness(1.15); }
+
+html[data-theme-vars] .menu {
+  background: var(--pv-pmenu, var(--pv-menu));
+  border: 1px solid var(--pv-btn-border);
+  border-radius: calc(var(--pv-radius) + 4px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+html[data-theme-vars] .menu a,
+html[data-theme-vars] .menu button { color: var(--pv-menu-text); }
+
+html[data-theme-vars] .content,
+html[data-theme-vars] .content p { color: var(--pv-text); }
+html[data-theme-vars] .content a { color: var(--pv-link); }
+html[data-theme-vars] footer { color: var(--pv-muted); }
+
+html[data-theme-vars] .Link,
+html[data-theme-vars] .downloadPDF {
+  background: var(--pv-accent);
+  color: var(--pv-accent-text);
+  border: 1px solid var(--pv-accent-border, var(--pv-accent));
+  border-radius: var(--pv-radius);
+  box-shadow: var(--pv-accent-glow, none);
+}
+
+html[data-theme-vars] .Link:hover {
+  background: var(--pv-accent);
+  border: 1px solid var(--pv-accent-border, var(--pv-accent));
+  filter: brightness(1.12);
+}
+
+/* ---------- Poster colours ---------- */
+
+html[data-theme='poster'] {
+  --pv-page: #141414;
+  --pv-page-img: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0) 0 0 / 10px 10px;
+  --pv-nav: rgba(20, 20, 20, 0.94);
+  --pv-line: #e63946;
+  --pv-line-height: 4px;
+  --pv-title: #f1faee;
+  --pv-subtitle: #e63946;
+  --pv-btn-bg: #f1faee;
+  --pv-btn-text: #141414;
+  --pv-btn-border: #f1faee;
+  --pv-pmenu: #1d1d1d;
+  --pv-menu-text: #f1faee;
+  --pv-text: #f1faee;
+  --pv-link: #e63946;
+  --pv-muted: #8d8d8d;
+  --pv-accent: #e63946;
+  --pv-accent-text: #f1faee;
+  --pv-radius: 2px;
+  --pv-card: rgba(29, 29, 29, 0.95);
+  --pv-card-border: #2f2f2f;
+  --pv-inner: rgba(40, 40, 40, 0.88);
+  --pv-control: #1d1d1d;
+  --pv-control-border: #3a3a3a;
+  --pv-menu: #1d1d1d;
+  --pv-bar: rgba(24, 24, 24, 0.97);
+}
+
+/* ---------- the logos ---------- */
+
+/* shared: the score / name text sits above the bigger logos */
+html[data-theme-logos] .nfl-data-container .team-text {
+  position: relative;
+  z-index: 3;
+}
+
+html[data-theme-logos] .nfl-data-container .team-text .abbreviation,
+html[data-theme-logos] .nfl-data-container .team-text .team-score,
+html[data-theme-logos] .nfl-data-container .team-text .team-odds-value {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+/* Poster logos: zoomed in, centred and faded while a game is closed; opening
+   a game shrinks them to fit the cell, in full colour.
+   UFC cells hold fighter headshots, so they keep their normal size. */
+html[data-theme='poster'] .nfl-data-container .game-slot:not(.ufc-fight) .team-logo-watermark,
+html[data-theme='poster'] .nfl-data-container .game-container .team-logo-watermark {
+  transform: translate(-50%, -50%) scale(calc(1.5 * var(--wm-closed-size, var(--wm-size, 1))));
+  opacity: 0.22;
+  filter: grayscale(1) contrast(1.2);
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease, filter 0.5s ease;
+}
+
+html[data-theme='poster'] .nfl-data-container .game-slot:not(.ufc-fight) .team-cell.expanded .team-logo-watermark,
+html[data-theme='poster'] .nfl-data-container .game-container .team-cell.expanded .team-logo-watermark {
+  transform: translate(-50%, -50%) scale(calc(0.54 * var(--wm-size, 1)));
+  opacity: 0.8;
+  filter: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme-logos] .nfl-data-container .team-logo-watermark {
+    transition: none;
+  }
+}

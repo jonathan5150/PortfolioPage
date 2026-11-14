@@ -771,16 +771,17 @@ export const betReturn = (stake, price, result) => {
   return Math.round((stake + profit) * 100) / 100;
 };
 
-// The three line picks as bets, in moneyline, spread, over/under order:
-// what was bet, the pregame price and how it graded. Bets with no price
-// (a moneyline with no posted odds) are left out.
-export const linePickBets = (linePicks, game, odds) => {
+// The three line picks as tickets, in moneyline, spread, over/under order:
+// what was picked, the pregame price and how it graded (result is null until
+// the game is final). Picks with no price (a moneyline with no posted odds)
+// are left out.
+export const linePickTickets = (linePicks, game, odds) => {
   if (!linePicks) return [];
   const abbr = (side) => game?.[side]?.team?.abbreviation || side.toUpperCase();
   const bet = (key, label, price) => {
     const pick = linePicks[key];
+    if (!pick || price === null || price === undefined) return null;
     const result = gradeLinePick(pick, game, odds);
-    if (!pick || !result || price === null || price === undefined) return null;
     return { key, label, price, result, bet: pick.bet !== false, ...(pick.upset ? { upset: true } : {}) };
   };
   // every pick is simulated as a bet (BETS and LEANS alike); `bet` says which it was
@@ -808,6 +809,9 @@ export const linePickBets = (linePicks, game, odds) => {
       ),
   ].filter(Boolean);
 };
+
+// The graded tickets of a finished game (what the model results count).
+export const linePickBets = (linePicks, game, odds) => linePickTickets(linePicks, game, odds).filter((t) => t.result);
 
 // QB / RB / WR-TE touchdown picks for the PLAYERS tab. `players` is
 // { away: { qb: [...], rb: [...], wr: [...] }, home: { ... } }.

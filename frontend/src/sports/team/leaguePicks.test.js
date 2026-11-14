@@ -60,6 +60,8 @@ describe('league picks (NBA / MLB)', () => {
   it('NBA: bets the home team with 2+ more days of rest, else leans home', () => {
     const rested = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 3, away: 1 } });
     expect(rested.spread).toMatchObject({ side: 'home', bet: true });
+    const awayRested = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 1, away: 4 } });
+    expect(awayRested.spread).toMatchObject({ side: 'away', bet: true });
     const even = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 2, away: 1 } });
     expect(even.spread).toMatchObject({ side: 'home', bet: false });
   });

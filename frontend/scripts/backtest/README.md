@@ -41,7 +41,14 @@ often on the underdog.
 **NBA** (walk-forward 2012-13 to 2021-22 for moneylines, 2013-14 to 2023-24 for
 spreads and totals; holdout 2024-25 and 2025-26)
 - The existing rest rule (home team with 2+ more days of rest) covered 56.6%
-  over 129 holdout games and stays the one BET.
+  over 129 holdout games and 57.5% over 2022-26, but only 49.2% in 2007-14 and
+  52.0% in 2015-21, so it may be a recent pattern rather than a lasting one.
+- The road team with 2+ more days of rest covered 53.5% (2007-14), 52.5%
+  (2015-21) and 52.6% (2022-26): a small edge, but the only spread spot that
+  cleared the 52.4% a -110 price needs in every stretch. Added as a second BET.
+- Over three dozen other situational spots (back-to-backs, 3-in-4 nights, big
+  favourites, head-to-head streaks, revenge, totals by size) didn't hold up
+  in all three stretches (`nba/situational_spots.py`).
 - Winner value side: -4.7% over 2,359 picks (54% underdogs) vs -4.4% for every
   favourite. A lean.
 - The spread and total models hit about 50-51% walk-forward and 49% in the
