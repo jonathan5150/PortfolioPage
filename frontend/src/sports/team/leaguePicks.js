@@ -6,9 +6,12 @@
 // NBA (scripts/backtest/nba): every regular-season game of 2022-23 through
 // 2025-26 at DraftKings / ESPN BET closing prices, 2026-27 held out. Betting
 // every favourite, underdog, home or road side, over or under lost money in
-// all of them. One rule paid in all four seasons:
+// all of them. Two rules are bets:
 //   spread - the home team when it's had 2+ more days of rest than the
-//            visitor (58.1% over 260 games, +10.6% at the closing prices).
+//            visitor (58.1% over 260 games, +10.6% at the closing prices;
+//            it only broke even before 2022, see scripts/backtest/nba)
+//   spread - the road team when it's had 2+ more days of rest (52.5-53.5% in
+//            2007-14, 2015-21 and 2022-26 alike: small, but steady).
 // No moneyline or total rule held up season after season, so those are leans:
 //   winner - the backtested model's value side (teamModels.js: the market plus
 //            head-to-head, rest, back-to-backs and revenge spots) when one
@@ -133,22 +136,28 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, teamM
     };
   }
 
-  // NBA spread: the rest rule, else the home side
+  // NBA spread: the rest rules (the better-rested side), else the home side
   if (nba && odds.homeSpread !== null && odds.homeSpread !== undefined) {
     const edge = rest ? rest.home - rest.away : null;
-    const isBet = edge !== null && edge >= NBA_REST_EDGE;
-    const team = game.home?.team;
-    const line = odds.home?.spreadLine ?? odds.homeSpread;
+    const homeRested = edge !== null && edge >= NBA_REST_EDGE;
+    const awayRested = edge !== null && edge <= -NBA_REST_EDGE;
+    const side = awayRested ? 'away' : 'home';
+    const other = side === 'home' ? 'away' : 'home';
+    const team = game[side]?.team;
+    const line = odds[side]?.spreadLine ?? (side === 'home' ? odds.homeSpread : -odds.homeSpread);
+    const isBet = homeRested || awayRested;
     out.spread = {
       key: 'spread',
       title: league.lineLabel,
-      side: 'home',
+      side,
       bet: isBet,
       headline: `${nick(team)} ${fmtLine(line)}`,
-      summary: isBet
-        ? `Bet ${name(team)} ${fmtLine(line)}: they've had ${rest.home} days off to their visitor's ${rest.away}. A home team with 2+ more days of rest covered 58% of the time from 2022 to 2026.`
-        : `Lean ${name(team)} ${fmtLine(line)}: home teams cover a little more often (50.4% since 2022). No rest edge here, so it's a lean, not a bet.`,
-      odds: real(odds.home?.spreadOdds) ? fmtOdds(odds.home.spreadOdds) : null,
+      summary: homeRested
+        ? `Bet ${name(team)} ${fmtLine(line)}: they've had ${rest.home} days off to their visitor's ${rest.away}. A home team with 2+ more days of rest covered 57.5% of the time from 2022 to 2026.`
+        : awayRested
+          ? `Bet ${name(team)} ${fmtLine(line)}: they've had ${rest[side]} days off to their hosts' ${rest[other]}. A road team with 2+ more days of rest covered 52.5-53.5% of the time in every stretch we tested, 2007 to 2026.`
+          : `Lean ${name(team)} ${fmtLine(line)}: home teams cover a little more often (50.4% since 2022). No rest edge here, so it's a lean, not a bet.`,
+      odds: real(odds[side]?.spreadOdds) ? fmtOdds(odds[side].spreadOdds) : null,
       pick: `${team?.abbreviation} ${fmtLine(line)}`,
       pickAbbr: team?.abbreviation,
     };

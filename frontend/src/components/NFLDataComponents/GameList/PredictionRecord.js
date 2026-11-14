@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useAsyncData from '../shared/useAsyncData';
-import { readPreference, writePreference } from '../shared/usePersistentState';
+import usePersistentState from '../shared/usePersistentState';
 import SlideOpen from '../shared/SlideOpen';
 import { graderFor, seasonLoaderFor } from '../../../pages/NFLData/NFLDataApi/modelGrading';
 import { runWithConcurrency } from '../../../pages/NFLData/NFLDataApi/http';
@@ -52,12 +52,12 @@ const dayLabel = (date) =>
   new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
 
 // Finished games' bets, oldest start first, grouped by the day they were played.
-const betDays = (finished, gradedById, filter, stake, minOdds) => {
+const betDays = (finished, gradedById, filter, stake, minOdds, scope) => {
   const days = [];
   [...finished]
     .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
     .forEach((game) => {
-      const bets = (gradedById[game.id]?.bets || [])
+      const bets = inScope(gradedById[game.id]?.bets, scope)
         .filter((b) => (filter === 'all' || b.key === filter) && allowed(b, minOdds))
         .map((b) => {
           const back = betReturn(stake, b.price, b.result);
@@ -75,6 +75,13 @@ const betDays = (finished, gradedById, filter, stake, minOdds) => {
     });
   return days;
 };
+
+// BETS ONLY: just the picks strong enough to bet; EVERY PICK: leans too
+const SCOPES = [
+  { key: 'bets', label: 'BETS ONLY' },
+  { key: 'all', label: 'EVERY PICK' },
+];
+const inScope = (bets, scope) => (bets || []).filter((b) => scope === 'all' || b.bet);
 
 const pct = ({ W, L }) => (W + L ? `${Math.round((W / (W + L)) * 100)}%` : '—');
 
@@ -119,7 +126,7 @@ const useSeasonGrades = (loadSeason, gradeGame) => {
 };
 
 // The model's season record and flat-bet profit for each market, at `stake`.
-const SeasonTotals = ({ stake, minOdds, filter, loadSeason, gradeGame, markets }) => {
+const SeasonTotals = ({ stake, minOdds, filter, loadSeason, gradeGame, markets, scope }) => {
   const { grades, done, total, error } = useSeasonGrades(loadSeason, gradeGame);
   if (error && !grades) return <div className="prediction-record-loading">Couldn't load the season's games.</div>;
   if (!grades) {
@@ -133,7 +140,7 @@ const SeasonTotals = ({ stake, minOdds, filter, loadSeason, gradeGame, markets }
     const rec = { W: 0, L: 0, profit: 0 };
     // record and profit both come from the simulated bets, so the odds filter applies to both
     grades.forEach((g) => {
-      const bet = (g.bets || []).find((b) => b.key === key);
+      const bet = inScope(g.bets, scope).find((b) => b.key === key);
       if (!bet || !allowed(bet, minOdds)) return;
       if (bet.result === 'W' || bet.result === 'L') rec[bet.result] += 1;
       rec.profit += betReturn(stake, bet.price, bet.result) - stake;
@@ -168,11 +175,11 @@ const SeasonTotals = ({ stake, minOdds, filter, loadSeason, gradeGame, markets }
 
 const matchup = (g) => `${g.away?.team?.abbreviation || 'AWAY'} @ ${g.home?.team?.abbreviation || 'HOME'}`;
 
-const BetResults = ({ finished, gradedById, period, spreadLabel, loadSeason, gradeGame, markets }) => {
+const BetResults = ({ finished, gradedById, period, spreadLabel, loadSeason, gradeGame, markets, scope }) => {
   const [filter, setFilter] = useState('all');
   const [stake, setStake] = useState(STAKES[0]);
   const [minOdds, setMinOdds] = useState(null);
-  const days = betDays(finished, gradedById, filter, stake, minOdds);
+  const days = betDays(finished, gradedById, filter, stake, minOdds, scope);
   const periodProfit = days.reduce((sum, d) => sum + d.profit, 0);
   // Just the period's profit until EACH BET is opened.
   const [showBets, setShowBets] = useState(false);
@@ -276,6 +283,7 @@ const BetResults = ({ finished, gradedById, period, spreadLabel, loadSeason, gra
         loadSeason={loadSeason}
         gradeGame={gradeGame}
         markets={markets}
+        scope={scope}
       />
     </div>
   );
@@ -311,10 +319,12 @@ export const ModelResults = ({
     { enabled: finished.length > 0 && open },
   );
 
+  const [scope, setScope] = usePersistentState('modelResultsScope', 'bets');
   const rows = markets.map(({ key, label }) => {
     const rec = { W: 0, L: 0 };
     (graded.data || []).forEach((g) => {
-      if (g[key] === 'W' || g[key] === 'L') rec[g[key]] += 1;
+      const result = scope === 'all' ? g[key] : inScope(g.bets, scope).find((b) => b.key === key)?.result;
+      if (result === 'W' || result === 'L') rec[result] += 1;
     });
     return { key, label, ...rec };
   });
@@ -337,7 +347,21 @@ export const ModelResults = ({
         </button>
         <SlideOpen open={open} className="model-results-body">
           <div className="model-results-content">
-            <div className="prediction-record-title">PREDICTION RECORD · EVERY PICK</div>
+            <div className="bet-filter model-scope" aria-label="Which picks count">
+              {SCOPES.map((s) => (
+                <button
+                  key={s.key}
+                  type="button"
+                  className={`bet-filter-btn ${scope === s.key ? 'active' : ''}`}
+                  onClick={() => setScope(s.key)}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            <div className="prediction-record-title">
+              PREDICTION RECORD · {scope === 'all' ? 'EVERY PICK' : 'BETS ONLY'}
+            </div>
             {!finished.length ? (
               <div className="prediction-record-loading">No finished games this {word} yet.</div>
             ) : !graded.data ? (
@@ -364,6 +388,7 @@ export const ModelResults = ({
                 loadSeason={loadSeason}
                 gradeGame={gradeGame}
                 markets={markets}
+                scope={scope}
               />
             )}
             {note && <div className="league-model-note">{note}</div>}

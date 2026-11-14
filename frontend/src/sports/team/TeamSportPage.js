@@ -60,7 +60,7 @@ const timeSlots = (games) => {
 // ---------- model results: the NFL panel, graded with this league's engine ----------
 
 const MODEL_NOTES = {
-  nba: "BET: the home team with 2+ more days of rest (covered 58% from 2022-26, 57% in the 2024-26 holdout). Winner leans are the model's value side (market plus head-to-head, rest and revenge), an underdog about half the time; no moneyline or total rule beat the closing prices.",
+  nba: "BETS: the better-rested team on the spread when it's had 2+ more days off (home teams covered 57.5% from 2022-26; road teams 52.5-53.5% in every stretch from 2007). Everything else is a lean: no moneyline or total rule beat the closing prices, so EVERY PICK includes picks we wouldn't bet.",
   mlb: "The MLB picks are leans from ESPN's model and the betting market. They haven't been backtested like the NFL and NBA models yet.",
 };
 

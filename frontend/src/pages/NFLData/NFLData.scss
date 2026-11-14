@@ -3870,7 +3870,7 @@
 /* ---------- SHOW CONFIDENT BETS ---------- */
 
 .nfl-data-container .day-bets .bet-row:not(.bet-total) {
-  grid-template-columns: 1fr 44px 54px 62px;
+  grid-template-columns: minmax(0, 1fr) 38px 52px 58px;
 }
 
 .nfl-data-container .day-bets-status {

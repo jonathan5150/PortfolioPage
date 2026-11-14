@@ -47,6 +47,10 @@ const bundle = () =>
     );
   });
 
+// a stray rejection or exception in the app code mustn't fail the build
+process.on('unhandledRejection', (reason) => log(`ignored: ${reason && reason.message ? reason.message : reason}`));
+process.on('uncaughtException', (error) => log(`ignored: ${error.message}`));
+
 const main = async () => {
   if (typeof fetch !== 'function') {
     log(`skipped: Node ${process.version} has no fetch`);
