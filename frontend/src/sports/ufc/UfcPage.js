@@ -14,6 +14,7 @@ import usePersistentState from '../../components/NFLDataComponents/shared/usePer
 import { betReturn } from '../../pages/NFLData/NFLDataApi/picks';
 import { fmtOdds } from '../../pages/NFLData/NFLDataApi/betting';
 import { loadUfcModel, ufcPicks, gradeUfcPicks, decimalPrice, METHOD_LABEL } from './ufcModel';
+import DayBets from '../../components/NFLDataComponents/GameList/DayBets';
 import { runWithConcurrency } from '../../pages/NFLData/NFLDataApi/http';
 import {
   etDay,
@@ -66,6 +67,26 @@ const asCompetitor = (fighter, color) =>
 
 // ---------- picks: the backtested UFC model (see ufcModel.js) ----------
 
+// a fight's picks, with the tale of the tape filling in newcomers (all cached)
+const fightPicks = async (eventId, fight) => {
+  const [model, odds, red, blue] = await Promise.all([
+    loadUfcModel(),
+    getUfcOdds(eventId, fight.id, { final: fight.status.state !== 'pre' }).catch(() => null),
+    fight.red ? getUfcFighter(fight.red.id).catch(() => null) : null,
+    fight.blue ? getUfcFighter(fight.blue.id).catch(() => null) : null,
+  ]);
+  return odds ? ufcPicks(model, fight, odds, { red, blue }) : null;
+};
+
+const fightItems = (event) =>
+  (event?.fights || []).map((fight) => ({
+    id: fight.id,
+    date: fight.date,
+    state: fight.status.state,
+    matchup: `${(fight.red?.lastName || fight.red?.name || 'RED').toUpperCase()} vs ${(fight.blue?.lastName || fight.blue?.name || 'BLUE').toUpperCase()}`,
+    fight,
+  }));
+
 const pct = (p) => `${Math.round(p * 100)}%`;
 const ResultCorner = ({ grade }) =>
   grade === 'W' || grade === 'L' ? <span className={`pick-result ${grade === 'W' ? 'right' : 'wrong'}`} /> : null;
@@ -93,7 +114,7 @@ const WinnerPick = ({ w, leg, grade }) => {
     ? `${w.underdog ? 'Underdog value: ' : ''}we have ${name} at ${pct(w.chance)} to win; at ${fmtOdds(w.price)} the price only needs ${pct(1 / decimalPrice(w.price))}.${why.length ? ` They're ${why.join(', ')}.` : ''} The model's value picks broke about even over 900 out-of-sample fights from 2018 to 2025, with over half of them on underdogs.`
     : `Lean ${name}: about ${pct(w.chance)} to win, but at ${fmtOdds(w.price)} the price already says so. No value, so not a bet.`;
   return (
-    <Holdable className={`pick-line ${w.bet ? 'bet' : 'lean'}`} leg={leg}>
+    <Holdable className={`pick-line ${w.bet ? 'is-bet' : 'lean'}`} leg={leg}>
       <span className="pick-title-row">
         <span className={`pick-kind ${w.bet ? 'bet' : 'lean'}`}>{w.bet ? (w.underdog ? 'UPSET' : 'BET') : 'LEAN'}</span>
         <span className="pick-headline">{headline}</span>
@@ -393,8 +414,7 @@ const EventModelResults = ({ event, details }) => {
       const model = await loadUfcModel();
       const results = await runWithConcurrency(
         finished.map((fight) => async () => {
-          const odds = await getUfcOdds(event.id, fight.id, { final: true }).catch(() => null);
-          const picks = odds ? ufcPicks(model, fight, odds) : null;
+          const picks = model ? await fightPicks(event.id, fight) : null;
           const g = picks ? gradeUfcPicks(picks, fight, details?.[fight.id]?.result) : null;
           return g ? { ...g, price: picks.winner.price, bet: picks.winner.bet } : null;
         }),
@@ -587,6 +607,21 @@ const UfcPage = () => {
     setPickingDay(false);
     setOpenId(null);
   };
+  // SHOW CONFIDENT BETS: the winner picks strong enough to bet (only the
+  // winner pick ever is), graded once the result is in
+  const eventId = event?.id;
+  const results = details.data;
+  const loadFightTickets = useCallback(
+    async ({ fight }) => {
+      const picks = await fightPicks(eventId, fight);
+      const w = picks?.winner;
+      if (!w?.price) return [];
+      const grade = fight.status.state === 'post' ? gradeUfcPicks(picks, fight, results?.[fight.id]?.result) : null;
+      const name = (w.fighter?.lastName || w.fighter?.name || '').toUpperCase();
+      return [{ key: 'winner', label: `${name} ML`, price: w.price, result: grade?.winner || null, bet: Boolean(w.bet) }];
+    },
+    [eventId, results],
+  );
   const onToggle = useCallback((id) => setOpenId((prev) => (prev === id ? null : id)), []);
 
   if (error && !board) {
@@ -734,6 +769,7 @@ const UfcPage = () => {
             )}
           </div>
 
+          {event && <DayBets items={fightItems(event)} loadTickets={loadFightTickets} period="CARD" />}
           {event && <EventModelResults event={event} details={details.data} />}
           <LastUpdated />
           <ParlayBar />

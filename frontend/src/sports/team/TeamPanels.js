@@ -130,7 +130,7 @@ const PickCard = ({ pick, game, grade, leg }) => {
   if (!pick) return null;
   const team = pick.key !== 'total' ? game[pick.side]?.team : null;
   return (
-    <Holdable className={`pick-line ${pick.bet ? '' : 'lean'}`} leg={leg}>
+    <Holdable className={`pick-line ${pick.bet ? 'is-bet' : 'lean'}`} leg={leg}>
       <span className="pick-title-row">
         <span className={`pick-kind ${pick.bet ? 'bet' : 'lean'}${pick.upset ? ' upset' : ''}`}>
           {pick.bet ? 'BET' : pick.upset ? 'UPSET' : 'LEAN'}

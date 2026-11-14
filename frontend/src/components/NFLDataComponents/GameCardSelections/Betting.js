@@ -234,7 +234,7 @@ const PickLine = ({ pick, leg, game, grade }) => {
   // BET: one of the rules that made money fired. LEAN: just the likelier side.
   const isBet = pick.bet !== false;
   return (
-    <Holdable className={`pick-line ${pick.strong ? 'strong' : ''} ${isBet ? '' : 'lean'}`} leg={leg}>
+    <Holdable className={`pick-line ${pick.strong ? 'strong' : ''} ${isBet ? 'is-bet' : 'lean'}`} leg={leg}>
       <span className="pick-title-row">
         <span className={`pick-kind ${isBet ? 'bet' : 'lean'}${pick.upset ? ' upset' : ''}`}>
           {isBet ? 'BET' : pick.upset ? 'UPSET' : 'LEAN'}

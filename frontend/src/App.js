@@ -18,7 +18,7 @@ import './sports/SportTitles.scss';
 import './sports/ufc/Ufc.scss';
 import LoadingField from './components/NFLDataComponents/shared/LoadingField';
 // Test site only (hidden on jonathanrainey.dev): font + style preview dropdowns
-import StylePicker from './components/PortfolioComponents/StylePicker/StylePicker';
+import './components/PortfolioComponents/SiteStyle/SiteStyle.css';
 
 // Every other page is downloaded only when it's opened, so a phone opening the
 // sports pages doesn't also download and parse the whole portfolio (and the
@@ -106,8 +106,6 @@ function Main() {
           <Route path="/mlbdata" element={<Navigate to="/sports/mlb" replace />} />
         </Routes>
       </Suspense>
-      {/* floats at the bottom of every page */}
-      <StylePicker />
     </div>
   );
 }

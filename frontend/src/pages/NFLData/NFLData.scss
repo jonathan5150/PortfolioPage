@@ -3860,3 +3860,46 @@
   border-color: rgba(255, 140, 66, 0.75);
   color: #ffb27a;
 }
+
+/* a pick strong enough to bet: a steady glowing gold border */
+.nfl-data-container .pick-line.is-bet {
+  border: 1.5px solid #e2b33a;
+  box-shadow: 0 0 10px 1px rgba(245, 209, 107, 0.45), inset 0 0 8px rgba(245, 209, 107, 0.12);
+}
+
+/* ---------- SHOW CONFIDENT BETS ---------- */
+
+.nfl-data-container .day-bets .bet-row:not(.bet-total) {
+  grid-template-columns: 1fr 44px 54px 62px;
+}
+
+.nfl-data-container .day-bets-status {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.nfl-data-container .day-bets-status.W {
+  color: #6fd38a;
+}
+
+.nfl-data-container .day-bets-status.L {
+  color: #ff7a7a;
+}
+
+.nfl-data-container .day-bets-summary {
+  font-size: 11px;
+}
+
+.nfl-data-container .day-bets-pending {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.nfl-data-container .day-bets .league-model-note {
+  margin-top: 8px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.5);
+}

@@ -2,11 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import useAsyncData from '../shared/useAsyncData';
 import { readPreference, writePreference } from '../shared/usePersistentState';
 import SlideOpen from '../shared/SlideOpen';
-import { getGradedLinePicks } from '../../../pages/NFLData/NFLDataApi/bettingService';
+import { graderFor, seasonLoaderFor } from '../../../pages/NFLData/NFLDataApi/modelGrading';
 import { runWithConcurrency } from '../../../pages/NFLData/NFLDataApi/http';
 import { betReturn } from '../../../pages/NFLData/NFLDataApi/picks';
 import { fmtOdds } from '../../../pages/NFLData/NFLDataApi/betting';
-import { getScoreboard } from '../../../pages/NFLData/NFLDataApi/espnService';
 
 // How the pick engine did: moneyline, spread and over/under records for every
 // finished game shown (a week for the NFL, a day for the NBA / MLB), plus the
@@ -19,33 +18,17 @@ const MARKETS = [
 ];
 const marketsFor = (spreadLabel) => MARKETS.map((m) => (m.key === 'spread' ? { ...m, label: spreadLabel } : m));
 
-// A finished game's grades never change, so they're kept in localStorage and
-// later visits don't refetch anything. Bump the version when the pick rules or
-// grading change (v1 could hold grades made against in-game "Live Odds" lines;
-// v2 had no bets; v3 was graded with the old bet-every-game engine; v4 had
-// no leans).
-const GRADES_KEY = 'gradedPicks:v8';
+// A finished game's grades never change, so they're kept in localStorage (and
+// precomputed at build time, see modelGrading.js) and later visits don't
+// refetch anything. Old versions' saved grades are cleared out.
 try {
-  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v1');
-  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v2');
-  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v3');
-  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v4');
-  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v5');
-  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v6');
-  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v7');
+  ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7'].forEach((v) => window.localStorage.removeItem(`nflStatsWizard:gradedPicks:${v}`));
+  ['nba', 'mlb'].forEach((lg) => window.localStorage.removeItem(`nflStatsWizard:${lg}GradedPicks:v1`));
+  window.localStorage.removeItem('nflStatsWizard:nbaGradedPicks:v2');
 } catch {
   // storage blocked
 }
-
-// Grade one game, remembering the result under `key` in localStorage.
-export const cachedGrader = (key, grade) => async (game) => {
-  const saved = readPreference(key, {});
-  if (saved[game.id]) return saved[game.id];
-  const grades = await grade(game);
-  if (grades) writePreference(key, { ...readPreference(key, {}), [game.id]: grades });
-  return grades;
-};
-const nflGrade = cachedGrader(GRADES_KEY, getGradedLinePicks);
+const nflGrade = graderFor('nfl');
 
 // Every pick is a flat bet (the chosen stake) at its pregame price.
 const STAKES = [10, 25, 100];
@@ -97,26 +80,7 @@ const pct = ({ W, L }) => (W + L ? `${Math.round((W / (W + L)) * 100)}%` : '—'
 
 // ---------- season to date ----------
 
-const REGULAR_SEASON_WEEKS = 18;
-
-// Every finished NFL game of the current season so far (regular season, plus
-// the playoffs once they've started).
-const nflSeasonGames = async () => {
-  const current = await getScoreboard();
-  const { season, seasonType, week } = current;
-  const weeks = [];
-  const regularThrough = seasonType === 3 ? REGULAR_SEASON_WEEKS : seasonType === 2 ? week : 0;
-  for (let w = 1; w <= regularThrough; w += 1) weeks.push({ season, seasonType: 2, week: w });
-  if (seasonType === 3) for (let w = 1; w <= week; w += 1) weeks.push({ season, seasonType: 3, week: w });
-  const boards = await runWithConcurrency(
-    weeks.map((params) => () => getScoreboard(params)),
-    3,
-  );
-  const seen = new Set();
-  return boards
-    .flatMap((b) => (b.ok ? b.value.events : []))
-    .filter((g) => g.status?.state === 'post' && !seen.has(g.id) && seen.add(g.id));
-};
+const nflSeasonGames = seasonLoaderFor('nfl');
 
 // The season's finished games, each graded like the current ones. Grades are
 // cached, so only the first visit fetches the older games. Reports progress.
