@@ -57,4 +57,4 @@ export const frozenOdds = (game, kind) => {
 
 // Snapshot kind for the engine's line picks. Versioned: picks saved by an older
 // engine are ignored instead of shown and graded as if the current one made them.
-export const PICKS_SNAPSHOT = 'picks:v4';
+export const PICKS_SNAPSHOT = 'picks:v5';

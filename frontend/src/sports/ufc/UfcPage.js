@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import FitText from '../../components/NFLDataComponents/shared/FitText';
 import SportSwitcher from '../SportSwitcher';
 import DayCalendar from '../DayCalendar';
 import SlideOpen from '../../components/NFLDataComponents/shared/SlideOpen';
@@ -11,7 +12,8 @@ import TeamCell from '../../components/NFLDataComponents/ScoreBug/TeamCell';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
 import usePersistentState from '../../components/NFLDataComponents/shared/usePersistentState';
 import { betReturn } from '../../pages/NFLData/NFLDataApi/picks';
-import { fmtOdds, impliedProbability } from '../../pages/NFLData/NFLDataApi/betting';
+import { fmtOdds } from '../../pages/NFLData/NFLDataApi/betting';
+import { loadUfcModel, ufcPicks, gradeUfcPicks, decimalPrice, METHOD_LABEL } from './ufcModel';
 import { runWithConcurrency } from '../../pages/NFLData/NFLDataApi/http';
 import {
   etDay,
@@ -62,32 +64,84 @@ const asCompetitor = (fighter, color) =>
     },
   };
 
-// ---------- the pick: the betting favourite (a lean; UFC isn't backtested) ----------
+// ---------- picks: the backtested UFC model (see ufcModel.js) ----------
 
-const fightPick = (fight, odds) => {
-  if (!odds) return null;
-  const r = odds.byId[fight.red?.id];
-  const b = odds.byId[fight.blue?.id];
-  if (!r || !b) return null;
-  const fav = r <= b ? fight.red : fight.blue;
-  const price = r <= b ? r : b;
-  return { fighter: fav, price, chance: impliedProbability(price) };
+const pct = (p) => `${Math.round(p * 100)}%`;
+const ResultCorner = ({ grade }) =>
+  grade === 'W' || grade === 'L' ? <span className={`pick-result ${grade === 'W' ? 'right' : 'wrong'}`} /> : null;
+
+// why the model likes the winner pick, in a sentence or two
+const winnerWhy = (w) => {
+  const me = w.profile;
+  const op = w.opp;
+  const bits = [];
+  if (me.known && op.known) {
+    if (me.ageNow + 3 <= op.ageNow) bits.push(`${Math.round(op.ageNow - me.ageNow)} years younger`);
+    if (me.reachCm && op.reachCm && me.reachCm - op.reachCm >= 7) bits.push('a clear reach edge');
+    if (op.ko_w * me.ko_l < me.ko_w * op.ko_l - 0.03) bits.push('more knockout power against a shakier chin');
+    if (me.tdpm - op.tdpm > 0.05) bits.push('the better wrestler');
+    if (me.slpm - me.sapm - (op.slpm - op.sapm) > 1) bits.push('out-striking opponents by more');
+  } else if (!op.known && me.known) bits.push(`facing a UFC newcomer`);
+  return bits.slice(0, 3);
 };
-// each fighter's chance to win from the moneylines, with the book's margin removed
-const winChances = (fight, odds) => {
-  const r = odds?.byId[fight.red?.id];
-  const b = odds?.byId[fight.blue?.id];
-  if (!r || !b) return null;
-  const pr = impliedProbability(r);
-  const pb = impliedProbability(b);
-  if (!pr || !pb) return null;
-  return { red: (pr / (pr + pb)) * 100, blue: (pb / (pr + pb)) * 100 };
+
+const WinnerPick = ({ w, leg, grade }) => {
+  const why = winnerWhy(w);
+  const name = w.fighter?.name || '';
+  const headline = `${name.toUpperCase()} TO WIN`;
+  const text = w.bet
+    ? `${w.underdog ? 'Underdog value: ' : ''}we have ${name} at ${pct(w.chance)} to win; at ${fmtOdds(w.price)} the price only needs ${pct(1 / decimalPrice(w.price))}.${why.length ? ` They're ${why.join(', ')}.` : ''} The model's value picks broke about even over 900 out-of-sample fights from 2018 to 2025, with over half of them on underdogs.`
+    : `Lean ${name}: about ${pct(w.chance)} to win, but at ${fmtOdds(w.price)} the price already says so. No value, so not a bet.`;
+  return (
+    <Holdable className={`pick-line ${w.bet ? 'bet' : 'lean'}`} leg={leg}>
+      <span className="pick-title-row">
+        <span className={`pick-kind ${w.bet ? 'bet' : 'lean'}`}>{w.bet ? (w.underdog ? 'UPSET' : 'BET') : 'LEAN'}</span>
+        <span className="pick-headline">{headline}</span>
+      </span>
+      <span className="pick-because">{text}</span>
+      <span className="pick-odds">ML {fmtOdds(w.price)}</span>
+      <ResultCorner grade={grade} />
+    </Holdable>
+  );
 };
-const gradeFight = (fight, pick) => {
-  if (!pick || fight.status.state !== 'post') return null;
-  if (!fight.red?.winner && !fight.blue?.winner) return 'P'; // draw / no contest
-  return pick.fighter.winner ? 'W' : 'L';
+
+const RoundsPick = ({ r, grade }) => {
+  const word = r.side === 'over' ? 'OVER' : 'UNDER';
+  const price = r.side === 'over' ? r.overOdds : r.underOdds;
+  return (
+    <div className="pick-line lean">
+      <span className="pick-title-row">
+        <span className="pick-kind lean">LEAN</span>
+        <span className="pick-headline">
+          {word} {r.line} ROUNDS
+        </span>
+      </span>
+      <span className="pick-because">
+        {r.side === 'over'
+          ? `About ${pct(r.chance)} to go past ${r.line} rounds: these two have gone long and don't get finished often.`
+          : `About ${pct(r.chance)} to end before ${r.line} rounds: there's finishing power and chins that have been cracked.`}{' '}
+        {!r.posted && 'No rounds line is posted yet, so this is against the usual line. '}
+        Right 60% of the time on the last year of fights (64% when the model was 60%+ sure).
+      </span>
+      {price !== null && price !== undefined && Math.abs(price) >= 100 && <span className="pick-odds">{fmtOdds(price)}</span>}
+      <ResultCorner grade={grade} />
+    </div>
+  );
 };
+
+const MethodPick = ({ m, grade }) => (
+  <div className="pick-line lean">
+    <span className="pick-title-row">
+      <span className="pick-kind lean">LEAN</span>
+      <span className="pick-headline">ENDS BY {METHOD_LABEL[m.method]}</span>
+    </span>
+    <span className="pick-because">
+      {`KO/TKO ${pct(m.probs.KO || 0)} · submission ${pct(m.probs.SUB || 0)} · decision ${pct(m.probs.DEC || 0)}. `}
+      Right 49% of the time on the last year of fights, against 42% for always picking a decision.
+    </span>
+    <ResultCorner grade={grade} />
+  </div>
+);
 
 // ---------- fight card ----------
 
@@ -99,20 +153,21 @@ const TaleRow = ({ label, red, blue }) => (
   </div>
 );
 
-const FightPanel = ({ eventId, fight }) => {
+const FightPanel = ({ eventId, fight, details }) => {
   const final = fight.status.state === 'post';
   const data = useAsyncData(async () => {
-    const [red, blue, odds] = await Promise.all([
+    const [red, blue, odds, model] = await Promise.all([
       fight.red ? getUfcFighter(fight.red.id).catch(() => null) : null,
       fight.blue ? getUfcFighter(fight.blue.id).catch(() => null) : null,
       getUfcOdds(eventId, fight.id, { final }).catch(() => null),
+      loadUfcModel().catch(() => null),
     ]);
-    return { red, blue, odds };
+    return { red, blue, odds, model };
   }, [eventId, fight.id, final]);
   if (data.loading && !data.data) return <div className="bet-message">Loading the tale of the tape…</div>;
-  const { red, blue, odds } = data.data || {};
-  const pick = fightPick(fight, odds);
-  const grade = gradeFight(fight, pick);
+  const { red, blue, odds, model } = data.data || {};
+  const picks = model && odds ? ufcPicks(model, fight, odds, { red, blue }) : null;
+  const grades = picks ? gradeUfcPicks(picks, fight, details?.result) : null;
   return (
     <div className="ufc-panel">
       <div className="ufc-tape">
@@ -166,22 +221,15 @@ const FightPanel = ({ eventId, fight }) => {
               </div>
             )}
           </div>
-          {pick && (
+          {picks && (
             <div className="pick-lines">
-              <Holdable className="pick-line lean" leg={!final ? fightLeg(eventId, fight, pick.fighter, odds) : null}>
-                <span className="pick-title-row">
-                  <span className="pick-kind lean">LEAN</span>
-                  <span className="pick-headline">{pick.fighter.name.toUpperCase()} TO WIN</span>
-                </span>
-                <span className="pick-because">
-                  Lean the betting favorite: about {Math.round(pick.chance)}% to win at {fmtOdds(pick.price)}. There's
-                  no UFC model yet, so this is a lean, not a bet.
-                </span>
-                <span className="pick-odds">ML {fmtOdds(pick.price)}</span>
-                {(grade === 'W' || grade === 'L') && (
-                  <span className={`pick-result ${grade === 'W' ? 'right' : 'wrong'}`} />
-                )}
-              </Holdable>
+              <WinnerPick
+                w={picks.winner}
+                grade={grades?.winner}
+                leg={!final ? fightLeg(eventId, fight, picks.winner.fighter, odds) : null}
+              />
+              <RoundsPick r={picks.rounds} grade={grades?.rounds} />
+              <MethodPick m={picks.method} grade={grades?.method} />
             </div>
           )}
         </>
@@ -236,8 +284,6 @@ const FightCard = ({ eventId, fight, details, sectionsReady, isOpen, onToggle, h
         : timeLabel(fight.date);
   const score = (f) =>
     state === 'post' ? (f?.winner ? 'W' : fight.red?.winner || fight.blue?.winner ? 'L' : 'D') : '';
-  // before and during the fight: each fighter's chance to win, from the odds
-  const chances = state === 'post' ? null : winChances(fight, odds);
 
   return (
     <div
@@ -271,7 +317,7 @@ const FightCard = ({ eventId, fight, details, sectionsReady, isOpen, onToggle, h
               side="away"
               competitor={asCompetitor(fight.red, RED)}
               score={score(fight.red)}
-              winProb={chances?.red}
+              showOdds={state !== 'post'}
               moneyLine={odds?.byId[fight.red?.id]}
               isWinner={fight.red?.winner}
               corner="top"
@@ -281,7 +327,7 @@ const FightCard = ({ eventId, fight, details, sectionsReady, isOpen, onToggle, h
               side="home"
               competitor={asCompetitor(fight.blue, BLUE)}
               score={score(fight.blue)}
-              winProb={chances?.blue}
+              showOdds={state !== 'post'}
               moneyLine={odds?.byId[fight.blue?.id]}
               isWinner={fight.blue?.winner}
               corner="top"
@@ -308,7 +354,7 @@ const FightCard = ({ eventId, fight, details, sectionsReady, isOpen, onToggle, h
               boxSizing: 'content-box',
             }}
           >
-            <div ref={innerRef}>{hasOpened && <FightPanel eventId={eventId} fight={fight} />}</div>
+            <div ref={innerRef}>{hasOpened && <FightPanel eventId={eventId} fight={fight} details={details} />}</div>
           </div>
         </div>
       </div>
@@ -322,33 +368,48 @@ const money = (n) => `$${Math.abs(n).toLocaleString('en-US', { minimumFractionDi
 const signed = (n) => `${n > 0.004 ? '+' : n < -0.004 ? '-' : ''}${money(n)}`;
 const tone = (n) => (n > 0.004 ? 'up' : n < -0.004 ? 'down' : 'even');
 
-const EventModelResults = ({ event }) => {
+const tally = (rows, key) =>
+  rows.reduce(
+    (a, g) => ({ W: a.W + (g[key] === 'W' ? 1 : 0), L: a.L + (g[key] === 'L' ? 1 : 0) }),
+    { W: 0, L: 0 },
+  );
+
+const RecordRow = ({ label, rec, profit }) => (
+  <div className="season-row total">
+    <span>{label}</span>
+    <span className="prediction-record-wl">
+      {rec.W}-{rec.L}
+    </span>
+    <span className="prediction-record-pct">{rec.W + rec.L ? `${Math.round((rec.W / (rec.W + rec.L)) * 100)}%` : '—'}</span>
+    {profit === undefined ? <span /> : <span className={`bet-return ${tone(profit)}`}>{signed(profit)}</span>}
+  </div>
+);
+
+const EventModelResults = ({ event, details }) => {
   const [open, setOpen] = useState(false);
   const finished = useMemo(() => event.fights.filter((f) => f.status.state === 'post'), [event]);
   const graded = useAsyncData(
     async () => {
+      const model = await loadUfcModel();
       const results = await runWithConcurrency(
         finished.map((fight) => async () => {
           const odds = await getUfcOdds(event.id, fight.id, { final: true }).catch(() => null);
-          const pick = fightPick(fight, odds);
-          const result = gradeFight(fight, pick);
-          return pick && result ? { result, price: pick.price } : null;
+          const picks = odds ? ufcPicks(model, fight, odds) : null;
+          const g = picks ? gradeUfcPicks(picks, fight, details?.[fight.id]?.result) : null;
+          return g ? { ...g, price: picks.winner.price, bet: picks.winner.bet } : null;
         }),
         4,
       );
       return results.map((r) => (r.ok ? r.value : null)).filter(Boolean);
     },
-    [event.id, finished.length],
+    [event.id, finished.length, Boolean(details)],
     { enabled: open && finished.length > 0 },
   );
-  const rec = (graded.data || []).reduce(
-    (a, g) => ({
-      W: a.W + (g.result === 'W' ? 1 : 0),
-      L: a.L + (g.result === 'L' ? 1 : 0),
-      profit: a.profit + betReturn(10, g.price, g.result) - 10,
-    }),
-    { W: 0, L: 0, profit: 0 },
-  );
+  const rows = graded.data || [];
+  const winners = tally(rows, 'winner');
+  const bets = rows.filter((g) => g.bet);
+  const betRec = tally(bets, 'winner');
+  const profitOf = (list) => list.reduce((a, g) => a + (g.winner === 'P' ? 0 : betReturn(10, g.price, g.winner) - 10), 0);
   return (
     <div className="gold-box prediction-record-outer">
       <div className="prediction-record">
@@ -364,25 +425,21 @@ const EventModelResults = ({ event }) => {
         </button>
         <SlideOpen open={open} className="model-results-body">
           <div className="model-results-content">
-            <div className="prediction-record-title">FAVORITES · $10 EACH</div>
+            <div className="prediction-record-title">THIS CARD · $10 EACH</div>
             {!finished.length ? (
               <div className="prediction-record-loading">No finished fights on this card yet.</div>
             ) : !graded.data ? (
               <div className="prediction-record-loading">Grading the card…</div>
             ) : (
               <>
-                <div className="season-row total">
-                  <span>Moneyline</span>
-                  <span className="prediction-record-wl">
-                    {rec.W}-{rec.L}
-                  </span>
-                  <span className="prediction-record-pct">
-                    {rec.W + rec.L ? `${Math.round((rec.W / (rec.W + rec.L)) * 100)}%` : '—'}
-                  </span>
-                  <span className={`bet-return ${tone(rec.profit)}`}>{signed(rec.profit)}</span>
-                </div>
+                <RecordRow label="Winner bets" rec={betRec} profit={profitOf(bets)} />
+                <RecordRow label="Every winner pick" rec={winners} profit={profitOf(rows)} />
+                <RecordRow label="Rounds O/U" rec={tally(rows, 'rounds')} />
+                <RecordRow label="Method" rec={tally(rows, 'method')} />
                 <div className="league-model-note">
-                  Each fight's pick is the betting favorite. There's no UFC model yet, so these are leans, not bets.
+                  Winner bets are the model's value picks (often underdogs); every other winner pick is a lean on the
+                  likelier fighter. On the last year of fights it held out, the model's value picks went 43-39 (44
+                  underdogs) for about break-even, rounds picks were right 60% of the time and method picks 49%.
                 </div>
               </>
             )}
@@ -577,7 +634,7 @@ const UfcPage = () => {
                   title={event?.name}
                   onClick={() => setPickingDay((o) => !o)}
                 >
-                  {event ? shortTitle.replace(/^UFC Fight Night/i, 'FIGHT NIGHT').toUpperCase() : 'NO EVENT'}
+                  <FitText>{event ? shortTitle.replace(/^UFC Fight Night/i, 'FIGHT NIGHT').toUpperCase() : 'NO EVENT'}</FitText>
                 </button>
                 <button
                   type="button"
@@ -677,7 +734,7 @@ const UfcPage = () => {
             )}
           </div>
 
-          {event && <EventModelResults event={event} />}
+          {event && <EventModelResults event={event} details={details.data} />}
           <LastUpdated />
           <ParlayBar />
           {hideMode && (

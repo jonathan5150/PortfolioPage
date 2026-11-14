@@ -1020,3 +1020,322 @@ html[data-preview-light]:not([data-preview-theme='paper']) .style-picker select.
   background-image: linear-gradient(45deg, transparent 50%, #0f2537 50%),
     linear-gradient(135deg, #0f2537 50%, transparent 50%);
 }
+
+/* =====================================================================
+   Logo styles: colours like the styles above, plus bigger team-cell logos
+   and an effect when a game is opened (its cells get .expanded).
+   UFC cells hold fighter headshots, so they keep their normal size.
+   ===================================================================== */
+
+html[data-preview-theme='jumbotron'] {
+  --pv-page: #05070d;
+  --pv-page-img: radial-gradient(1100px 380px at 50% -8%, rgba(255, 255, 255, 0.12), transparent 60%),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 2px, transparent 2px 6px);
+  --pv-nav: rgba(5, 7, 13, 0.92);
+  --pv-line: linear-gradient(90deg, #ff3b3b, #ffd23b, #3bff8a, #3bb4ff);
+  --pv-title: #fff;
+  --pv-subtitle: #ffd23b;
+  --pv-btn-bg: #11151f;
+  --pv-btn-text: #fff;
+  --pv-btn-border: #2a3142;
+  --pv-pmenu: #0c0f18;
+  --pv-menu-text: #fff;
+  --pv-text: #e4e8f2;
+  --pv-link: #ffd23b;
+  --pv-muted: #6b7280;
+  --pv-accent: #ffd23b;
+  --pv-accent-text: #05070d;
+  --pv-radius: 6px;
+  --pv-card: rgba(12, 15, 24, 0.94);
+  --pv-card-border: #232a3a;
+  --pv-inner: rgba(20, 25, 38, 0.86);
+  --pv-control: #0f131d;
+  --pv-control-border: #2a3142;
+  --pv-menu: #0c0f18;
+  --pv-bar: rgba(10, 12, 20, 0.97);
+}
+
+html[data-preview-theme='holo'] {
+  --pv-page: #0c0a14;
+  --pv-page-img: linear-gradient(120deg, rgba(255, 0, 170, 0.12), rgba(0, 220, 255, 0.12), rgba(170, 255, 0, 0.1), rgba(255, 140, 0, 0.12));
+  --pv-nav: rgba(12, 10, 20, 0.85);
+  --pv-line: linear-gradient(90deg, #ff4fd8, #4fd2ff, #b6ff4f, #ffb14f, #ff4fd8);
+  --pv-title: #fff;
+  --pv-subtitle: #c8b6ff;
+  --pv-btn-bg: rgba(255, 255, 255, 0.08);
+  --pv-btn-text: #fff;
+  --pv-btn-border: rgba(200, 182, 255, 0.45);
+  --pv-pmenu: #15111f;
+  --pv-menu-text: #fff;
+  --pv-text: #ece8ff;
+  --pv-link: #4fd2ff;
+  --pv-muted: #8a82a8;
+  --pv-accent: #c8b6ff;
+  --pv-accent-text: #15111f;
+  --pv-radius: 14px;
+  --pv-card: rgba(22, 18, 34, 0.82);
+  --pv-card-border: rgba(200, 182, 255, 0.35);
+  --pv-inner: rgba(36, 30, 56, 0.7);
+  --pv-control: rgba(28, 22, 44, 0.92);
+  --pv-control-border: rgba(200, 182, 255, 0.4);
+  --pv-menu: #15111f;
+  --pv-bar: rgba(20, 16, 30, 0.97);
+}
+
+html[data-preview-theme='neon-sign'] {
+  --pv-page: #07030d;
+  --pv-page-img: radial-gradient(800px 420px at 20% 0%, rgba(255, 46, 136, 0.14), transparent 60%),
+    radial-gradient(800px 420px at 80% 100%, rgba(46, 213, 255, 0.12), transparent 60%);
+  --pv-nav: rgba(7, 3, 13, 0.92);
+  --pv-line: #ff2e88;
+  --pv-line-glow: 0 0 10px #ff2e88, 0 0 22px rgba(255, 46, 136, 0.6);
+  --pv-title: #fff;
+  --pv-subtitle: #2ed5ff;
+  --pv-btn-bg: transparent;
+  --pv-btn-text: #2ed5ff;
+  --pv-btn-border: #2ed5ff;
+  --pv-pmenu: #0d0618;
+  --pv-menu-text: #ffd1e6;
+  --pv-text: #f3e6ff;
+  --pv-link: #2ed5ff;
+  --pv-muted: #8a6aa8;
+  --pv-accent: transparent;
+  --pv-accent-text: #ff2e88;
+  --pv-accent-border: #ff2e88;
+  --pv-accent-glow: 0 0 12px rgba(255, 46, 136, 0.6);
+  --pv-radius: 999px;
+  --pv-card: rgba(13, 6, 24, 0.9);
+  --pv-card-border: rgba(255, 46, 136, 0.45);
+  --pv-inner: rgba(26, 12, 44, 0.72);
+  --pv-control: #10071d;
+  --pv-control-border: rgba(46, 213, 255, 0.5);
+  --pv-menu: #0d0618;
+  --pv-bar: rgba(13, 6, 24, 0.97);
+}
+
+html[data-preview-theme='poster'] {
+  --pv-page: #141414;
+  --pv-page-img: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0) 0 0 / 10px 10px;
+  --pv-nav: rgba(20, 20, 20, 0.94);
+  --pv-line: #e63946;
+  --pv-line-height: 4px;
+  --pv-title: #f1faee;
+  --pv-subtitle: #e63946;
+  --pv-btn-bg: #f1faee;
+  --pv-btn-text: #141414;
+  --pv-btn-border: #f1faee;
+  --pv-pmenu: #1d1d1d;
+  --pv-menu-text: #f1faee;
+  --pv-text: #f1faee;
+  --pv-link: #e63946;
+  --pv-muted: #8d8d8d;
+  --pv-accent: #e63946;
+  --pv-accent-text: #f1faee;
+  --pv-radius: 2px;
+  --pv-card: rgba(29, 29, 29, 0.95);
+  --pv-card-border: #2f2f2f;
+  --pv-inner: rgba(40, 40, 40, 0.88);
+  --pv-control: #1d1d1d;
+  --pv-control-border: #3a3a3a;
+  --pv-menu: #1d1d1d;
+  --pv-bar: rgba(24, 24, 24, 0.97);
+}
+
+html[data-preview-theme='glitch'] {
+  --pv-page: #050505;
+  --pv-page-img: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 4px);
+  --pv-nav: rgba(5, 5, 5, 0.94);
+  --pv-line: linear-gradient(90deg, #ff0040 0 33%, #00ffd0 33% 66%, #ffffff 66%);
+  --pv-title: #fff;
+  --pv-subtitle: #00ffd0;
+  --pv-btn-bg: #0d0d0d;
+  --pv-btn-text: #fff;
+  --pv-btn-border: #ff0040;
+  --pv-pmenu: #0b0b0b;
+  --pv-menu-text: #fff;
+  --pv-text: #e9e9e9;
+  --pv-link: #00ffd0;
+  --pv-muted: #6b6b6b;
+  --pv-accent: #fff;
+  --pv-accent-text: #050505;
+  --pv-accent-glow: -2px 0 0 #ff0040, 2px 0 0 #00ffd0;
+  --pv-radius: 0;
+  --pv-card: rgba(12, 12, 12, 0.95);
+  --pv-card-border: #262626;
+  --pv-inner: rgba(22, 22, 22, 0.88);
+  --pv-control: #0d0d0d;
+  --pv-control-border: #333;
+  --pv-menu: #0b0b0b;
+  --pv-bar: rgba(10, 10, 10, 0.97);
+}
+
+html[data-preview-theme='glitch'] .header-title { text-shadow: -2px 0 #ff0040, 2px 0 #00ffd0; }
+html[data-preview-theme='neon-sign'] .header-title { text-shadow: 0 0 6px #ff2e88, 0 0 16px rgba(255, 46, 136, 0.7); }
+html[data-preview-theme='holo'] .header-title {
+  background: linear-gradient(90deg, #ff4fd8, #4fd2ff, #b6ff4f, #ffb14f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- the logos ---------- */
+
+/* shared: the score / name text sits above the bigger logos */
+html[data-preview-logos] .nfl-data-container .team-text {
+  position: relative;
+  z-index: 3;
+}
+
+html[data-preview-logos] .nfl-data-container .team-text .abbreviation,
+html[data-preview-logos] .nfl-data-container .team-text .team-score,
+html[data-preview-logos] .nfl-data-container .team-text .team-odds-value {
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+/* 1. Jumbotron: giant logos; opening a game sweeps a spotlight across them */
+@keyframes pvJumboPop {
+  0% { transform: translate(-50%, -50%) scale(calc(1.05 * var(--wm-size, 1))); }
+  45% { transform: translate(-50%, -50%) scale(calc(1.32 * var(--wm-size, 1))); }
+  100% { transform: translate(-50%, -50%) scale(calc(1.18 * var(--wm-size, 1))); }
+}
+
+@keyframes pvSpotlight {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(260%) skewX(-18deg); }
+}
+
+html[data-preview-theme='jumbotron'] .nfl-data-container .game-slot:not(.ufc-fight) .team-logo-watermark,
+html[data-preview-theme='jumbotron'] .nfl-data-container .game-container .team-logo-watermark {
+  transform: translate(-50%, -50%) scale(calc(1.05 * var(--wm-closed-size, var(--wm-size, 1))));
+  opacity: 0.5;
+}
+
+html[data-preview-theme='jumbotron'] .nfl-data-container .game-slot:not(.ufc-fight) .team-cell.expanded .team-logo-watermark,
+html[data-preview-theme='jumbotron'] .nfl-data-container .game-container .team-cell.expanded .team-logo-watermark {
+  animation: pvJumboPop 0.6s cubic-bezier(0.2, 0.8, 0.2, 1.2) forwards;
+  opacity: 0.85;
+  filter: saturate(1.4) drop-shadow(0 0 12px rgba(255, 255, 255, 0.35));
+}
+
+html[data-preview-theme='jumbotron'] .nfl-data-container .team-cell.expanded .team-info-container::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 35%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  animation: pvSpotlight 0.9s ease-out 1;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* 2. Holo Foil: shimmering cells; opening a game spins the logo once */
+@keyframes pvHoloSpin {
+  from { transform: translate(-50%, -50%) scale(calc(0.8 * var(--wm-size, 1))) rotateY(0deg); }
+  to { transform: translate(-50%, -50%) scale(calc(0.8 * var(--wm-size, 1))) rotateY(360deg); }
+}
+
+@keyframes pvHoloShift {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+
+html[data-preview-theme='holo'] .nfl-data-container .game-slot:not(.ufc-fight) .team-logo-watermark,
+html[data-preview-theme='holo'] .nfl-data-container .game-container .team-logo-watermark {
+  transform: translate(-50%, -50%) scale(calc(0.72 * var(--wm-closed-size, var(--wm-size, 1))));
+  filter: drop-shadow(-2px 0 0 rgba(255, 79, 216, 0.55)) drop-shadow(2px 0 0 rgba(79, 210, 255, 0.55));
+}
+
+html[data-preview-theme='holo'] .nfl-data-container .team-cell.expanded .team-logo-watermark {
+  animation: pvHoloSpin 0.9s cubic-bezier(0.3, 0.7, 0.2, 1) 1 forwards;
+  opacity: 0.9;
+}
+
+html[data-preview-theme='holo'] .nfl-data-container .team-info-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 20%, rgba(255, 79, 216, 0.16), rgba(79, 210, 255, 0.16), rgba(182, 255, 79, 0.14), transparent 80%);
+  background-size: 200% 100%;
+  animation: pvHoloShift 4s linear infinite;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 3. Neon Sign: logos as glowing white outlines; opening a game flickers them on */
+@keyframes pvNeonOn {
+  0% { opacity: 0.15; }
+  8% { opacity: 0.9; }
+  12% { opacity: 0.2; }
+  20% { opacity: 1; }
+  26% { opacity: 0.35; }
+  34%, 100% { opacity: 1; }
+}
+
+html[data-preview-theme='neon-sign'] .nfl-data-container .game-slot:not(.ufc-fight) .team-logo-watermark,
+html[data-preview-theme='neon-sign'] .nfl-data-container .game-container .team-logo-watermark {
+  transform: translate(-50%, -50%) scale(calc(0.7 * var(--wm-closed-size, var(--wm-size, 1))));
+  filter: brightness(0) invert(1) drop-shadow(0 0 3px #ff2e88) drop-shadow(0 0 8px #ff2e88);
+  opacity: 0.35;
+}
+
+html[data-preview-theme='neon-sign'] .nfl-data-container .game-slot:not(.ufc-fight) .team-cell.expanded .team-logo-watermark,
+html[data-preview-theme='neon-sign'] .nfl-data-container .game-container .team-cell.expanded .team-logo-watermark {
+  transform: translate(-50%, -50%) scale(calc(0.82 * var(--wm-size, 1)));
+  filter: brightness(0) invert(1) drop-shadow(0 0 4px #2ed5ff) drop-shadow(0 0 12px #2ed5ff);
+  animation: pvNeonOn 1s steps(1, end) 1 forwards;
+}
+
+/* 4. Poster: oversized logos bleeding off the edge; opening a game slides them in */
+html[data-preview-theme='poster'] .nfl-data-container .game-slot:not(.ufc-fight) .team-logo-watermark,
+html[data-preview-theme='poster'] .nfl-data-container .game-container .team-logo-watermark {
+  transform: translate(-22%, -50%) scale(calc(1.5 * var(--wm-closed-size, var(--wm-size, 1)))) rotate(-12deg);
+  opacity: 0.22;
+  filter: grayscale(1) contrast(1.2);
+  transition: transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s ease, filter 0.6s ease;
+}
+
+html[data-preview-theme='poster'] .nfl-data-container .game-slot:not(.ufc-fight) .team-logo-watermark.home,
+html[data-preview-theme='poster'] .nfl-data-container .game-container .team-logo-watermark.home {
+  transform: translate(-78%, -50%) scale(calc(1.5 * var(--wm-closed-size, var(--wm-size, 1)))) rotate(12deg);
+}
+
+html[data-preview-theme='poster'] .nfl-data-container .game-slot:not(.ufc-fight) .team-cell.expanded .team-logo-watermark,
+html[data-preview-theme='poster'] .nfl-data-container .game-container .team-cell.expanded .team-logo-watermark {
+  transform: translate(-50%, -50%) scale(calc(1.05 * var(--wm-size, 1))) rotate(0deg);
+  opacity: 0.8;
+  filter: none;
+}
+
+/* 5. Glitch: opening a game makes the logo glitch and split into colour channels */
+@keyframes pvGlitch {
+  0% { transform: translate(-50%, -50%) scale(calc(0.8 * var(--wm-size, 1))); filter: none; }
+  10% { transform: translate(-46%, -52%) scale(calc(0.84 * var(--wm-size, 1))) skewX(8deg); filter: drop-shadow(-6px 0 0 #ff0040) drop-shadow(6px 0 0 #00ffd0); }
+  20% { transform: translate(-54%, -48%) scale(calc(0.78 * var(--wm-size, 1))) skewX(-10deg); filter: drop-shadow(5px 0 0 #ff0040) drop-shadow(-5px 0 0 #00ffd0) hue-rotate(90deg); }
+  30% { transform: translate(-50%, -50%) scale(calc(0.86 * var(--wm-size, 1))); filter: drop-shadow(-3px 0 0 #ff0040) drop-shadow(3px 0 0 #00ffd0); clip-path: inset(10% 0 40% 0); }
+  40% { transform: translate(-52%, -50%) scale(calc(0.8 * var(--wm-size, 1))); clip-path: inset(50% 0 5% 0); }
+  50% { clip-path: none; transform: translate(-48%, -50%) scale(calc(0.82 * var(--wm-size, 1))) skewX(4deg); }
+  65% { transform: translate(-50%, -50%) scale(calc(0.8 * var(--wm-size, 1))); filter: drop-shadow(-2px 0 0 #ff0040) drop-shadow(2px 0 0 #00ffd0); }
+  100% { transform: translate(-50%, -50%) scale(calc(0.8 * var(--wm-size, 1))); filter: drop-shadow(-1.5px 0 0 #ff0040) drop-shadow(1.5px 0 0 #00ffd0); }
+}
+
+html[data-preview-theme='glitch'] .nfl-data-container .game-slot:not(.ufc-fight) .team-logo-watermark,
+html[data-preview-theme='glitch'] .nfl-data-container .game-container .team-logo-watermark {
+  transform: translate(-50%, -50%) scale(calc(0.72 * var(--wm-closed-size, var(--wm-size, 1))));
+  filter: grayscale(0.6) drop-shadow(-1px 0 0 rgba(255, 0, 64, 0.6)) drop-shadow(1px 0 0 rgba(0, 255, 208, 0.6));
+}
+
+html[data-preview-theme='glitch'] .nfl-data-container .team-cell.expanded .team-logo-watermark {
+  animation: pvGlitch 0.7s steps(1, end) 1 forwards;
+  opacity: 0.85;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-preview-logos] .nfl-data-container .team-logo-watermark,
+  html[data-preview-logos] .nfl-data-container .team-info-container::before,
+  html[data-preview-logos] .nfl-data-container .team-info-container::after {
+    animation: none !important;
+  }
+}

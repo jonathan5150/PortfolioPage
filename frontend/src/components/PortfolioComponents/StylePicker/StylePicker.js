@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FONT_OPTIONS, THEME_OPTIONS, groupOptions, isPreviewSite } from './stylePresets';
+import { FONT_OPTIONS, THEME_OPTIONS, isPreviewSite } from './stylePresets';
 import './StylePicker.css';
 
 // Test-site only: two dropdowns floating at the bottom of the screen on every page
@@ -47,29 +47,15 @@ export const applyStyleChoice = ({ font = 'default', theme = 'default' }) => {
   else root.removeAttribute('data-preview-theme');
   setFlag(root, 'data-preview-vars', Boolean(themeOption.vars));
   setFlag(root, 'data-preview-light', Boolean(themeOption.light));
+  setFlag(root, 'data-preview-logos', Boolean(themeOption.logos));
 };
 
-const OptionList = ({ options }) => {
-  const [loose, groups] = groupOptions(options);
-  return (
-    <>
-      {loose.map((o) => (
-        <option key={o.id} value={o.id}>
-          {o.label}
-        </option>
-      ))}
-      {groups.map(([name, items]) => (
-        <optgroup key={name} label={name}>
-          {items.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.label}
-            </option>
-          ))}
-        </optgroup>
-      ))}
-    </>
-  );
-};
+const OptionList = ({ options }) =>
+  options.map((o) => (
+    <option key={o.id} value={o.id}>
+      {o.label}
+    </option>
+  ));
 
 function StylePicker() {
   const [choice, setChoice] = useState(() => ({ font: 'default', theme: 'default', ...readSaved() }));

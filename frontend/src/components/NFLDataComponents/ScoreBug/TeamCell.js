@@ -91,19 +91,12 @@ const LEAGUE_LOGOS = {
   mlb: { open: 0.7, closed: 0.7, teams: {} },
 };
 
-// Before a game: the moneyline over "ODDS", then the win chance over "WIN PROB".
-const OddsStack = ({ winProb, moneyLine }) => (
+// Before a game: just the moneyline, on one row, centred in the cell.
+const fmtMoneyLine = (n) => (n > 0 ? `+${n}` : String(n));
+const hasPrice = (n) => n !== null && n !== undefined && Math.abs(n) >= 100;
+const OddsStack = ({ moneyLine }) => (
   <div className="team-odds-stack">
-    {moneyLine !== null && moneyLine !== undefined && (
-      <div className="team-odds-row">
-        <span className="team-odds-value">{moneyLine > 0 ? `+${moneyLine}` : moneyLine}</span>
-        <span className="team-odds-label">ODDS</span>
-      </div>
-    )}
-    <div className="team-odds-row">
-      <span className="team-odds-value">{Math.round(winProb)}%</span>
-      <span className="team-odds-label">WIN PROB</span>
-    </div>
+    <span className="team-odds-value">{fmtMoneyLine(moneyLine)}</span>
   </div>
 );
 
@@ -113,7 +106,7 @@ const TeamCell = ({
   score,
   scoreIsSpread,
   subScore,
-  winProb,
+  showOdds = false,
   moneyLine,
   isWinner,
   corner = 'top',
@@ -179,8 +172,8 @@ const TeamCell = ({
             <div className="team-record">{competitor?.record || '0-0'}</div>
           </div>
 
-          {winProb !== null && winProb !== undefined ? (
-            <OddsStack winProb={winProb} moneyLine={moneyLine} />
+          {showOdds && hasPrice(moneyLine) ? (
+            <OddsStack moneyLine={moneyLine} />
           ) : (
             <div className={`team-score ${isWinner ? 'winner' : ''} ${scoreIsSpread ? 'spread' : ''}`}>
               {score}

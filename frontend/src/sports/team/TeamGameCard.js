@@ -3,7 +3,7 @@ import TeamCell from '../../components/NFLDataComponents/ScoreBug/TeamCell';
 import Marquee from '../../components/NFLDataComponents/shared/Marquee';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
 import { getTeamColor, getTeamRingColors, washOut } from '../../components/NFLDataComponents/shared/teamColors';
-import { getLeagueOdds, getLeaguePredictor } from './leagueApi';
+import { getLeagueOdds } from './leagueApi';
 import { BoxScorePanel, LinesPanel, PlayersPanel, useGameLines } from './TeamPanels';
 
 const accent = (team) => washOut(getTeamColor(team) || 'rgba(120,120,120,0.6)', 0.15).replace(/[\d.]+\)$/, '1)');
@@ -168,12 +168,9 @@ const ScoreBug = ({ lg, game, open, onToggle }) => {
   const { state } = game.status;
   const s = game.situation;
   const pre = state === 'pre';
-  const predictor = useAsyncData(() => getLeaguePredictor(lg, game.id), [lg, game.id], { enabled: pre });
   const odds = useAsyncData(() => getLeagueOdds(lg, game.id), [lg, game.id], { enabled: pre });
 
   const cells = ['away', 'home'].map((side) => {
-    const prob = predictor.data?.[side];
-    const showProb = pre && prob !== null && prob !== undefined;
     const other = side === 'away' ? 'home' : 'away';
     return (
       <TeamCell
@@ -181,7 +178,7 @@ const ScoreBug = ({ lg, game, open, onToggle }) => {
         side={side}
         competitor={game[side]}
         score={pre ? '' : (game[side]?.score ?? 0)}
-        winProb={showProb ? prob : null}
+        showOdds={pre}
         moneyLine={odds.data?.[side]?.moneyLine}
         isWinner={state === 'post' && game[side]?.winner}
         corner={state === 'in' ? 'top' : open ? 'top' : 'all'}

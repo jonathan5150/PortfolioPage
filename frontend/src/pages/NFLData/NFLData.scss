@@ -3811,3 +3811,52 @@
   min-width: 0;
   justify-content: flex-end;
 }
+
+/* before a game the team cell shows only the moneyline: one row, centred
+   vertically, a little bigger now that it has the space to itself */
+.nfl-data-container .team-odds-stack {
+  align-self: stretch;
+  justify-content: center;
+  gap: 0;
+}
+
+.nfl-data-container .team-odds-stack .team-odds-value {
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.96);
+  letter-spacing: 0.01em;
+}
+
+/* each pick card anchors its own green / red result corner (finished games'
+   cards aren't holdable, and without this all three corners stacked on the
+   game cell's corner) */
+.nfl-data-container .pick-line {
+  position: relative;
+}
+
+/* the day / event label shrinks to fit its button instead of being cut off */
+.nfl-data-container .week-button .fit-text {
+  display: inline-block;
+  white-space: nowrap;
+  max-width: none;
+  vertical-align: middle;
+}
+
+.nfl-data-container .controls > .week-control > .week-button:has(.fit-text) {
+  text-overflow: clip;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+/* an underdog lean: the model's value side is the team the odds expect to lose */
+.nfl-data-container .pick-kind.upset {
+  border-color: rgba(255, 140, 66, 0.75);
+  background: rgba(255, 140, 66, 0.16);
+  color: #ffb27a;
+}
+
+.nfl-data-container .bet-lean-tag.upset {
+  border-color: rgba(255, 140, 66, 0.75);
+  color: #ffb27a;
+}

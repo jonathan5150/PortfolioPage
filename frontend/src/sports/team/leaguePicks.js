@@ -10,13 +10,23 @@
 //   spread - the home team when it's had 2+ more days of rest than the
 //            visitor (58.1% over 260 games, +10.6% at the closing prices).
 // No moneyline or total rule held up season after season, so those are leans:
-//   winner - the blended favourite (right 68.4% of the time)
+//   winner - the backtested model's value side (teamModels.js: the market plus
+//            head-to-head, rest, back-to-backs and revenge spots) when one
+//            side's chance beats its price; it's an underdog about half the
+//            time. Otherwise the blended favourite (right 68.4% of the time).
 //   spread - the home side (50.4%) when the rest rule doesn't fire
 //   total  - follow a 3+ point move in the total since it opened (down:
 //            under), otherwise the over (51.5% together).
 // MLB hasn't been backtested yet: all leans.
 import { fmtLine, fmtOdds } from '../../pages/NFLData/NFLDataApi/betting';
 import { marketHomeProbability } from '../../pages/NFLData/NFLDataApi/picks';
+import {
+  teamModelChance,
+  finishChance,
+  valueSide,
+  h2hSentence,
+  situationBits,
+} from '../../pages/NFLData/NFLDataApi/teamModels';
 import { LEAGUES } from './leagueApi';
 
 const real = (n) => n !== null && n !== undefined && Math.abs(n) >= 100;
@@ -56,15 +66,50 @@ export const restDays = (game, earlier) => {
 export const scheduleGames = (schedule) =>
   (schedule || []).map((g) => ({ date: g.date, homeId: g.home?.teamId, awayId: g.away?.teamId }));
 
-export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null }) => {
+// The NBA model's value lean, or null (see teamModels.js).
+const nbaValueLean = (teamModel, game, odds, rest) => {
+  const mc = teamModelChance(teamModel, { game, odds, rest });
+  if (!mc) return null;
+  const v = valueSide(teamModel, finishChance(teamModel, mc), odds);
+  if (!v) return null;
+  const other = v.side === 'home' ? 'away' : 'home';
+  const team = game[v.side]?.team;
+  const dog = odds[v.side].moneyLine > odds[other].moneyLine;
+  const needs = Math.round(100 / (v.price > 0 ? 1 + v.price / 100 : 1 + 100 / -v.price));
+  const bits = situationBits(mc, v.side);
+  const h2h = h2hSentence(mc.h2h, game, v.side);
+  const summary = [
+    `${dog ? 'Upset lean' : 'Value lean'} ${name(team)}: the model has them at ${Math.round(v.p * 100)}% to win, and at ${fmtOdds(v.price)} the price only needs ${needs}%.`,
+    ...(bits.length ? [`Working for them: ${bits.join('; ')}.`] : []),
+    ...(h2h ? [h2h] : []),
+    `The model's value picks lost about as much as always taking the favourite from 2012 to 2022, so it's a lean, not a bet.`,
+  ].join(' ');
+  return {
+    key: 'winner',
+    title: 'WINNER',
+    side: v.side,
+    bet: false,
+    upset: dog,
+    headline: `${nick(team)} TO WIN`,
+    summary,
+    odds: `ML ${fmtOdds(v.price)}`,
+    pick: team?.displayName || team?.abbreviation,
+    pickAbbr: team?.abbreviation,
+  };
+};
+
+export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, teamModel = null }) => {
   const league = LEAGUES[lg];
   const nba = lg === 'nba';
   const chance = winChance({ odds, predictor });
   const out = { winner: null, spread: null, total: null };
   if (!odds) return out;
 
+  // NBA winner: the model's value side when there is one
+  if (nba && teamModel && rest) out.winner = nbaValueLean(teamModel, game, odds, rest);
+
   // winner: the likelier side
-  if (chance && real(odds.home?.moneyLine) && real(odds.away?.moneyLine)) {
+  if (!out.winner && chance && real(odds.home?.moneyLine) && real(odds.away?.moneyLine)) {
     const side = chance.home >= 50 ? 'home' : 'away';
     const team = game[side]?.team;
     const p = Math.round(side === 'home' ? chance.home : 100 - chance.home);

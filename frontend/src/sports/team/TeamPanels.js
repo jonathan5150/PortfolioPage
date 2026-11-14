@@ -25,6 +25,7 @@ import {
   getLeagueTeamSchedule,
 } from './leagueApi';
 import { buildLeaguePicks, restDays, scheduleGames } from './leaguePicks';
+import { loadTeamModel } from '../../pages/NFLData/NFLDataApi/teamModels';
 
 const accent = (team) => washOut(getTeamColor(team) || 'rgba(120,120,120,0.6)', 0.15).replace(/[\d.]+\)$/, '1)');
 const LIVE_REFRESH_MS = 20000;
@@ -129,9 +130,11 @@ const PickCard = ({ pick, game, grade, leg }) => {
   if (!pick) return null;
   const team = pick.key !== 'total' ? game[pick.side]?.team : null;
   return (
-    <Holdable className="pick-line lean" leg={leg}>
+    <Holdable className={`pick-line ${pick.bet ? '' : 'lean'}`} leg={leg}>
       <span className="pick-title-row">
-        <span className="pick-kind lean">LEAN</span>
+        <span className={`pick-kind ${pick.bet ? 'bet' : 'lean'}${pick.upset ? ' upset' : ''}`}>
+          {pick.bet ? 'BET' : pick.upset ? 'UPSET' : 'LEAN'}
+        </span>
         <span className="pick-headline">
           {team?.logo && <img src={team.logo} alt="" className="pick-team-logo" draggable={false} />}
           {pick.headline}
@@ -189,9 +192,10 @@ export const LinesPanel = ({ lg, game, lines }) => {
     [lg, game.id],
     { enabled: lg === 'nba' },
   );
+  const teamModel = useAsyncData(() => loadTeamModel(lg), [lg], { enabled: lg === 'nba' });
   const picks = useMemo(
-    () => (odds ? buildLeaguePicks({ lg, game, odds, predictor, rest: rest.data }) : null),
-    [lg, game, odds, predictor, rest.data],
+    () => (odds ? buildLeaguePicks({ lg, game, odds, predictor, rest: rest.data, teamModel: teamModel.data }) : null),
+    [lg, game, odds, predictor, rest.data, teamModel.data],
   );
   const grades = useMemo(
     () => (picks && game.status.state === 'post' ? gradeLinePicks(picks, game, odds) : null),

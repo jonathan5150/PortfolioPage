@@ -3,6 +3,7 @@
 // game logs + prop lines, it returns a pick and short reasons for each market.
 import { fmtLine, fmtOdds, impliedProbability } from './betting';
 import { playerMarketsFor, BOOK } from './sportsbookOdds';
+import { teamModelChance, finishChance, valueSide, h2hSentence, situationBits } from './teamModels';
 
 const round1 = (n) => Math.round(n * 10) / 10;
 const fmt1 = (n) => (n === null || n === undefined ? '—' : round1(n).toFixed(1).replace(/\.0$/, ''));
@@ -166,10 +167,11 @@ export const totalBet = ({ game, odds, awayTrends, homeTrends }) => {
 
 // Every market of every game gets a pick. Where one of the rules above fires
 // it's a BET (\`bet: true\`): those are the picks the money results count. The
-// rest are LEANS, the side that has been right most often since 2019 when no
-// rule applies (blended favourite to win, road team on the spread, the under);
-// they count in the prediction record but none of them beat the bookmaker's
-// margin, so they aren't bets.
+// rest are LEANS when no rule applies: to win, the backtested model's value
+// side (teamModels.js; often an underdog, tagged UPSET) or else the blended
+// favourite; the road team on the spread; the under. They count in the
+// prediction record but none of them beat the bookmaker's margin, so they
+// aren't bets.
 
 // ---------- winner ----------
 
@@ -179,7 +181,53 @@ export const pickWinner = (ctx) => {
   const value = moneylineValue(ctx);
   const market = marketHomeProbability(ctx.odds);
 
+  // the backtested model (market + head-to-head, rest, byes, form, division):
+  // its chance for the home team, when the model and both teams' games are loaded
+  const tm = ctx.teamModel;
+  const mc = tm
+    ? teamModelChance(tm, {
+        game: ctx.game,
+        odds: ctx.odds,
+        awayGames: ctx.awayTrends?.last5,
+        homeGames: ctx.homeTrends?.last5,
+      })
+    : null;
+  if (mc) mc.x.prime = isPrimetime(ctx.game) ? 1 : 0;
+  const modelHome = mc ? finishChance(tm, mc) : null;
+
   if (!value) {
+    // the model's value side: the team whose chance beats its price (an
+    // underdog most of the time it fires)
+    const v = modelHome !== null ? valueSide(tm, modelHome, ctx.odds) : null;
+    if (v) {
+      const lean = v.side === 'home' ? home : away;
+      const dog = lean.ml > (lean === home ? away.ml : home.ml);
+      const needs = Math.round(impliedProbability(lean.ml));
+      const extra = [h2hSentence(mc.h2h, ctx.game, lean.side)].filter(Boolean);
+      const bits = situationBits(mc, lean.side);
+      const sentences = [
+        `${dog ? 'Upset lean' : 'Value lean'}: the model has the ${lean.name} at ${Math.round(v.p * 100)}% to win; at ${fmtOdds(lean.ml)} the price only needs ${needs}%.`,
+        ...(bits.length ? [`Working for them: ${bits.join('; ')}.`] : []),
+        ...extra,
+        `Not strong enough to bet: the model's value picks lost about 1% per pick from 2015 to 2026, against 3.6% for always taking the favourite.`,
+      ];
+      return {
+        headline: `${lean.nickname} TO WIN`,
+        side: lean.side,
+        bet: false,
+        upset: dog,
+        summary: sentences.join(' '),
+        strong: false,
+        key: 'winner',
+        title: 'WINNER',
+        pick: lean.team?.displayName || lean.abbr,
+        pickAbbr: lean.abbr,
+        odds: `ML ${fmtOdds(lean.ml)}`,
+        confidence: Math.round(v.p * 100),
+        reasons: sentences,
+      };
+    }
+
     // lean: the favourite by a 25/75 FPI / market blend
     const pHome =
       market === null
@@ -191,11 +239,12 @@ export const pickWinner = (ctx) => {
           : market;
     const lean = pHome >= 50 ? home : away;
     const chance = Math.round(lean === home ? pHome : 100 - pHome);
+    const h2hText = mc ? h2hSentence(mc.h2h, ctx.game, lean.side) : null;
     return {
       headline: `${lean.nickname} TO WIN`,
       side: lean.side,
       bet: false,
-      summary: `Lean ${lean.name}: we have them about ${chance}% to win, but at ${fmtOdds(lean.ml)} the price already says so. No value, so not a bet.`,
+      summary: `Lean ${lean.name}: we have them about ${chance}% to win, but at ${fmtOdds(lean.ml)} the price already says so. No value, so not a bet.${h2hText ? ` ${h2hText}` : ''}`,
       strong: false,
       key: 'winner',
       title: 'WINNER',
@@ -666,8 +715,8 @@ export const touchdownChance = ({ games, position, season, oppId, oppAbbr, ranki
 // ---------- everything ----------
 
 // Winner, spread and total for the LINES tab.
-export const buildLinePicks = ({ game, odds, predictor, awayTrends, homeTrends }) => {
-  const ctx = { game, odds, predictor, awayTrends, homeTrends };
+export const buildLinePicks = ({ game, odds, predictor, awayTrends, homeTrends, teamModel = null }) => {
+  const ctx = { game, odds, predictor, awayTrends, homeTrends, teamModel };
   return { winner: pickWinner(ctx), spread: pickSpread(ctx), total: pickTotal(ctx) };
 };
 
@@ -732,7 +781,7 @@ export const linePickBets = (linePicks, game, odds) => {
     const pick = linePicks[key];
     const result = gradeLinePick(pick, game, odds);
     if (!pick || !result || price === null || price === undefined) return null;
-    return { key, label, price, result, bet: pick.bet !== false };
+    return { key, label, price, result, bet: pick.bet !== false, ...(pick.upset ? { upset: true } : {}) };
   };
   // every pick is simulated as a bet (BETS and LEANS alike); `bet` says which it was
   const live = (pick) => (pick && pick.side ? pick : null);

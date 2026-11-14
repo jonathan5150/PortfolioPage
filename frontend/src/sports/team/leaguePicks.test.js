@@ -14,7 +14,32 @@ const odds = {
   total: { line: 221.5, overOdds: -110, underOdds: -110 },
 };
 
+// a made-up model where the Bucks own the matchup
+const teamModel = {
+  lg: 'nba',
+  model: { winner: { features: ['mkt', 'h2h_win'], coef: [1, 3], intercept: 0, min_edge: 0, max_price: 4.5 } },
+  history: {
+    h2h: {
+      'MIL|NYK': [
+        [2025, 'MIL', 'MIL', 9, 'MIL', 1, '2025-11-02'],
+        [2025, 'NYK', 'MIL', 4, 'MIL', 0, '2025-12-12'],
+        [2025, 'MIL', 'MIL', 11, 'MIL', 1, '2026-02-01'],
+        [2025, 'NYK', 'MIL', 2, 'MIL', 0, '2026-03-15'],
+      ],
+    },
+  },
+};
+
 describe('league picks (NBA / MLB)', () => {
+  it("picks the model's value side, an underdog here, as an upset lean", () => {
+    const g = { ...game(), date: '2026-11-14T00:30Z' };
+    const picks = buildLeaguePicks({ lg: 'nba', game: g, odds, predictor: null, rest: { home: 2, away: 2 }, teamModel });
+    expect(picks.winner).toMatchObject({ side: 'away', bet: false, upset: true, headline: 'BUCKS TO WIN', odds: 'ML +205' });
+    expect(picks.winner.summary).toMatch(/Bucks have won 4 of the last 4 meetings with the Knicks/);
+    // without the model it's the favourite again
+    expect(buildLeaguePicks({ lg: 'nba', game: g, odds, predictor: null, rest: { home: 2, away: 2 } }).winner.side).toBe('home');
+  });
+
   it('blends ESPN and the market 25/75, or uses the market alone', () => {
     const both = winChance({ odds, predictor: { home: 80, away: 20 } });
     expect(both.home).toBeCloseTo(0.25 * 80 + 0.75 * both.market, 5);

@@ -4,7 +4,7 @@ import useGameSummary from '../GameCard/useGameSummary';
 import Linescore from './Linescore';
 import Marquee from '../shared/Marquee';
 import { headshotUrl } from '../../../pages/NFLData/NFLDataApi/endpoints';
-import { getEventOdds, getEventPredictor } from '../../../pages/NFLData/NFLDataApi/bettingService';
+import { getEventOdds } from '../../../pages/NFLData/NFLDataApi/bettingService';
 import { getGameConditions } from '../../../pages/NFLData/NFLDataApi/gameConditions';
 import useAsyncData from '../shared/useAsyncData';
 import { getTeamBorderColor } from '../shared/teamColors';
@@ -158,8 +158,7 @@ export const PreGameScoreBug = ({ game, onToggle, showLinescore }) => {
     ? new Date(game.date).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' })
     : 'TBD';
 
-  // ESPN FPI win probability fills the score spot before kickoff.
-  const predictor = useAsyncData(() => getEventPredictor(game.id), [game.id]);
+  // the moneylines fill the score spot before kickoff
   const odds = useAsyncData(() => getEventOdds(game.id), [game.id]);
 
   const rows = (side) => {
@@ -180,15 +179,13 @@ export const PreGameScoreBug = ({ game, onToggle, showLinescore }) => {
   return (
     <div className="score-grid" onClick={onToggle} style={{ ...gridStyle, position: 'relative' }}>
       {['away', 'home'].map((side) => {
-        const prob = predictor.data?.[side];
-        const hasProb = prob !== null && prob !== undefined;
         return (
           <TeamCell
             key={side}
             side={side}
             competitor={game[side]}
             score=""
-            winProb={hasProb ? prob : null}
+            showOdds
             moneyLine={odds.data?.[side]?.moneyLine}
             corner={showLinescore ? 'top' : 'all'}
             expanded={showLinescore}

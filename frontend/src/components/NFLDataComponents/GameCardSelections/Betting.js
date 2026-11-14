@@ -16,6 +16,7 @@ import {
 } from '../../../pages/NFLData/NFLDataApi/bettingService';
 import { BOOK, getBookOdds, normalizeName } from '../../../pages/NFLData/NFLDataApi/sportsbookOdds';
 import { fmtLine, fmtOdds } from '../../../pages/NFLData/NFLDataApi/betting';
+import { loadTeamModel } from '../../../pages/NFLData/NFLDataApi/teamModels';
 import {
   buildLinePicks,
   gradeLinePicks,
@@ -235,7 +236,9 @@ const PickLine = ({ pick, leg, game, grade }) => {
   return (
     <Holdable className={`pick-line ${pick.strong ? 'strong' : ''} ${isBet ? '' : 'lean'}`} leg={leg}>
       <span className="pick-title-row">
-        <span className={`pick-kind ${isBet ? 'bet' : 'lean'}`}>{isBet ? 'BET' : 'LEAN'}</span>
+        <span className={`pick-kind ${isBet ? 'bet' : 'lean'}${pick.upset ? ' upset' : ''}`}>
+          {isBet ? 'BET' : pick.upset ? 'UPSET' : 'LEAN'}
+        </span>
         <PickHeadline pick={pick} game={game} />
       </span>
       <span className="pick-because">{pick.summary}</span>
@@ -759,10 +762,14 @@ const Betting = ({ game, rankings, isOpen = true }) => {
     [players, lines.loading, bookOdds],
   );
 
+  // the backtested winner model and head-to-head history (one download, shared)
+  const teamModel = useAsyncData(() => loadTeamModel('nfl'), [], { enabled: inView || needPlayers });
   const currentPicks = useMemo(
     () =>
-      research.data && odds ? buildLinePicks({ game, odds, predictor: lines.data?.predictor, ...research.data }) : null,
-    [research.data, game, odds, lines.data],
+      research.data && odds && !teamModel.loading
+        ? buildLinePicks({ game, odds, predictor: lines.data?.predictor, ...research.data, teamModel: teamModel.data })
+        : null,
+    [research.data, game, odds, lines.data, teamModel.loading, teamModel.data],
   );
   // Before kickoff the picks are saved with the odds; after kickoff LINES shows
   // (and grades) the picks as they stood ~30 minutes before the game, the same

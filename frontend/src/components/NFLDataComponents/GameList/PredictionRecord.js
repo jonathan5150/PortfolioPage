@@ -24,7 +24,7 @@ const marketsFor = (spreadLabel) => MARKETS.map((m) => (m.key === 'spread' ? { .
 // grading change (v1 could hold grades made against in-game "Live Odds" lines;
 // v2 had no bets; v3 was graded with the old bet-every-game engine; v4 had
 // no leans).
-const GRADES_KEY = 'gradedPicks:v7';
+const GRADES_KEY = 'gradedPicks:v8';
 try {
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v1');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v2');
@@ -32,6 +32,7 @@ try {
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v4');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v5');
   window.localStorage.removeItem('nflStatsWizard:gradedPicks:v6');
+  window.localStorage.removeItem('nflStatsWizard:gradedPicks:v7');
 } catch {
   // storage blocked
 }
@@ -281,7 +282,7 @@ const BetResults = ({ finished, gradedById, period, spreadLabel, loadSeason, gra
                         <div key={b.key} className="bet-row">
                           <span className="bet-label">
                             {b.label}
-                            {!b.bet && <span className="bet-lean-tag">LEAN</span>}
+                            {!b.bet && <span className={`bet-lean-tag${b.upset ? ' upset' : ''}`}>{b.upset ? 'UPSET' : 'LEAN'}</span>}
                           </span>
                           <span>{money(stake)}</span>
                           <span>{fmtOdds(b.price)}</span>

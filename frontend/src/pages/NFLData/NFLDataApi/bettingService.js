@@ -20,6 +20,7 @@ import {
 } from './betting';
 import { buildLinePicks, gradeLinePicks, linePickBets, teamResultHistory } from './picks';
 import { frozenOdds, PICKS_SNAPSHOT } from './oddsSnapshots';
+import { loadTeamModel } from './teamModels';
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -82,15 +83,16 @@ export const getGradedLinePicks = async (game) => {
   const graded = (picks, lines) => ({ ...gradeLinePicks(picks, game, lines), bets: linePickBets(picks, game, lines) });
   if (savedPicks && savedLines) return graded(savedPicks, savedLines);
   const quiet = (p) => p.catch(() => null);
-  const [odds, predictor, awayTrends, homeTrends] = await Promise.all([
+  const [odds, predictor, awayTrends, homeTrends, teamModel] = await Promise.all([
     quiet(getEventOdds(game.id, { final: true })),
     quiet(getEventPredictor(game.id)),
     quiet(getTeamBettingTrends(game.away?.teamId, game)),
     quiet(getTeamBettingTrends(game.home?.teamId, game)),
+    quiet(loadTeamModel('nfl')),
   ]);
   const lines = savedLines || odds;
   if (!lines) return null;
-  const picks = savedPicks || buildLinePicks({ game, odds: lines, predictor, awayTrends, homeTrends });
+  const picks = savedPicks || buildLinePicks({ game, odds: lines, predictor, awayTrends, homeTrends, teamModel });
   return picks ? graded(picks, lines) : null;
 };
 
