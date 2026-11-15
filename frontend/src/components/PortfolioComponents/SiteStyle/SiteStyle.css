@@ -230,7 +230,7 @@ html[data-theme-logos] .nfl-data-container .team-text .team-odds-value {
    fit the cell, in full colour. */
 html[data-theme='poster'] .nfl-data-container .game-slot .team-logo-watermark,
 html[data-theme='poster'] .nfl-data-container .game-container .team-logo-watermark {
-  transform: translate(-50%, -50%) scale(calc(1.5 * var(--wm-poster-closed, var(--wm-closed-size, var(--wm-size, 1)))));
+  transform: translate(-50%, -50%) scale(calc(1.5 * var(--wm-poster-closed, 1)));
   opacity: 0.22;
   filter: grayscale(1) contrast(1.2);
   transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease, filter 0.5s ease;
