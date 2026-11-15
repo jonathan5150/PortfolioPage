@@ -25,6 +25,13 @@ describe('default sport by season', () => {
 describe('saved sport', () => {
   beforeEach(() => {
     document.cookie = 'sportsPref=; path=/; max-age=0';
+    window.localStorage.clear();
+  });
+
+  it('survives the cookie expiring (Safari keeps page-set cookies 7 days)', () => {
+    savePreferredSport('nba');
+    document.cookie = 'sportsPref=; path=/; max-age=0';
+    expect(readPreferredSport()).toBe('nba');
   });
 
   it('starts on the season default until the visitor picks a sport', () => {

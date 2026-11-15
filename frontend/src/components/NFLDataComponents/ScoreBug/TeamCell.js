@@ -159,6 +159,9 @@ const TeamCell = ({
               '--wm-closed-size': nflTuned
                 ? (WATERMARK_CLOSED_SIZE[team.abbreviation] ?? WATERMARK_SIZE[team.abbreviation] ?? 1)
                 : (leagueScale?.closed ?? 1),
+              // Poster's zoomed-in closed logo: the same zoom for every league
+              // (the league sizes above shrink logos to sit inside the cell)
+              ...(nflTuned ? {} : { '--wm-poster-closed': teamTweak?.size ?? 1 }),
             }}
             draggable={false}
           />

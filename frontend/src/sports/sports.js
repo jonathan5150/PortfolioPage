@@ -24,13 +24,29 @@ export const defaultSport = (date = new Date()) => {
   return 'nba';
 };
 
-// A visitor's own choice (from the sport switcher), remembered for a year.
+// The sport a visitor was last on, remembered for a year. Kept in
+// localStorage as well as a cookie: Safari caps cookies set by the page at 7
+// days, and a home-screen web app can keep its own cookies.
 const COOKIE = 'sportsPref';
+const STORAGE = 'nflStatsWizard:sportsPref';
 export const readPreferredSport = () => {
+  let stored = null;
+  try {
+    stored = window.localStorage.getItem(STORAGE);
+  } catch {
+    // storage blocked
+  }
+  if (isSport(stored)) return stored;
   const value = readCookie(COOKIE);
   return isSport(value) ? value : null;
 };
 export const savePreferredSport = (key) => {
-  if (isSport(key)) writeCookie(COOKIE, key, 365);
+  if (!isSport(key)) return;
+  writeCookie(COOKIE, key, 365);
+  try {
+    window.localStorage.setItem(STORAGE, key);
+  } catch {
+    // storage blocked
+  }
 };
 export const startingSport = (date = new Date()) => readPreferredSport() || defaultSport(date);

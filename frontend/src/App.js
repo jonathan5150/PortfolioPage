@@ -1,9 +1,10 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import './App.css';
 import Home from './pages/Home';
 import Header from './components/PortfolioComponents/Header';
 import SportsHub from './sports/SportsHub';
+import RememberSport from './sports/RememberSport';
 // The sports pages' shared stylesheets, loaded once here in one fixed order
 // (the order they had before the pages were split into their own downloads).
 // Left to the split pages, each imports them in a different order, which the
@@ -17,7 +18,7 @@ import './sports/team/TeamSport.scss';
 import './sports/SportTitles.scss';
 import './sports/ufc/Ufc.scss';
 import LoadingField from './components/NFLDataComponents/shared/LoadingField';
-// Test site only (hidden on jonathanrainey.dev): font + style preview dropdowns
+// the site's font and style (Bricolage Grotesque + Poster, Aurora background)
 import './components/PortfolioComponents/SiteStyle/SiteStyle.css';
 
 // Every other page is downloaded only when it's opened, so a phone opening the
@@ -97,13 +98,13 @@ function Main() {
         <Routes>
           {/* the sports data project: /sports opens the saved or in-season sport */}
           <Route path="/sports" element={<SportsHub />} />
-          <Route path="/sports/nfl" element={<NFLData />} />
-          <Route path="/sports/mlb" element={<TeamSportPage key="mlb" lg="mlb" />} />
-          <Route path="/sports/nba" element={<TeamSportPage key="nba" lg="nba" />} />
-          <Route path="/sports/ufc" element={<UfcPage />} />
-          {/* old addresses */}
-          <Route path="/nfldata" element={<Navigate to="/sports/nfl" replace />} />
-          <Route path="/mlbdata" element={<Navigate to="/sports/mlb" replace />} />
+          <Route path="/sports/nfl" element={<RememberSport sport="nfl"><NFLData /></RememberSport>} />
+          <Route path="/sports/mlb" element={<RememberSport sport="mlb"><TeamSportPage key="mlb" lg="mlb" /></RememberSport>} />
+          <Route path="/sports/nba" element={<RememberSport sport="nba"><TeamSportPage key="nba" lg="nba" /></RememberSport>} />
+          <Route path="/sports/ufc" element={<RememberSport sport="ufc"><UfcPage /></RememberSport>} />
+          {/* old addresses: the visitor's last sport */}
+          <Route path="/nfldata" element={<SportsHub />} />
+          <Route path="/mlbdata" element={<SportsHub />} />
         </Routes>
       </Suspense>
     </div>

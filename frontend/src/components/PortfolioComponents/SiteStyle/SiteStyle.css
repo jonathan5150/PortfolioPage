@@ -158,8 +158,11 @@ html[data-theme-vars] .Link:hover {
 /* ---------- Poster colours ---------- */
 
 html[data-theme='poster'] {
-  --pv-page: #141414;
-  --pv-page-img: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0) 0 0 / 10px 10px;
+  /* the Aurora background (violet, teal and pink glows on near-black) */
+  --pv-page: #07070f;
+  --pv-page-img: radial-gradient(60% 40% at 15% 5%, rgba(124, 58, 237, 0.38), transparent 70%),
+    radial-gradient(55% 35% at 90% 30%, rgba(20, 184, 166, 0.3), transparent 70%),
+    radial-gradient(60% 40% at 50% 100%, rgba(236, 72, 153, 0.26), transparent 70%);
   --pv-nav: rgba(20, 20, 20, 0.94);
   --pv-line: #e63946;
   --pv-line-height: 4px;
@@ -185,6 +188,29 @@ html[data-theme='poster'] {
   --pv-bar: rgba(24, 24, 24, 0.97);
 }
 
+/* the portfolio pages' backdrop: the Aurora glows, slowly drifting */
+@keyframes siteAuroraDrift {
+  0% { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; }
+  50% { background-position: 30% 20%, 70% 30%, 40% 70%, 0 0; }
+  100% { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; }
+}
+
+html[data-theme='poster'] .bg {
+  background:
+    radial-gradient(60% 45% at 20% 10%, rgba(124, 58, 237, 0.45), transparent 70%),
+    radial-gradient(55% 40% at 85% 25%, rgba(20, 184, 166, 0.38), transparent 70%),
+    radial-gradient(60% 45% at 50% 95%, rgba(236, 72, 153, 0.32), transparent 70%),
+    #07070f;
+  background-size: 140% 140%, 140% 140%, 140% 140%, auto;
+  animation: siteAuroraDrift 18s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme='poster'] .bg {
+    animation: none;
+  }
+}
+
 /* ---------- the logos ---------- */
 
 /* shared: the score / name text sits above the bigger logos */
@@ -199,22 +225,28 @@ html[data-theme-logos] .nfl-data-container .team-text .team-odds-value {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.8);
 }
 
-/* Poster logos: zoomed in, centred and faded while a game is closed; opening
-   a game shrinks them to fit the cell, in full colour.
-   UFC cells hold fighter headshots, so they keep their normal size. */
-html[data-theme='poster'] .nfl-data-container .game-slot:not(.ufc-fight) .team-logo-watermark,
+/* Poster logos, every sport (UFC's are fighter headshots): zoomed in,
+   centred and faded while a game is closed; opening a game shrinks them to
+   fit the cell, in full colour. */
+html[data-theme='poster'] .nfl-data-container .game-slot .team-logo-watermark,
 html[data-theme='poster'] .nfl-data-container .game-container .team-logo-watermark {
-  transform: translate(-50%, -50%) scale(calc(1.5 * var(--wm-closed-size, var(--wm-size, 1))));
+  transform: translate(-50%, -50%) scale(calc(1.5 * var(--wm-poster-closed, var(--wm-closed-size, var(--wm-size, 1)))));
   opacity: 0.22;
   filter: grayscale(1) contrast(1.2);
   transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease, filter 0.5s ease;
 }
 
-html[data-theme='poster'] .nfl-data-container .game-slot:not(.ufc-fight) .team-cell.expanded .team-logo-watermark,
+html[data-theme='poster'] .nfl-data-container .game-slot .team-cell.expanded .team-logo-watermark,
 html[data-theme='poster'] .nfl-data-container .game-container .team-cell.expanded .team-logo-watermark {
   transform: translate(-50%, -50%) scale(calc(0.54 * var(--wm-size, 1)));
   opacity: 0.8;
   filter: none;
+}
+
+/* UFC headshots normally sit over the names; under Poster they sit behind
+   the text like the team logos */
+html[data-theme='poster'] .nfl-data-container .ufc-fight .team-logo-watermark {
+  z-index: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
