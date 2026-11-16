@@ -1,6 +1,6 @@
-/* Loading animation (see LoadingField.js): one gold-and-black icon that turns
-   from a football into a baseball, a basketball and an octagon, a new shape
-   every half second (a 2s cycle), each spinning in as the last spins out. */
+/* Loading animation (see LoadingField.js): the ball of the sport being loaded,
+   gold and black, turning in place (one turn every 1.6s, speeding up and
+   easing off) with a soft gold glow pulsing behind it twice per turn. */
 
 .sports-loading {
   display: flex;
@@ -27,7 +27,7 @@
   inset: -10px;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(245, 209, 107, 0.24), transparent 68%);
-  animation: sl-halo 0.5s ease-in-out infinite;
+  animation: sl-halo 0.8s ease-in-out infinite;
   animation-delay: var(--sl-phase, 0s);
   will-change: transform, opacity;
 }
@@ -116,6 +116,31 @@
     animation-name: sl-fade;
   }
   .sports-loading .sl-morph::before {
+    animation: none;
+  }
+}
+
+/* the one ball: shown all the time, turning round */
+.sports-loading .sl-shape.sl-ball {
+  opacity: 1;
+  animation: sl-spin 1.6s cubic-bezier(0.55, 0.1, 0.45, 0.9) infinite;
+  animation-delay: var(--sl-phase, 0s);
+}
+
+@keyframes sl-spin {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.06);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sports-loading .sl-shape.sl-ball {
     animation: none;
   }
 }

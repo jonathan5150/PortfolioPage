@@ -4397,12 +4397,13 @@
 }
 
 /* an open game spreads out toward the edges of the screen (the scrolling area
-   and the box around it widen), and narrows back when it's closed */
+   and the box around it widen), and narrows back when it's closed. The
+   widening is only a few pixels, so it happens in one step rather than as an
+   animation: animating a width makes the phone lay the whole game out again
+   on every frame. */
 .nfl-data-container .nfl-scroll-panel,
 .nfl-data-container .nfl-scroll-panel .game-section {
   transition:
-    width 0.45s ease,
-    padding 0.45s ease,
     opacity 0.45s ease,
     background-color 0.45s ease,
     border-color 0.45s ease,
@@ -4512,8 +4513,9 @@ html[data-quality='low'] .nfl-data-container *::after {
   animation: none !important;
 }
 
-html[data-quality='low'] .nfl-data-container .sports-loading .sl-shape {
-  animation: sl-turn 2s linear infinite !important;
+html[data-quality='low'] .nfl-data-container .sports-loading .sl-shape.sl-ball {
+  animation: sl-spin 1.6s linear infinite !important;
+  animation-delay: var(--sl-phase, 0s) !important;
 }
 
 html[data-quality='low'] .nfl-data-container .game-ring,

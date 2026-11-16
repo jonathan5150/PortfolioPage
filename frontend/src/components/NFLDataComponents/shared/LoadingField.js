@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
+import { useInRouterContext, useLocation } from 'react-router-dom';
+import { isSport, startingSport } from '../../../sports/sports';
 import './LoadingField.scss';
 
-// Loading animation for every sport: one gold-and-black icon that turns from a
-// football into a baseball, then a basketball, then a fight octagon, and round
-// again, a new shape every half second with a quick spin between them.
+// Loading animation for the sports pages: the ball of the sport being loaded
+// (a football for NFL, a baseball for MLB, a basketball for NBA, the octagon
+// for UFC), gold and black, turning in place with a soft gold glow pulsing
+// behind it. The sport comes from the address (/sports/nfl ...), which already
+// points at the sport being opened while it loads; on /sports itself it's the
+// sport that's about to open (the remembered one, or the one in season).
 //
 // It runs entirely on CSS animation (transform and opacity), so it keeps going
 // while the phone is busy loading the page; a JavaScript timer would freeze
 // then. Every copy is also in step with the clock, so when one loading screen
-// hands over to the next the animation carries on instead of starting over.
+// hands over to the next the ball carries on turning instead of starting over.
 const GOLD = '#f5d16b';
 const BLACK = '#0d0c0a';
-const STEP_S = 0.5;
 
 const Football = () => (
   <svg viewBox="0 0 40 40" className="sl-icon">
@@ -77,29 +81,37 @@ const Octagon = () => (
   </svg>
 );
 
-const SHAPES = [
-  { key: 'nfl', Icon: Football },
-  { key: 'mlb', Icon: Baseball },
-  { key: 'nba', Icon: Basketball },
-  { key: 'ufc', Icon: Octagon },
-];
-const CYCLE_S = STEP_S * SHAPES.length;
+const ICONS = { nfl: Football, mlb: Baseball, nba: Basketball, ufc: Octagon };
+const TURN_S = 1.6;
 
-const LoadingField = ({ className = '' }) => {
-  // where in the cycle the clock is right now, so every copy is in step
-  const [phase] = useState(() => (performance.now() / 1000) % CYCLE_S);
+const sportIn = (path) => {
+  const m = /^\/sports\/([a-z]+)/.exec(path || '');
+  return m && isSport(m[1]) ? m[1] : startingSport();
+};
+
+const Loader = ({ sport, className }) => {
+  // where in the turn the clock is right now, so every copy is in step
+  const [phase] = useState(() => (performance.now() / 1000) % TURN_S);
+  const Icon = ICONS[sport] || Football;
   return (
     <div className={`loading sports-loading ${className}`} role="status" aria-label="Loading">
       <div className="sl-morph" aria-hidden="true" style={{ '--sl-phase': `${-phase}s` }}>
-        {SHAPES.map(({ key, Icon }, i) => (
-          <div key={key} className="sl-shape" style={{ animationDelay: `${i * STEP_S - phase}s` }}>
-            <Icon />
-          </div>
-        ))}
+        <div key={sport} className={`sl-shape sl-ball sl-${sport}`}>
+          <Icon />
+        </div>
       </div>
       <p className="sl-caption">Loading</p>
     </div>
   );
 };
+
+const RoutedLoader = (props) => <Loader {...props} sport={sportIn(useLocation().pathname)} />;
+
+const LoadingField = ({ className = '' }) =>
+  useInRouterContext() ? (
+    <RoutedLoader className={className} />
+  ) : (
+    <Loader className={className} sport={sportIn(window.location.pathname)} />
+  );
 
 export default LoadingField;
