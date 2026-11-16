@@ -4223,63 +4223,50 @@
   height: 100vh;
 }
 
-/* ---------- the title's cycling border (NFL): a ring around the title box,
-   half gold and half black, slowly turning round and round. ---------- */
-@property --title-spin {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@property --title-a {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: #f5d16b;
-}
-
-@property --title-b {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: #15120c;
-}
-
+/* ---------- the title's turning border (every sport): a ring around the title
+   box, half gold and half black, slowly turning round and round. Drawn as a
+   gold-and-black wheel spinning behind the title, with the title's own
+   background laid over it 2px in from the edge, so only a 2px ring of the
+   wheel shows. Only the wheel's rotation animates, which the phone's GPU does
+   without redrawing anything. ---------- */
 .nfl-data-container .pinned-header .nfl-title {
   border-color: transparent;
+  isolation: isolate;
+}
+
+.nfl-data-container .pinned-header .nfl-title::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: -2;
+  width: 160%;
+  aspect-ratio: 1;
+  margin: -80% 0 0 -80%;
+  background: conic-gradient(#f5d16b 0deg, #f5d16b 150deg, #15120c 180deg, #15120c 330deg, #f5d16b 360deg);
+  pointer-events: none;
+  will-change: transform;
+  animation: titleRingTurn 12s linear infinite;
 }
 
 .nfl-data-container .pinned-header .nfl-title::after {
   content: '';
   position: absolute;
-  inset: 0;
-  padding: 2px;
-  border-radius: inherit;
-  background: conic-gradient(
-    from var(--title-spin),
-    var(--title-a) 0deg,
-    var(--title-a) 150deg,
-    var(--title-b) 180deg,
-    var(--title-b) 330deg,
-    var(--title-a) 360deg
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#000 0 0) content-box exclude,
-    linear-gradient(#000 0 0);
+  inset: 2px;
+  z-index: -1;
+  border-radius: 16px;
+  background: inherit;
   pointer-events: none;
-  animation: titleBorderSpin 12s linear infinite;
 }
 
-@keyframes titleBorderSpin {
+@keyframes titleRingTurn {
   to {
-    --title-spin: 360deg;
+    transform: rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nfl-data-container .pinned-header .nfl-title::after {
+  .nfl-data-container .pinned-header .nfl-title::before {
     animation: none;
   }
 }
@@ -4463,13 +4450,86 @@ html[data-theme] .nfl-data-container .kickoff-bar {
   margin-bottom: 2px;
 }
 
-/* an open game whose details run past the bottom of the screen: its panel
-   (BOX SCORE, LINES...) scrolls inside itself, with the phone's own smooth
-   scrolling, instead of the whole list moving (useGameFocus sets --focus-max,
-   the room left on screen; the list itself is held still while it's open) */
-.nfl-data-container .game-slot.open .stat-toggle-container {
-  max-height: var(--focus-max, none) !important;
-  overflow-y: auto !important;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+
+/* ---------- just the open game (useGameFocus): once a game has slid to the top,
+   everything else (already faded out) is taken out of the scrolling list, so
+   the list holds only that game and scrolls it natively - not at all if it
+   fits on the screen, the whole game together if it's taller. ---------- */
+.nfl-data-container .nfl-scroll-panel.focus-only .game-section:not(:has(.focus-target)),
+.nfl-data-container .nfl-scroll-panel.focus-only .game-container:not(:has(.focus-target)),
+.nfl-data-container .nfl-scroll-panel.focus-only .game-slot:not(.focus-target),
+.nfl-data-container .nfl-scroll-panel.focus-only .game-section-label,
+.nfl-data-container .nfl-scroll-panel.focus-only .game-group-time,
+.nfl-data-container .nfl-scroll-panel.focus-only .game-group-subtime,
+.nfl-data-container .nfl-scroll-panel.focus-only .model-panel,
+.nfl-data-container .nfl-scroll-panel.focus-only .settings-panel,
+.nfl-data-container .nfl-scroll-panel.focus-only .last-updated-timer,
+.nfl-data-container .nfl-scroll-panel.focus-only .ufc-event-head,
+.nfl-data-container .nfl-scroll-panel.focus-only .noGames,
+.nfl-data-container .nfl-scroll-panel.focus-only::after {
+  display: none !important;
+}
+
+/* the open game's glowing ring breathes on its own GPU layer */
+.nfl-data-container .game-slot .game-ring,
+.nfl-data-container .game-slot::after {
+  will-change: opacity;
+}
+
+/* ---------- SETTINGS (under MODEL) ---------- */
+.nfl-data-container .matchup-card.game-focus .settings-panel {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nfl-data-container .settings-panel {
+  transition: opacity 0.45s ease;
+}
+
+.nfl-data-container .settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 2px 2px;
+}
+
+.nfl-data-container .settings-row .settings-choices {
+  flex: 0 0 auto;
+  grid-template-columns: repeat(2, 64px);
+  margin: 0;
+}
+
+/* ---------- low graphics quality (SETTINGS): simple, snappy versions ----------
+   No sliding, fading, breathing or turning: things open, close and change
+   colour at once, the title's ring and the background lines hold still, and
+   an open game jumps straight to the top (useGameFocus). The loading
+   animation keeps going, so it's clear something's happening. */
+html[data-quality='low'] .nfl-data-container *:not(.sl-shape),
+html[data-quality='low'] .nfl-data-container *::before,
+html[data-quality='low'] .nfl-data-container *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+html[data-quality='low'] .nfl-data-container .sports-loading .sl-shape {
+  animation: sl-turn 2s linear infinite !important;
+}
+
+html[data-quality='low'] .nfl-data-container .game-ring,
+html[data-quality='low'] .nfl-data-container .game-slot::after,
+html[data-quality='low'] .nfl-data-container .pinned-header .nfl-title::before {
+  will-change: auto;
+}
+
+/* the open game's ring: steady instead of breathing */
+html[data-quality='low'] .nfl-data-container .game-slot.open .game-ring,
+html[data-quality='low'] .nfl-data-container .game-slot.open::after {
+  opacity: 1;
+}
+
+/* the list doesn't fade under the header when scrolled */
+html[data-quality='low'] .nfl-data-container .nfl-scroll-panel.scrolled {
+  -webkit-mask-image: none;
+  mask-image: none;
 }

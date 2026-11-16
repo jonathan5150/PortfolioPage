@@ -15,6 +15,7 @@ import ParlayBar from '../../components/NFLDataComponents/ParlayBar/ParlayBar';
 import { ModelResults } from '../../components/NFLDataComponents/GameList/PredictionRecord';
 import ConfidentBets, { asBetItems, leagueTicketLoader } from '../../components/NFLDataComponents/GameList/DayBets';
 import ModelPanel from '../../components/NFLDataComponents/GameList/ModelPanel';
+import SettingsPanel from '../../components/NFLDataComponents/GameList/SettingsPanel';
 import { graderFor, seasonLoaderFor } from '../../pages/NFLData/NFLDataApi/modelGrading';
 import {
   LEAGUES,
@@ -502,6 +503,7 @@ const TeamSportPage = ({ lg }) => {
                   )}
                 </ModelPanel>
               )}
+              {!switching && <SettingsPanel />}
               {!switching && <LastUpdated />}
             </div>
             <ParlayBar />

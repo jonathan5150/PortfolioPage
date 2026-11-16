@@ -9,10 +9,7 @@
 }
 
 /* one repeating 400 x 200 tile of lines (a stencil filled with the line
-   colour), a tile wider than the screen. The gold lines are kept soft; while a
-   game is open (useGameFocus sets --bg-line-a / --bg-line-b and their
-   -strength) they turn the teams' colours at full strength, fading between
-   the two. */
+   colour), a tile wider than the screen */
 .site-background-layer {
   position: absolute;
   top: 0;
@@ -22,24 +19,42 @@
   mask-size: 400px 200px;
   -webkit-mask-repeat: repeat;
   mask-repeat: repeat;
-  transition:
-    background-color 0.8s ease,
-    opacity 0.8s ease;
-  will-change: transform;
+  transition: opacity 0.8s ease;
+  will-change: transform, opacity;
 }
 
 .site-background-layer.rolls-right {
   left: -400px;
-  opacity: var(--bg-line-a-strength, 0.73);
-  background-color: var(--bg-line-a, #f5d16b);
   animation: siteBgRight 40s linear infinite;
 }
 
 .site-background-layer.rolls-left {
   left: 0;
-  opacity: var(--bg-line-b-strength, 0.59);
-  background-color: var(--bg-line-b, #f5d16b);
   animation: siteBgLeft 46s linear infinite;
+}
+
+/* soft gold normally; the team-coloured copy fades in over it (at full
+   strength) while a game is open, and the gold fades out under it */
+.site-background-layer.gold {
+  background-color: #f5d16b;
+}
+
+.site-background-layer.rolls-right.gold {
+  opacity: calc(0.73 * (1 - var(--bg-team-on, 0)));
+}
+
+.site-background-layer.rolls-left.gold {
+  opacity: calc(0.59 * (1 - var(--bg-team-on, 0)));
+}
+
+.site-background-layer.rolls-right.team {
+  background-color: var(--bg-team-a, #f5d16b);
+  opacity: var(--bg-team-on, 0);
+}
+
+.site-background-layer.rolls-left.team {
+  background-color: var(--bg-team-b, #f5d16b);
+  opacity: calc(0.9 * var(--bg-team-on, 0));
 }
 
 @keyframes siteBgRight {
@@ -58,4 +73,11 @@
   .site-background-layer {
     animation: none;
   }
+}
+
+/* low graphics quality (SETTINGS): the lines hold still and switch colour at once */
+html[data-quality='low'] .site-background-layer {
+  animation: none;
+  transition: none;
+  will-change: auto;
 }

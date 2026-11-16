@@ -16,6 +16,7 @@ import { fmtOdds } from '../../pages/NFLData/NFLDataApi/betting';
 import { loadUfcModel, ufcPicks, gradeUfcPicks, decimalPrice, METHOD_LABEL } from './ufcModel';
 import ConfidentBets from '../../components/NFLDataComponents/GameList/DayBets';
 import ModelPanel from '../../components/NFLDataComponents/GameList/ModelPanel';
+import SettingsPanel from '../../components/NFLDataComponents/GameList/SettingsPanel';
 import ModelSection from '../../components/NFLDataComponents/GameList/ModelSection';
 import { peekOdds, preloadOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
 import useGameFocus, { lineColorFrom } from '../../components/NFLDataComponents/shared/useGameFocus';
@@ -868,6 +869,7 @@ const UfcPage = () => {
                 )}
               </ModelPanel>
             )}
+            {!switching && <SettingsPanel />}
             {!switching && <LastUpdated />}
           </div>
           <ParlayBar />

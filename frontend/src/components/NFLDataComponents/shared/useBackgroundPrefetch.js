@@ -31,6 +31,13 @@ const RECHECK_MS = 60 * 1000;
 
 const doneAt = new Map(); // key -> when it was loaded
 
+// Pages call this while something on screen is animating (a game opening or
+// closing), so background loading doesn't compete with it.
+let holdUntil = 0;
+export const holdBackgroundWork = (ms) => {
+  holdUntil = Math.max(holdUntil, Date.now() + ms);
+};
+
 let lastScroll = 0;
 if (typeof window !== 'undefined') {
   window.addEventListener(
@@ -81,7 +88,13 @@ const useBackgroundPrefetch = (tasks, { paused = false } = {}) => {
       }
       // hold off while scrolling, hidden, paused, or while other requests are
       // going (the user's come first); check again shortly
-      if (pausedRef.current || document.hidden || networkBusy() || Date.now() - lastScroll < SCROLL_QUIET_MS) {
+      if (
+        pausedRef.current ||
+        document.hidden ||
+        networkBusy() ||
+        Date.now() < holdUntil ||
+        Date.now() - lastScroll < SCROLL_QUIET_MS
+      ) {
         timer = setTimeout(next, 400);
         return;
       }

@@ -1,18 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getTeamRingColors } from './teamColors';
+import { holdBackgroundWork } from './useBackgroundPrefetch';
+import { isLowQuality } from './graphicsQuality';
 
 // What happens around an open game on every sports page (NFL, NBA, MLB, UFC).
 // The fading of everything else is CSS (.game-focus, see NFLData.scss); this
 // does the rest:
 //  - the site's background lines take the open game's two colours (away on one
 //    set of lines, home on the other), fading back to gold when it closes
-//  - a tap anywhere outside the open game closes it (its own team cells
-//    already toggle it; the parlay slip and DONE bar don't close it)
+//  - a tap below the open game closes it (its own team cells toggle it too)
 //  - the game slides up to the top of the scrolling box (panelRef, just under
 //    the pinned header), and closing it slides the box back to where it was
-//  - while it's open the box only scrolls within the game, so a box score or
-//    other panel running past the bottom of the screen can still be scrolled
-//    to, but nothing else can
+//  - once it's at the top, everything else (already faded out) is taken out
+//    of the list (.focus-only), so the list holds just that game: it doesn't
+//    scroll at all if the game fits on the screen, and scrolls the whole game
+//    natively, stopping at its real ends, if it's taller. Nothing is held in
+//    place by code, so there's no bounce. Taking things out and putting them
+//    back keeps the game exactly where it is on screen, so nothing jumps.
 // Returns focusSpace: true while the box needs room at its end (so even the
 // last game can reach the top), kept until the slide back has finished.
 
@@ -47,41 +51,28 @@ const toHsl = (r, g, b) => {
 export const teamLineColor = (team) => lineColorFrom(getTeamRingColors(team)[0]);
 
 const SLIDE_MS = 700;
-const LINE_VARS = ['--bg-line-a', '--bg-line-b', '--bg-line-a-strength', '--bg-line-b-strength'];
 const GAP = 8; // space between the top of the box and the open game
 
 const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
   const isOpen = Boolean(openKey);
 
   // ---- the background lines ----
-  // the teams' colours at full strength while a game is open (the gold lines
-  // are kept softer, see SiteBackground.css)
+  // Two sets of lines are stacked: gold and team-coloured. Opening a game
+  // fades the team set in over the gold (only its opacity changes, which the
+  // phone's GPU does without redrawing anything); closing fades it back out.
+  // Its colours stay put while it fades out, so it never flashes gold.
   useEffect(() => {
     const root = document.documentElement.style;
     if (isOpen && lineA && lineB) {
-      root.setProperty('--bg-line-a', lineA);
-      root.setProperty('--bg-line-b', lineB);
-      root.setProperty('--bg-line-a-strength', '1');
-      root.setProperty('--bg-line-b-strength', '0.9');
+      root.setProperty('--bg-team-a', lineA);
+      root.setProperty('--bg-team-b', lineB);
+      root.setProperty('--bg-team-on', '1');
     } else {
-      LINE_VARS.forEach((v) => root.removeProperty(v));
+      root.setProperty('--bg-team-on', '0');
     }
   }, [isOpen, lineA, lineB]);
   // leaving the page puts them back to gold
-  useEffect(() => () => LINE_VARS.forEach((v) => document.documentElement.style.removeProperty(v)), []);
-
-  // ---- the top fade ----
-  // Once the list has been scrolled, what reaches the top of the scrolling box
-  // fades out just under the header (.scrolled, see NFLData.scss); at the very
-  // top nothing is faded.
-  useEffect(() => {
-    const box = panelRef.current;
-    if (!box) return undefined;
-    const mark = () => box.classList.toggle('scrolled', box.scrollTop > 2);
-    mark();
-    box.addEventListener('scroll', mark, { passive: true });
-    return () => box.removeEventListener('scroll', mark);
-  }, [panelRef]);
+  useEffect(() => () => document.documentElement.style.setProperty('--bg-team-on', '0'), []);
 
   // ---- tap below the game to close ----
   // Only the empty background below the open game closes it (its own score
@@ -102,67 +93,87 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     return () => document.removeEventListener('click', closeOnTapBelow, true);
   }, [isOpen]);
 
-  // ---- slide up, scroll only within the game, slide back ----
-  const returnTo = useRef(null);
-  const [focusSpace, setFocusSpace] = useState(false);
+  // ---- the top fade ----
+  // Once the list has been scrolled, what reaches the top of the scrolling box
+  // fades out just under the header (.scrolled, see NFLData.scss); at the very
+  // top nothing is faded.
   useEffect(() => {
     const box = panelRef.current;
     if (!box) return undefined;
+    const mark = () => box.classList.toggle('scrolled', box.scrollTop > 2);
+    mark();
+    box.addEventListener('scroll', mark, { passive: true });
+    return () => box.removeEventListener('scroll', mark);
+  }, [panelRef]);
+
+  // ---- slide up, just the game, slide back ----
+  const returnTo = useRef(null);
+  const target = useRef(null); // the open game's slot (marked .focus-target)
+  const [focusSpace, setFocusSpace] = useState(false);
+  // layout effect: the list is changed before the screen is drawn, so taking
+  // things out or putting them back never shows a frame out of place
+  useLayoutEffect(() => {
+    const box = panelRef.current;
+    if (!box) return undefined;
+    const behavior = isLowQuality() ? 'auto' : 'smooth';
+    // keeps the game's spot on screen while things are taken out / put back
+    const keepingPlace = (slot, change) => {
+      const before = slot.getBoundingClientRect().top;
+      change();
+      box.scrollTop += slot.getBoundingClientRect().top - before;
+    };
+
     if (isOpen) {
+      holdBackgroundWork(SLIDE_MS + 500);
       if (returnTo.current === null) returnTo.current = box.scrollTop;
       setFocusSpace(true);
-      // the list doesn't scroll by hand while a game is open: not during the
-      // slide (a scroll mid-slide fights it) and not after. A game whose details
-      // run past the bottom of the screen scrolls inside its own panel instead
-      // (BOX SCORE, LINES...), with the phone's normal scrolling, so there's
-      // nothing to fight it and no bounce (--focus-max, see NFLData.scss).
+      // no scrolling by hand during the slide (a scroll mid-slide fights it)
       box.style.overflowY = 'hidden';
-      const top = () => {
-        const slot = box.querySelector('.game-slot.open');
-        return slot ? box.scrollTop + slot.getBoundingClientRect().top - box.getBoundingClientRect().top - GAP : null;
-      };
-      // the panel's room: from its top down to the bottom of the screen
-      const fit = () => {
-        const slot = box.querySelector('.game-slot.open');
-        const panel = slot?.querySelector('.stat-toggle-container');
-        if (!panel) return;
-        const room = box.getBoundingClientRect().bottom - panel.getBoundingClientRect().top - GAP;
-        slot.style.setProperty('--focus-max', `${Math.max(120, Math.floor(room))}px`);
-      };
-      let watch = null;
-      // after the room below is in place: slide up, then size the panel
       const slide = setTimeout(() => {
-        const t = top();
-        if (t !== null) box.scrollTo({ top: t, behavior: 'smooth' });
+        const slot = box.querySelector('.game-slot.open');
+        if (!slot) return;
+        const top = box.scrollTop + slot.getBoundingClientRect().top - box.getBoundingClientRect().top - GAP;
+        box.scrollTo({ top, behavior });
       }, 30);
-      const hold = setTimeout(() => {
-        // the slide is over: make sure the game ended up at the top
-        const t = top();
-        if (t !== null && Math.abs(box.scrollTop - t) > 1) box.scrollTop = t;
-        fit();
-        if (window.ResizeObserver) {
-          watch = new ResizeObserver(fit);
-          watch.observe(box);
-        }
-      }, SLIDE_MS);
+      // at the top: just the game stays in the list, which scrolls natively again
+      const settle = setTimeout(
+        () => {
+          const slot = box.querySelector('.game-slot.open');
+          if (!slot) return;
+          slot.classList.add('focus-target');
+          target.current = slot;
+          keepingPlace(slot, () => box.classList.add('focus-only'));
+          box.style.overflowY = '';
+        },
+        behavior === 'smooth' ? SLIDE_MS : 60,
+      );
       return () => {
         clearTimeout(slide);
-        clearTimeout(hold);
-        if (watch) watch.disconnect();
-        box.querySelectorAll('.game-slot').forEach((el) => el.style.removeProperty('--focus-max'));
-        box.style.overflowY = '';
+        clearTimeout(settle);
       };
     }
+
+    // closing: put everything back (the game stays put), then slide back
     if (returnTo.current === null) return undefined;
-    // sliding back: no scrolling by hand until it's back where it was
+    holdBackgroundWork(SLIDE_MS + 500);
+    const slot = target.current;
+    if (slot && box.classList.contains('focus-only')) {
+      keepingPlace(slot, () => box.classList.remove('focus-only'));
+    }
+    box.classList.remove('focus-only');
+    if (slot) slot.classList.remove('focus-target');
+    target.current = null;
     const back = returnTo.current;
-    box.style.overflowY = 'hidden';
-    box.scrollTo({ top: back, behavior: 'smooth' });
     returnTo.current = null;
-    const unlock = setTimeout(() => {
-      box.scrollTop = back;
-      box.style.overflowY = '';
-    }, SLIDE_MS);
+    box.style.overflowY = 'hidden';
+    box.scrollTo({ top: back, behavior });
+    const unlock = setTimeout(
+      () => {
+        box.scrollTop = back;
+        box.style.overflowY = '';
+      },
+      behavior === 'smooth' ? SLIDE_MS : 60,
+    );
     const t = setTimeout(() => setFocusSpace(false), SLIDE_MS + 100);
     return () => {
       clearTimeout(unlock);

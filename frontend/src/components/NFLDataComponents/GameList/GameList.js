@@ -9,6 +9,7 @@ import ParlayBar from '../ParlayBar/ParlayBar';
 import ModelResults from './PredictionRecord';
 import ConfidentBets, { asBetItems, leagueTicketLoader } from './DayBets';
 import ModelPanel from './ModelPanel';
+import SettingsPanel from './SettingsPanel';
 import SlideOpen from '../shared/SlideOpen';
 import LastUpdated from '../shared/LastUpdated';
 import useGameFocus, { teamLineColor } from '../shared/useGameFocus';
@@ -360,6 +361,7 @@ const GameList = ({
               )}
             </ModelPanel>
           )}
+          {!loading && <SettingsPanel />}
           {!loading && <LastUpdated />}
         </div>
         {hideMode ? (
