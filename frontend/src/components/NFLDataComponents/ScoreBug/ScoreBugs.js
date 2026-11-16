@@ -91,9 +91,17 @@ const KickoffBar = ({ game, label, altLabel }) => {
       ) : (
         <span className="kickoff-when">{label}</span>
       )}
-      <span className="kickoff-where" title={c?.stadium || game.venue}>
-        {c?.stadium || game.venue || '—'}
-      </span>
+      {/* the stadium takes turns with the TV network showing the game */}
+      {game.broadcast ? (
+        <span className="kickoff-where kickoff-swap" title={`${c?.stadium || game.venue || ''} · ${game.broadcast}`}>
+          <span className="kickoff-swap-a">{c?.stadium || game.venue || '—'}</span>
+          <span className="kickoff-swap-b">📺 {game.broadcast}</span>
+        </span>
+      ) : (
+        <span className="kickoff-where" title={c?.stadium || game.venue}>
+          {c?.stadium || game.venue || '—'}
+        </span>
+      )}
       <span className={`kickoff-sky ${sky ? '' : 'empty'}`}>{sky}</span>
       <span className={`kickoff-wind ${wind ? '' : 'empty'}`}>{wind}</span>
     </div>

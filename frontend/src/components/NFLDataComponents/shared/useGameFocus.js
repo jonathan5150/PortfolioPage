@@ -17,6 +17,9 @@ import { isLowQuality } from './graphicsQuality';
 //    natively, stopping at its real ends, if it's taller. Nothing is held in
 //    place by code, so there's no bounce. Taking things out and putting them
 //    back keeps the game exactly where it is on screen, so nothing jumps.
+//  - only then do its details unfold (.focus-details), and they fold away
+//    before everything else comes back: unfolding while the whole list was
+//    there made a weak phone lay out and redraw all of it every frame
 // Returns focusSpace: true while the box needs room at its end (so even the
 // last game can reach the top), kept until the slide back has finished.
 
@@ -53,8 +56,14 @@ export const teamLineColor = (team) => lineColorFrom(getTeamRingColors(team)[0])
 const SLIDE_MS = 700;
 const FADE_MS = 480; // everything else fades out in 0.45s (NFLData.scss)
 const MASK_MS = 260; // the top fade slides away in 0.25s
-const NARROW_MS = 300; // an open game spreads out / narrows back in 0.3s
+const FOLD_MS = 380; // an open game's details fold away in about 0.35s
 const GAP = 8; // space between the top of the box and the open game
+
+// The slide back to where the list was when a game closes: a little slower
+// than the browser's own smooth scroll, so it can be watched gliding home.
+// Longer for longer distances, within limits.
+const slideBackMs = (distance) => Math.min(1100, 650 + Math.abs(distance) * 0.4);
+const easeInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2);
 
 const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
   const isOpen = Boolean(openKey);
@@ -145,6 +154,24 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     };
     const timers = [];
     const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+    let frame = 0;
+    // glides the box to top, then runs done
+    const slideTo = (top, done) => {
+      const from = box.scrollTop;
+      const distance = top - from;
+      const ms = slideBackMs(distance);
+      const startedAt = performance.now();
+      const step = (now) => {
+        const p = Math.min(1, (now - startedAt) / ms);
+        box.scrollTop = from + distance * easeInOut(p);
+        if (p < 1) frame = requestAnimationFrame(step);
+        else {
+          frame = 0;
+          done();
+        }
+      };
+      frame = requestAnimationFrame(step);
+    };
     // runs fn once the box has really stopped scrolling ('scrollend'), or after
     // fallbackMs at the latest (no scroll at all, or an older browser). Acting
     // on the list while a slide is still running on a slow phone made the game
@@ -167,6 +194,7 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     };
     const cleanup = () => {
       timers.forEach(clearTimeout);
+      cancelAnimationFrame(frame);
       stopWaiting();
       unlock();
     };
@@ -183,9 +211,9 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
       later(() => box.classList.add('mask-off'), low ? 0 : MASK_MS);
       const startedAt = performance.now();
       // At the top: just the game stays in the list, which then scrolls it
-      // natively, and it spreads out to its full width (cheap now, with
-      // nothing else in the list to lay out again). Never before the rest has
-      // finished fading out, so nothing vanishes while it can still be seen.
+      // natively, and its details unfold (cheap now, with nothing else in the
+      // list to lay out again). Never before the rest has finished fading
+      // out, so nothing vanishes while it can still be seen.
       const settle = () => {
         const wait = low ? 0 : FADE_MS - (performance.now() - startedAt);
         if (wait > 0) {
@@ -197,7 +225,7 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
         slot.setAttribute('data-focus-target', '');
         target.current = slot;
         keepingPlace(slot, () => box.classList.add('focus-only'));
-        box.classList.add('focus-wide');
+        box.classList.add('focus-details');
         unlock();
       };
       later(() => {
@@ -217,18 +245,18 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
       return cleanup;
     }
 
-    // Closing. The game first narrows back to the list's width while it's still
-    // the only thing in the list (cheap), then everything else is put back
+    // Closing. The game's details first fold away while it's still the only
+    // thing in the list (cheap), then everything else is put back
     // faded out (.focus-fading) and let go, so it fades in together instead of
     // popping in at full strength (something that wasn't on the page has
     // nothing to fade from); the game keeps its spot on screen meanwhile. Then
-    // the box slides back to where it was, and the top fade slides back in.
+    // the box glides back to where it was, and the top fade slides back in.
     if (returnTo.current === null) return undefined;
-    holdBackgroundWork(NARROW_MS + SLIDE_MS + 900);
+    holdBackgroundWork(FOLD_MS + 1100 + 900);
     const back = returnTo.current;
     lock();
-    const wasFocused = Boolean(target.current) && box.classList.contains('focus-only');
-    box.classList.remove('focus-wide');
+    const wasFocused = Boolean(target.current) && box.classList.contains('focus-details');
+    box.classList.remove('focus-details');
     const restore = () => {
       const slot = target.current;
       if (slot && box.classList.contains('focus-only')) {
@@ -253,10 +281,14 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
         later(done, low ? 0 : FADE_MS);
         return;
       }
-      afterScroll(done, low ? 60 : SLIDE_MS + 500);
-      box.scrollTo({ top: back, behavior });
+      if (low) {
+        box.scrollTop = back;
+        done();
+        return;
+      }
+      slideTo(back, done);
     };
-    if (wasFocused && !low) later(restore, NARROW_MS);
+    if (wasFocused && !low) later(restore, FOLD_MS);
     else restore();
     return cleanup;
   }, [isOpen, openKey, panelRef]);

@@ -29,6 +29,7 @@ import { Holdable } from '../shared/ParlayContext';
 import TeamToggle from '../shared/TeamToggle';
 import BoxScore from './BoxScore';
 import useGameSummary from '../GameCard/useGameSummary';
+import TeamStatsCompare from '../shared/TeamStatsCompare';
 import { touchdownScorers } from '../../../pages/NFLData/NFLDataApi/espnParsers';
 import {
   hasStarted,
@@ -651,11 +652,14 @@ const PlayersTab = ({ game, deep, playerPicks, isFinal, odds, rankings, oddsProb
 
 // ---------- panel ----------
 
+// An upcoming game has no box score yet: its first tab is STATS instead, the
+// two teams' season stats side by side (TeamStatsCompare).
 const TABS = [
   { key: 'boxscore', label: 'BOX SCORE' },
   { key: 'lines', label: 'LINES' },
   { key: 'players', label: 'TD ODDS' },
 ];
+const UPCOMING_TABS = [{ key: 'stats', label: 'STATS' }, ...TABS.slice(1)];
 
 // Lines refresh this often while the game is open and hasn't started.
 const LINES_REFRESH_MS = 5 * 60 * 1000;
@@ -796,7 +800,7 @@ const Betting = ({ game, rankings, isOpen = true }) => {
   return (
     <div className="betting-panel" ref={ref}>
       <div className="bet-tabs" role="tablist">
-        {TABS.map((t) => (
+        {(game.status.state === 'pre' ? UPCOMING_TABS : TABS).map((t) => (
           <button
             key={t.key}
             type="button"
@@ -811,6 +815,7 @@ const Betting = ({ game, rankings, isOpen = true }) => {
       </div>
 
       {tab === 'boxscore' && <BoxScore key={openCount} game={game} summaryState={summaryState} withToggle />}
+      {tab === 'stats' && <TeamStatsCompare lg="nfl" game={game} />}
       {tab === 'lines' && <LinesTab game={game} lines={lines} linePicks={linePicks} grades={grades} />}
       {tab === 'players' && (
         <TdScorersContext.Provider value={tdScorers}>

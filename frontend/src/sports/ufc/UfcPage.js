@@ -285,7 +285,9 @@ const FightCard = ({ eventId, fight, details, sectionsReady, isOpen, onToggle, h
       setHasOpened(true);
       return undefined;
     }
-    const t = setTimeout(() => setHasOpened(false), 500);
+    // the closed game's panel is let go only after the list has glided back
+    // (letting it go mid-glide made the glide stutter on a slow phone)
+    const t = setTimeout(() => setHasOpened(false), 2000);
     return () => clearTimeout(t);
   }, [isOpen]);
   const innerRef = useRef(null);

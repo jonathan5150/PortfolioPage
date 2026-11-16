@@ -73,7 +73,9 @@ const GameCard = memo(function GameCard({
       setHasOpened(true);
       return undefined;
     }
-    const timer = setTimeout(() => setHasOpened(false), 500);
+    // the closed game's panel is let go only after the list has glided back
+    // (letting it go mid-glide made the glide stutter on a slow phone)
+    const timer = setTimeout(() => setHasOpened(false), 2000);
     return () => clearTimeout(timer);
   }, [isExpanded]);
 

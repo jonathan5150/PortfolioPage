@@ -22,6 +22,7 @@ import {
   getTeamResultHistory,
 } from '../../../pages/NFLData/NFLDataApi/bettingService';
 import { loadTeamModel } from '../../../pages/NFLData/NFLDataApi/teamModels';
+import { getTeamStatsTable } from '../shared/TeamStatsCompare';
 
 // What each game's BOX SCORE and LINES tabs load, for loading in the background
 // (never the touchdown scorer odds: those wait until PLAYERS / TD ODDS is
@@ -139,6 +140,10 @@ const GameList = ({
   useBackgroundPrefetch(
     [
       ...byPriority(shownGames.filter((g) => g.status?.state !== 'post')).flatMap(nflLinesTasks),
+      // every team's season stats (one download), for upcoming games' STATS
+      ...(shownGames.some((g) => g.status?.state === 'pre')
+        ? [{ key: 'nfl:teamStats', run: () => getTeamStatsTable('nfl') }]
+        : []),
       ...shownGames.filter((g) => g.status?.state === 'post').map(nflBoxTask),
       ...shownGames.filter((g) => g.status?.state === 'post').flatMap(nflLinesTasks),
       { key: 'nfl:teamModel', run: () => loadTeamModel('nfl') },

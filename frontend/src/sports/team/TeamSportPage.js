@@ -35,6 +35,7 @@ import { loadTeamModel } from '../../pages/NFLData/NFLDataApi/teamModels';
 import { preloadOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
 import useGameFocus, { teamLineColor } from '../../components/NFLDataComponents/shared/useGameFocus';
 import TeamGameCard from './TeamGameCard';
+import { getTeamStatsTable } from '../../components/NFLDataComponents/shared/TeamStatsCompare';
 import '../../pages/NFLData/NFLData.scss';
 import './TeamSport.scss';
 import '../SportTitles.scss';
@@ -63,6 +64,10 @@ const leagueBackgroundTasks = (lg, games) => {
   const finished = games.filter((g) => g.status?.state === 'post');
   return [
     ...byPriority(games.filter((g) => g.status?.state !== 'post')).flatMap(leagueLinesTasks(lg)),
+    // every team's season stats (one download), for upcoming games' STATS
+    ...(games.some((g) => g.status?.state === 'pre')
+      ? [{ key: `${lg}:teamStats`, run: () => getTeamStatsTable(lg) }]
+      : []),
     ...finished.map(leagueBoxTask(lg)),
     ...finished.flatMap(leagueLinesTasks(lg)),
     ...(lg === 'nba' ? [{ key: 'nba:teamModel', run: () => loadTeamModel('nba') }] : []),

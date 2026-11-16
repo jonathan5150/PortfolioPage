@@ -6,6 +6,7 @@ import { getTeamColor, getTeamRingColors, washOut } from '../../components/NFLDa
 import { getLeagueOdds } from './leagueApi';
 import { peekOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
 import { BoxScorePanel, LinesPanel, PlayersPanel, useGameLines } from './TeamPanels';
+import TeamStatsCompare from '../../components/NFLDataComponents/shared/TeamStatsCompare';
 
 const accent = (team) => washOut(getTeamColor(team) || 'rgba(120,120,120,0.6)', 0.15).replace(/[\d.]+\)$/, '1)');
 const startTime = (game) =>
@@ -283,6 +284,8 @@ const TABS = [
   { key: 'lines', label: 'LINES' },
   { key: 'players', label: 'PLAYERS' },
 ];
+// an upcoming game has no box score yet: STATS (both teams' season stats) instead
+const UPCOMING_TABS = [{ key: 'stats', label: 'STATS' }, ...TABS.slice(1)];
 
 const TeamGameCard = memo(({ lg, game, isOpen, onUserToggle, hideMode, hidden, onToggleHidden }) => {
   const [hasOpened, setHasOpened] = useState(false);
@@ -293,7 +296,9 @@ const TeamGameCard = memo(({ lg, game, isOpen, onUserToggle, hideMode, hidden, o
       setTab(game.status.state === 'pre' ? 'lines' : 'boxscore');
       return undefined;
     }
-    const timer = setTimeout(() => setHasOpened(false), 500);
+    // the closed game's panel is let go only after the list has glided back
+    // (letting it go mid-glide made the glide stutter on a slow phone)
+    const timer = setTimeout(() => setHasOpened(false), 2000);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -371,7 +376,7 @@ const TeamGameCard = memo(({ lg, game, isOpen, onUserToggle, hideMode, hidden, o
                 {hasOpened && (
                   <div className="betting-panel">
                     <div className="bet-tabs" role="tablist">
-                      {TABS.map((t) => (
+                      {(game.status.state === 'pre' ? UPCOMING_TABS : TABS).map((t) => (
                         <button
                           key={t.key}
                           type="button"
@@ -385,6 +390,7 @@ const TeamGameCard = memo(({ lg, game, isOpen, onUserToggle, hideMode, hidden, o
                       ))}
                     </div>
                     {tab === 'boxscore' && <BoxScorePanel lg={lg} game={game} />}
+                    {tab === 'stats' && <TeamStatsCompare lg={lg} game={game} />}
                     {tab === 'lines' && <LinesPanel lg={lg} game={game} lines={lines} />}
                     {tab === 'players' && <PlayersPanel lg={lg} game={game} />}
                   </div>

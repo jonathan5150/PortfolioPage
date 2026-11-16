@@ -180,7 +180,10 @@ const TeamCell = ({
         style={{
           ...getTeamBackgroundStyle(getTeamColor(team)),
           borderRadius: radius,
-          transition: 'border-radius 0.3s ease, opacity 0.5s ease, filter 0.5s ease',
+          // only opacity and filter ease, which the phone's GPU does on its own;
+          // the corners switch at once (easing them made the browser redraw
+          // the cell every frame, and run its fade on the main thread too)
+          transition: 'opacity 0.5s ease, filter 0.5s ease',
         }}
       />
 
@@ -191,7 +194,7 @@ const TeamCell = ({
           borderRadius: radius,
           // the border eases between its closed and open colours with the rest
           // of the cell, rather than switching at once
-          transition: 'border-radius 0.3s ease, opacity 0.5s ease, border-color 0.5s ease',
+          transition: 'opacity 0.5s ease, border-color 0.5s ease',
           overflow: 'hidden',
         }}
       >
