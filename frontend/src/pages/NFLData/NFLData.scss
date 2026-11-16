@@ -7,7 +7,11 @@
   align-items: center;
   flex-direction: column;
   width: 100%;
+  /* exactly the part of the screen that's showing (App.js keeps --vh up to
+     date; dvh below does the same in browsers that have it), so the bottom of
+     the page is never hidden behind the browser's own bars */
   height: calc(var(--vh, 1vh) * 100);
+  height: 100dvh;
   text-align: center;
   overflow-y: auto;
   overflow-x: hidden;

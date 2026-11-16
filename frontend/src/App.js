@@ -54,6 +54,17 @@ const SportsFallback = () => (
   </div>
 );
 
+// The height of the part of the screen that's showing (--vh, one hundredth of
+// it), kept up to date as a phone's address bar comes and goes, for every page.
+// The sports pages fit themselves to it so their bottom is never hidden behind
+// the browser's bars (older browsers without the dvh unit use this).
+const setVisibleHeight = () =>
+  document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+if (typeof window !== 'undefined') {
+  setVisibleHeight();
+  window.addEventListener('resize', setVisibleHeight);
+}
+
 function App() {
   return (
     <Router>
