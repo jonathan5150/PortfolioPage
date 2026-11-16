@@ -1,84 +1,58 @@
-/* Four-sport loading animation (see LoadingField.js). */
+/* Loading animation (see LoadingField.js): one gold-and-black icon that turns
+   from a football into a baseball, a basketball and an octagon, and round again. */
 
 .sports-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   margin: auto;
   padding: 24px 0;
   font-family: 'DM Sans', sans-serif;
 }
 
-.sports-loading .sl-stage {
+/* the shapes sit on top of each other; a soft gold halo glows behind them */
+.sports-loading .sl-morph {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 14px;
-  width: 220px;
-  height: 92px;
-  padding: 0 14px 12px;
-  box-sizing: border-box;
-  border: 1.5px solid rgba(245, 209, 107, 0.55);
-  border-radius: 12px;
-  background:
-    radial-gradient(ellipse at 50% 120%, rgba(245, 209, 107, 0.16), transparent 65%),
-    rgba(30, 30, 30, 0.9);
-  box-shadow: 0 0 18px rgba(245, 209, 107, 0.12), inset 0 0 14px rgba(0, 0, 0, 0.5);
-  overflow: hidden;
+  width: 74px;
+  height: 74px;
 }
 
-.sports-loading .sl-floor {
+.sports-loading .sl-morph::before {
+  content: '';
   position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(245, 209, 107, 0.45), transparent);
+  inset: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 209, 107, 0.22), transparent 68%);
+  animation: sl-halo 1.1s ease-in-out infinite alternate;
 }
 
-.sports-loading .sl-slot {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 36px;
+/* the leaving shape spins on and shrinks away while the next spins and grows in */
+.sports-loading .sl-shape {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: rotate(-120deg) scale(0.3);
+  transition:
+    opacity 0.4s ease,
+    transform 0.55s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
 
-.sports-loading .sl-hop {
-  width: 34px;
-  height: 34px;
-  animation: sl-hop 1.6s cubic-bezier(0.35, 0, 0.4, 1) infinite;
-  animation-delay: calc(var(--i) * 0.2s);
-  transform-origin: 50% 100%;
+.sports-loading .sl-shape.active {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
 }
 
-.sports-loading .sl-ball {
+.sports-loading .sl-shape:not(.active) {
+  transform: rotate(120deg) scale(0.3);
+}
+
+.sports-loading .sl-icon {
   display: block;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.55)) saturate(0.6) brightness(0.75);
-  animation: sl-glow 1.6s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.2s);
-}
-
-.sports-loading .sl-nfl .sl-ball,
-.sports-loading .sl-nba .sl-ball {
-  animation-name: sl-glow, sl-spin;
-  animation-duration: 1.6s, 1.6s;
-  animation-timing-function: ease-in-out, ease-in-out;
-}
-
-.sports-loading .sl-shadow {
-  width: 26px;
-  height: 5px;
-  margin-top: 2px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.55);
-  animation: sl-shadow 1.6s cubic-bezier(0.35, 0, 0.4, 1) infinite;
-  animation-delay: calc(var(--i) * 0.2s);
+  filter: drop-shadow(0 0 6px rgba(245, 209, 107, 0.45));
 }
 
 .sports-loading .sl-caption {
@@ -87,65 +61,26 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(245, 209, 107, 0.75);
+  color: rgba(245, 209, 107, 0.8);
 }
 
-@keyframes sl-hop {
-  0%,
-  55%,
-  100% {
-    transform: translateY(0) scale(1, 1);
+@keyframes sl-halo {
+  from {
+    transform: scale(0.85);
+    opacity: 0.6;
   }
-  8% {
-    transform: translateY(0) scale(1.12, 0.86);
-  }
-  25% {
-    transform: translateY(-34px) scale(0.95, 1.06);
-  }
-  45% {
-    transform: translateY(0) scale(1.1, 0.88);
-  }
-}
-
-@keyframes sl-shadow {
-  0%,
-  55%,
-  100% {
-    transform: scale(1);
-    opacity: 0.9;
-  }
-  25% {
-    transform: scale(0.45);
-    opacity: 0.35;
-  }
-}
-
-@keyframes sl-glow {
-  0%,
-  55%,
-  100% {
-    filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.55)) saturate(0.6) brightness(0.75);
-  }
-  25% {
-    filter: drop-shadow(0 0 6px rgba(245, 209, 107, 0.7)) saturate(1.1) brightness(1.1);
-  }
-}
-
-@keyframes sl-spin {
-  0%,
-  10% {
-    transform: rotate(0deg);
-  }
-  45%,
-  100% {
-    transform: rotate(360deg);
+  to {
+    transform: scale(1.1);
+    opacity: 1;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sports-loading .sl-hop,
-  .sports-loading .sl-ball,
-  .sports-loading .sl-shadow {
+  .sports-loading .sl-shape {
+    transition: opacity 0.4s ease;
+    transform: none;
+  }
+  .sports-loading .sl-morph::before {
     animation: none;
   }
 }

@@ -80,7 +80,8 @@ const WATERMARK_CLOSED_SIZE = {
 // per-team tweaks on top (size multiplier, or a style such as a brighter filter).
 const LEAGUE_LOGOS = {
   nba: {
-    open: 0.94,
+    // an opened game's logos shrink well down, out of the way of its details
+    open: 0.72,
     closed: 0.77,
     teams: {
       NO: { size: 1.5 },
@@ -176,6 +177,7 @@ const TeamCell = ({
         <div className="team-text">
           <div className="team-abbr-block" title={team?.displayName}>
             <div className="abbreviation">{team?.abbreviation}</div>
+            {team?.name && <div className="team-full-name">{team.name}</div>}
             <div className="team-record">{competitor?.record || '0-0'}</div>
           </div>
 

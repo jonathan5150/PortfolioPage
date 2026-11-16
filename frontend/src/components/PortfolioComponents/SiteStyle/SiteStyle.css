@@ -160,8 +160,8 @@ html[data-theme-vars] .Link:hover {
 /* ---------- Poster colours ---------- */
 
 html[data-theme='poster'] {
-  /* plain dark page; the BG picker (BackgroundPicker) swaps these on <html> */
-  --pv-page: #111111;
+  /* see-through pages: the moving background (SiteBackground) shows behind them */
+  --pv-page: transparent;
   --pv-page-img: none;
   --pv-nav: rgba(20, 20, 20, 0.94);
   --pv-line: #e63946;

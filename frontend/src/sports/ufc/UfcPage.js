@@ -14,7 +14,9 @@ import usePersistentState from '../../components/NFLDataComponents/shared/usePer
 import { betReturn } from '../../pages/NFLData/NFLDataApi/picks';
 import { fmtOdds } from '../../pages/NFLData/NFLDataApi/betting';
 import { loadUfcModel, ufcPicks, gradeUfcPicks, decimalPrice, METHOD_LABEL } from './ufcModel';
-import DayBets from '../../components/NFLDataComponents/GameList/DayBets';
+import ConfidentBets from '../../components/NFLDataComponents/GameList/DayBets';
+import ModelPanel from '../../components/NFLDataComponents/GameList/ModelPanel';
+import ModelSection from '../../components/NFLDataComponents/GameList/ModelSection';
 import { runWithConcurrency } from '../../pages/NFLData/NFLDataApi/http';
 import {
   etDay,
@@ -144,7 +146,9 @@ const RoundsPick = ({ r, grade }) => {
         {!r.posted && 'No rounds line is posted yet, so this is against the usual line. '}
         Right 60% of the time on the last year of fights (64% when the model was 60%+ sure).
       </span>
-      {price !== null && price !== undefined && Math.abs(price) >= 100 && <span className="pick-odds">{fmtOdds(price)}</span>}
+      {price !== null && price !== undefined && Math.abs(price) >= 100 && (
+        <span className="pick-odds">{fmtOdds(price)}</span>
+      )}
       <ResultCorner grade={grade} />
     </div>
   );
@@ -390,10 +394,7 @@ const signed = (n) => `${n > 0.004 ? '+' : n < -0.004 ? '-' : ''}${money(n)}`;
 const tone = (n) => (n > 0.004 ? 'up' : n < -0.004 ? 'down' : 'even');
 
 const tally = (rows, key) =>
-  rows.reduce(
-    (a, g) => ({ W: a.W + (g[key] === 'W' ? 1 : 0), L: a.L + (g[key] === 'L' ? 1 : 0) }),
-    { W: 0, L: 0 },
-  );
+  rows.reduce((a, g) => ({ W: a.W + (g[key] === 'W' ? 1 : 0), L: a.L + (g[key] === 'L' ? 1 : 0) }), { W: 0, L: 0 });
 
 const RecordRow = ({ label, rec, profit }) => (
   <div className="season-row total">
@@ -401,13 +402,16 @@ const RecordRow = ({ label, rec, profit }) => (
     <span className="prediction-record-wl">
       {rec.W}-{rec.L}
     </span>
-    <span className="prediction-record-pct">{rec.W + rec.L ? `${Math.round((rec.W / (rec.W + rec.L)) * 100)}%` : '—'}</span>
+    <span className="prediction-record-pct">
+      {rec.W + rec.L ? `${Math.round((rec.W / (rec.W + rec.L)) * 100)}%` : '—'}
+    </span>
     {profit === undefined ? <span /> : <span className={`bet-return ${tone(profit)}`}>{signed(profit)}</span>}
   </div>
 );
 
-const EventModelResults = ({ event, details }) => {
-  const [open, setOpen] = useState(false);
+// the model results section of the MODEL dropdown, at its unit size (mounted
+// only while the dropdown is open, so nothing is graded until then)
+const EventModelResults = ({ event, details, stake }) => {
   const finished = useMemo(() => event.fights.filter((f) => f.status.state === 'post'), [event]);
   const graded = useAsyncData(
     async () => {
@@ -423,50 +427,38 @@ const EventModelResults = ({ event, details }) => {
       return results.map((r) => (r.ok ? r.value : null)).filter(Boolean);
     },
     [event.id, finished.length, Boolean(details)],
-    { enabled: open && finished.length > 0 },
+    { enabled: finished.length > 0 },
   );
   const rows = graded.data || [];
   const winners = tally(rows, 'winner');
   const bets = rows.filter((g) => g.bet);
   const betRec = tally(bets, 'winner');
-  const profitOf = (list) => list.reduce((a, g) => a + (g.winner === 'P' ? 0 : betReturn(10, g.price, g.winner) - 10), 0);
+  const profitOf = (list) =>
+    list.reduce((a, g) => a + (g.winner === 'P' ? 0 : betReturn(stake, g.price, g.winner) - stake), 0);
   return (
-    <div className="gold-box prediction-record-outer">
-      <div className="prediction-record">
-        <button
-          type="button"
-          className={`bet-results-toggle gold-box-text ${open ? 'open' : ''}`}
-          onClick={() => setOpen((o) => !o)}
-        >
-          <span className="game-section-name">
-            {open ? 'HIDE MODEL RESULTS' : 'SHOW MODEL RESULTS'}
-            <span className="gold-caret" aria-hidden="true" />
-          </span>
-        </button>
-        <SlideOpen open={open} className="model-results-body">
-          <div className="model-results-content">
-            <div className="prediction-record-title">THIS CARD · $10 EACH</div>
-            {!finished.length ? (
-              <div className="prediction-record-loading">No finished fights on this card yet.</div>
-            ) : !graded.data ? (
-              <div className="prediction-record-loading">Grading the card…</div>
-            ) : (
-              <>
-                <RecordRow label="Winner bets" rec={betRec} profit={profitOf(bets)} />
-                <RecordRow label="Every winner pick" rec={winners} profit={profitOf(rows)} />
-                <RecordRow label="Rounds O/U" rec={tally(rows, 'rounds')} />
-                <RecordRow label="Method" rec={tally(rows, 'method')} />
-                <div className="league-model-note">
-                  Winner bets are the model's value picks (often underdogs); every other winner pick is a lean on the
-                  likelier fighter. On the last year of fights it held out, the model's value picks went 43-39 (44
-                  underdogs) for about break-even, rounds picks were right 60% of the time and method picks 49%.
-                </div>
-              </>
-            )}
-          </div>
-        </SlideOpen>
-      </div>
-    </div>
+    <>
+      <ModelSection title="THIS CARD'S RESULTS">
+        {!finished.length ? (
+          <div className="prediction-record-loading">No finished fights on this card yet.</div>
+        ) : !graded.data ? (
+          <div className="prediction-record-loading">Grading the card…</div>
+        ) : (
+          <>
+            <RecordRow label="Winner bets" rec={betRec} profit={profitOf(bets)} />
+            <RecordRow label="Every winner pick" rec={winners} profit={profitOf(rows)} />
+            <RecordRow label="Rounds O/U" rec={tally(rows, 'rounds')} />
+            <RecordRow label="Method" rec={tally(rows, 'method')} />
+          </>
+        )}
+      </ModelSection>
+      <ModelSection title="ABOUT THE MODEL">
+        <div className="league-model-note">
+          Winner bets are the model's value picks (often underdogs); every other winner pick is a lean on the likelier
+          fighter. On the last year of fights it held out, the model's value picks went 43-39 (44 underdogs) for about
+          break-even, rounds picks were right 60% of the time and method picks 49%.
+        </div>
+      </ModelSection>
+    </>
   );
 };
 
@@ -607,7 +599,7 @@ const UfcPage = () => {
     setPickingDay(false);
     setOpenId(null);
   };
-  // SHOW CONFIDENT BETS: the winner picks strong enough to bet (only the
+  // CONFIDENT BETS (in the MODEL dropdown): the winner picks strong enough to bet (only the
   // winner pick ever is), graded once the result is in
   const eventId = event?.id;
   const results = details.data;
@@ -618,7 +610,9 @@ const UfcPage = () => {
       if (!w?.price) return [];
       const grade = fight.status.state === 'post' ? gradeUfcPicks(picks, fight, results?.[fight.id]?.result) : null;
       const name = (w.fighter?.lastName || w.fighter?.name || '').toUpperCase();
-      return [{ key: 'winner', label: `${name} ML`, price: w.price, result: grade?.winner || null, bet: Boolean(w.bet) }];
+      return [
+        { key: 'winner', label: `${name} ML`, price: w.price, result: grade?.winner || null, bet: Boolean(w.bet) },
+      ];
     },
     [eventId, results],
   );
@@ -669,7 +663,9 @@ const UfcPage = () => {
                   title={event?.name}
                   onClick={() => setPickingDay((o) => !o)}
                 >
-                  <FitText>{event ? shortTitle.replace(/^UFC Fight Night/i, 'FIGHT NIGHT').toUpperCase() : 'NO EVENT'}</FitText>
+                  <FitText>
+                    {event ? shortTitle.replace(/^UFC Fight Night/i, 'FIGHT NIGHT').toUpperCase() : 'NO EVENT'}
+                  </FitText>
                 </button>
                 <button
                   type="button"
@@ -769,8 +765,16 @@ const UfcPage = () => {
             )}
           </div>
 
-          {event && <DayBets items={fightItems(event)} loadTickets={loadFightTickets} period="CARD" />}
-          {event && <EventModelResults event={event} details={details.data} />}
+          {event && (
+            <ModelPanel pickFilters={false}>
+              {({ unit }) => (
+                <>
+                  <ConfidentBets items={fightItems(event)} loadTickets={loadFightTickets} stake={unit} period="CARD" />
+                  <EventModelResults event={event} details={details.data} stake={unit} />
+                </>
+              )}
+            </ModelPanel>
+          )}
           <LastUpdated />
           <ParlayBar />
           {hideMode && (

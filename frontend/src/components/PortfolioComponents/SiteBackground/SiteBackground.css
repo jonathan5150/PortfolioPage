@@ -1,0 +1,49 @@
+/* The site's moving background (see SiteBackground.js), fixed behind every page. */
+.site-background {
+  position: fixed;
+  inset: 0;
+  z-index: -40;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: #0a0908;
+}
+
+/* one repeating 400 x 200 tile of lines, a tile wider than the screen */
+.site-background-layer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(100% + 400px);
+  background-size: 400px 200px;
+  background-repeat: repeat;
+  will-change: transform;
+}
+
+.site-background-layer.rolls-right {
+  left: -400px;
+  animation: siteBgRight 40s linear infinite;
+}
+
+.site-background-layer.rolls-left {
+  left: 0;
+  opacity: 0.8;
+  animation: siteBgLeft 46s linear infinite;
+}
+
+@keyframes siteBgRight {
+  to {
+    transform: translate3d(400px, 0, 0);
+  }
+}
+
+@keyframes siteBgLeft {
+  to {
+    transform: translate3d(-400px, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-background-layer {
+    animation: none;
+  }
+}

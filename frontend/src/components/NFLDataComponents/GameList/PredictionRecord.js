@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useAsyncData from '../shared/useAsyncData';
-import usePersistentState from '../shared/usePersistentState';
-import SlideOpen from '../shared/SlideOpen';
+import { ModelSection } from './ModelSection';
+import { allowed, inScope } from './modelFilters';
 import { graderFor, precomputedInfo, seasonLoaderFor } from '../../../pages/NFLData/NFLDataApi/modelGrading';
 import { runWithConcurrency } from '../../../pages/NFLData/NFLDataApi/http';
 import { betReturn } from '../../../pages/NFLData/NFLDataApi/picks';
@@ -22,27 +22,15 @@ const marketsFor = (spreadLabel) => MARKETS.map((m) => (m.key === 'spread' ? { .
 // precomputed at build time, see modelGrading.js) and later visits don't
 // refetch anything. Old versions' saved grades are cleared out.
 try {
-  ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7'].forEach((v) => window.localStorage.removeItem(`nflStatsWizard:gradedPicks:${v}`));
+  ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7'].forEach((v) =>
+    window.localStorage.removeItem(`nflStatsWizard:gradedPicks:${v}`),
+  );
   ['nba', 'mlb'].forEach((lg) => window.localStorage.removeItem(`nflStatsWizard:${lg}GradedPicks:v1`));
   window.localStorage.removeItem('nflStatsWizard:nbaGradedPicks:v2');
 } catch {
   // storage blocked
 }
 const nflGrade = graderFor('nfl');
-
-// Every pick is a flat bet (the chosen stake) at its pregame price.
-const STAKES = [10, 25, 100];
-const betFilters = (spreadLabel) => [
-  { key: 'all', label: 'TOTAL' },
-  { key: 'winner', label: 'MONEYLINE' },
-  { key: 'spread', label: spreadLabel.toUpperCase() },
-  { key: 'total', label: 'O/U' },
-];
-
-// Minimum moneyline odds: with -300 picked, a moneyline bet on a team priced
-// worse than -300 (say -900) is skipped. Spreads and totals are unaffected.
-const MIN_ODDS = [null, -200, -300, -500];
-const allowed = (bet, minOdds) => !(minOdds && bet.key === 'winner' && bet.price < minOdds);
 
 const money = (n) => `$${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const signedMoney = (n) => `${n > 0.004 ? '+' : n < -0.004 ? '-' : ''}${money(n)}`;
@@ -75,13 +63,6 @@ const betDays = (finished, gradedById, filter, stake, minOdds, scope) => {
     });
   return days;
 };
-
-// BETS ONLY: just the picks strong enough to bet; EVERY PICK: leans too
-const SCOPES = [
-  { key: 'bets', label: 'BETS ONLY' },
-  { key: 'all', label: 'EVERY PICK' },
-];
-const inScope = (bets, scope) => (bets || []).filter((b) => scope === 'all' || b.bet);
 
 const pct = ({ W, L }) => (W + L ? `${Math.round((W / (W + L)) * 100)}%` : '—');
 
@@ -138,6 +119,10 @@ const SeasonTotals = ({ stake, minOdds, filter, loadSeason, gradeGame, markets, 
       </div>
     );
   }
+  const skipped = countSkipped(
+    grades.flatMap((g) => inScope(g.bets, scope).filter((b) => filter === 'all' || b.key === filter)),
+    minOdds,
+  );
   const rows = markets.map(({ key, label }) => {
     const rec = { W: 0, L: 0, profit: 0 };
     // record and profit both come from the simulated bets, so the odds filter applies to both
@@ -171,10 +156,13 @@ const SeasonTotals = ({ stake, minOdds, filter, loadSeason, gradeGame, markets, 
           <span className={`bet-return ${tone(r.profit)}`}>{signedMoney(r.profit)}</span>
         </div>
       ))}
+      <SkippedNote minOdds={minOdds} skipped={skipped} />
       {ready?.games ? (
         <div className="season-precomputed">
           {ready.games} games came pre-graded with the site
-          {ready.builtAt ? ` (${new Date(ready.builtAt).toLocaleDateString([], { month: 'short', day: 'numeric' })})` : ''}
+          {ready.builtAt
+            ? ` (${new Date(ready.builtAt).toLocaleDateString([], { month: 'short', day: 'numeric' })})`
+            : ''}
         </div>
       ) : null}
     </div>
@@ -183,126 +171,93 @@ const SeasonTotals = ({ stake, minOdds, filter, loadSeason, gradeGame, markets, 
 
 const matchup = (g) => `${g.away?.team?.abbreviation || 'AWAY'} @ ${g.home?.team?.abbreviation || 'HOME'}`;
 
-const BetResults = ({ finished, gradedById, period, spreadLabel, loadSeason, gradeGame, markets, scope, lg }) => {
-  const [filter, setFilter] = useState('all');
-  const [stake, setStake] = useState(STAKES[0]);
-  const [minOdds, setMinOdds] = useState(null);
-  const days = betDays(finished, gradedById, filter, stake, minOdds, scope);
-  const periodProfit = days.reduce((sum, d) => sum + d.profit, 0);
-  // Just the period's profit until EACH BET is opened.
+// How many moneyline bets the ML limit took out (so it's clear it did something,
+// or that there was nothing that short to take out).
+const SkippedNote = ({ minOdds, skipped }) =>
+  minOdds ? (
+    <div className="model-filter-note">
+      {skipped
+        ? `ML ${minOdds}: skipped ${skipped} moneyline ${skipped === 1 ? 'bet' : 'bets'} priced shorter than ${minOdds}.`
+        : `ML ${minOdds}: no moneyline bets here were priced shorter than ${minOdds}.`}
+    </div>
+  ) : null;
+const countSkipped = (bets, minOdds) => (minOdds ? bets.filter((b) => !allowed(b, minOdds)).length : 0);
+
+// The period's profit, with each bet behind SHOW EACH BET.
+const PeriodProfit = ({ days, period, stake, minOdds, skipped }) => {
   const [showBets, setShowBets] = useState(false);
+  const periodProfit = days.reduce((sum, d) => sum + d.profit, 0);
+  if (!days.length) return <div className="prediction-record-loading">No graded bets yet.</div>;
   return (
     <div className="bet-results">
-      <div className="prediction-record-title">MODEL RESULTS</div>
-      <div className="bet-filter">
-        {betFilters(spreadLabel).map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            className={`bet-filter-btn ${filter === f.key ? 'active' : ''}`}
-            onClick={() => setFilter(f.key)}
-          >
-            {f.label}
-          </button>
-        ))}
+      <div className="bet-row bet-total bet-week">
+        <span>{period} PROFIT</span>
+        <span className={`bet-return ${tone(periodProfit)}`}>{signedMoney(periodProfit)}</span>
       </div>
-      <div className="bet-filter bet-stakes">
-        {STAKES.map((amount) => (
-          <button
-            key={amount}
-            type="button"
-            className={`bet-filter-btn ${stake === amount ? 'active' : ''}`}
-            onClick={() => setStake(amount)}
-          >
-            ${amount} / BET
-          </button>
-        ))}
-      </div>
-      <div className="bet-filter bet-min-odds" aria-label="Minimum moneyline odds">
-        {MIN_ODDS.map((odds) => (
-          <button
-            key={odds ?? 'off'}
-            type="button"
-            className={`bet-filter-btn ${minOdds === odds ? 'active' : ''}`}
-            onClick={() => setMinOdds(odds)}
-          >
-            {odds === null ? 'OFF' : `ML ${odds}`}
-          </button>
-        ))}
-      </div>
-      {!days.length ? (
-        <div className="prediction-record-loading">No graded bets yet.</div>
-      ) : (
+      <SkippedNote minOdds={minOdds} skipped={skipped} />
+      <button
+        type="button"
+        className={`bet-each-toggle ${showBets ? 'open' : ''}`}
+        aria-expanded={showBets}
+        onClick={() => setShowBets((v) => !v)}
+      >
+        {showBets ? 'HIDE EACH BET' : 'SHOW EACH BET'}
+        <span className="bet-results-caret" aria-hidden="true" />
+      </button>
+      {showBets && (
         <>
-          <button
-            type="button"
-            className={`bet-each-toggle ${showBets ? 'open' : ''}`}
-            aria-expanded={showBets}
-            onClick={() => setShowBets((v) => !v)}
-          >
-            {showBets ? 'HIDE EACH BET' : 'SHOW EACH BET'}
-            <span className="bet-results-caret" aria-hidden="true" />
-          </button>
-          {showBets && (
-            <>
-              <div className="bet-row bet-head">
-                <span>BET</span>
-                <span>WAGER</span>
-                <span>ODDS</span>
-                <span>RETURN</span>
-              </div>
-              {days.map((day) => (
-                <div key={day.key} className="bet-day">
-                  <div className="bet-day-label">{day.label}</div>
-                  {day.games.map(({ game, bets }) => (
-                    <div key={game.id} className="bet-game">
-                      <div className="bet-game-label">{matchup(game)}</div>
-                      {bets.map((b) => (
-                        <div key={b.key} className="bet-row">
-                          <span className="bet-label">
-                            {b.label}
-                            {!b.bet && <span className={`bet-lean-tag${b.upset ? ' upset' : ''}`}>{b.upset ? 'UPSET' : 'LEAN'}</span>}
-                          </span>
-                          <span>{money(stake)}</span>
-                          <span>{fmtOdds(b.price)}</span>
-                          <span className={`bet-return ${tone(b.profit)}`}>{money(b.back)}</span>
-                        </div>
-                      ))}
+          <div className="bet-row bet-head">
+            <span>BET</span>
+            <span>WAGER</span>
+            <span>ODDS</span>
+            <span>RETURN</span>
+          </div>
+          {days.map((day) => (
+            <div key={day.key} className="bet-day">
+              <div className="bet-day-label">{day.label}</div>
+              {day.games.map(({ game, bets }) => (
+                <div key={game.id} className="bet-game">
+                  <div className="bet-game-label">{matchup(game)}</div>
+                  {bets.map((b) => (
+                    <div key={b.key} className="bet-row">
+                      <span className="bet-label">
+                        {b.label}
+                        {!b.bet && (
+                          <span className={`bet-lean-tag${b.upset ? ' upset' : ''}`}>{b.upset ? 'UPSET' : 'LEAN'}</span>
+                        )}
+                      </span>
+                      <span>{money(stake)}</span>
+                      <span>{fmtOdds(b.price)}</span>
+                      <span className={`bet-return ${tone(b.profit)}`}>{money(b.back)}</span>
                     </div>
                   ))}
-                  <div className="bet-row bet-total">
-                    <span>{day.label} PROFIT</span>
-                    <span className={`bet-return ${tone(day.profit)}`}>{signedMoney(day.profit)}</span>
-                  </div>
                 </div>
               ))}
-            </>
-          )}
-          <div className="bet-row bet-total bet-week">
-            <span>{period} PROFIT</span>
-            <span className={`bet-return ${tone(periodProfit)}`}>{signedMoney(periodProfit)}</span>
-          </div>
+              <div className="bet-row bet-total">
+                <span>{day.label} PROFIT</span>
+                <span className={`bet-return ${tone(day.profit)}`}>{signedMoney(day.profit)}</span>
+              </div>
+            </div>
+          ))}
         </>
       )}
-      <SeasonTotals
-        stake={stake}
-        minOdds={minOdds}
-        filter={filter}
-        loadSeason={loadSeason}
-        gradeGame={gradeGame}
-        markets={markets}
-        scope={scope}
-        lg={lg}
-      />
     </div>
   );
 };
 
 // games: the games on screen (a week / a day). gradeGame(game) -> { winner,
 // spread, total, bets } (cached); loadSeason() -> the season's finished games.
-// period: 'WEEK' or 'DAY'. note: an optional line under the season totals.
+// period: 'WEEK' or 'DAY'. note: an optional explanation (ABOUT THE MODEL).
+// stake, scope, filter, minOdds: the MODEL dropdown's FILTERS (see ModelPanel).
+// These are the dropdown's results sections: the period's results, SEASON TO
+// DATE and ABOUT THE MODEL, each collapsible. Mounted only while the dropdown
+// is open, so nothing is graded until then.
 export const ModelResults = ({
   games,
+  stake,
+  scope = 'bets',
+  filter = 'all',
+  minOdds = null,
   gradeGame = nflGrade,
   loadSeason = nflSeasonGames,
   period = 'WEEK',
@@ -313,9 +268,6 @@ export const ModelResults = ({
   const finished = useMemo(() => (games || []).filter((g) => g.status?.state === 'post'), [games]);
   const ids = finished.map((g) => g.id).join(',');
   const markets = useMemo(() => marketsFor(spreadLabel), [spreadLabel]);
-  // Everything here stays closed until the button is pressed, and nothing is
-  // graded until then, so it never competes with a game being opened.
-  const [open, setOpen] = useState(false);
 
   const graded = useAsyncData(
     async () => {
@@ -326,10 +278,9 @@ export const ModelResults = ({
       return results.map((r, i) => (r.ok && r.value ? { ...r.value, id: finished[i].id } : null)).filter(Boolean);
     },
     [ids, gradeGame],
-    { enabled: finished.length > 0 && open },
+    { enabled: finished.length > 0 },
   );
 
-  const [scope, setScope] = usePersistentState('modelResultsScope', 'bets');
   const rows = markets.map(({ key, label }) => {
     const rec = { W: 0, L: 0 };
     (graded.data || []).forEach((g) => {
@@ -341,75 +292,58 @@ export const ModelResults = ({
   const gradedById = Object.fromEntries((graded.data || []).map((g) => [g.id, g]));
   const total = rows.reduce((acc, r) => ({ W: acc.W + r.W, L: acc.L + r.L }), { W: 0, L: 0 });
   const word = period.toLowerCase();
+  const days = betDays(finished, gradedById, filter, stake, minOdds, scope);
+  const skipped = countSkipped(
+    (graded.data || []).flatMap((g) => inScope(g.bets, scope).filter((b) => filter === 'all' || b.key === filter)),
+    minOdds,
+  );
 
   return (
-    <div className="gold-box prediction-record-outer">
-      <div className="prediction-record">
-        <button
-          type="button"
-          className={`bet-results-toggle gold-box-text ${open ? 'open' : ''}`}
-          onClick={() => setOpen((o) => !o)}
-        >
-          <span className="game-section-name">
-            {open ? 'HIDE MODEL RESULTS' : 'SHOW MODEL RESULTS'}
-            <span className="gold-caret" aria-hidden="true" />
-          </span>
-        </button>
-        <SlideOpen open={open} className="model-results-body">
-          <div className="model-results-content">
-            <div className="bet-filter model-scope" aria-label="Which picks count">
-              {SCOPES.map((s) => (
-                <button
-                  key={s.key}
-                  type="button"
-                  className={`bet-filter-btn ${scope === s.key ? 'active' : ''}`}
-                  onClick={() => setScope(s.key)}
-                >
-                  {s.label}
-                </button>
+    <>
+      <ModelSection title={`THIS ${period}'S RESULTS`}>
+        <div className="prediction-record-title">
+          PREDICTION RECORD · {scope === 'all' ? 'EVERY PICK' : 'CONFIDENT BETS ONLY'}
+        </div>
+        {!finished.length ? (
+          <div className="prediction-record-loading">No finished games this {word} yet.</div>
+        ) : !graded.data ? (
+          <div className="prediction-record-loading">Grading this {word}'s picks…</div>
+        ) : (
+          <>
+            <div className="prediction-record-rows">
+              {[...rows, { key: 'all', label: 'Total', ...total }].map((r) => (
+                <div key={r.key} className={`prediction-record-row ${r.key === 'all' ? 'total' : ''}`}>
+                  <span className="prediction-record-label">{r.label}</span>
+                  <span className="prediction-record-wl">
+                    {r.W}-{r.L}
+                  </span>
+                  <span className="prediction-record-pct">{pct(r)}</span>
+                </div>
               ))}
             </div>
-            <div className="prediction-record-title">
-              PREDICTION RECORD · {scope === 'all' ? 'EVERY PICK' : 'BETS ONLY'}
-            </div>
-            {!finished.length ? (
-              <div className="prediction-record-loading">No finished games this {word} yet.</div>
-            ) : !graded.data ? (
-              <div className="prediction-record-loading">Grading this {word}'s picks…</div>
-            ) : (
-              <div className="prediction-record-rows">
-                {[...rows, { key: 'all', label: 'Total', ...total }].map((r) => (
-                  <div key={r.key} className={`prediction-record-row ${r.key === 'all' ? 'total' : ''}`}>
-                    <span className="prediction-record-label">{r.label}</span>
-                    <span className="prediction-record-wl">
-                      {r.W}-{r.L}
-                    </span>
-                    <span className="prediction-record-pct">{pct(r)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-            {(graded.data || !finished.length) && (
-              <BetResults
-                finished={finished}
-                gradedById={gradedById}
-                period={period}
-                spreadLabel={spreadLabel}
-                loadSeason={loadSeason}
-                gradeGame={gradeGame}
-                markets={markets}
-                scope={scope}
-                lg={lg}
-              />
-            )}
-            {note && <div className="league-model-note">{note}</div>}
-          </div>
-        </SlideOpen>
-      </div>
-    </div>
+            <PeriodProfit days={days} period={period} stake={stake} minOdds={minOdds} skipped={skipped} />
+          </>
+        )}
+      </ModelSection>
+      <ModelSection title="SEASON TO DATE">
+        <SeasonTotals
+          stake={stake}
+          minOdds={minOdds}
+          filter={filter}
+          loadSeason={loadSeason}
+          gradeGame={gradeGame}
+          markets={markets}
+          scope={scope}
+          lg={lg}
+        />
+      </ModelSection>
+      {note && (
+        <ModelSection title="ABOUT THE MODEL">
+          <div className="league-model-note">{note}</div>
+        </ModelSection>
+      )}
+    </>
   );
 };
 
-const PredictionRecord = ({ games }) => <ModelResults games={games} />;
-
-export default PredictionRecord;
+export default ModelResults;

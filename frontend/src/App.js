@@ -18,10 +18,10 @@ import './sports/team/TeamSport.scss';
 import './sports/SportTitles.scss';
 import './sports/ufc/Ufc.scss';
 import LoadingField from './components/NFLDataComponents/shared/LoadingField';
-// the site's font and style (Bricolage Grotesque + Poster); the BG button
-// lets you try dark page backgrounds
+// the site's font and style (Bricolage Grotesque + Poster), over the moving
+// gold contour-line background
 import './components/PortfolioComponents/SiteStyle/SiteStyle.css';
-import BackgroundPicker from './components/PortfolioComponents/BackgroundPicker/BackgroundPicker';
+import SiteBackground from './components/PortfolioComponents/SiteBackground/SiteBackground';
 
 // Every other page is downloaded only when it's opened, so a phone opening the
 // sports pages doesn't also download and parse the whole portfolio (and the
@@ -38,7 +38,7 @@ const TeamSportPage = lazy(() => import('./sports/team/TeamSportPage'));
 const UfcPage = lazy(() => import('./sports/ufc/UfcPage'));
 
 // while a sports page's code arrives: the same loading screen its own data
-// load shows (dark backdrop, four-sport animation)
+// load shows (over the site background, the four-sport animation)
 const SportsFallback = () => (
   <div
     style={{
@@ -47,7 +47,7 @@ const SportsFallback = () => (
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(41, 41, 41, 1)',
+      backgroundColor: 'transparent',
     }}
   >
     <LoadingField />
@@ -81,7 +81,7 @@ function Main() {
     <div className="App">
       {hasHeader && <Header />}
       <div className="bg"></div>
-      <BackgroundPicker />
+      <SiteBackground />
       <div className="content" style={{ marginTop: hasHeader ? '90px' : '0px' }}>
         <Suspense fallback={null}>
           <Routes>
@@ -101,10 +101,38 @@ function Main() {
         <Routes>
           {/* the sports data project: /sports opens the saved or in-season sport */}
           <Route path="/sports" element={<SportsHub />} />
-          <Route path="/sports/nfl" element={<RememberSport sport="nfl"><NFLData /></RememberSport>} />
-          <Route path="/sports/mlb" element={<RememberSport sport="mlb"><TeamSportPage key="mlb" lg="mlb" /></RememberSport>} />
-          <Route path="/sports/nba" element={<RememberSport sport="nba"><TeamSportPage key="nba" lg="nba" /></RememberSport>} />
-          <Route path="/sports/ufc" element={<RememberSport sport="ufc"><UfcPage /></RememberSport>} />
+          <Route
+            path="/sports/nfl"
+            element={
+              <RememberSport sport="nfl">
+                <NFLData />
+              </RememberSport>
+            }
+          />
+          <Route
+            path="/sports/mlb"
+            element={
+              <RememberSport sport="mlb">
+                <TeamSportPage key="mlb" lg="mlb" />
+              </RememberSport>
+            }
+          />
+          <Route
+            path="/sports/nba"
+            element={
+              <RememberSport sport="nba">
+                <TeamSportPage key="nba" lg="nba" />
+              </RememberSport>
+            }
+          />
+          <Route
+            path="/sports/ufc"
+            element={
+              <RememberSport sport="ufc">
+                <UfcPage />
+              </RememberSport>
+            }
+          />
           {/* old addresses: the visitor's last sport */}
           <Route path="/nfldata" element={<SportsHub />} />
           <Route path="/mlbdata" element={<SportsHub />} />

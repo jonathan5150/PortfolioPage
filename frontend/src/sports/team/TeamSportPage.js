@@ -13,7 +13,8 @@ import LoadingField from '../../components/NFLDataComponents/shared/LoadingField
 import { ParlayProvider } from '../../components/NFLDataComponents/shared/ParlayContext';
 import ParlayBar from '../../components/NFLDataComponents/ParlayBar/ParlayBar';
 import { ModelResults } from '../../components/NFLDataComponents/GameList/PredictionRecord';
-import DayBets, { asBetItems, leagueTicketLoader } from '../../components/NFLDataComponents/GameList/DayBets';
+import ConfidentBets, { asBetItems, leagueTicketLoader } from '../../components/NFLDataComponents/GameList/DayBets';
+import ModelPanel from '../../components/NFLDataComponents/GameList/ModelPanel';
 import { graderFor, seasonLoaderFor } from '../../pages/NFLData/NFLDataApi/modelGrading';
 import { LEAGUES, dayFromKey, findGameDay, getLeagueEventDays, getLeagueScoreboard, getLeagueTeams } from './leagueApi';
 import TeamGameCard from './TeamGameCard';
@@ -373,17 +374,35 @@ const TeamSportPage = ({ lg }) => {
               )}
             </div>
 
-            {day && <DayBets items={asBetItems(games)} loadTickets={leagueTicketLoader(lg)} period="DAY" />}
             {day && (
-              <ModelResults
-                games={games}
-                gradeGame={graderFor(lg)}
-                lg={lg}
-                loadSeason={seasonLoaderFor(lg)}
-                period="DAY"
-                spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}
-                note={MODEL_NOTES[lg]}
-              />
+              <ModelPanel spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}>
+                {({ unit, scope, filter, minOdds }) => (
+                  <>
+                    <ConfidentBets
+                      items={asBetItems(games)}
+                      loadTickets={leagueTicketLoader(lg)}
+                      stake={unit}
+                      scope={scope}
+                      filter={filter}
+                      minOdds={minOdds}
+                      period="DAY"
+                    />
+                    <ModelResults
+                      games={games}
+                      stake={unit}
+                      scope={scope}
+                      filter={filter}
+                      minOdds={minOdds}
+                      gradeGame={graderFor(lg)}
+                      lg={lg}
+                      loadSeason={seasonLoaderFor(lg)}
+                      period="DAY"
+                      spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}
+                      note={MODEL_NOTES[lg]}
+                    />
+                  </>
+                )}
+              </ModelPanel>
             )}
             <LastUpdated />
             <ParlayBar />

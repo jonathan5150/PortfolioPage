@@ -3322,7 +3322,7 @@
 
 
 
-/* everything under SHOW / HIDE MODEL RESULTS sits in one container styled like
+/* everything in the MODEL dropdown sits in one container styled like
    a game's start-time container (same border, corners and inset) */
 .nfl-data-container .gold-box.prediction-record-outer {
   padding: 0 4px;
@@ -3867,7 +3867,7 @@
   box-shadow: 0 0 10px 1px rgba(245, 209, 107, 0.45), inset 0 0 8px rgba(245, 209, 107, 0.12);
 }
 
-/* ---------- SHOW CONFIDENT BETS ---------- */
+/* ---------- CONFIDENT BETS (in the MODEL dropdown) ---------- */
 
 .nfl-data-container .day-bets .bet-row:not(.bet-total) {
   grid-template-columns: minmax(0, 1fr) 38px 52px 58px;
@@ -3924,4 +3924,190 @@
 .nfl-data-container .game-slot + .game-group-subtime {
   margin-top: 3px;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* the team's full name, small and in caps, between the abbreviation and the
+   record. Full names run wider than the 46px abbreviation column, so the
+   three lines sit left-aligned and the name stops (with …) before the score. */
+.nfl-data-container .team-abbr-block {
+  align-items: flex-start;
+  min-width: 46px;
+  width: auto;
+}
+
+.nfl-data-container .team-full-name {
+  max-width: 104px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 8.5px;
+  line-height: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* LIVE section heading: the same red dot, pulsing the same way, as the one
+   beside a live game's clock (.live-indicator), just off the left of the word
+   so the word stays dead centre */
+.nfl-data-container .game-section-label.in .game-section-name::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 6px);
+  width: 7px;
+  height: 7px;
+  margin-top: -3.5px;
+  border-radius: 50%;
+  background: #d94848;
+  pointer-events: none;
+  animation: nflPulse 2s infinite;
+}
+
+/* ---------- the MODEL dropdown (ModelPanel): unit size, then sections ---------- */
+.nfl-data-container .model-units {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+/* confident bets and model results each start under a thin divider */
+.nfl-data-container .model-panel .model-section {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(245, 209, 107, 0.25);
+}
+
+/* CONFIDENT BETS ONLY / EVERY PICK: centred in their row */
+.nfl-data-container .model-scope {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.nfl-data-container .model-scope .bet-filter-btn {
+  flex: 0 0 auto;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* collapsible sections inside the MODEL dropdown (ModelSection): a gold
+   heading row with an arrow; tapping it slides the section open or shut */
+.nfl-data-container .model-panel .model-fold {
+  margin-top: 6px;
+  padding-top: 0;
+  border-top: 1px solid rgba(245, 209, 107, 0.22);
+}
+
+.nfl-data-container .model-fold-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 9px 4px 7px;
+  border: 0;
+  background: transparent;
+  color: #f5d16b;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nfl-data-container .model-fold.open > .model-fold-toggle .bet-results-caret {
+  transform: rotate(180deg);
+}
+
+.nfl-data-container .model-fold-content {
+  padding-bottom: 6px;
+}
+
+/* the small labels over each row of filter buttons, and the notes under them */
+.nfl-data-container .model-filter-label {
+  margin: 4px 0 4px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.nfl-data-container .model-filter-note {
+  margin: 2px 0 6px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* the MODEL filters: always across the top of the dropdown, four small
+   dropdowns side by side, each titled above with its choice shown in the box */
+.nfl-data-container .model-filters {
+  display: grid;
+  grid-template-columns: 0.8fr 1.15fr 1.15fr 0.9fr;
+  gap: 5px;
+  margin: 2px 0 6px;
+}
+
+.nfl-data-container .model-filters.unit-only {
+  grid-template-columns: minmax(0, 90px);
+  justify-content: center;
+}
+
+.nfl-data-container .model-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 3px;
+  min-width: 0;
+}
+
+.nfl-data-container .model-filter-title {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.nfl-data-container .model-filter-box {
+  position: relative;
+  display: block;
+  color: #f5d16b;
+}
+
+.nfl-data-container .model-filter-box select {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  padding: 7px 15px 7px 5px;
+  border: 1px solid rgba(245, 209, 107, 0.55);
+  border-radius: 7px;
+  background: rgba(20, 18, 14, 0.9);
+  color: #f5d16b;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-align: center;
+  text-align-last: center;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nfl-data-container .model-filter-box select option {
+  background: #141210;
+  color: #f5d16b;
+}
+
+.nfl-data-container .model-filter-box .bet-results-caret {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  margin-top: -3px;
+  border-left-width: 3.5px;
+  border-right-width: 3.5px;
+  border-top-width: 4.5px;
+  pointer-events: none;
 }

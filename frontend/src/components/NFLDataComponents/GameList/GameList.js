@@ -6,8 +6,9 @@ import LoadingField from '../shared/LoadingField';
 import usePersistentState from '../shared/usePersistentState';
 import { ParlayProvider } from '../shared/ParlayContext';
 import ParlayBar from '../ParlayBar/ParlayBar';
-import PredictionRecord from './PredictionRecord';
-import DayBets, { asBetItems, leagueTicketLoader } from './DayBets';
+import ModelResults from './PredictionRecord';
+import ConfidentBets, { asBetItems, leagueTicketLoader } from './DayBets';
+import ModelPanel from './ModelPanel';
 import SlideOpen from '../shared/SlideOpen';
 import LastUpdated from '../shared/LastUpdated';
 
@@ -263,8 +264,20 @@ const GameList = ({
           )}
         </div>
 
-        <DayBets items={asBetItems(weekGames || games)} loadTickets={leagueTicketLoader('nfl')} period="WEEK" />
-        <PredictionRecord games={weekGames || games} />
+        <ModelPanel>
+          {({ unit, scope, filter, minOdds }) => (
+            <>
+              <ConfidentBets
+                items={asBetItems(weekGames || games)}
+                loadTickets={leagueTicketLoader('nfl')}
+                stake={unit}
+                filter={filter}
+                period="WEEK"
+              />
+              <ModelResults games={weekGames || games} stake={unit} scope={scope} filter={filter} minOdds={minOdds} />
+            </>
+          )}
+        </ModelPanel>
         <LastUpdated />
         {hideMode ? (
           <button type="button" className="hide-done-bar" onClick={() => setHideMode(false)}>
