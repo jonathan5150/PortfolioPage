@@ -55,7 +55,6 @@ export const teamLineColor = (team) => lineColorFrom(getTeamRingColors(team)[0])
 
 const SLIDE_MS = 800; // the longest slide up (slideUpMs)
 const FADE_MS = 580; // everything else fades out in 0.55s (NFLData.scss)
-const MASK_MS = 260; // the top fade slides away in 0.25s
 const FOLD_MS = 400; // an open game's details fold away in about 0.4s
 const GAP = 8; // space between the top of the box and the open game
 
@@ -110,19 +109,6 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     document.addEventListener('click', closeOnTapBelow, true);
     return () => document.removeEventListener('click', closeOnTapBelow, true);
   }, [isOpen]);
-
-  // ---- the top fade ----
-  // Once the list has been scrolled, what reaches the top of the scrolling box
-  // fades out just under the header (.scrolled, see NFLData.scss); at the very
-  // top nothing is faded.
-  useEffect(() => {
-    const box = panelRef.current;
-    if (!box) return undefined;
-    const mark = () => box.classList.toggle('scrolled', box.scrollTop > 2);
-    mark();
-    box.addEventListener('scroll', mark, { passive: true });
-    return () => box.removeEventListener('scroll', mark);
-  }, [panelRef]);
 
   // ---- slide up, just the game, slide back ----
   const returnTo = useRef(null);
@@ -184,11 +170,6 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
       if (returnTo.current === null) returnTo.current = box.scrollTop;
       setFocusSpace(true);
       lock();
-      // the fade at the top of the list slides out of the way, then goes
-      // altogether, so nothing is masked while the game is open (.mask-away,
-      // .mask-off; see NFLData.scss)
-      box.classList.add('mask-away');
-      later(() => box.classList.add('mask-off'), low ? 0 : MASK_MS);
       const startedAt = performance.now();
       // At the top: just the game stays in the list, which then scrolls it
       // natively, and its details unfold (cheap now, with nothing else in the
@@ -234,7 +215,7 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     // faded out (.focus-fading) and let go, so it fades in together instead of
     // popping in at full strength (something that wasn't on the page has
     // nothing to fade from); the game keeps its spot on screen meanwhile. Then
-    // the box glides back to where it was, and the top fade slides back in.
+    // the box glides back to where it was.
     if (returnTo.current === null) return undefined;
     holdBackgroundWork(FOLD_MS + 1080 + 900);
     const back = returnTo.current;
@@ -255,10 +236,6 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
       const done = () => {
         box.scrollTop = back;
         unlock();
-        // the top fade comes back just out of sight, then slides in
-        box.classList.remove('mask-off');
-        getComputedStyle(box).maskPosition; // eslint-disable-line no-unused-expressions
-        box.classList.remove('mask-away');
         later(() => setFocusSpace(false), 100);
       };
       if (Math.abs(back - box.scrollTop) < 2) {

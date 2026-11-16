@@ -4546,38 +4546,12 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
 }
 
 /* the scrolling box under the header has no look of its own (no tint, border
-   or corners); once scrolled, what reaches its top fades out under the header */
+   or corners, and no fade at its top: on every sport the list scrolls cleanly
+   up under the header) */
 .nfl-data-container .nfl-scroll-panel {
   border: 0;
   border-radius: 0;
   background: none;
-}
-
-/* The fade at the top of the list once it's scrolled, only while browsing the
-   list. When a game opens it slides up out of sight (.mask-away) and is then
-   taken off altogether (.mask-off) for as long as the game is open and while
-   it slides back, so the list is never masked while things in it move (phones
-   handle a masked list with moving things inside it badly); afterwards it
-   comes back out of sight and slides back in (useGameFocus). */
-.nfl-data-container .nfl-scroll-panel.scrolled {
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 26px);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 26px);
-  -webkit-mask-size: 100% calc(100% + 26px);
-  mask-size: 100% calc(100% + 26px);
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: 0 0;
-  mask-position: 0 0;
-}
-
-.nfl-data-container .nfl-scroll-panel.scrolled.mask-away {
-  -webkit-mask-position: 0 -26px;
-  mask-position: 0 -26px;
-}
-
-.nfl-data-container .nfl-scroll-panel.scrolled.mask-off {
-  -webkit-mask-image: none;
-  mask-image: none;
 }
 
 /* no scrolling by hand while an open game slides into place (useGameFocus) */
@@ -4623,19 +4597,6 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
   margin-bottom: 0 !important;
   border-width: 0 !important;
   opacity: 0 !important;
-}
-
-/* (the scrolling box slides its top fade away and back: .mask-away above) */
-.nfl-data-container .nfl-scroll-panel {
-  transition:
-    -webkit-mask-position 0.25s ease,
-    mask-position 0.25s ease;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nfl-data-container .nfl-scroll-panel {
-    transition: none;
-  }
 }
 
 /* the kickoff bar (NFL) and info bar (NBA / MLB) under a game's team cells: the
@@ -4797,12 +4758,6 @@ html[data-quality='low'] .nfl-data-container .game-slot.open::after {
 /* an open game's details open and close at once */
 html[data-quality='low'] .nfl-data-container .nfl-scroll-panel .game-slot .info-drawer {
   transition: none !important;
-}
-
-/* the list doesn't fade under the header when scrolled */
-html[data-quality='low'] .nfl-data-container .nfl-scroll-panel {
-  -webkit-mask-image: none;
-  mask-image: none;
 }
 
 /* the title's gold shine stays off */
