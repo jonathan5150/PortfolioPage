@@ -10,6 +10,7 @@ import usePersistentState from '../../components/NFLDataComponents/shared/usePer
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
 import TeamsMenu from '../../components/NFLDataComponents/NFLDataNavbar/NFLDataNavbarComponents/TeamsMenu';
 import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
+import TitleText from '../../components/NFLDataComponents/shared/TitleText';
 import { ParlayProvider } from '../../components/NFLDataComponents/shared/ParlayContext';
 import ParlayBar from '../../components/NFLDataComponents/ParlayBar/ParlayBar';
 import { ModelResults } from '../../components/NFLDataComponents/GameList/PredictionRecord';
@@ -319,7 +320,7 @@ const TeamSportPage = ({ lg }) => {
             <div className="nflDataNavbar pinned-header">
               <h1 className={`nfl-title sport-title-${lg}`}>
                 <span className="nfl-title-badge">{league.label}</span>
-                <span className="nfl-title-text">Stats Guide</span>
+                <TitleText>Stats Guide</TitleText>
               </h1>
               <div className="controls">
                 <div className="controls-left">

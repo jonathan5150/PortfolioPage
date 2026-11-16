@@ -5,6 +5,7 @@ import DayCalendar from '../DayCalendar';
 import SlideOpen from '../../components/NFLDataComponents/shared/SlideOpen';
 import LastUpdated from '../../components/NFLDataComponents/shared/LastUpdated';
 import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
+import TitleText from '../../components/NFLDataComponents/shared/TitleText';
 import { Holdable, ParlayProvider } from '../../components/NFLDataComponents/shared/ParlayContext';
 import ParlayBar from '../../components/NFLDataComponents/ParlayBar/ParlayBar';
 import { fightLeg } from '../parlayLegs';
@@ -724,7 +725,7 @@ const UfcPage = () => {
           <div className="nflDataNavbar pinned-header">
             <h1 className="nfl-title sport-title-ufc">
               <span className="nfl-title-badge">UFC</span>
-              <span className="nfl-title-text">Stats Guide</span>
+              <TitleText>Stats Guide</TitleText>
             </h1>
             <div className="controls">
               <div className="controls-left">

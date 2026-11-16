@@ -60,19 +60,23 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
   // Two sets of lines are stacked: gold and team-coloured. Opening a game
   // fades the team set in over the gold (only its opacity changes, which the
   // phone's GPU does without redrawing anything); closing fades it back out.
-  // Its colours stay put while it fades out, so it never flashes gold.
+  // Its colours stay put while it fades out, so it never flashes gold. Set on
+  // the background itself, not the whole page: a colour set on the page is
+  // passed down to everything on it, which made the phone restyle every
+  // element at the moment a game opened or closed.
   useEffect(() => {
-    const root = document.documentElement.style;
+    const bg = document.querySelector('.site-background');
+    if (!bg) return;
     if (isOpen && lineA && lineB) {
-      root.setProperty('--bg-team-a', lineA);
-      root.setProperty('--bg-team-b', lineB);
-      root.setProperty('--bg-team-on', '1');
+      bg.style.setProperty('--bg-team-a', lineA);
+      bg.style.setProperty('--bg-team-b', lineB);
+      bg.classList.add('team-on');
     } else {
-      root.setProperty('--bg-team-on', '0');
+      bg.classList.remove('team-on');
     }
   }, [isOpen, lineA, lineB]);
   // leaving the page puts them back to gold
-  useEffect(() => () => document.documentElement.style.setProperty('--bg-team-on', '0'), []);
+  useEffect(() => () => document.querySelector('.site-background')?.classList.remove('team-on'), []);
 
   // ---- tap below the game to close ----
   // Only the empty background below the open game closes it (its own score
@@ -116,6 +120,19 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     const box = panelRef.current;
     if (!box) return undefined;
     const behavior = isLowQuality() ? 'auto' : 'smooth';
+    // No scrolling by hand while the game slides (a scroll mid-slide fights
+    // it). Done by refusing the gesture rather than switching the box's
+    // scrolling off: switching that off and on made the phone redraw the whole
+    // list each time, which showed as a flash.
+    const blockWheel = (e) => e.preventDefault();
+    const lock = () => {
+      box.classList.add('focus-sliding');
+      box.addEventListener('wheel', blockWheel, { passive: false });
+    };
+    const unlock = () => {
+      box.classList.remove('focus-sliding');
+      box.removeEventListener('wheel', blockWheel);
+    };
     // keeps the game's spot on screen while things are taken out / put back
     const keepingPlace = (slot, change) => {
       const before = slot.getBoundingClientRect().top;
@@ -127,8 +144,7 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
       holdBackgroundWork(SLIDE_MS + 500);
       if (returnTo.current === null) returnTo.current = box.scrollTop;
       setFocusSpace(true);
-      // no scrolling by hand during the slide (a scroll mid-slide fights it)
-      box.style.overflowY = 'hidden';
+      lock();
       const slide = setTimeout(() => {
         const slot = box.querySelector('.game-slot.open');
         if (!slot) return;
@@ -143,42 +159,49 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
           slot.classList.add('focus-target');
           target.current = slot;
           keepingPlace(slot, () => box.classList.add('focus-only'));
-          box.style.overflowY = '';
+          unlock();
         },
         behavior === 'smooth' ? SLIDE_MS : 60,
       );
       return () => {
         clearTimeout(slide);
         clearTimeout(settle);
+        unlock();
       };
     }
 
-    // closing: put everything back (the game stays put), then slide back
+    // closing: put everything back (the game stays put), then slide back.
+    // What comes back is put back faded out (.focus-fading) and only then let
+    // go, so it fades in with the rest; put back straight away it would pop in
+    // at full strength (something that wasn't on the page has nothing to fade
+    // from).
     if (returnTo.current === null) return undefined;
     holdBackgroundWork(SLIDE_MS + 500);
     const slot = target.current;
     if (slot && box.classList.contains('focus-only')) {
+      box.classList.add('focus-fading');
+      // measuring (in keepingPlace) settles the faded look before it's let go
       keepingPlace(slot, () => box.classList.remove('focus-only'));
     }
-    box.classList.remove('focus-only');
+    box.classList.remove('focus-only', 'focus-fading');
     if (slot) slot.classList.remove('focus-target');
     target.current = null;
     const back = returnTo.current;
     returnTo.current = null;
-    box.style.overflowY = 'hidden';
+    lock();
     box.scrollTo({ top: back, behavior });
-    const unlock = setTimeout(
+    const done = setTimeout(
       () => {
         box.scrollTop = back;
-        box.style.overflowY = '';
+        unlock();
       },
       behavior === 'smooth' ? SLIDE_MS : 60,
     );
     const t = setTimeout(() => setFocusSpace(false), SLIDE_MS + 100);
     return () => {
-      clearTimeout(unlock);
+      clearTimeout(done);
       clearTimeout(t);
-      box.style.overflowY = '';
+      unlock();
     };
   }, [isOpen, openKey, panelRef]);
 

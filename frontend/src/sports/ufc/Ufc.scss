@@ -226,9 +226,3 @@
 .nfl-data-container .ufc-fight .team-cell:not(.expanded) .team-score {
   opacity: 0.85;
 }
-
-.nfl-data-container .has-open .game-slot.ufc-fight:not(.open) .team-abbr-block,
-.nfl-data-container .has-open .game-slot.ufc-fight:not(.open) .team-odds-stack,
-.nfl-data-container .has-open .game-slot.ufc-fight:not(.open) .team-score {
-  opacity: 0.55;
-}

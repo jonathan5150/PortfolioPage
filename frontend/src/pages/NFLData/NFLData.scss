@@ -97,7 +97,6 @@
   margin-top: 10px;
 }
 
-
 /* SlideOpen: grows open and shrinks shut (grid rows animate between 0 and the
    content's height) - the game sections and MODEL RESULTS */
 .nfl-data-container .slide-open {
@@ -105,7 +104,9 @@
   grid-template-rows: 0fr;
   width: 100%;
   opacity: 0;
-  transition: grid-template-rows 0.5s ease, opacity 0.4s ease;
+  transition:
+    grid-template-rows 0.5s ease,
+    opacity 0.4s ease;
 }
 
 .nfl-data-container .slide-open.open {
@@ -197,11 +198,16 @@
   box-sizing: border-box;
   padding: 3px;
   border-radius: 10px;
-  background: linear-gradient(to bottom, rgba(24, 24, 24, 0) 0, rgba(24, 24, 24, 0) 20%, rgba(24, 24, 24, 0.55) 100%),
+  background:
+    linear-gradient(to bottom, rgba(24, 24, 24, 0) 0, rgba(24, 24, 24, 0) 20%, rgba(24, 24, 24, 0.55) 100%),
     linear-gradient(to right, var(--ring-away, #888) 0 30%, var(--ring-home, #888) 70% 100%); /* blended across the middle */
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
@@ -242,7 +248,9 @@
   inset: -2px 4px;
   z-index: 4;
   border-radius: 10px;
-  box-shadow: -5px 0 14px -6px var(--ring-away, #888), 5px 0 14px -6px var(--ring-home, #888);
+  box-shadow:
+    -5px 0 14px -6px var(--ring-away, #888),
+    5px 0 14px -6px var(--ring-home, #888);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
@@ -329,7 +337,9 @@
   border-radius: 12px;
   border: 1.5px solid #c49410;
   background: rgba(24, 24, 24, 0.97);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6), 0 0 14px rgba(196, 148, 16, 0.3);
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.6),
+    0 0 14px rgba(196, 148, 16, 0.3);
   color: #f5d16b;
   font-family: 'DM Sans', sans-serif;
   font-size: 15px;
@@ -616,18 +626,32 @@
 /* ---------- loading ---------- */
 
 @keyframes nflFadeInOut {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
 }
 
 @keyframes nflFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes nflPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.25; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
 }
 
 .nfl-data-container .loading {
@@ -655,7 +679,9 @@
   border-radius: 14px;
   overflow: hidden;
   border: 1.5px solid rgba(196, 148, 16, 0.6);
-  box-shadow: 0 0 18px rgba(196, 148, 16, 0.25), 0 6px 14px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 0 18px rgba(196, 148, 16, 0.25),
+    0 6px 14px rgba(0, 0, 0, 0.45);
 }
 
 .nfl-data-container .field-turf {
@@ -665,7 +691,10 @@
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0 2px, transparent 2px 40px),
     repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0 20px, transparent 20px 40px),
     linear-gradient(180deg, #2f7a3e, #1d5329);
-  background-size: 40px 100%, 40px 100%, 100% 100%;
+  background-size:
+    40px 100%,
+    40px 100%,
+    100% 100%;
   animation: fieldRush 0.9s linear infinite;
 }
 
@@ -785,10 +814,16 @@
 
 @keyframes fieldRush {
   from {
-    background-position: 0 0, 0 0, 0 0;
+    background-position:
+      0 0,
+      0 0,
+      0 0;
   }
   to {
-    background-position: -40px 0, -40px 0, 0 0;
+    background-position:
+      -40px 0,
+      -40px 0,
+      0 0;
   }
 }
 
@@ -883,7 +918,10 @@
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.07) 0 1px, transparent 1px 26px),
     linear-gradient(135deg, rgba(42, 92, 64, 0.92), rgba(58, 58, 58, 0.92) 70%);
   border: 1.5px solid rgba(196, 148, 16, 0.65);
-  box-shadow: 0 0 18px rgba(196, 148, 16, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 10px rgba(0, 0, 0, 0.45);
+  box-shadow:
+    0 0 18px rgba(196, 148, 16, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 4px 10px rgba(0, 0, 0, 0.45);
 }
 
 .nfl-data-container .nfl-title-badge {
@@ -905,28 +943,72 @@
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  background: linear-gradient(100deg, #ffffff 0%, #ffffff 40%, #f5d16b 50%, #ffffff 60%, #ffffff 100%);
-  background-size: 250% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(1px 2px 1px rgba(0, 0, 0, 0.6));
-  animation: nflTitleShine 2.6s ease-in-out infinite;
+  position: relative;
+  white-space: nowrap;
+  color: #ffffff;
+  text-shadow: 1px 2px 2px rgba(0, 0, 0, 0.6);
 }
 
-@keyframes nflTitleShine {
+/* The gold shine sweeping across the white title (TitleText.js). It used to be
+   a gradient moved through the letters, which the phone had to redraw on every
+   frame, forever. Now a gold copy of the words is seen through a narrow,
+   slanted window with soft edges: the window slides across while the gold
+   words inside slide back by exactly as much, so they stay on top of the white
+   ones and only the window seems to move. Both are plain moves, which the
+   phone's GPU does without redrawing anything. */
+.nfl-data-container .title-shine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 50%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 50%, transparent);
+  transform-origin: 0 50%;
+  transform: translateX(-100%) skewX(-10deg);
+  will-change: transform;
+  animation: titleShineWindow 2.6s ease-in-out infinite;
+}
+
+.nfl-data-container .title-shine-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  color: #f5d16b;
+  text-shadow: none;
+  white-space: nowrap;
+  transform-origin: 0 50%;
+  transform: skewX(10deg) translateX(50%);
+  will-change: transform;
+  animation: titleShineWords 2.6s ease-in-out infinite;
+}
+
+@keyframes titleShineWindow {
   0%,
   20% {
-    background-position: 100% 0;
+    transform: translateX(-100%) skewX(-10deg);
   }
   100% {
-    background-position: -50% 0;
+    transform: translateX(350%) skewX(-10deg);
+  }
+}
+
+@keyframes titleShineWords {
+  0%,
+  20% {
+    transform: skewX(10deg) translateX(50%);
+  }
+  100% {
+    transform: skewX(10deg) translateX(-175%);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nfl-data-container .nfl-title-text {
-    animation: none;
+  .nfl-data-container .title-shine {
+    display: none;
   }
 }
 
@@ -1015,7 +1097,9 @@
   align-items: flex-end;
   gap: 4px;
   flex-shrink: 0;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.6);
 }
 
 .nfl-data-container .team-odds-row {
@@ -1106,8 +1190,6 @@
 .nfl-data-container .arrow.open {
   transform: rotate(180deg);
 }
-
-
 
 .nfl-data-container .teams-dropdown-wrapper,
 .nfl-data-container .week-control {
@@ -1261,7 +1343,9 @@
   font-weight: 500;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .nfl-data-container .week-option:hover {
@@ -1443,14 +1527,16 @@
   filter: saturate(0.45); /* closer to black and white until the game is opened */
 }
 
-/* With no game open, every cell is brighter: a stronger colour wash and a
-   slightly lifted border. */
-.nfl-data-container .matchup-container:not(.has-open) .team-cell-bg {
+/* Every closed game's cells: a strong colour wash and a slightly lifted
+   border. (While a game is open the others are faded right out, so their cells
+   are left exactly as they are: changing them repainted every game on the
+   page at the moment a game opened or closed.) */
+.nfl-data-container .team-cell:not(.expanded) .team-cell-bg {
   opacity: 0.95;
   filter: saturate(0.85);
 }
 
-.nfl-data-container .matchup-container:not(.has-open) .team-info-container {
+.nfl-data-container .team-cell:not(.expanded) .team-info-container {
   border-color: color-mix(in srgb, var(--cell-border) 80%, white);
 }
 
@@ -1466,11 +1552,6 @@
   transition: opacity 0.5s ease;
 }
 
-.nfl-data-container .has-open .game-slot:not(.open) .team-cell-bg {
-  opacity: 0.4;
-  filter: saturate(0.2);
-}
-
 /* team name, record and win prob / score dim with the cell: a little on a
    closed game, more while another game is open */
 .nfl-data-container .team-text {
@@ -1484,16 +1565,6 @@
 
 .nfl-data-container .team-cell:not(.expanded) .team-text {
   opacity: 0.85;
-}
-
-.nfl-data-container .has-open .game-slot:not(.open) .team-text {
-  opacity: 0.55;
-}
-
-/* while another game is open, these borders wash out with their cells: mostly
-   grey, only a hint of the team colour, and faint */
-.nfl-data-container .has-open .game-slot:not(.open) .team-info-container {
-  border-color: color-mix(in srgb, color-mix(in srgb, var(--cell-border) 30%, rgb(105, 105, 105)) 45%, transparent);
 }
 
 /* Oversized, faded logo behind the team text; clipped by the cell's edges.
@@ -1513,7 +1584,10 @@
   z-index: 0;
   pointer-events: none;
   -webkit-user-drag: none;
-  transition: transform 0.7s ease, opacity 0.7s ease, filter 0.7s ease;
+  transition:
+    transform 0.7s ease,
+    opacity 0.7s ease,
+    filter 0.7s ease;
 }
 
 .nfl-data-container .team-cell.expanded .team-logo-watermark {
@@ -1533,7 +1607,9 @@
   flex-direction: column;
   align-items: center;
   width: 46px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.6);
 }
 
 .nfl-data-container .abbreviation {
@@ -1559,7 +1635,9 @@
   min-width: 40px;
   text-align: center;
   color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.9),
+    0 0 8px rgba(0, 0, 0, 0.6);
 }
 
 .nfl-data-container .live-indicator {
@@ -1619,7 +1697,6 @@
   white-space: nowrap;
 }
 
-
 /* ---------- linescore ---------- */
 
 /* ---------- quarter scoreboard ---------- */
@@ -1629,7 +1706,9 @@
   border: 1.5px solid #555555;
   border-radius: 8px;
   padding: 4px 6px 6px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 6px rgba(0, 0, 0, 0.25);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.25);
   font-variant-numeric: tabular-nums;
   animation: nflFadeIn 0.4s ease-in-out;
 }
@@ -1725,7 +1804,6 @@
   font-variant-numeric: tabular-nums;
   text-align: left;
 }
-
 
 .nfl-data-container .bet-message {
   padding: 14px 10px;
@@ -1858,7 +1936,6 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
-
 .nfl-data-container .bet-subtabs {
   display: flex;
   gap: 4px;
@@ -1967,7 +2044,6 @@
   min-width: 0;
   color: rgba(255, 255, 255, 0.78);
 }
-
 
 .nfl-data-container .pick-odds {
   font-size: 11px;
@@ -2141,7 +2217,6 @@
   font-weight: 600;
 }
 
-
 .nfl-data-container .player-headshot.small {
   flex: 0 0 26px;
   width: 26px;
@@ -2202,7 +2277,9 @@
   -webkit-touch-callout: none;
   touch-action: manipulation;
   overflow: hidden;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 /* gold fill that sweeps across while the user is holding */
@@ -2260,7 +2337,9 @@
   border-radius: 12px;
   border: 1.5px solid #c49410;
   background: rgba(24, 24, 24, 0.97);
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6), 0 0 14px rgba(196, 148, 16, 0.3);
+  box-shadow:
+    0 6px 22px rgba(0, 0, 0, 0.6),
+    0 0 14px rgba(196, 148, 16, 0.3);
   overflow: hidden;
   font-family: 'DM Sans', sans-serif;
 }
@@ -2493,8 +2572,6 @@
   white-space: nowrap;
 }
 
-
-
 .nfl-data-container .pick-market-verdict {
   flex: 0 0 auto;
   font-size: 10px;
@@ -2523,9 +2600,6 @@
 
 /* ---------- touchdown "why" + team groups ---------- */
 
-
-
-
 .nfl-data-container .td-chance {
   flex: 0 0 auto;
   align-self: center;
@@ -2547,7 +2621,6 @@
   gap: 7px;
   margin-top: 7px;
 }
-
 
 .nfl-data-container .td-history-games {
   flex: 1;
@@ -2760,8 +2833,6 @@
 }
 
 .nfl-data-container .team-group-head,
-
-
 .nfl-data-container .team-group-logo {
   width: 22px;
   height: 22px;
@@ -3149,7 +3220,6 @@
     font-size: 0.6rem;
   }
 
-
   .nfl-data-container .nfl-title {
     gap: 11px;
     padding: 8px 18px 8px 8px;
@@ -3319,8 +3389,6 @@
   border-radius: 0;
   background: none;
 }
-
-
 
 /* everything in the MODEL dropdown sits in one container styled like
    a game's start-time container (same border, corners and inset) */
@@ -3506,7 +3574,10 @@
   background: var(--cell-wash);
   cursor: pointer;
   user-select: none;
-  transition: filter 0.25s ease, opacity 0.25s ease, border-color 0.25s ease;
+  transition:
+    filter 0.25s ease,
+    opacity 0.25s ease,
+    border-color 0.25s ease;
 }
 
 /* not picked: greyed out like a losing team's cell */
@@ -3864,7 +3935,9 @@
 /* a pick strong enough to bet: a steady glowing gold border */
 .nfl-data-container .pick-line.is-bet {
   border: 1.5px solid #e2b33a;
-  box-shadow: 0 0 10px 1px rgba(245, 209, 107, 0.45), inset 0 0 8px rgba(245, 209, 107, 0.12);
+  box-shadow:
+    0 0 10px 1px rgba(245, 209, 107, 0.45),
+    inset 0 0 8px rgba(245, 209, 107, 0.12);
 }
 
 /* ---------- CONFIDENT BETS (in the MODEL dropdown) ---------- */
@@ -4127,40 +4200,93 @@
 .nfl-data-container .matchup-card .game-group-time,
 .nfl-data-container .matchup-card .game-group-subtime,
 .nfl-data-container .matchup-card .model-panel,
-.nfl-data-container .matchup-card .last-updated-timer {
-  transition:
-    opacity 0.45s ease,
-    background-color 0.45s ease,
-    border-color 0.45s ease,
-    box-shadow 0.45s ease;
+.nfl-data-container .matchup-card .last-updated-timer,
+.nfl-data-container .nfl-scroll-panel .game-section::before,
+.nfl-data-container .nfl-scroll-panel .game-container::before {
+  transition: opacity 0.45s ease;
 }
 
-/* the things that go completely */
-.nfl-data-container .matchup-card.game-focus .game-slot:not(.open),
+/* The things that go completely. Only the outermost of each is faded (a whole
+   section or day without the open game, rather than it and every game in it
+   too): on a phone everything that's fading is lifted onto a layer of its own
+   while it fades, so fading boxes inside fading boxes multiplied the work.
+   .focus-fading (useGameFocus) holds the same things faded for a moment as the
+   game closes, so they fade back in rather than popping back. */
 .nfl-data-container .matchup-card.game-focus .game-section:not(:has(.game-slot.open)),
-.nfl-data-container .matchup-card.game-focus .game-container:not(:has(.game-slot.open)),
-.nfl-data-container .matchup-card.game-focus .game-section-label,
-.nfl-data-container .matchup-card.game-focus .game-group-time,
-.nfl-data-container .matchup-card.game-focus .game-group-subtime,
+.nfl-data-container .matchup-card.game-focus .game-section:has(.game-slot.open) .game-section-label,
+.nfl-data-container
+  .matchup-card.game-focus
+  .game-section:has(.game-slot.open)
+  .game-container:not(:has(.game-slot.open)),
+.nfl-data-container .matchup-card.game-focus .game-container:has(.game-slot.open) .game-group-time,
+.nfl-data-container .matchup-card.game-focus .game-container:has(.game-slot.open) .game-group-subtime,
+.nfl-data-container .matchup-card.game-focus .game-container:has(.game-slot.open) .game-slot:not(.open),
 .nfl-data-container .matchup-card.game-focus .model-panel,
-.nfl-data-container .matchup-card.game-focus .last-updated-timer {
+.nfl-data-container .matchup-card.game-focus .last-updated-timer,
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-section:not(:has(.focus-target)),
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-section:has(.focus-target) .game-section-label,
+.nfl-data-container
+  .nfl-scroll-panel.focus-fading
+  .game-section:has(.focus-target)
+  .game-container:not(:has(.focus-target)),
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has(.focus-target) .game-group-time,
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has(.focus-target) .game-group-subtime,
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has(.focus-target) .game-slot:not(.focus-target),
+.nfl-data-container .nfl-scroll-panel.focus-fading .model-panel,
+.nfl-data-container .nfl-scroll-panel.focus-fading .settings-panel,
+.nfl-data-container .nfl-scroll-panel.focus-fading .last-updated-timer {
   opacity: 0;
   pointer-events: none;
 }
 
-/* the boxes holding the open game: still there, but see-through */
-.nfl-data-container .matchup-card.game-focus .game-section:has(.game-slot.open),
-.nfl-data-container .matchup-card.game-focus .game-container:has(.game-slot.open) {
-  background: transparent !important;
+/* The section and day boxes in the list: their fill and border are drawn on a
+   layer just behind them (::before) instead of on the box itself, so the
+   boxes holding an open game can fade their look away by fading that layer,
+   which the phone's GPU does without redrawing anything. Animating the boxes'
+   own colours repainted most of the screen on every frame. Looks the same. */
+.nfl-data-container .nfl-scroll-panel .game-section,
+.nfl-data-container .nfl-scroll-panel .game-container {
+  position: relative;
+  isolation: isolate;
+  background: none !important;
   border-color: transparent !important;
   box-shadow: none !important;
+}
+
+.nfl-data-container .nfl-scroll-panel .game-section::before,
+.nfl-data-container .nfl-scroll-panel .game-container::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border: 1px solid var(--pv-card-border, rgba(245, 209, 107, 0.7));
+  border-radius: inherit;
+  background-color: var(--pv-card, rgba(41, 41, 41, 0.5));
+  pointer-events: none;
+}
+
+.nfl-data-container .nfl-scroll-panel .game-container::before {
+  inset: -1.5px;
+  border-width: 1.5px;
+  border-color: var(--pv-card-border, #555555);
+  background-color: var(--pv-card, rgba(41, 41, 41, 0.85));
+}
+
+/* the boxes holding the open game: still there, but see-through */
+.nfl-data-container .matchup-card.game-focus .game-section:has(.game-slot.open)::before,
+.nfl-data-container .matchup-card.game-focus .game-container:has(.game-slot.open)::before,
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-section:has(.focus-target)::before,
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has(.focus-target)::before {
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .nfl-data-container .matchup-card .game-section,
   .nfl-data-container .matchup-card .game-container,
   .nfl-data-container .matchup-card .game-slot,
-  .nfl-data-container .matchup-card .model-panel {
+  .nfl-data-container .matchup-card .model-panel,
+  .nfl-data-container .nfl-scroll-panel .game-section::before,
+  .nfl-data-container .nfl-scroll-panel .game-container::before {
     transition: none;
   }
 }
@@ -4240,9 +4366,9 @@
   left: 50%;
   top: 50%;
   z-index: -2;
-  width: 160%;
+  width: 112%; /* just past the title's corners as it turns (smaller = less for the GPU to hold) */
   aspect-ratio: 1;
-  margin: -80% 0 0 -80%;
+  margin: -56% 0 0 -56%;
   background: conic-gradient(#f5d16b 0deg, #f5d16b 150deg, #15120c 180deg, #15120c 330deg, #f5d16b 360deg);
   pointer-events: none;
   will-change: transform;
@@ -4372,9 +4498,28 @@
   background: none;
 }
 
-.nfl-data-container .nfl-scroll-panel.scrolled {
+/* The fade is always on the box, just slid up out of sight when it isn't
+   wanted: switching it on and off made the phone redraw the whole list each
+   time (a flash when a game opened or closed). Moving it redraws only the fade. */
+.nfl-data-container .nfl-scroll-panel {
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 26px);
   mask-image: linear-gradient(to bottom, transparent 0, #000 26px);
+  -webkit-mask-size: 100% calc(100% + 26px);
+  mask-size: 100% calc(100% + 26px);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: 0 -26px;
+  mask-position: 0 -26px;
+}
+
+.nfl-data-container .nfl-scroll-panel.scrolled {
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+}
+
+/* no scrolling by hand while an open game slides into place (useGameFocus) */
+.nfl-data-container .nfl-scroll-panel.focus-sliding {
+  touch-action: none;
 }
 
 /* the glowing ring around an open game: its sides as far from the team cells
@@ -4386,8 +4531,8 @@
 
 /* no top fade while a game is open */
 .nfl-data-container .matchup-card.game-focus .nfl-scroll-panel.scrolled {
-  -webkit-mask-image: none;
-  mask-image: none;
+  -webkit-mask-position: 0 -26px;
+  mask-position: 0 -26px;
 }
 
 /* the scrolling area runs right to the bottom of the screen, so the list goes
@@ -4451,7 +4596,6 @@ html[data-theme] .nfl-data-container .kickoff-bar {
   margin-bottom: 2px;
 }
 
-
 /* ---------- just the open game (useGameFocus): once a game has slid to the top,
    everything else (already faded out) is taken out of the scrolling list, so
    the list holds only that game and scrolls it natively - not at all if it
@@ -4471,9 +4615,10 @@ html[data-theme] .nfl-data-container .kickoff-bar {
   display: none !important;
 }
 
-/* the open game's glowing ring breathes on its own GPU layer */
-.nfl-data-container .game-slot .game-ring,
-.nfl-data-container .game-slot::after {
+/* the open game's glowing ring breathes on its own GPU layer (only the open
+   game's: a layer for every game's ring held a lot of the phone's memory) */
+.nfl-data-container .game-slot.open .game-ring,
+.nfl-data-container .game-slot.open::after {
   will-change: opacity;
 }
 
@@ -4531,7 +4676,12 @@ html[data-quality='low'] .nfl-data-container .game-slot.open::after {
 }
 
 /* the list doesn't fade under the header when scrolled */
-html[data-quality='low'] .nfl-data-container .nfl-scroll-panel.scrolled {
+html[data-quality='low'] .nfl-data-container .nfl-scroll-panel {
   -webkit-mask-image: none;
   mask-image: none;
+}
+
+/* the title's gold shine stays off */
+html[data-quality='low'] .nfl-data-container .title-shine {
+  display: none;
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
+import TitleText from '../shared/TitleText';
 import TeamsMenu from './NFLDataNavbarComponents/TeamsMenu';
 import SportSwitcher from '../../../sports/SportSwitcher';
 import DayCalendar from '../../../sports/DayCalendar';
@@ -122,7 +123,7 @@ const NFLDataNavbar = ({
     <div className="nflDataNavbar pinned-header">
       <h1 className="nfl-title">
         <span className="nfl-title-badge">NFL</span>
-        <span className="nfl-title-text">Stats Guide</span>
+        <TitleText>Stats Guide</TitleText>
       </h1>
 
       <div className="controls">

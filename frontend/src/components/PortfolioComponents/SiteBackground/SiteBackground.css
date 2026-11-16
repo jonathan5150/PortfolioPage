@@ -19,8 +19,7 @@
   mask-size: 400px 200px;
   -webkit-mask-repeat: repeat;
   mask-repeat: repeat;
-  transition: opacity 0.8s ease;
-  will-change: transform, opacity;
+  will-change: transform;
 }
 
 .site-background-layer.rolls-right {
@@ -34,27 +33,63 @@
 }
 
 /* soft gold normally; the team-coloured copy fades in over it (at full
-   strength) while a game is open, and the gold fades out under it */
+   strength) while a game is open, and the gold fades out under it.
+   useGameFocus marks the background .team-on and sets --bg-team-a / -b on it
+   (on the background only, so nothing else on the page is restyled). Once a
+   set has faded out it's hidden, so the phone only keeps the set that's
+   showing in its memory (these layers are wider than the screen). */
 .site-background-layer.gold {
   background-color: #f5d16b;
+  transition:
+    opacity 0.8s ease,
+    visibility 0s;
 }
 
 .site-background-layer.rolls-right.gold {
-  opacity: calc(0.73 * (1 - var(--bg-team-on, 0)));
+  opacity: 0.73;
 }
 
 .site-background-layer.rolls-left.gold {
-  opacity: calc(0.59 * (1 - var(--bg-team-on, 0)));
+  opacity: 0.59;
+}
+
+.site-background-layer.team {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.8s ease,
+    visibility 0s linear 0.8s;
 }
 
 .site-background-layer.rolls-right.team {
   background-color: var(--bg-team-a, #f5d16b);
-  opacity: var(--bg-team-on, 0);
 }
 
 .site-background-layer.rolls-left.team {
   background-color: var(--bg-team-b, #f5d16b);
-  opacity: calc(0.9 * var(--bg-team-on, 0));
+}
+
+.site-background.team-on .site-background-layer.gold {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.8s ease,
+    visibility 0s linear 0.8s;
+}
+
+.site-background.team-on .site-background-layer.team {
+  visibility: visible;
+  transition:
+    opacity 0.8s ease,
+    visibility 0s;
+}
+
+.site-background.team-on .site-background-layer.rolls-right.team {
+  opacity: 1;
+}
+
+.site-background.team-on .site-background-layer.rolls-left.team {
+  opacity: 0.9;
 }
 
 @keyframes siteBgRight {
@@ -76,7 +111,8 @@
 }
 
 /* low graphics quality (SETTINGS): the lines hold still and switch colour at once */
-html[data-quality='low'] .site-background-layer {
+html[data-quality='low'] .site-background-layer,
+html[data-quality='low'] .site-background.team-on .site-background-layer {
   animation: none;
   transition: none;
   will-change: auto;

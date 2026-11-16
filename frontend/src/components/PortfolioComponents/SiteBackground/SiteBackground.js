@@ -13,9 +13,9 @@ import './SiteBackground.css';
 //
 // The drawings are used as stencils (CSS masks) filled with a colour. Each set
 // of lines is there twice: soft gold, and a team-coloured copy on top that's
-// invisible until a game is open (useGameFocus sets --bg-team-a / -b and
-// --bg-team-on). Switching between them only fades opacity, which the GPU does
-// without redrawing the lines.
+// invisible until a game is open (useGameFocus marks the background .team-on
+// and sets --bg-team-a / -b on it). Switching between them only fades opacity,
+// which the GPU does without redrawing the lines.
 
 // a choice from the old background picker, no longer used
 try {
