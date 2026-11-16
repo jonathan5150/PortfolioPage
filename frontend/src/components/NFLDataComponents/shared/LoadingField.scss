@@ -1,6 +1,7 @@
 /* Loading animation (see LoadingField.js): the ball of the sport being loaded,
    gold and black, turning in place (one turn every 1.6s, speeding up and
-   easing off) with a soft gold glow pulsing behind it twice per turn. */
+   easing off) while it grows and shrinks (once per turn), with a soft gold
+   glow pulsing behind it twice per turn. */
 
 .sports-loading {
   display: flex;
@@ -129,18 +130,35 @@
 
 @keyframes sl-spin {
   0% {
-    transform: rotate(0deg) scale(1);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.06);
+    transform: rotate(0deg);
   }
   100% {
-    transform: rotate(360deg) scale(1);
+    transform: rotate(360deg);
+  }
+}
+
+/* ...and grows and shrinks while it turns: smallest as a turn starts, biggest
+   halfway round. The icon inside the turning ball does this, so the two
+   movements each keep their own easing. Same clock as the turn. */
+.sports-loading .sl-ball .sl-icon {
+  animation: sl-grow 1.6s ease-in-out infinite;
+  animation-delay: var(--sl-phase, 0s);
+  will-change: transform;
+}
+
+@keyframes sl-grow {
+  0%,
+  100% {
+    transform: scale(0.78);
+  }
+  50% {
+    transform: scale(1.14);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sports-loading .sl-shape.sl-ball {
+  .sports-loading .sl-shape.sl-ball,
+  .sports-loading .sl-ball .sl-icon {
     animation: none;
   }
 }

@@ -9,6 +9,7 @@ import { peekOdds } from '../shared/preloadOdds';
 import { getGameConditions } from '../../../pages/NFLData/NFLDataApi/gameConditions';
 import useAsyncData from '../shared/useAsyncData';
 import { getTeamBorderColor } from '../shared/teamColors';
+import { DRAWER_TRANSITION } from '../shared/detailsTiming';
 
 // Three score bug variants, matching the MLB app's Before / Live / After bugs.
 
@@ -38,19 +39,20 @@ const infoBoxStyle = (corner) => ({
 });
 
 // Everything below the team cells that only shows once the game is opened.
-const InfoDrawer = ({ open, maxHeight = 260, children }) => (
+// It eases its real height (a one-row grid going from 0fr to 1fr), so it opens
+// and closes at the same steady speed whatever is in it.
+const InfoDrawer = ({ open, children }) => (
   <div
     className="info-drawer"
     style={{
       gridColumn: '1 / span 2',
-      overflow: 'hidden',
-      padding: open ? '0 0 3px' : '0',
-      maxHeight: open ? `${maxHeight}px` : '0px',
+      display: 'grid',
+      gridTemplateRows: open ? '1fr' : '0fr',
       opacity: open ? 1 : 0,
-      transition: 'max-height 0.75s ease, opacity 0.55s ease, padding 0.5s ease',
+      transition: DRAWER_TRANSITION,
     }}
   >
-    {children}
+    <div className="info-drawer-inner">{children}</div>
   </div>
 );
 

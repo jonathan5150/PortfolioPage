@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { whenStill } from './motionGate';
 
 // Runs an async loader whenever deps change; ignores stale responses.
 // Pass enabled=false to defer loading (e.g. until a card is expanded).
@@ -21,7 +22,10 @@ const useAsyncData = (loader, deps, { enabled = true, keepPrevious = false, init
 
     loader()
       .then((data) => {
-        if (active) setState({ data, error: null, loading: false });
+        // drawn once any game sliding open or closed has come to rest (motionGate)
+        whenStill(() => {
+          if (active) setState({ data, error: null, loading: false });
+        });
       })
       .catch((error) => {
         console.warn('NFL data load failed:', error);

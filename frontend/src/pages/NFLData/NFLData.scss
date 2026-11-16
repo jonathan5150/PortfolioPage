@@ -4580,15 +4580,18 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
    everything under the game down a little every frame; with the whole list
    still there, that made a weak phone lay out and redraw the whole list
    every frame while it was also sliding and fading, which showed as
-   flickering. With just the game in the list it's cheap. */
+   flickering. With just the game in the list it's cheap.
+   They fold with their own transitions (detailsTiming.js), so folding takes
+   exactly as long as unfolding. */
 .nfl-data-container .nfl-scroll-panel:not(.focus-details) .game-slot .info-drawer {
-  max-height: 0 !important;
-  padding: 0 !important;
+  grid-template-rows: 0fr !important;
   opacity: 0 !important;
-  transition:
-    max-height 0.38s ease,
-    opacity 0.32s ease,
-    padding 0.32s ease !important;
+}
+
+/* the drawer's content, clipped while its row eases open or shut */
+.nfl-data-container .info-drawer-inner {
+  min-height: 0;
+  overflow: hidden;
 }
 
 .nfl-data-container .nfl-scroll-panel:not(.focus-details) .game-slot .stat-toggle-container {
@@ -4628,7 +4631,7 @@ html[data-theme] .nfl-data-container .kickoff-bar {
   margin-bottom: 1px;
 }
 
-.nfl-data-container .info-drawer:has(> .info-drawer-row) .kickoff-bar {
+.nfl-data-container .info-drawer-inner:has(> .info-drawer-row) .kickoff-bar {
   margin-bottom: 3px;
 }
 
@@ -4725,7 +4728,7 @@ html[data-theme] .nfl-data-container .kickoff-bar {
    colour at once, the title's ring and the background lines hold still, and
    an open game jumps straight to the top (useGameFocus). The loading
    animation keeps going, so it's clear something's happening. */
-html[data-quality='low'] .nfl-data-container *:not(.sl-shape),
+html[data-quality='low'] .nfl-data-container *:not(.sl-shape):not(.sl-icon),
 html[data-quality='low'] .nfl-data-container *::before,
 html[data-quality='low'] .nfl-data-container *::after {
   transition: none !important;

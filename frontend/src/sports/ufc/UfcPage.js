@@ -3,6 +3,7 @@ import FitText from '../../components/NFLDataComponents/shared/FitText';
 import SportSwitcher from '../SportSwitcher';
 import DayCalendar from '../DayCalendar';
 import SlideOpen from '../../components/NFLDataComponents/shared/SlideOpen';
+import { PANEL_TRANSITION } from '../../components/NFLDataComponents/shared/detailsTiming';
 import LastUpdated from '../../components/NFLDataComponents/shared/LastUpdated';
 import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
 import TitleText from '../../components/NFLDataComponents/shared/TitleText';
@@ -384,7 +385,7 @@ const FightCard = ({ eventId, fight, details, sectionsReady, isOpen, onToggle, h
               marginBottom: isOpen ? '7px' : '0',
               borderWidth: isOpen ? '2px' : '0px',
               pointerEvents: isOpen ? 'auto' : 'none',
-              transition: 'height 0.42s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease',
+              transition: PANEL_TRANSITION,
               boxSizing: 'content-box',
             }}
           >

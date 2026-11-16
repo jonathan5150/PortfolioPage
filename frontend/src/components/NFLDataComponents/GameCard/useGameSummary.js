@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { whenStill } from '../shared/motionGate';
 import { getGameSummary } from '../../../pages/NFLData/NFLDataApi/nflDataService';
 import { peekGameSummary } from '../../../pages/NFLData/NFLDataApi/espnService';
 
@@ -27,7 +28,10 @@ const useGameSummary = (game, enabled) => {
     const load = async (live) => {
       try {
         const data = await getGameSummary(game.id, { live, final: isFinal });
-        if (active) setState({ data, error: null, loading: false });
+        // drawn once any game sliding open or closed has come to rest (motionGate)
+        whenStill(() => {
+          if (active) setState({ data, error: null, loading: false });
+        });
       } catch (error) {
         console.warn(`Box score unavailable for game ${game.id}:`, error);
         if (active) setState((prev) => ({ data: prev.data, error, loading: false }));

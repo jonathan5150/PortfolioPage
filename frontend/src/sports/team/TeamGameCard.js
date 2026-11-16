@@ -7,6 +7,7 @@ import { getLeagueOdds } from './leagueApi';
 import { peekOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
 import { BoxScorePanel, LinesPanel, PlayersPanel, useGameLines } from './TeamPanels';
 import TeamStatsCompare from '../../components/NFLDataComponents/shared/TeamStatsCompare';
+import { DRAWER_TRANSITION, PANEL_TRANSITION } from '../../components/NFLDataComponents/shared/detailsTiming';
 
 const accent = (team) => washOut(getTeamColor(team) || 'rgba(120,120,120,0.6)', 0.15).replace(/[\d.]+\)$/, '1)');
 const startTime = (game) =>
@@ -21,19 +22,19 @@ const gridStyle = {
   WebkitTapHighlightColor: 'transparent',
 };
 
+// eases its real height (see ScoreBugs' InfoDrawer)
 const InfoDrawer = ({ open, children }) => (
   <div
     className="info-drawer"
     style={{
       gridColumn: '1 / span 2',
-      overflow: 'hidden',
-      padding: open ? '0 0 3px' : '0',
-      maxHeight: open ? '320px' : '0px',
+      display: 'grid',
+      gridTemplateRows: open ? '1fr' : '0fr',
       opacity: open ? 1 : 0,
-      transition: 'max-height 0.75s ease, opacity 0.55s ease, padding 0.5s ease',
+      transition: DRAWER_TRANSITION,
     }}
   >
-    {children}
+    <div className="info-drawer-inner">{children}</div>
   </div>
 );
 
@@ -367,7 +368,7 @@ const TeamGameCard = memo(({ lg, game, isOpen, onUserToggle, hideMode, hidden, o
               marginBottom: isOpen ? '7px' : '0',
               borderWidth: isOpen ? '2px' : '0px',
               pointerEvents: isOpen ? 'auto' : 'none',
-              transition: 'height 0.42s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease',
+              transition: PANEL_TRANSITION,
               boxSizing: 'content-box',
             }}
           >

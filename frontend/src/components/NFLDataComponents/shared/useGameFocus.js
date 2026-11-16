@@ -2,6 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getTeamRingColors } from './teamColors';
 import { holdBackgroundWork } from './useBackgroundPrefetch';
 import { isLowQuality } from './graphicsQuality';
+import { DETAILS_MS } from './detailsTiming';
+import { setMoving } from './motionGate';
 
 // What happens around an open game on every sports page (NFL, NBA, MLB, UFC).
 // The fading of everything else is CSS (.game-focus, see NFLData.scss); this
@@ -55,7 +57,7 @@ export const teamLineColor = (team) => lineColorFrom(getTeamRingColors(team)[0])
 
 const SLIDE_MS = 800; // the longest slide up (slideUpMs)
 const FADE_MS = 580; // everything else fades out in 0.55s (NFLData.scss)
-const FOLD_MS = 400; // an open game's details fold away in about 0.4s
+const FOLD_MS = DETAILS_MS + 30; // an open game's details fold away (detailsTiming), then the rest comes back
 const GAP = 8; // space between the top of the box and the open game
 
 // The slides, done here rather than by the browser's own smooth scroll (about
@@ -126,10 +128,12 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     // list each time, which showed as a flash.
     const blockWheel = (e) => e.preventDefault();
     const lock = () => {
+      setMoving(true);
       box.classList.add('focus-sliding');
       box.addEventListener('wheel', blockWheel, { passive: false });
     };
     const unlock = () => {
+      setMoving(false);
       box.classList.remove('focus-sliding');
       box.removeEventListener('wheel', blockWheel);
     };
@@ -186,8 +190,20 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
         slot.setAttribute('data-focus-target', '');
         target.current = slot;
         keepingPlace(slot, () => box.classList.add('focus-only'));
-        box.classList.add('focus-details');
+        // Data that came in during the slide is drawn now, while nothing
+        // moves, and the details unfold two frames later, once that's done:
+        // drawing it (and restyling the page for .focus-details) in the
+        // unfold's first frames made a phone stall just as it began.
+        // Anything newer waits until the details have unfolded.
         unlock();
+        setMoving(true);
+        frame = requestAnimationFrame(() => {
+          frame = requestAnimationFrame(() => {
+            frame = 0;
+            box.classList.add('focus-details');
+            later(() => setMoving(false), DETAILS_MS + 50);
+          });
+        });
       };
       later(() => {
         const slot = box.querySelector('.game-slot.open');
