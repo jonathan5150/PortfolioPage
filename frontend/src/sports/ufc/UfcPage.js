@@ -384,7 +384,7 @@ const FightCard = ({ eventId, fight, details, sectionsReady, isOpen, onToggle, h
               marginBottom: isOpen ? '7px' : '0',
               borderWidth: isOpen ? '2px' : '0px',
               pointerEvents: isOpen ? 'auto' : 'none',
-              transition: 'height 0.35s ease, opacity 0.25s ease, padding 0.25s ease, margin 0.25s ease',
+              transition: 'height 0.42s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease',
               boxSizing: 'content-box',
             }}
           >

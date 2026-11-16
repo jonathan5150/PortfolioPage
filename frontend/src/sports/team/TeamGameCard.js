@@ -30,7 +30,7 @@ const InfoDrawer = ({ open, children }) => (
       padding: open ? '0 0 3px' : '0',
       maxHeight: open ? '320px' : '0px',
       opacity: open ? 1 : 0,
-      transition: 'max-height 0.6s ease, opacity 0.45s ease, padding 0.4s ease',
+      transition: 'max-height 0.75s ease, opacity 0.55s ease, padding 0.5s ease',
     }}
   >
     {children}
@@ -367,7 +367,7 @@ const TeamGameCard = memo(({ lg, game, isOpen, onUserToggle, hideMode, hidden, o
               marginBottom: isOpen ? '7px' : '0',
               borderWidth: isOpen ? '2px' : '0px',
               pointerEvents: isOpen ? 'auto' : 'none',
-              transition: 'height 0.35s ease, opacity 0.25s ease, padding 0.25s ease, margin 0.25s ease',
+              transition: 'height 0.42s ease, opacity 0.3s ease, padding 0.3s ease, margin 0.3s ease',
               boxSizing: 'content-box',
             }}
           >

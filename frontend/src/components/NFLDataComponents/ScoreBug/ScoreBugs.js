@@ -47,7 +47,7 @@ const InfoDrawer = ({ open, maxHeight = 260, children }) => (
       padding: open ? '0 0 3px' : '0',
       maxHeight: open ? `${maxHeight}px` : '0px',
       opacity: open ? 1 : 0,
-      transition: 'max-height 0.6s ease, opacity 0.45s ease, padding 0.4s ease',
+      transition: 'max-height 0.75s ease, opacity 0.55s ease, padding 0.5s ease',
     }}
   >
     {children}

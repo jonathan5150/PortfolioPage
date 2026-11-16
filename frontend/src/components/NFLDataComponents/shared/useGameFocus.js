@@ -53,16 +53,18 @@ const toHsl = (r, g, b) => {
 
 export const teamLineColor = (team) => lineColorFrom(getTeamRingColors(team)[0]);
 
-const SLIDE_MS = 700;
-const FADE_MS = 480; // everything else fades out in 0.45s (NFLData.scss)
+const SLIDE_MS = 800; // the longest slide up (slideUpMs)
+const FADE_MS = 580; // everything else fades out in 0.55s (NFLData.scss)
 const MASK_MS = 260; // the top fade slides away in 0.25s
-const FOLD_MS = 320; // an open game's details fold away in about 0.3s
+const FOLD_MS = 400; // an open game's details fold away in about 0.4s
 const GAP = 8; // space between the top of the box and the open game
 
-// The slide back to where the list was when a game closes: a little slower
-// than the browser's own smooth scroll, so it can be watched gliding home.
-// Longer for longer distances, within limits.
-const slideBackMs = (distance) => Math.min(900, 520 + Math.abs(distance) * 0.32);
+// The slides, done here rather than by the browser's own smooth scroll (about
+// 0.4s up, too quick to watch): opening glides the game up to the top in about
+// 0.5-0.8s, and closing glides the list back to where it was in about
+// 0.6-1.1s. Longer for longer distances, within limits.
+const slideUpMs = (distance) => Math.min(SLIDE_MS, 480 + Math.abs(distance) * 0.25);
+const slideBackMs = (distance) => Math.min(1080, 620 + Math.abs(distance) * 0.38);
 const easeInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2);
 
 const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
@@ -132,7 +134,6 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     const box = panelRef.current;
     if (!box) return undefined;
     const low = isLowQuality();
-    const behavior = low ? 'auto' : 'smooth';
     // No scrolling by hand while the game slides (a scroll mid-slide fights
     // it). Done by refusing the gesture rather than switching the box's
     // scrolling off: switching that off and on made the phone redraw the whole
@@ -155,11 +156,11 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     const timers = [];
     const later = (fn, ms) => timers.push(setTimeout(fn, ms));
     let frame = 0;
-    // glides the box to top, then runs done
-    const slideTo = (top, done) => {
+    // glides the box to top over duration(distance) ms, then runs done
+    const slideTo = (top, duration, done) => {
       const from = box.scrollTop;
       const distance = top - from;
-      const ms = slideBackMs(distance);
+      const ms = duration(distance);
       const startedAt = performance.now();
       const step = (now) => {
         const p = Math.min(1, (now - startedAt) / ms);
@@ -172,35 +173,14 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
       };
       frame = requestAnimationFrame(step);
     };
-    // runs fn once the box has really stopped scrolling ('scrollend'), or after
-    // fallbackMs at the latest (no scroll at all, or an older browser). Acting
-    // on the list while a slide is still running on a slow phone made the game
-    // jump: the page's idea of where the box was scrolled to lagged behind.
-    let stopWaiting = () => {};
-    const afterScroll = (fn, fallbackMs) => {
-      let ran = false;
-      const run = () => {
-        if (ran) return;
-        ran = true;
-        stopWaiting();
-        fn();
-      };
-      box.addEventListener('scrollend', run);
-      const fallback = setTimeout(run, fallbackMs);
-      stopWaiting = () => {
-        box.removeEventListener('scrollend', run);
-        clearTimeout(fallback);
-      };
-    };
     const cleanup = () => {
       timers.forEach(clearTimeout);
       cancelAnimationFrame(frame);
-      stopWaiting();
       unlock();
     };
 
     if (isOpen) {
-      holdBackgroundWork(SLIDE_MS + 900);
+      holdBackgroundWork(SLIDE_MS + 1000);
       if (returnTo.current === null) returnTo.current = box.scrollTop;
       setFocusSpace(true);
       lock();
@@ -239,8 +219,12 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
           settle();
           return;
         }
-        afterScroll(settle, low ? 60 : SLIDE_MS + 500);
-        box.scrollTo({ top, behavior });
+        if (low) {
+          box.scrollTop = top;
+          settle();
+          return;
+        }
+        slideTo(top, slideUpMs, settle);
       }, 30);
       return cleanup;
     }
@@ -252,7 +236,7 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     // nothing to fade from); the game keeps its spot on screen meanwhile. Then
     // the box glides back to where it was, and the top fade slides back in.
     if (returnTo.current === null) return undefined;
-    holdBackgroundWork(FOLD_MS + 900 + 900);
+    holdBackgroundWork(FOLD_MS + 1080 + 900);
     const back = returnTo.current;
     lock();
     const wasFocused = Boolean(target.current) && box.classList.contains('focus-details');
@@ -286,7 +270,7 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
         done();
         return;
       }
-      slideTo(back, done);
+      slideTo(back, slideBackMs, done);
     };
     if (wasFocused && !low) later(restore, FOLD_MS);
     else restore();
