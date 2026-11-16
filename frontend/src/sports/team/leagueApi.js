@@ -325,12 +325,20 @@ const parseBoxScore = (json, lg) =>
     })),
   }));
 
-export const getLeagueSummary = async (lg, eventId, { live = false } = {}) => {
-  const json = await fetchJson(`${SITE(lg)}/summary?event=${eventId}`, { ttlMs: live ? 0 : 5 * MIN });
-  return {
+// A finished game's box score never changes, so it's kept for hours (and its
+// parsed copy kept too, so an opened game can show it on its very first frame).
+const finishedSummaries = new Map();
+export const peekLeagueSummary = (lg, eventId) => finishedSummaries.get(`${lg}:${eventId}`);
+export const getLeagueSummary = async (lg, eventId, { live = false, final = false } = {}) => {
+  const json = await fetchJson(`${SITE(lg)}/summary?event=${eventId}`, {
+    ttlMs: live ? 0 : final ? 12 * 60 * MIN : 5 * MIN,
+  });
+  const summary = {
     status: parseStatus(json?.header?.competitions?.[0]?.status),
     box: parseBoxScore(json, lg),
   };
+  if (final) finishedSummaries.set(`${lg}:${eventId}`, summary);
+  return summary;
 };
 
 export const getLeagueOdds = async (lg, eventId, { final = false } = {}) => {

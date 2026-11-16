@@ -705,7 +705,7 @@ const Betting = ({ game, rankings, isOpen = true }) => {
     async () => {
       const [espnOdds, predictor, book] = await Promise.all([
         settle(getEventOdds(game.id, { final: isFinal })),
-        settle(getEventPredictor(game.id)),
+        settle(getEventPredictor(game.id, { final: isFinal })),
         getBookOdds(game),
       ]);
       lastLoadRef.current = Date.now();

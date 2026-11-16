@@ -8,25 +8,31 @@
   background-color: #0a0908;
 }
 
-/* one repeating 400 x 200 tile of lines, a tile wider than the screen */
+/* one repeating 400 x 200 tile of lines (a stencil filled with the line
+   colour), a tile wider than the screen */
 .site-background-layer {
   position: absolute;
   top: 0;
   bottom: 0;
   width: calc(100% + 400px);
-  background-size: 400px 200px;
-  background-repeat: repeat;
+  -webkit-mask-size: 400px 200px;
+  mask-size: 400px 200px;
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+  transition: background-color 0.8s ease;
   will-change: transform;
 }
 
 .site-background-layer.rolls-right {
   left: -400px;
+  background-color: var(--bg-line-a, #f5d16b);
   animation: siteBgRight 40s linear infinite;
 }
 
 .site-background-layer.rolls-left {
   left: 0;
   opacity: 0.8;
+  background-color: var(--bg-line-b, #f5d16b);
   animation: siteBgLeft 46s linear infinite;
 }
 

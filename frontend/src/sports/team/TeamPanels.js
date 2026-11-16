@@ -23,6 +23,7 @@ import {
   getLeagueTeamLeaders,
   getLeagueSummary,
   getLeagueTeamSchedule,
+  peekLeagueSummary,
 } from './leagueApi';
 import { buildLeaguePicks, restDays, scheduleGames } from './leaguePicks';
 import { loadTeamModel } from '../../pages/NFLData/NFLDataApi/teamModels';
@@ -286,7 +287,12 @@ const StatGroup = ({ group }) => (
 export const BoxScorePanel = ({ lg, game }) => {
   const live = game.status.state === 'in';
   const tick = useTicker(live);
-  const summary = useAsyncData(() => getLeagueSummary(lg, game.id, { live }), [lg, game.id, live, tick]);
+  const final = game.status.state === 'post';
+  // a finished game's box score that's already loaded (in the background, say)
+  // shows straight away, with no loading message
+  const summary = useAsyncData(() => getLeagueSummary(lg, game.id, { live, final }), [lg, game.id, live, tick], {
+    initial: final ? peekLeagueSummary(lg, game.id) : undefined,
+  });
   const [side, setSide] = useState('away');
   const teamBox = (summary.data?.box || []).find((b) => b.teamId === game[side]?.teamId);
   return (

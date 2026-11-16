@@ -24,12 +24,49 @@ import {
   getLeagueOdds,
   getLeagueScoreboard,
   getLeagueTeams,
+  getLeaguePredictor,
+  getLeagueSummary,
+  getLeagueTeamSchedule,
 } from './leagueApi';
+import useBackgroundPrefetch, { byPriority } from '../../components/NFLDataComponents/shared/useBackgroundPrefetch';
+import { loadTeamModel } from '../../pages/NFLData/NFLDataApi/teamModels';
 import { preloadOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
+import useGameFocus, { teamLineColor } from '../../components/NFLDataComponents/shared/useGameFocus';
 import TeamGameCard from './TeamGameCard';
 import '../../pages/NFLData/NFLData.scss';
 import './TeamSport.scss';
 import '../SportTitles.scss';
+
+// What each game's BOX SCORE and LINES tabs load, for loading in the background,
+// in this order: live and upcoming games' lines, then every finished game's box
+// score (a finished game opens on its box score), then finished games' lines,
+// then each team's schedule (its results rows and days of rest).
+const leagueLinesTasks = (lg) => (game) => [
+  {
+    key: `${lg}:odds:${game.id}`,
+    run: () => getLeagueOdds(lg, game.id, { final: game.status?.state === 'post' }),
+  },
+  { key: `${lg}:predictor:${game.id}`, run: () => getLeaguePredictor(lg, game.id) },
+];
+const leagueBoxTask = (lg) => (game) => ({
+  key: `${lg}:summary:${game.id}`,
+  run: () => getLeagueSummary(lg, game.id, { final: true }),
+});
+const leagueScheduleTasks = (lg) => (game) =>
+  ['away', 'home'].map((side) => ({
+    key: `${lg}:schedule:${game[side]?.teamId}:${game.season}`,
+    run: () => getLeagueTeamSchedule(lg, game[side]?.teamId, game.season),
+  }));
+const leagueBackgroundTasks = (lg, games) => {
+  const finished = games.filter((g) => g.status?.state === 'post');
+  return [
+    ...byPriority(games.filter((g) => g.status?.state !== 'post')).flatMap(leagueLinesTasks(lg)),
+    ...finished.map(leagueBoxTask(lg)),
+    ...finished.flatMap(leagueLinesTasks(lg)),
+    ...(lg === 'nba' ? [{ key: 'nba:teamModel', run: () => loadTeamModel('nba') }] : []),
+    ...byPriority(games).flatMap(leagueScheduleTasks(lg)),
+  ];
+};
 
 const SECTIONS = [
   { key: 'post', label: 'FINISHED' },
@@ -57,6 +94,9 @@ const TeamSportPage = ({ lg }) => {
   const [board, setBoard] = useState(null);
   const [error, setError] = useState(null);
   const [refresh, setRefresh] = useState(0);
+  // another day was picked and its games aren't in yet: the loading screen
+  // shows under the header, with everything else hidden
+  const [switching, setSwitching] = useState(false);
 
   // the current day (ESPN's pick) on first load, then whichever day is chosen;
   // learning the day from that first board mustn't download it a second time
@@ -82,6 +122,7 @@ const TeamSportPage = ({ lg }) => {
       )
       .then((data) => {
         if (!active) return;
+        setSwitching(false);
         setBoard(data);
         setError(null);
         if (!day && data.day) {
@@ -89,7 +130,11 @@ const TeamSportPage = ({ lg }) => {
           setDay(data.day);
         }
       })
-      .catch((e) => active && setError(e));
+      .catch((e) => {
+        if (!active) return;
+        setSwitching(false);
+        setError(e);
+      });
     return () => {
       active = false;
     };
@@ -160,6 +205,24 @@ const TeamSportPage = ({ lg }) => {
   const onUserToggle = useCallback((id, open) => setOpenGameId((prev) => (open ? id : prev === id ? null : prev)), []);
   const hasOpenGame = Boolean(openGameId) && shownGames.some((g) => g.id === openGameId);
 
+  // around the open game: everything else fades (.game-focus), team-coloured
+  // lines, tap outside to close, the slide up to the top of the scrolling box
+  // and back (see useGameFocus)
+  const panelRef = useRef(null);
+  const openGame = hasOpenGame ? shownGames.find((g) => g.id === openGameId) : null;
+  // BOX SCORE and LINES for every game shown, loaded quietly in the background
+  // (see useBackgroundPrefetch). With live games on, it waits while one is open;
+  // with none, it keeps going even then.
+  const hasLive = shownGames.some((g) => g.status?.state === 'in');
+  useBackgroundPrefetch(leagueBackgroundTasks(lg, shownGames), { paused: hasLive && hasOpenGame });
+  const { focusSpace } = useGameFocus({
+    openKey: openGame?.id,
+    lineA: openGame ? teamLineColor(openGame.away?.team) : null,
+    lineB: openGame ? teamLineColor(openGame.home?.team) : null,
+    onClose: () => setOpenGameId(null),
+    panelRef,
+  });
+
   // ---- sections ----
   const sections = useMemo(
     () =>
@@ -177,6 +240,10 @@ const TeamSportPage = ({ lg }) => {
   const [savedCollapsed, setSavedCollapsed] = useState(null);
   // not saved anywhere: every new day starts from the default view
   useEffect(() => setSavedCollapsed(null), [cookieName]);
+  // GAMES (hiding games): every section opens, so every game can be checked off
+  useEffect(() => {
+    if (hideMode) setSavedCollapsed(new Set());
+  }, [hideMode]);
   const defaultCollapsed = useMemo(() => {
     const keys = sections.map((s) => s.key);
     // live games: LIVE and UPCOMING open; otherwise UPCOMING, else FINISHED
@@ -200,6 +267,7 @@ const TeamSportPage = ({ lg }) => {
     findGameDay(lg, day, dir)
       .then((next) => {
         if (next) {
+          if (next !== day) setSwitching(true);
           setDay(next);
           setOpenGameId(null);
         }
@@ -219,6 +287,7 @@ const TeamSportPage = ({ lg }) => {
   }, [pickingDay]);
   const loadEventDays = useCallback((y, m) => getLeagueEventDays(lg, y, m), [lg]);
   const pickDay = (key) => {
+    if (key !== day) setSwitching(true);
     setDay(key);
     setPickingDay(false);
     setOpenGameId(null);
@@ -241,10 +310,12 @@ const TeamSportPage = ({ lg }) => {
 
   return (
     <ParlayProvider>
-      <div className="nfl-data-container">
+      {/* pinned layout: the header stays put and everything under it scrolls in
+          its own box; game-focus fades everything but an open game */}
+      <div className="nfl-data-container pinned-layout">
         <div>
-          <div className="matchup-card fade-in">
-            <div className="nflDataNavbar">
+          <div className={`matchup-card fade-in ${hasOpenGame ? 'game-focus' : ''} ${focusSpace ? 'focus-space' : ''}`}>
+            <div className="nflDataNavbar pinned-header">
               <h1 className={`nfl-title sport-title-${lg}`}>
                 <span className="nfl-title-badge">{league.label}</span>
                 <span className="nfl-title-text">Stats Guide</span>
@@ -332,99 +403,107 @@ const TeamSportPage = ({ lg }) => {
               </div>
             </div>
 
-            <div className={`matchup-container ${hasOpenGame ? 'has-open' : ''}`}>
-              {!shownGames.length ? (
-                <p className="noGames">
-                  {!games.length
-                    ? `No ${league.label} games on ${day ? dayLabel(day) : 'this day'}.`
-                    : !teamGames.length
-                      ? 'No games for your selected teams on this day.'
-                      : 'Every game on this day is hidden. Use GAMES to bring them back.'}
-                </p>
-              ) : (
-                sections.map((section) => {
-                  const list = section.slots.flatMap((s) => s.games);
-                  return (
-                    <div key={section.key} className={`game-section ${collapsed.has(section.key) ? 'collapsed' : ''}`}>
-                      <button
-                        type="button"
-                        className={`game-section-label ${section.key} ${collapsed.has(section.key) ? 'collapsed' : ''}`}
-                        aria-expanded={!collapsed.has(section.key)}
-                        onClick={() => toggleSection(section.key, list)}
-                      >
-                        <span className="game-section-name">
-                          {section.key === 'pre' && day && relativeDay(dayFromKey(day)) !== 'TODAY'
-                            ? relativeDay(dayFromKey(day)) || section.label
-                            : section.label}
-                          <span className="gold-caret" aria-hidden="true" />
-                        </span>
-                        <span className="game-section-count">{list.length}</span>
-                      </button>
-                      <SlideOpen open={!collapsed.has(section.key)} className="game-section-body">
-                        {/* one container per day (WED 11/11 ... TODAY), each start time inside it */}
-                        {section.days.map((d) => (
-                          <div key={d.key} className="game-container game-group">
-                            <div className="game-group-time">
-                              <span>{d.label}</span>
-                              {d.when && <span className="game-group-when">{d.when}</span>}
-                            </div>
-                            {d.slots.map((slot) => (
-                              <React.Fragment key={slot.label || 'all'}>
-                                {slot.label && <div className="game-group-subtime">{slot.label}</div>}
-                                {slot.games.map((game) => (
-                                  <TeamGameCard
-                                    key={game.id}
-                                    lg={lg}
-                                    game={game}
-                                    isOpen={openGameId === game.id}
-                                    onUserToggle={onUserToggle}
-                                    hideMode={hideMode}
-                                    hidden={hiddenSet.has(game.id)}
-                                    onToggleHidden={toggleHidden}
-                                  />
+            <div className="nfl-scroll-panel" ref={panelRef}>
+              {switching && <LoadingField className="inline-loading" />}
+              {!switching && (
+                <div className={`matchup-container ${hasOpenGame ? 'has-open' : ''}`}>
+                  {!shownGames.length ? (
+                    <p className="noGames">
+                      {!games.length
+                        ? `No ${league.label} games on ${day ? dayLabel(day) : 'this day'}.`
+                        : !teamGames.length
+                          ? 'No games for your selected teams on this day.'
+                          : 'Every game on this day is hidden. Use GAMES to bring them back.'}
+                    </p>
+                  ) : (
+                    sections.map((section) => {
+                      const list = section.slots.flatMap((s) => s.games);
+                      return (
+                        <div
+                          key={section.key}
+                          className={`game-section ${collapsed.has(section.key) ? 'collapsed' : ''}`}
+                        >
+                          <button
+                            type="button"
+                            className={`game-section-label ${section.key} ${collapsed.has(section.key) ? 'collapsed' : ''}`}
+                            aria-expanded={!collapsed.has(section.key)}
+                            onClick={() => toggleSection(section.key, list)}
+                          >
+                            <span className="game-section-name">
+                              {section.key === 'pre' && day && relativeDay(dayFromKey(day)) !== 'TODAY'
+                                ? relativeDay(dayFromKey(day)) || section.label
+                                : section.label}
+                              <span className="gold-caret" aria-hidden="true" />
+                            </span>
+                            <span className="game-section-count">{list.length}</span>
+                          </button>
+                          <SlideOpen open={!collapsed.has(section.key)} className="game-section-body">
+                            {/* one container per day (WED 11/11 ... TODAY), each start time inside it */}
+                            {section.days.map((d) => (
+                              <div key={d.key} className="game-container game-group">
+                                <div className="game-group-time">
+                                  <span>{d.label}</span>
+                                  {d.when && <span className="game-group-when">{d.when}</span>}
+                                </div>
+                                {d.slots.map((slot) => (
+                                  <React.Fragment key={slot.label || 'all'}>
+                                    {slot.label && <div className="game-group-subtime">{slot.label}</div>}
+                                    {slot.games.map((game) => (
+                                      <TeamGameCard
+                                        key={game.id}
+                                        lg={lg}
+                                        game={game}
+                                        isOpen={openGameId === game.id}
+                                        onUserToggle={onUserToggle}
+                                        hideMode={hideMode}
+                                        hidden={hiddenSet.has(game.id)}
+                                        onToggleHidden={toggleHidden}
+                                      />
+                                    ))}
+                                  </React.Fragment>
                                 ))}
-                              </React.Fragment>
+                              </div>
                             ))}
-                          </div>
-                        ))}
-                      </SlideOpen>
-                    </div>
-                  );
-                })
+                          </SlideOpen>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
               )}
-            </div>
 
-            {day && (
-              <ModelPanel spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}>
-                {({ unit, scope, filter, minOdds }) => (
-                  <>
-                    <ConfidentBets
-                      items={asBetItems(games)}
-                      loadTickets={leagueTicketLoader(lg)}
-                      stake={unit}
-                      scope={scope}
-                      filter={filter}
-                      minOdds={minOdds}
-                      period="DAY"
-                    />
-                    <ModelResults
-                      games={games}
-                      stake={unit}
-                      scope={scope}
-                      filter={filter}
-                      minOdds={minOdds}
-                      gradeGame={graderFor(lg)}
-                      lg={lg}
-                      loadSeason={seasonLoaderFor(lg)}
-                      period="DAY"
-                      spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}
-                      note={MODEL_NOTES[lg]}
-                    />
-                  </>
-                )}
-              </ModelPanel>
-            )}
-            <LastUpdated />
+              {day && !switching && (
+                <ModelPanel spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}>
+                  {({ unit, scope, filter, minOdds }) => (
+                    <>
+                      <ConfidentBets
+                        items={asBetItems(games)}
+                        loadTickets={leagueTicketLoader(lg)}
+                        stake={unit}
+                        scope={scope}
+                        filter={filter}
+                        minOdds={minOdds}
+                        period="DAY"
+                      />
+                      <ModelResults
+                        games={games}
+                        stake={unit}
+                        scope={scope}
+                        filter={filter}
+                        minOdds={minOdds}
+                        gradeGame={graderFor(lg)}
+                        lg={lg}
+                        loadSeason={seasonLoaderFor(lg)}
+                        period="DAY"
+                        spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}
+                        note={MODEL_NOTES[lg]}
+                      />
+                    </>
+                  )}
+                </ModelPanel>
+              )}
+              {!switching && <LastUpdated />}
+            </div>
             <ParlayBar />
             {hideMode && (
               <button type="button" className="hide-done-bar" onClick={() => setHideMode(false)}>

@@ -118,7 +118,8 @@ const NFLDataNavbar = ({
       : 'WEEK';
 
   return (
-    <div className="nflDataNavbar">
+    // pinned-header: stays at the top of the page while the games scroll under it
+    <div className="nflDataNavbar pinned-header">
       <h1 className="nfl-title">
         <span className="nfl-title-badge">NFL</span>
         <span className="nfl-title-text">Stats Guide</span>

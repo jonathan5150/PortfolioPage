@@ -25,8 +25,17 @@ export const getTeams = async () => parseTeamsResponse(await fetchJson(espnUrls.
 export const getScoreboard = async (params = {}, { live = false } = {}) =>
   parseScoreboard(await fetchJson(espnUrls.scoreboard(params), { ttlMs: live ? 0 : 30 * 1000 }));
 
-export const getGameSummary = async (eventId, { live = false } = {}) =>
-  parseSummary(await fetchJson(espnUrls.summary(eventId), { ttlMs: live ? 0 : 5 * MINUTE }));
+// A finished game's box score never changes, so it's kept for hours (and its
+// parsed copy kept too, so an opened game can show it on its very first frame).
+const finishedSummaries = new Map();
+export const peekGameSummary = (eventId) => finishedSummaries.get(eventId);
+export const getGameSummary = async (eventId, { live = false, final = false } = {}) => {
+  const summary = parseSummary(
+    await fetchJson(espnUrls.summary(eventId), { ttlMs: live ? 0 : final ? 12 * 60 * MINUTE : 5 * MINUTE }),
+  );
+  if (final) finishedSummaries.set(eventId, summary);
+  return summary;
+};
 
 export const getTeamSchedule = async (teamId, season, seasonType = 2) =>
   parseTeamSchedule(

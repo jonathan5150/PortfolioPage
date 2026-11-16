@@ -33,6 +33,11 @@ const acquire = () =>
     }
   });
 
+// True while any request is going or waiting: the background loader
+// (useBackgroundPrefetch) waits for this to clear, so it never makes a game the
+// user just opened wait behind it.
+export const networkBusy = () => active > 0 || waiting.length > 0;
+
 const release = () => {
   const next = waiting.shift();
   if (next) next();

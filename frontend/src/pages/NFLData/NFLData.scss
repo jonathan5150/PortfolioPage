@@ -4111,3 +4111,332 @@
   border-top-width: 4.5px;
   pointer-events: none;
 }
+
+/* ---------- game focus: while a game is open (GameList adds .game-focus),
+   everything else in the list fades right away so the team-coloured background
+   lines show: the other games, the sections and days without the open game,
+   the MODEL box and the footer fade out completely, and the boxes around the
+   open game lose their fill, border and headings. Only opacity and colours
+   change, so everything keeps its space and nothing on the page moves; faded
+   things can't be tapped, so a tap there lands outside the game and closes it
+   (fading everything back). ---------- */
+.nfl-data-container .matchup-card .game-section,
+.nfl-data-container .matchup-card .game-container,
+.nfl-data-container .matchup-card .game-slot,
+.nfl-data-container .matchup-card .game-section-label,
+.nfl-data-container .matchup-card .game-group-time,
+.nfl-data-container .matchup-card .game-group-subtime,
+.nfl-data-container .matchup-card .model-panel,
+.nfl-data-container .matchup-card .last-updated-timer {
+  transition:
+    opacity 0.45s ease,
+    background-color 0.45s ease,
+    border-color 0.45s ease,
+    box-shadow 0.45s ease;
+}
+
+/* the things that go completely */
+.nfl-data-container .matchup-card.game-focus .game-slot:not(.open),
+.nfl-data-container .matchup-card.game-focus .game-section:not(:has(.game-slot.open)),
+.nfl-data-container .matchup-card.game-focus .game-container:not(:has(.game-slot.open)),
+.nfl-data-container .matchup-card.game-focus .game-section-label,
+.nfl-data-container .matchup-card.game-focus .game-group-time,
+.nfl-data-container .matchup-card.game-focus .game-group-subtime,
+.nfl-data-container .matchup-card.game-focus .model-panel,
+.nfl-data-container .matchup-card.game-focus .last-updated-timer {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* the boxes holding the open game: still there, but see-through */
+.nfl-data-container .matchup-card.game-focus .game-section:has(.game-slot.open),
+.nfl-data-container .matchup-card.game-focus .game-container:has(.game-slot.open) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nfl-data-container .matchup-card .game-section,
+  .nfl-data-container .matchup-card .game-container,
+  .nfl-data-container .matchup-card .game-slot,
+  .nfl-data-container .matchup-card .model-panel {
+    transition: none;
+  }
+}
+
+/* ---------- pinned layout (NFL): the title, sport picker, week picker and
+   TEAMS / GAMES stay at the top of the page; everything under them scrolls
+   inside .nfl-scroll-panel, a faint box whose top edge cuts off what scrolls
+   up. The header has no backing of its own, so the moving background lines
+   show behind it too. ---------- */
+.nfl-data-container.pinned-layout {
+  overflow: hidden;
+}
+
+.nfl-data-container.pinned-layout > div:has(> .matchup-card) {
+  height: 100%;
+}
+
+.nfl-data-container.pinned-layout .matchup-card {
+  height: 100%;
+}
+
+.nfl-data-container.pinned-layout .nflDataNavbar.pinned-header {
+  flex: none;
+  position: relative;
+  z-index: 40;
+}
+
+/* the dropdown menus open over the games below */
+.nfl-data-container .nflDataNavbar.pinned-header .nfl-dropdown-menu {
+  z-index: 41;
+}
+
+.nfl-data-container .nfl-scroll-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 95%;
+  margin: 8px 0 8px;
+  padding: 8px 0 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid rgba(245, 209, 107, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nfl-data-container .nfl-scroll-panel > * {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* while a game is open the box only scrolls within that game (useGameFocus) */
+
+/* while a game is open (and while it slides back), room at the end of the box
+   so even the last game can slide up to the top */
+.nfl-data-container .matchup-card.focus-space .nfl-scroll-panel::after {
+  content: '';
+  display: block;
+  height: 100vh;
+}
+
+/* ---------- the title's cycling border (NFL): a ring around the title box,
+   half gold and half black, slowly turning round and round. ---------- */
+@property --title-spin {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --title-a {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #f5d16b;
+}
+
+@property --title-b {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #15120c;
+}
+
+.nfl-data-container .pinned-header .nfl-title {
+  border-color: transparent;
+}
+
+.nfl-data-container .pinned-header .nfl-title::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--title-spin),
+    var(--title-a) 0deg,
+    var(--title-a) 150deg,
+    var(--title-b) 180deg,
+    var(--title-b) 330deg,
+    var(--title-a) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  pointer-events: none;
+  animation: titleBorderSpin 12s linear infinite;
+}
+
+@keyframes titleBorderSpin {
+  to {
+    --title-spin: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nfl-data-container .pinned-header .nfl-title::after {
+    animation: none;
+  }
+}
+
+/* NFL: the boxes and buttons on the main screen keep their usual grey but are
+   a little see-through, so a hint of the moving lines shows through them: the sport picker and header buttons, the
+   LIVE / UPCOMING / FINISHED boxes, the day boxes and the MODEL box. (Menus
+   that open stay solid so they're easy to read.) */
+.nfl-data-container.pinned-layout {
+  --pv-control: rgba(29, 29, 29, 0.88);
+  --pv-control-border: #3a3a3a;
+  --pv-card: rgba(29, 29, 29, 0.88);
+  --pv-card-border: #2f2f2f;
+}
+
+/* ---------- checkboxes (TEAMS menu, hiding games): plain white boxes with a
+   dark tick, the same on every sport ---------- */
+.nfl-data-container .teams-menu-cell input,
+.nfl-data-container .hide-check input {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1px solid #9a9a9a;
+  border-radius: 3px;
+  background: #ffffff center / 14px 14px no-repeat;
+  cursor: pointer;
+}
+
+.nfl-data-container .teams-menu-cell input:checked,
+.nfl-data-container .hide-check input:checked {
+  border-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.2 3.2L13 4.8' fill='none' stroke='%23161616' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* ---------- TEAMS menu: 4 teams to a row (8 rows for 32 teams), checkbox and
+   logo only, sized to fit the screen so it never scrolls sideways ---------- */
+.nfl-data-container .nfl-menu.teams-menu {
+  width: calc(100vw - 24px);
+  max-width: 440px;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.nfl-data-container .teams-menu ul.teams-menu-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+  max-height: none;
+  overflow: hidden;
+}
+
+.nfl-data-container .teams-menu-cell {
+  justify-content: space-between;
+  gap: 2px;
+  min-width: 0;
+  height: 40px;
+  padding: 0 4px 0 6px;
+}
+
+.nfl-data-container .teams-menu-logo {
+  width: 30px;
+  height: 30px;
+}
+
+/* inside the scrolling box the first section (FINISHED, LIVE or UPCOMING) sits
+   close to the box's top edge, about as close as the box's sides */
+.nfl-data-container .nfl-scroll-panel .game-section:first-child,
+.nfl-data-container .nfl-scroll-panel .ufc-event-head:first-child {
+  margin-top: 0;
+}
+
+/* every sport's title: the turning ring is its border, so the old (see-through)
+   border goes; otherwise the title's background showed in it as a thin line of
+   colour just outside the ring on each side */
+.nfl-data-container .pinned-header .nfl-title {
+  border-width: 0;
+}
+
+/* games sit closer to the sides of the box they're in */
+.nfl-data-container .game-slot .score-grid {
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+/* the FINISHED / LIVE / UPCOMING (and UFC card) boxes nearly fill the scrolling
+   box: just a sliver of space around them */
+.nfl-data-container .nfl-scroll-panel {
+  padding-top: 3px;
+}
+
+.nfl-data-container .nfl-scroll-panel .game-section {
+  width: calc(100% - 6px);
+  margin-bottom: 3px;
+}
+
+/* the scrolling box under the header has no look of its own (no tint, border
+   or corners); once scrolled, what reaches its top fades out under the header */
+.nfl-data-container .nfl-scroll-panel {
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.nfl-data-container .nfl-scroll-panel.scrolled {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 26px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 26px);
+}
+
+/* the glowing ring around an open game: its sides as far from the team cells
+   as its top edge */
+.nfl-data-container .game-ring,
+.nfl-data-container .game-slot::after {
+  inset: -2px 0.5px;
+}
+
+/* no top fade while a game is open */
+.nfl-data-container .matchup-card.game-focus .nfl-scroll-panel.scrolled {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+/* the scrolling area runs right to the bottom of the screen, so the list goes
+   off the bottom edge instead of stopping short of it */
+.nfl-data-container .nfl-scroll-panel {
+  margin-bottom: 0;
+}
+
+/* an open game spreads out toward the edges of the screen (the scrolling area
+   and the box around it widen), and narrows back when it's closed */
+.nfl-data-container .nfl-scroll-panel,
+.nfl-data-container .nfl-scroll-panel .game-section {
+  transition:
+    width 0.45s ease,
+    padding 0.45s ease,
+    opacity 0.45s ease,
+    background-color 0.45s ease,
+    border-color 0.45s ease,
+    box-shadow 0.45s ease;
+}
+
+/* the open game's glowing edge lines up with the SPORT and GAMES buttons at
+   the top (they sit in a 95% wide row; the game's edge is 4.5px inside this) */
+.nfl-data-container .matchup-card.game-focus .nfl-scroll-panel {
+  width: calc(95% + 9px);
+}
+
+.nfl-data-container .matchup-card.game-focus .nfl-scroll-panel .game-section {
+  width: calc(100% - 2px);
+  padding-left: 1px;
+  padding-right: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nfl-data-container .nfl-scroll-panel,
+  .nfl-data-container .nfl-scroll-panel .game-section {
+    transition: none;
+  }
+}

@@ -9,29 +9,41 @@ import { getTeamTextColor } from '../shared/teamColors';
 
 const ScoringPlays = ({ summary, teamsById }) => {
   if (!summary.scoringPlays.length) return null;
+  // which side's number went up on each play (compared with the play before),
+  // so that number can be shown in the scoring team's colour
+  let prev = { away: 0, home: 0 };
+  const plays = summary.scoringPlays.map((play) => {
+    const away = Number(play.awayScore) || 0;
+    const home = Number(play.homeScore) || 0;
+    const side = away > prev.away ? 'away' : home > prev.home ? 'home' : null;
+    prev = { away, home };
+    return { play, side };
+  });
   return (
     <div style={{ ...viewportStyle, marginTop: '6px' }}>
       <div style={{ ...sectionTitleStyle, borderTop: 'none' }}>SCORING PLAYS</div>
-      {summary.scoringPlays.map((play) => (
-        <div key={play.id || play.text} className="scoring-play">
-          <span className="scoring-play-meta">
-            {play.period ? formatPeriod(play.period) : ''} {play.clock}
-          </span>
-          {/* the scoring team's abbreviation in a vivid team colour, readable on the dark rows */}
-          <span
-            className="scoring-play-team"
-            style={teamsById[play.teamId] ? { color: getTeamTextColor(teamsById[play.teamId]) } : undefined}
-          >
-            {teamsById[play.teamId]?.abbreviation || play.type}
-          </span>
-          <span className="scoring-play-text" title={play.text}>
-            {play.text}
-          </span>
-          <span className="scoring-play-score">
-            {play.awayScore}-{play.homeScore}
-          </span>
-        </div>
-      ))}
+      {plays.map(({ play, side }) => {
+        const teamColor = teamsById[play.teamId] ? getTeamTextColor(teamsById[play.teamId]) : undefined;
+        return (
+          <div key={play.id || play.text} className="scoring-play">
+            <span className="scoring-play-meta">
+              {play.period ? formatPeriod(play.period) : ''} {play.clock}
+            </span>
+            {/* the scoring team's abbreviation in a vivid team colour, readable on the dark rows */}
+            <span className="scoring-play-team" style={teamColor ? { color: teamColor } : undefined}>
+              {teamsById[play.teamId]?.abbreviation || play.type}
+            </span>
+            <span className="scoring-play-text" title={play.text}>
+              {play.text}
+            </span>
+            {/* the scoring team's new score in its colour, like its abbreviation */}
+            <span className="scoring-play-score">
+              <span style={side === 'away' && teamColor ? { color: teamColor } : undefined}>{play.awayScore}</span>-
+              <span style={side === 'home' && teamColor ? { color: teamColor } : undefined}>{play.homeScore}</span>
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 };

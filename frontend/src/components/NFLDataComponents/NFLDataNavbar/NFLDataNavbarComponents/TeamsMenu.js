@@ -1,9 +1,9 @@
 import React from 'react';
 import { getTeamBackgroundStyle, getTeamBorderColor, getTeamColor } from '../../shared/teamColors';
 
-// The TEAMS picker: each team as a small team cell (its colour wash and
-// border), checkbox and abbreviation on the left, logo on the right. Teams
-// that aren't picked are greyed out.
+// The TEAMS picker: four teams to a row, each a small team cell (its colour
+// wash and border) with a checkbox and its logo. Teams that aren't picked are
+// greyed out.
 const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onSelectAll, onDeselectAll }) => (
   <div className="nfl-menu teams-menu">
     <div className="menu-buttons">
@@ -27,7 +27,6 @@ const TeamsMenu = ({ teams, selectedTeams, onTeamChange, onSelectAll, onDeselect
               title={team.displayName || team.name}
             >
               <input type="checkbox" checked={picked} onChange={() => onTeamChange(team.id)} />
-              <span className="teams-menu-abbr">{team.abbreviation}</span>
               {team.logo && <img src={team.logo} alt="" className="teams-menu-logo" draggable={false} />}
             </label>
           </li>

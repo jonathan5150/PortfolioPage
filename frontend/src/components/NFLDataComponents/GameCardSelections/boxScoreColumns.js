@@ -37,15 +37,6 @@ export const BOX_SCORE_SECTIONS = [
     ],
   },
   {
-    category: 'interceptions',
-    title: 'INTERCEPTIONS',
-    columns: [
-      { key: 'interceptions', label: 'INT', labels: ['INT'] },
-      { key: 'interceptionYards', label: 'YDS', labels: ['YDS'] },
-      { key: 'interceptionTouchdowns', label: 'TD', labels: ['TD'] },
-    ],
-  },
-  {
     category: 'kicking',
     title: 'KICKING',
     columns: [

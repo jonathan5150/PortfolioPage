@@ -182,11 +182,12 @@ const GameCard = memo(function GameCard({
     >
       {hideMode && (
         <label className="hide-check">
+          {/* ticked: shown; unticked: hidden */}
           <input
             type="checkbox"
-            checked={hidden}
+            checked={!hidden}
             onChange={() => onToggleHidden?.(game.id)}
-            aria-label={`Hide ${game.away?.team?.abbreviation || ''} at ${game.home?.team?.abbreviation || ''}`}
+            aria-label={`Show ${game.away?.team?.abbreviation || ''} at ${game.home?.team?.abbreviation || ''}`}
           />
         </label>
       )}

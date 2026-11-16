@@ -36,8 +36,8 @@ export const getEventLiveLines = async (eventId) => {
   return { pregame: parsePregameOdds(json), live: parseLiveOdds(json) };
 };
 
-export const getEventPredictor = async (eventId) =>
-  parsePredictor(await fetchJson(espnUrls.eventPredictor(eventId), { ttlMs: 10 * MINUTE }));
+export const getEventPredictor = async (eventId, { final = false } = {}) =>
+  parsePredictor(await fetchJson(espnUrls.eventPredictor(eventId), { ttlMs: final ? 12 * HOUR : 10 * MINUTE }));
 
 const beforeGame = (game) => {
   const cutoff = game.date ? new Date(game.date).getTime() : Infinity;

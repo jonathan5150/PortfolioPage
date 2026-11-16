@@ -212,7 +212,10 @@ function NFLData() {
   }
 
   return (
-    <div className={`nfl-data-container ${loading && !selection ? 'loading-background' : ''}`}>
+    // pinned-layout: the header stays put and the games scroll in their own box (GameList)
+    <div
+      className={`nfl-data-container ${loading && !selection ? 'loading-background' : ''} ${selection ? 'pinned-layout' : ''}`}
+    >
       {!selection ? (
         <LoadingFootball />
       ) : (
