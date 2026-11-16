@@ -1579,20 +1579,21 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
   filter: saturate(0.45); /* closer to black and white until the game is opened */
 }
 
-/* Every closed game's cells: a strong colour wash and a slightly lifted
+/* Every closed game's cells, on every sport: three quarters as vivid as an
+   open game's (saturation 75% of the open 1.45), with a slightly lifted
    border. (While a game is open the others are faded right out, so their cells
    are left exactly as they are: changing them repainted every game on the
    page at the moment a game opened or closed.) */
 .nfl-data-container .team-cell:not(.expanded) .team-cell-bg {
-  opacity: 0.95;
-  filter: saturate(0.85);
+  opacity: 1;
+  filter: saturate(1.09) brightness(1.04);
 }
 
 .nfl-data-container .team-cell:not(.expanded) .team-info-container {
   border-color: color-mix(in srgb, var(--cell-border) 80%, white);
 }
 
-/* the opened game: its team colours turn up, richer than any closed cell */
+/* the opened game: its team colours at full strength */
 .nfl-data-container .team-cell.expanded .team-cell-bg {
   opacity: 1;
   filter: saturate(1.45) brightness(1.08);
@@ -1616,7 +1617,7 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
 }
 
 .nfl-data-container .team-cell:not(.expanded) .team-text {
-  opacity: 0.85;
+  opacity: 0.94;
 }
 
 /* Oversized, faded logo behind the team text; clipped by the cell's edges.

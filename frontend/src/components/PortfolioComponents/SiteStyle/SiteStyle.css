@@ -202,15 +202,17 @@ html[data-theme-logos] .nfl-data-container .team-text .team-odds-value {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 10px rgba(0, 0, 0, 0.8);
 }
 
-/* Poster logos, every sport (UFC's are fighter headshots): zoomed in,
-   centred and faded while a game is closed; opening a game shrinks them to
-   fit the cell, in full colour. */
+/* Poster logos, every sport (UFC's are fighter headshots): zoomed in and
+   centred while a game is closed, at three quarters of an open game's
+   colour (a quarter of the colour drained), and still faint enough (0.4)
+   to keep the team text easy to read; opening a
+   game shrinks them to fit the cell, in full colour. */
 html[data-theme='poster'] .nfl-data-container .game-slot .team-logo-watermark,
 html[data-theme='poster'] .nfl-data-container .game-container .team-logo-watermark {
   transform: translate(-50%, -50%) scale(calc(1.5 * var(--wm-poster-closed, 1)));
-  opacity: 0.22;
+  opacity: 0.4;
   /* --wm-faded-filter: a per-team lift for logos that would blend into their cell (TeamCell) */
-  filter: grayscale(1) contrast(1.2) var(--wm-faded-filter, brightness(1));
+  filter: grayscale(0.25) contrast(1.05) var(--wm-faded-filter, brightness(1));
   transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.8s ease, filter 0.8s ease;
 }
 
@@ -236,5 +238,5 @@ html[data-theme='poster'] .nfl-data-container .ufc-fight .team-logo-watermark {
 /* a closed game's faded logo with a per-team lift (--wm-faded-filter, see
    TeamCell) uses it even when the team also has its own filter for open games */
 html[data-theme='poster'] .nfl-data-container .team-cell:not(.expanded) .team-logo-watermark[style*='--wm-faded-filter'] {
-  filter: grayscale(1) contrast(1.2) var(--wm-faded-filter, brightness(1)) !important;
+  filter: grayscale(0.25) contrast(1.05) var(--wm-faded-filter, brightness(1)) !important;
 }
