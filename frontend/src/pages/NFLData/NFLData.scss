@@ -241,9 +241,21 @@
   }
 }
 
+/* the ring fades in to where its breathing starts, rather than appearing at once */
 .nfl-data-container .game-slot.open .game-ring {
   opacity: 1;
-  animation: nflRingBreathe 3.6s ease-in-out infinite;
+  animation:
+    nflRingIn 0.35s ease-out,
+    nflRingBreathe 3.6s ease-in-out 0.35s infinite;
+}
+
+@keyframes nflRingIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.45;
+  }
 }
 
 .nfl-data-container .game-slot::after {
@@ -4227,15 +4239,18 @@
 .nfl-data-container .matchup-card.game-focus .game-container:has(.game-slot.open) .game-slot:not(.open),
 .nfl-data-container .matchup-card.game-focus .model-panel,
 .nfl-data-container .matchup-card.game-focus .last-updated-timer,
-.nfl-data-container .nfl-scroll-panel.focus-fading .game-section:not(:has(.focus-target)),
-.nfl-data-container .nfl-scroll-panel.focus-fading .game-section:has(.focus-target) .game-section-label,
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-section:not(:has([data-focus-target])),
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-section:has([data-focus-target]) .game-section-label,
 .nfl-data-container
   .nfl-scroll-panel.focus-fading
-  .game-section:has(.focus-target)
-  .game-container:not(:has(.focus-target)),
-.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has(.focus-target) .game-group-time,
-.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has(.focus-target) .game-group-subtime,
-.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has(.focus-target) .game-slot:not(.focus-target),
+  .game-section:has([data-focus-target])
+  .game-container:not(:has([data-focus-target])),
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has([data-focus-target]) .game-group-time,
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has([data-focus-target]) .game-group-subtime,
+.nfl-data-container
+  .nfl-scroll-panel.focus-fading
+  .game-container:has([data-focus-target])
+  .game-slot:not([data-focus-target]),
 .nfl-data-container .nfl-scroll-panel.focus-fading .model-panel,
 .nfl-data-container .nfl-scroll-panel.focus-fading .settings-panel,
 .nfl-data-container .nfl-scroll-panel.focus-fading .last-updated-timer {
@@ -4279,8 +4294,8 @@
 /* the boxes holding the open game: still there, but see-through */
 .nfl-data-container .matchup-card.game-focus .game-section:has(.game-slot.open)::before,
 .nfl-data-container .matchup-card.game-focus .game-container:has(.game-slot.open)::before,
-.nfl-data-container .nfl-scroll-panel.focus-fading .game-section:has(.focus-target)::before,
-.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has(.focus-target)::before {
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-section:has([data-focus-target])::before,
+.nfl-data-container .nfl-scroll-panel.focus-fading .game-container:has([data-focus-target])::before {
   opacity: 0;
 }
 
@@ -4502,23 +4517,31 @@
   background: none;
 }
 
-/* The fade is always on the box, just slid up out of sight when it isn't
-   wanted: switching it on and off made the phone redraw the whole list each
-   time (a flash when a game opened or closed). Moving it redraws only the fade. */
-.nfl-data-container .nfl-scroll-panel {
+/* The fade at the top of the list once it's scrolled, only while browsing the
+   list. When a game opens it slides up out of sight (.mask-away) and is then
+   taken off altogether (.mask-off) for as long as the game is open and while
+   it slides back, so the list is never masked while things in it move (phones
+   handle a masked list with moving things inside it badly); afterwards it
+   comes back out of sight and slides back in (useGameFocus). */
+.nfl-data-container .nfl-scroll-panel.scrolled {
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 26px);
   mask-image: linear-gradient(to bottom, transparent 0, #000 26px);
   -webkit-mask-size: 100% calc(100% + 26px);
   mask-size: 100% calc(100% + 26px);
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+}
+
+.nfl-data-container .nfl-scroll-panel.scrolled.mask-away {
   -webkit-mask-position: 0 -26px;
   mask-position: 0 -26px;
 }
 
-.nfl-data-container .nfl-scroll-panel.scrolled {
-  -webkit-mask-position: 0 0;
-  mask-position: 0 0;
+.nfl-data-container .nfl-scroll-panel.scrolled.mask-off {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 /* no scrolling by hand while an open game slides into place (useGameFocus) */
@@ -4533,39 +4556,41 @@
   inset: -2px 0.5px;
 }
 
-/* no top fade while a game is open */
-.nfl-data-container .matchup-card.game-focus .nfl-scroll-panel.scrolled {
-  -webkit-mask-position: 0 -26px;
-  mask-position: 0 -26px;
-}
-
 /* the scrolling area runs right to the bottom of the screen, so the list goes
    off the bottom edge instead of stopping short of it */
 .nfl-data-container .nfl-scroll-panel {
   margin-bottom: 0;
 }
 
-/* an open game spreads out toward the edges of the screen (the scrolling area
-   and the box around it widen), and narrows back when it's closed. The
-   widening is only a few pixels, so it happens in one step rather than as an
-   animation: animating a width makes the phone lay the whole game out again
-   on every frame. */
-.nfl-data-container .nfl-scroll-panel,
+/* An open game spreads out toward the edges of the screen (the scrolling area
+   and the box around it widen), and narrows back when it's closed. It only
+   happens while the game is the only thing in the list (.focus-wide, from
+   useGameFocus): after it has slid up and everything else has gone, and
+   before everything comes back when it closes. Widening the list while all
+   the other games were still on screen resized every one of them at the
+   moment of the tap, which showed as a flash. */
 .nfl-data-container .nfl-scroll-panel .game-section {
   transition:
     opacity 0.45s ease,
-    background-color 0.45s ease,
-    border-color 0.45s ease,
-    box-shadow 0.45s ease;
+    width 0.3s ease,
+    padding 0.3s ease;
+}
+
+/* (the scrolling box also slides its top fade away and back: .mask-away above) */
+.nfl-data-container .nfl-scroll-panel {
+  transition:
+    width 0.3s ease,
+    -webkit-mask-position 0.25s ease,
+    mask-position 0.25s ease;
 }
 
 /* the open game's glowing edge lines up with the SPORT and GAMES buttons at
    the top (they sit in a 95% wide row; the game's edge is 4.5px inside this) */
-.nfl-data-container .matchup-card.game-focus .nfl-scroll-panel {
+.nfl-data-container .nfl-scroll-panel.focus-wide {
   width: calc(95% + 9px);
 }
 
-.nfl-data-container .matchup-card.game-focus .nfl-scroll-panel .game-section {
+.nfl-data-container .nfl-scroll-panel.focus-wide .game-section {
   width: calc(100% - 2px);
   padding-left: 1px;
   padding-right: 1px;
@@ -4604,9 +4629,9 @@ html[data-theme] .nfl-data-container .kickoff-bar {
    everything else (already faded out) is taken out of the scrolling list, so
    the list holds only that game and scrolls it natively - not at all if it
    fits on the screen, the whole game together if it's taller. ---------- */
-.nfl-data-container .nfl-scroll-panel.focus-only .game-section:not(:has(.focus-target)),
-.nfl-data-container .nfl-scroll-panel.focus-only .game-container:not(:has(.focus-target)),
-.nfl-data-container .nfl-scroll-panel.focus-only .game-slot:not(.focus-target),
+.nfl-data-container .nfl-scroll-panel.focus-only .game-section:not(:has([data-focus-target])),
+.nfl-data-container .nfl-scroll-panel.focus-only .game-container:not(:has([data-focus-target])),
+.nfl-data-container .nfl-scroll-panel.focus-only .game-slot:not([data-focus-target]),
 .nfl-data-container .nfl-scroll-panel.focus-only .game-section-label,
 .nfl-data-container .nfl-scroll-panel.focus-only .game-group-time,
 .nfl-data-container .nfl-scroll-panel.focus-only .game-group-subtime,
@@ -4617,6 +4642,27 @@ html[data-theme] .nfl-data-container .kickoff-bar {
 .nfl-data-container .nfl-scroll-panel.focus-only .noGames,
 .nfl-data-container .nfl-scroll-panel.focus-only::after {
   display: none !important;
+}
+
+/* the open game's section and day boxes stay see-through until everything is
+   back (otherwise, as a game closes, its box would show around it alone and
+   then jump to its full size when the rest comes back) */
+.nfl-data-container .nfl-scroll-panel.focus-only .game-section:has([data-focus-target])::before,
+.nfl-data-container .nfl-scroll-panel.focus-only .game-container:has([data-focus-target])::before {
+  opacity: 0;
+}
+
+/* The things that fade out when a game opens each keep a GPU layer of their
+   own all the time. Otherwise the phone made a layer for each of them at the
+   start of every fade and folded it back into the page at the end, redrawing
+   all of it both times - on a weak phone those redraws showed as flashes. */
+.nfl-data-container .nfl-scroll-panel .game-section,
+.nfl-data-container .nfl-scroll-panel .game-container,
+.nfl-data-container .nfl-scroll-panel .game-section-label,
+.nfl-data-container .nfl-scroll-panel .model-panel,
+.nfl-data-container .nfl-scroll-panel .settings-panel,
+.nfl-data-container .nfl-scroll-panel .last-updated-timer {
+  will-change: opacity;
 }
 
 /* the open game's glowing ring breathes on its own GPU layer (only the open
@@ -4669,7 +4715,13 @@ html[data-quality='low'] .nfl-data-container .sports-loading .sl-shape.sl-ball {
 
 html[data-quality='low'] .nfl-data-container .game-ring,
 html[data-quality='low'] .nfl-data-container .game-slot::after,
-html[data-quality='low'] .nfl-data-container .pinned-header .nfl-title::before {
+html[data-quality='low'] .nfl-data-container .pinned-header .nfl-title::before,
+html[data-quality='low'] .nfl-data-container .nfl-scroll-panel .game-section,
+html[data-quality='low'] .nfl-data-container .nfl-scroll-panel .game-container,
+html[data-quality='low'] .nfl-data-container .nfl-scroll-panel .game-section-label,
+html[data-quality='low'] .nfl-data-container .nfl-scroll-panel .model-panel,
+html[data-quality='low'] .nfl-data-container .nfl-scroll-panel .settings-panel,
+html[data-quality='low'] .nfl-data-container .nfl-scroll-panel .last-updated-timer {
   will-change: auto;
 }
 

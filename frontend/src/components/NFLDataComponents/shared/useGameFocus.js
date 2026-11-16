@@ -51,6 +51,9 @@ const toHsl = (r, g, b) => {
 export const teamLineColor = (team) => lineColorFrom(getTeamRingColors(team)[0]);
 
 const SLIDE_MS = 700;
+const FADE_MS = 480; // everything else fades out in 0.45s (NFLData.scss)
+const MASK_MS = 260; // the top fade slides away in 0.25s
+const NARROW_MS = 300; // an open game spreads out / narrows back in 0.3s
 const GAP = 8; // space between the top of the box and the open game
 
 const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
@@ -112,14 +115,15 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
 
   // ---- slide up, just the game, slide back ----
   const returnTo = useRef(null);
-  const target = useRef(null); // the open game's slot (marked .focus-target)
+  const target = useRef(null); // the open game's slot (marked data-focus-target: an attribute, as React rewrites its class list when it closes)
   const [focusSpace, setFocusSpace] = useState(false);
   // layout effect: the list is changed before the screen is drawn, so taking
   // things out or putting them back never shows a frame out of place
   useLayoutEffect(() => {
     const box = panelRef.current;
     if (!box) return undefined;
-    const behavior = isLowQuality() ? 'auto' : 'smooth';
+    const low = isLowQuality();
+    const behavior = low ? 'auto' : 'smooth';
     // No scrolling by hand while the game slides (a scroll mid-slide fights
     // it). Done by refusing the gesture rather than switching the box's
     // scrolling off: switching that off and on made the phone redraw the whole
@@ -139,70 +143,122 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
       change();
       box.scrollTop += slot.getBoundingClientRect().top - before;
     };
+    const timers = [];
+    const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+    // runs fn once the box has really stopped scrolling ('scrollend'), or after
+    // fallbackMs at the latest (no scroll at all, or an older browser). Acting
+    // on the list while a slide is still running on a slow phone made the game
+    // jump: the page's idea of where the box was scrolled to lagged behind.
+    let stopWaiting = () => {};
+    const afterScroll = (fn, fallbackMs) => {
+      let ran = false;
+      const run = () => {
+        if (ran) return;
+        ran = true;
+        stopWaiting();
+        fn();
+      };
+      box.addEventListener('scrollend', run);
+      const fallback = setTimeout(run, fallbackMs);
+      stopWaiting = () => {
+        box.removeEventListener('scrollend', run);
+        clearTimeout(fallback);
+      };
+    };
+    const cleanup = () => {
+      timers.forEach(clearTimeout);
+      stopWaiting();
+      unlock();
+    };
 
     if (isOpen) {
-      holdBackgroundWork(SLIDE_MS + 500);
+      holdBackgroundWork(SLIDE_MS + 900);
       if (returnTo.current === null) returnTo.current = box.scrollTop;
       setFocusSpace(true);
       lock();
-      const slide = setTimeout(() => {
+      // the fade at the top of the list slides out of the way, then goes
+      // altogether, so nothing is masked while the game is open (.mask-away,
+      // .mask-off; see NFLData.scss)
+      box.classList.add('mask-away');
+      later(() => box.classList.add('mask-off'), low ? 0 : MASK_MS);
+      const startedAt = performance.now();
+      // At the top: just the game stays in the list, which then scrolls it
+      // natively, and it spreads out to its full width (cheap now, with
+      // nothing else in the list to lay out again). Never before the rest has
+      // finished fading out, so nothing vanishes while it can still be seen.
+      const settle = () => {
+        const wait = low ? 0 : FADE_MS - (performance.now() - startedAt);
+        if (wait > 0) {
+          later(settle, wait);
+          return;
+        }
         const slot = box.querySelector('.game-slot.open');
         if (!slot) return;
-        const top = box.scrollTop + slot.getBoundingClientRect().top - box.getBoundingClientRect().top - GAP;
-        box.scrollTo({ top, behavior });
-      }, 30);
-      // at the top: just the game stays in the list, which scrolls natively again
-      const settle = setTimeout(
-        () => {
-          const slot = box.querySelector('.game-slot.open');
-          if (!slot) return;
-          slot.classList.add('focus-target');
-          target.current = slot;
-          keepingPlace(slot, () => box.classList.add('focus-only'));
-          unlock();
-        },
-        behavior === 'smooth' ? SLIDE_MS : 60,
-      );
-      return () => {
-        clearTimeout(slide);
-        clearTimeout(settle);
+        slot.setAttribute('data-focus-target', '');
+        target.current = slot;
+        keepingPlace(slot, () => box.classList.add('focus-only'));
+        box.classList.add('focus-wide');
         unlock();
       };
+      later(() => {
+        const slot = box.querySelector('.game-slot.open');
+        if (!slot) return;
+        const top = Math.max(
+          0,
+          Math.round(box.scrollTop + slot.getBoundingClientRect().top - box.getBoundingClientRect().top - GAP),
+        );
+        if (Math.abs(top - box.scrollTop) < 2) {
+          settle();
+          return;
+        }
+        afterScroll(settle, low ? 60 : SLIDE_MS + 500);
+        box.scrollTo({ top, behavior });
+      }, 30);
+      return cleanup;
     }
 
-    // closing: put everything back (the game stays put), then slide back.
-    // What comes back is put back faded out (.focus-fading) and only then let
-    // go, so it fades in with the rest; put back straight away it would pop in
-    // at full strength (something that wasn't on the page has nothing to fade
-    // from).
+    // Closing. The game first narrows back to the list's width while it's still
+    // the only thing in the list (cheap), then everything else is put back
+    // faded out (.focus-fading) and let go, so it fades in together instead of
+    // popping in at full strength (something that wasn't on the page has
+    // nothing to fade from); the game keeps its spot on screen meanwhile. Then
+    // the box slides back to where it was, and the top fade slides back in.
     if (returnTo.current === null) return undefined;
-    holdBackgroundWork(SLIDE_MS + 500);
-    const slot = target.current;
-    if (slot && box.classList.contains('focus-only')) {
-      box.classList.add('focus-fading');
-      // measuring (in keepingPlace) settles the faded look before it's let go
-      keepingPlace(slot, () => box.classList.remove('focus-only'));
-    }
-    box.classList.remove('focus-only', 'focus-fading');
-    if (slot) slot.classList.remove('focus-target');
-    target.current = null;
+    holdBackgroundWork(NARROW_MS + SLIDE_MS + 900);
     const back = returnTo.current;
-    returnTo.current = null;
     lock();
-    box.scrollTo({ top: back, behavior });
-    const done = setTimeout(
-      () => {
+    const wasFocused = Boolean(target.current) && box.classList.contains('focus-only');
+    box.classList.remove('focus-wide');
+    const restore = () => {
+      const slot = target.current;
+      if (slot && box.classList.contains('focus-only')) {
+        box.classList.add('focus-fading');
+        // measuring (in keepingPlace) settles the faded look before it's let go
+        keepingPlace(slot, () => box.classList.remove('focus-only'));
+      }
+      box.classList.remove('focus-only', 'focus-fading');
+      if (slot) slot.removeAttribute('data-focus-target');
+      target.current = null;
+      returnTo.current = null;
+      const done = () => {
         box.scrollTop = back;
         unlock();
-      },
-      behavior === 'smooth' ? SLIDE_MS : 60,
-    );
-    const t = setTimeout(() => setFocusSpace(false), SLIDE_MS + 100);
-    return () => {
-      clearTimeout(done);
-      clearTimeout(t);
-      unlock();
+        // the top fade comes back just out of sight, then slides in
+        box.classList.remove('mask-off');
+        getComputedStyle(box).maskPosition; // eslint-disable-line no-unused-expressions
+        box.classList.remove('mask-away');
+        later(() => setFocusSpace(false), 100);
+      };
+      if (Math.abs(back - box.scrollTop) < 2) {
+        later(done, low ? 0 : FADE_MS);
+        return;
+      }
+      afterScroll(done, low ? 60 : SLIDE_MS + 500);
+      box.scrollTo({ top: back, behavior });
     };
+    if (wasFocused && !low) later(restore, NARROW_MS);
+    else restore();
+    return cleanup;
   }, [isOpen, openKey, panelRef]);
 
   return { focusSpace };

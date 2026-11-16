@@ -97,7 +97,10 @@ const LEAGUE_LOGOS = {
     teams: {
       NO: { size: 1.5 },
       OKC: { size: 1.25 },
-      UTAH: { style: { filter: 'brightness(1.9) contrast(0.9)' }, ...WHITE },
+      // its open filter is written step for step like its faded one (grayscale,
+      // contrast, brightness, invert), so opening and closing blends smoothly
+      // between them instead of switching halfway through
+      UTAH: { style: { filter: 'grayscale(0) contrast(0.9) brightness(1.9) invert(0)' }, ...WHITE },
       CHI: WHITE,
       CLE: WHITE,
       HOU: LIFT(1.6),
@@ -186,7 +189,9 @@ const TeamCell = ({
         style={{
           '--cell-border': getTeamBorderColor(team), // border drawn in CSS
           borderRadius: radius,
-          transition: 'border-radius 0.3s ease, opacity 0.5s ease',
+          // the border eases between its closed and open colours with the rest
+          // of the cell, rather than switching at once
+          transition: 'border-radius 0.3s ease, opacity 0.5s ease, border-color 0.5s ease',
           overflow: 'hidden',
         }}
       >
