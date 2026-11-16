@@ -41,6 +41,7 @@ html[data-theme] .nfl-data-container.loading-background,
 html[data-theme] .nfl-data-container .loading {
   background-color: var(--pv-page);
   background-image: var(--pv-page-img);
+  background-size: var(--pv-page-size, auto);
   background-attachment: fixed;
 }
 
@@ -99,6 +100,7 @@ html[data-theme] .nfl-data-container .hide-done-bar {
 html[data-theme-vars] .bg {
   background-color: var(--pv-page);
   background-image: var(--pv-page-img);
+  background-size: var(--pv-page-size, auto);
 }
 
 html[data-theme-vars] .navbar {
@@ -158,11 +160,9 @@ html[data-theme-vars] .Link:hover {
 /* ---------- Poster colours ---------- */
 
 html[data-theme='poster'] {
-  /* the Aurora background (violet, teal and pink glows on near-black) */
-  --pv-page: #07070f;
-  --pv-page-img: radial-gradient(60% 40% at 15% 5%, rgba(124, 58, 237, 0.38), transparent 70%),
-    radial-gradient(55% 35% at 90% 30%, rgba(20, 184, 166, 0.3), transparent 70%),
-    radial-gradient(60% 40% at 50% 100%, rgba(236, 72, 153, 0.26), transparent 70%);
+  /* plain dark page; the BG picker (BackgroundPicker) swaps these on <html> */
+  --pv-page: #111111;
+  --pv-page-img: none;
   --pv-nav: rgba(20, 20, 20, 0.94);
   --pv-line: #e63946;
   --pv-line-height: 4px;
@@ -186,29 +186,6 @@ html[data-theme='poster'] {
   --pv-control-border: #3a3a3a;
   --pv-menu: #1d1d1d;
   --pv-bar: rgba(24, 24, 24, 0.97);
-}
-
-/* the portfolio pages' backdrop: the Aurora glows, slowly drifting */
-@keyframes siteAuroraDrift {
-  0% { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; }
-  50% { background-position: 30% 20%, 70% 30%, 40% 70%, 0 0; }
-  100% { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; }
-}
-
-html[data-theme='poster'] .bg {
-  background:
-    radial-gradient(60% 45% at 20% 10%, rgba(124, 58, 237, 0.45), transparent 70%),
-    radial-gradient(55% 40% at 85% 25%, rgba(20, 184, 166, 0.38), transparent 70%),
-    radial-gradient(60% 45% at 50% 95%, rgba(236, 72, 153, 0.32), transparent 70%),
-    #07070f;
-  background-size: 140% 140%, 140% 140%, 140% 140%, auto;
-  animation: siteAuroraDrift 18s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-theme='poster'] .bg {
-    animation: none;
-  }
 }
 
 /* ---------- the logos ---------- */

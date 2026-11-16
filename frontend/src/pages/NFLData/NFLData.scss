@@ -3910,3 +3910,18 @@
   color: rgba(255, 255, 255, 0.45);
   text-align: left;
 }
+
+/* a start time inside a day's container (8:30AM, 12:00PM ...) */
+.nfl-data-container .game-group-subtime {
+  padding: 5px 12px 1px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-align: left;
+  color: rgba(245, 209, 107, 0.72);
+}
+
+.nfl-data-container .game-slot + .game-group-subtime {
+  margin-top: 3px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}

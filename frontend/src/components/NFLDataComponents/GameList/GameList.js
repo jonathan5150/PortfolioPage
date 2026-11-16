@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { relativeDay } from '../../../sports/relativeDay';
+import { groupByDay } from '../../../sports/dayGroups';
 import NFLDataNavbar from '../NFLDataNavbar/NFLDataNavbar';
 import GameCard from '../GameCard/GameCard';
 import LoadingField from '../shared/LoadingField';
@@ -24,48 +24,6 @@ const SECTIONS = [
 // Which sections are collapsed only lasts while you stay on a week: every
 // week (and every visit) starts from the default view.
 const collapsedCookie = (season, seasonType, week) => `${season}-${seasonType}-${week}`;
-
-const clock = (d) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s+/g, '');
-const startLabel = (game) => {
-  if (game.status.isPostponed) return game.status.shortDetail || 'Postponed';
-  if (!game.date) return 'TBD';
-  const d = new Date(game.date);
-  const weekday = d.toLocaleDateString([], { weekday: 'short' });
-  return `${weekday} ${d.getMonth() + 1}/${d.getDate()} AT ${clock(d)}`;
-};
-
-// Kickoffs on the same day within half an hour of each other (Sunday's 3:05
-// and 3:25 games) share one group: "SUN 3:05 PM / 3:25 PM".
-const timeSlots = (games) => {
-  const byLabel = new Map();
-  [...games]
-    .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
-    .forEach((game) => {
-      const label = startLabel(game);
-      if (!byLabel.has(label)) byLabel.set(label, []);
-      byLabel.get(label).push(game);
-    });
-
-  const merged = [];
-  [...byLabel.entries()].forEach(([label, slotGames]) => {
-    const first = slotGames[0];
-    const start = !first.status.isPostponed && first.date ? new Date(first.date) : null;
-    const prev = merged[merged.length - 1];
-    if (
-      start &&
-      prev?.lastStart &&
-      prev.lastStart.toDateString() === start.toDateString() &&
-      start - prev.lastStart <= MERGE_WINDOW_MS
-    ) {
-      prev.games.push(...slotGames);
-      prev.label = `${prev.label} / ${clock(start)}`;
-      prev.lastStart = start;
-    } else {
-      merged.push({ label, games: [...slotGames], lastStart: start, when: relativeDay(start) });
-    }
-  });
-  return merged;
-};
 
 const GameList = ({
   loading,
@@ -161,14 +119,15 @@ const GameList = ({
 
   const sections = useMemo(
     () =>
-      SECTIONS.map((section) => ({
-        ...section,
-        slots: timeSlots(
+      SECTIONS.map((section) => {
+        const days = groupByDay(
           shownGames.filter((g) =>
             section.key === 'pre' ? !['post', 'in'].includes(g.status.state) : g.status.state === section.key,
           ),
-        ),
-      })).filter((section) => section.slots.length > 0),
+          { mergeWindowMs: MERGE_WINDOW_MS },
+        );
+        return { ...section, days, slots: days.flatMap((d) => d.slots) };
+      }).filter((section) => section.slots.length > 0),
     [shownGames],
   );
 
@@ -266,29 +225,35 @@ const GameList = ({
                   </span>
                 </button>
                 <SlideOpen open={!collapsed.has(section.key)} className="game-section-body">
-                  {section.slots.map((slot) => (
-                    <div key={slot.label} className="game-container game-group">
+                  {/* one container per day (SUN 11/15 ... TODAY), each start time inside it */}
+                  {section.days.map((day) => (
+                    <div key={day.key} className="game-container game-group">
                       <div className="game-group-time">
-                        <span>{slot.label}</span>
-                        {slot.when && <span className="game-group-when">{slot.when}</span>}
+                        <span>{day.label}</span>
+                        {day.when && <span className="game-group-when">{day.when}</span>}
                       </div>
-                      {slot.games.map((game) => (
-                        <GameCard
-                          key={game.id}
-                          game={game}
-                          teamsById={teamsById}
-                          season={season}
-                          currentSeason={currentSeason}
-                          rankings={rankings}
-                          syncCommand={syncCommand}
-                          onBroadcast={broadcast}
-                          suppressNextToggleRef={suppressNextToggleRef}
-                          isOpen={openGameId === game.id}
-                          onUserToggle={handleUserToggle}
-                          hideMode={hideMode}
-                          hidden={hiddenSet.has(game.id)}
-                          onToggleHidden={toggleHidden}
-                        />
+                      {day.slots.map((slot) => (
+                        <React.Fragment key={slot.label || 'all'}>
+                          {slot.label && <div className="game-group-subtime">{slot.label}</div>}
+                          {slot.games.map((game) => (
+                            <GameCard
+                              key={game.id}
+                              game={game}
+                              teamsById={teamsById}
+                              season={season}
+                              currentSeason={currentSeason}
+                              rankings={rankings}
+                              syncCommand={syncCommand}
+                              onBroadcast={broadcast}
+                              suppressNextToggleRef={suppressNextToggleRef}
+                              isOpen={openGameId === game.id}
+                              onUserToggle={handleUserToggle}
+                              hideMode={hideMode}
+                              hidden={hiddenSet.has(game.id)}
+                              onToggleHidden={toggleHidden}
+                            />
+                          ))}
+                        </React.Fragment>
                       ))}
                     </div>
                   ))}

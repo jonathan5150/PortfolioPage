@@ -18,8 +18,10 @@ import './sports/team/TeamSport.scss';
 import './sports/SportTitles.scss';
 import './sports/ufc/Ufc.scss';
 import LoadingField from './components/NFLDataComponents/shared/LoadingField';
-// the site's font and style (Bricolage Grotesque + Poster, Aurora background)
+// the site's font and style (Bricolage Grotesque + Poster); the BG button
+// lets you try dark page backgrounds
 import './components/PortfolioComponents/SiteStyle/SiteStyle.css';
+import BackgroundPicker from './components/PortfolioComponents/BackgroundPicker/BackgroundPicker';
 
 // Every other page is downloaded only when it's opened, so a phone opening the
 // sports pages doesn't also download and parse the whole portfolio (and the
@@ -79,6 +81,7 @@ function Main() {
     <div className="App">
       {hasHeader && <Header />}
       <div className="bg"></div>
+      <BackgroundPicker />
       <div className="content" style={{ marginTop: hasHeader ? '90px' : '0px' }}>
         <Suspense fallback={null}>
           <Routes>

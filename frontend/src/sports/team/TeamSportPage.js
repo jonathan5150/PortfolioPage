@@ -3,6 +3,7 @@ import FitText from '../../components/NFLDataComponents/shared/FitText';
 import SportSwitcher from '../SportSwitcher';
 import DayCalendar from '../DayCalendar';
 import { relativeDay } from '../relativeDay';
+import { groupByDay } from '../dayGroups';
 import SlideOpen from '../../components/NFLDataComponents/shared/SlideOpen';
 import LastUpdated from '../../components/NFLDataComponents/shared/LastUpdated';
 import usePersistentState from '../../components/NFLDataComponents/shared/usePersistentState';
@@ -14,14 +15,7 @@ import ParlayBar from '../../components/NFLDataComponents/ParlayBar/ParlayBar';
 import { ModelResults } from '../../components/NFLDataComponents/GameList/PredictionRecord';
 import DayBets, { asBetItems, leagueTicketLoader } from '../../components/NFLDataComponents/GameList/DayBets';
 import { graderFor, seasonLoaderFor } from '../../pages/NFLData/NFLDataApi/modelGrading';
-import {
-  LEAGUES,
-  dayFromKey,
-  findGameDay,
-  getLeagueEventDays,
-  getLeagueScoreboard,
-  getLeagueTeams,
-} from './leagueApi';
+import { LEAGUES, dayFromKey, findGameDay, getLeagueEventDays, getLeagueScoreboard, getLeagueTeams } from './leagueApi';
 import TeamGameCard from './TeamGameCard';
 import '../../pages/NFLData/NFLData.scss';
 import './TeamSport.scss';
@@ -37,25 +31,6 @@ const IDLE_POLL_MS = 5 * 60 * 1000;
 
 const dayLabel = (key) =>
   dayFromKey(key).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
-const timeLabel = (game) =>
-  game.status.isPostponed
-    ? game.status.shortDetail || 'Postponed'
-    : game.date
-      ? new Date(game.date).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-      : 'TBD';
-
-// games grouped by start time, earliest first
-const timeSlots = (games) => {
-  const byLabel = new Map();
-  [...games]
-    .sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0))
-    .forEach((g) => {
-      const label = timeLabel(g);
-      if (!byLabel.has(label)) byLabel.set(label, []);
-      byLabel.get(label).push(g);
-    });
-  return [...byLabel.entries()].map(([label, list]) => ({ label, games: list }));
-};
 
 // ---------- model results: the NFL panel, graded with this league's engine ----------
 
@@ -167,14 +142,14 @@ const TeamSportPage = ({ lg }) => {
   // ---- sections ----
   const sections = useMemo(
     () =>
-      SECTIONS.map((s) => ({
-        ...s,
-        slots: timeSlots(
+      SECTIONS.map((s) => {
+        const days = groupByDay(
           shownGames.filter((g) =>
             s.key === 'pre' ? !['post', 'in'].includes(g.status.state) : g.status.state === s.key,
           ),
-        ),
-      })).filter((s) => s.slots.length),
+        );
+        return { ...s, days, slots: days.flatMap((d) => d.slots) };
+      }).filter((s) => s.slots.length),
     [shownGames],
   );
   const cookieName = `${lg}Collapsed_${day}`;
@@ -365,20 +340,29 @@ const TeamSportPage = ({ lg }) => {
                         <span className="game-section-count">{list.length}</span>
                       </button>
                       <SlideOpen open={!collapsed.has(section.key)} className="game-section-body">
-                        {section.slots.map((slot) => (
-                          <div key={slot.label} className="game-container game-group">
-                            <div className="game-group-time">{slot.label}</div>
-                            {slot.games.map((game) => (
-                              <TeamGameCard
-                                key={game.id}
-                                lg={lg}
-                                game={game}
-                                isOpen={openGameId === game.id}
-                                onUserToggle={onUserToggle}
-                                hideMode={hideMode}
-                                hidden={hiddenSet.has(game.id)}
-                                onToggleHidden={toggleHidden}
-                              />
+                        {/* one container per day (WED 11/11 ... TODAY), each start time inside it */}
+                        {section.days.map((d) => (
+                          <div key={d.key} className="game-container game-group">
+                            <div className="game-group-time">
+                              <span>{d.label}</span>
+                              {d.when && <span className="game-group-when">{d.when}</span>}
+                            </div>
+                            {d.slots.map((slot) => (
+                              <React.Fragment key={slot.label || 'all'}>
+                                {slot.label && <div className="game-group-subtime">{slot.label}</div>}
+                                {slot.games.map((game) => (
+                                  <TeamGameCard
+                                    key={game.id}
+                                    lg={lg}
+                                    game={game}
+                                    isOpen={openGameId === game.id}
+                                    onUserToggle={onUserToggle}
+                                    hideMode={hideMode}
+                                    hidden={hiddenSet.has(game.id)}
+                                    onToggleHidden={toggleHidden}
+                                  />
+                                ))}
+                              </React.Fragment>
                             ))}
                           </div>
                         ))}
