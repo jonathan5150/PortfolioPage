@@ -4462,3 +4462,14 @@ html[data-theme] .nfl-data-container .kickoff-bar {
   margin-top: 3px;
   margin-bottom: 2px;
 }
+
+/* an open game whose details run past the bottom of the screen: its panel
+   (BOX SCORE, LINES...) scrolls inside itself, with the phone's own smooth
+   scrolling, instead of the whole list moving (useGameFocus sets --focus-max,
+   the room left on screen; the list itself is held still while it's open) */
+.nfl-data-container .game-slot.open .stat-toggle-container {
+  max-height: var(--focus-max, none) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}

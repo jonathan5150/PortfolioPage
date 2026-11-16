@@ -111,68 +111,45 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     if (isOpen) {
       if (returnTo.current === null) returnTo.current = box.scrollTop;
       setFocusSpace(true);
-      // no scrolling by hand until the game has finished sliding into place: a
-      // scroll mid-slide fights the slide and leaves things out of place (the
-      // slide itself still moves the box)
+      // the list doesn't scroll by hand while a game is open: not during the
+      // slide (a scroll mid-slide fights it) and not after. A game whose details
+      // run past the bottom of the screen scrolls inside its own panel instead
+      // (BOX SCORE, LINES...), with the phone's normal scrolling, so there's
+      // nothing to fight it and no bounce (--focus-max, see NFLData.scss).
       box.style.overflowY = 'hidden';
-      // the open game's scroll range: from it sitting at the top of the box to
-      // its bottom edge just showing at the bottom of the box
-      const range = () => {
+      const top = () => {
         const slot = box.querySelector('.game-slot.open');
-        if (!slot) return null;
-        const top = box.scrollTop + slot.getBoundingClientRect().top - box.getBoundingClientRect().top - GAP;
-        return [top, Math.max(top, top + slot.offsetHeight + GAP * 2 - box.clientHeight)];
+        return slot ? box.scrollTop + slot.getBoundingClientRect().top - box.getBoundingClientRect().top - GAP : null;
       };
-      let keepInside = null;
+      // the panel's room: from its top down to the bottom of the screen
+      const fit = () => {
+        const slot = box.querySelector('.game-slot.open');
+        const panel = slot?.querySelector('.stat-toggle-container');
+        if (!panel) return;
+        const room = box.getBoundingClientRect().bottom - panel.getBoundingClientRect().top - GAP;
+        slot.style.setProperty('--focus-max', `${Math.max(120, Math.floor(room))}px`);
+      };
       let watch = null;
-      // after the room below is in place: slide up, then hold the box to the game
+      // after the room below is in place: slide up, then size the panel
       const slide = setTimeout(() => {
-        const r = range();
-        if (r) box.scrollTo({ top: r[0], behavior: 'smooth' });
+        const t = top();
+        if (t !== null) box.scrollTo({ top: t, behavior: 'smooth' });
       }, 30);
       const hold = setTimeout(() => {
-        // a game that fits on the screen doesn't scroll at all; one that runs
-        // past the bottom scrolls only far enough to see the rest of it. Checked
-        // again whenever the game changes height (a tab opened, say).
-        const fit = () => {
-          const r = range();
-          box.style.overflowY = r && r[1] <= r[0] + 1 ? 'hidden' : '';
-        };
-        keepInside = () => {
-          const r = range();
-          if (!r) return;
-          if (box.scrollTop < r[0] - 1) box.scrollTop = r[0];
-          else if (box.scrollTop > r[1] + 1) box.scrollTop = r[1];
-        };
-        // the slide is over: make sure the game ended up at the top, then let
-        // the box scroll again (only within the game, if it's taller than the screen)
-        const settled = range();
-        if (settled && (box.scrollTop < settled[0] - 1 || box.scrollTop > settled[1] + 1)) box.scrollTop = settled[0];
+        // the slide is over: make sure the game ended up at the top
+        const t = top();
+        if (t !== null && Math.abs(box.scrollTop - t) > 1) box.scrollTop = t;
         fit();
-        box.addEventListener('scroll', keepInside, { passive: true });
-        const slot = box.querySelector('.game-slot.open');
-        if (slot && window.ResizeObserver) {
+        if (window.ResizeObserver) {
           watch = new ResizeObserver(fit);
-          watch.observe(slot);
-        }
-        // and shortly after any tap inside the game (tabs open by tapping), in
-        // case the size change isn't reported
-        if (slot) {
-          recheck = () => [350, 900].forEach((ms) => later.push(setTimeout(fit, ms)));
-          slot.addEventListener('click', recheck);
-          tapped = slot;
+          watch.observe(box);
         }
       }, SLIDE_MS);
-      let recheck = null;
-      let tapped = null;
-      const later = [];
       return () => {
         clearTimeout(slide);
         clearTimeout(hold);
-        later.forEach(clearTimeout);
-        if (keepInside) box.removeEventListener('scroll', keepInside);
         if (watch) watch.disconnect();
-        if (tapped && recheck) tapped.removeEventListener('click', recheck);
+        box.querySelectorAll('.game-slot').forEach((el) => el.style.removeProperty('--focus-max'));
         box.style.overflowY = '';
       };
     }

@@ -82,8 +82,13 @@ const WATERMARK_CLOSED_SIZE = {
 // that otherwise blend into their team colour there (measured for every team:
 // the faded logo's contrast with its cell). Dark logos are brightened; ones with
 // almost no light in them become a light silhouette instead (partly inverted).
+// NBA / MLB faded logos are zoomed in less than NFL ones, so more of the logo
+// shows and it's easier to tell whose it is
+const NON_NFL_FADED_ZOOM = 0.8;
 const LIFT = (k) => ({ faded: `brightness(${k})` });
 const LIGHT_SILHOUETTE = { faded: 'invert(0.6)' };
+// still too close to their cell colour after that: a plain white logo shape
+const WHITE = { faded: 'brightness(0) invert(1)' };
 const LEAGUE_LOGOS = {
   nba: {
     // an opened game's logos shrink well down, out of the way of its details
@@ -92,11 +97,14 @@ const LEAGUE_LOGOS = {
     teams: {
       NO: { size: 1.5 },
       OKC: { size: 1.25 },
-      UTAH: { style: { filter: 'brightness(1.9) contrast(0.9)' } },
+      UTAH: { style: { filter: 'brightness(1.9) contrast(0.9)' }, ...WHITE },
+      CHI: WHITE,
+      CLE: WHITE,
       HOU: LIFT(1.6),
       MEM: LIFT(1.9),
-      PHI: LIFT(2.6),
-      TOR: LIFT(1.9),
+      MIA: WHITE,
+      PHI: WHITE,
+      TOR: WHITE,
     },
   },
   mlb: {
@@ -108,19 +116,19 @@ const LEAGUE_LOGOS = {
       ATL: LIGHT_SILHOUETTE,
       BAL: LIFT(1.6),
       BOS: LIFT(2),
-      CIN: LIFT(2.6),
-      CLE: LIFT(2),
+      CIN: WHITE,
+      CLE: WHITE,
       KC: LIGHT_SILHOUETTE,
-      LAD: LIFT(2.4),
+      LAD: WHITE,
       MIA: LIFT(2.2),
-      MIN: LIFT(2.6),
+      MIN: WHITE,
       NYM: LIFT(1.9),
       NYY: LIGHT_SILHOUETTE,
-      PHI: LIFT(1.8),
+      PHI: LIGHT_SILHOUETTE,
       SD: LIGHT_SILHOUETTE,
-      STL: LIFT(2.5),
+      STL: LIGHT_SILHOUETTE,
       TB: LIFT(1.7),
-      TEX: LIFT(2.5),
+      TEX: WHITE,
       WSH: LIGHT_SILHOUETTE,
     },
   },
@@ -200,7 +208,7 @@ const TeamCell = ({
               // the production CSS minifier.
               '--wm-poster-closed': nflTuned
                 ? (WATERMARK_CLOSED_SIZE[team.abbreviation] ?? WATERMARK_SIZE[team.abbreviation] ?? 1)
-                : (teamTweak?.size ?? 1),
+                : (teamTweak?.size ?? 1) * NON_NFL_FADED_ZOOM,
               // the faded (closed) logo's extra filter, if this team needs one
               ...(teamTweak?.faded ? { '--wm-faded-filter': teamTweak.faded } : null),
             }}

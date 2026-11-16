@@ -232,3 +232,9 @@ html[data-theme='poster'] .nfl-data-container .ufc-fight .team-logo-watermark {
     transition: none;
   }
 }
+
+/* a closed game's faded logo with a per-team lift (--wm-faded-filter, see
+   TeamCell) uses it even when the team also has its own filter for open games */
+html[data-theme='poster'] .nfl-data-container .team-cell:not(.expanded) .team-logo-watermark[style*='--wm-faded-filter'] {
+  filter: grayscale(1) contrast(1.2) var(--wm-faded-filter, brightness(1)) !important;
+}
