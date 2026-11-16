@@ -4440,3 +4440,25 @@
     transition: none;
   }
 }
+
+/* the kickoff bar (NFL) and info bar (NBA / MLB) under a game's team cells: the
+   same grey panel as BOX SCORE, LINES, PLAYERS... (UFC's fight row already is) */
+html[data-theme] .nfl-data-container .kickoff-bar {
+  padding: 4px 0;
+  border: 2px solid var(--pv-card-border, #555555);
+  border-radius: 7px;
+  background: var(--pv-inner, rgba(70, 70, 70, 0.8));
+}
+
+/* an open game's panel (BOX SCORE, LINES...) lines up with the team cells and
+   kickoff bar above it */
+.nfl-data-container .stat-toggle-container {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+/* the kickoff / info bar sits closer to the team cells above and the panel below */
+.nfl-data-container .kickoff-bar {
+  margin-top: 3px;
+  margin-bottom: 2px;
+}

@@ -78,6 +78,12 @@ const WATERMARK_CLOSED_SIZE = {
 
 // Other leagues' logos read big next to NFL ones: a scale per league, with
 // per-team tweaks on top (size multiplier, or a style such as a brighter filter).
+// faded: extra filter for the faded logo behind a closed game's cell, for logos
+// that otherwise blend into their team colour there (measured for every team:
+// the faded logo's contrast with its cell). Dark logos are brightened; ones with
+// almost no light in them become a light silhouette instead (partly inverted).
+const LIFT = (k) => ({ faded: `brightness(${k})` });
+const LIGHT_SILHOUETTE = { faded: 'invert(0.6)' };
 const LEAGUE_LOGOS = {
   nba: {
     // an opened game's logos shrink well down, out of the way of its details
@@ -87,9 +93,37 @@ const LEAGUE_LOGOS = {
       NO: { size: 1.5 },
       OKC: { size: 1.25 },
       UTAH: { style: { filter: 'brightness(1.9) contrast(0.9)' } },
+      HOU: LIFT(1.6),
+      MEM: LIFT(1.9),
+      PHI: LIFT(2.6),
+      TOR: LIFT(1.9),
     },
   },
-  mlb: { open: 0.7, closed: 0.7, teams: {} },
+  mlb: {
+    open: 0.7,
+    closed: 0.7,
+    teams: {
+      ARI: LIFT(1.8),
+      ATH: LIGHT_SILHOUETTE,
+      ATL: LIGHT_SILHOUETTE,
+      BAL: LIFT(1.6),
+      BOS: LIFT(2),
+      CIN: LIFT(2.6),
+      CLE: LIFT(2),
+      KC: LIGHT_SILHOUETTE,
+      LAD: LIFT(2.4),
+      MIA: LIFT(2.2),
+      MIN: LIFT(2.6),
+      NYM: LIFT(1.9),
+      NYY: LIGHT_SILHOUETTE,
+      PHI: LIFT(1.8),
+      SD: LIGHT_SILHOUETTE,
+      STL: LIFT(2.5),
+      TB: LIFT(1.7),
+      TEX: LIFT(2.5),
+      WSH: LIGHT_SILHOUETTE,
+    },
+  },
 };
 
 // Before a game: just the moneyline, on one row, centred in the cell.
@@ -167,6 +201,8 @@ const TeamCell = ({
               '--wm-poster-closed': nflTuned
                 ? (WATERMARK_CLOSED_SIZE[team.abbreviation] ?? WATERMARK_SIZE[team.abbreviation] ?? 1)
                 : (teamTweak?.size ?? 1),
+              // the faded (closed) logo's extra filter, if this team needs one
+              ...(teamTweak?.faded ? { '--wm-faded-filter': teamTweak.faded } : null),
             }}
             draggable={false}
           />

@@ -9,7 +9,10 @@
 }
 
 /* one repeating 400 x 200 tile of lines (a stencil filled with the line
-   colour), a tile wider than the screen */
+   colour), a tile wider than the screen. The gold lines are kept soft; while a
+   game is open (useGameFocus sets --bg-line-a / --bg-line-b and their
+   -strength) they turn the teams' colours at full strength, fading between
+   the two. */
 .site-background-layer {
   position: absolute;
   top: 0;
@@ -19,19 +22,22 @@
   mask-size: 400px 200px;
   -webkit-mask-repeat: repeat;
   mask-repeat: repeat;
-  transition: background-color 0.8s ease;
+  transition:
+    background-color 0.8s ease,
+    opacity 0.8s ease;
   will-change: transform;
 }
 
 .site-background-layer.rolls-right {
   left: -400px;
+  opacity: var(--bg-line-a-strength, 0.73);
   background-color: var(--bg-line-a, #f5d16b);
   animation: siteBgRight 40s linear infinite;
 }
 
 .site-background-layer.rolls-left {
   left: 0;
-  opacity: 0.8;
+  opacity: var(--bg-line-b-strength, 0.59);
   background-color: var(--bg-line-b, #f5d16b);
   animation: siteBgLeft 46s linear infinite;
 }

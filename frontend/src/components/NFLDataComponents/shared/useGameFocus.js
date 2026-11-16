@@ -16,45 +16,59 @@ import { getTeamRingColors } from './teamColors';
 // Returns focusSpace: true while the box needs room at its end (so even the
 // last game can reach the top), kept until the slide back has finished.
 
-// A team's colour for the background lines: its border colour, lifted a third
-// of the way toward white so thin lines read as clearly as the gold ones.
-// Any colour ('#b3262b' or 'rgb(...)'/'rgba(...)') lifted the same way.
+// A team's colour for the background lines: its border colour made vivid
+// enough for thin lines on black (see below). Takes any colour ('#b3262b' or
+// 'rgb(...)'/'rgba(...)').
 export const lineColorFrom = (color) => {
   const hex = /^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(color || '');
   const [r, g, b] = hex
     ? hex.slice(1).map((h) => parseInt(h, 16))
     : ((color || '').match(/[\d.]+/g) || [245, 209, 107]).map(Number);
-  const lift = (c) => Math.round(c + (255 - c) * 0.35);
-  return `rgb(${lift(r)}, ${lift(g)}, ${lift(b)})`;
+  // vivid but readable on black: the team's hue, more saturated, at a
+  // brightness that shows up as thin lines (dark navies and blacks lifted,
+  // nothing so light it turns pastel)
+  const [h, s, l] = toHsl(r / 255, g / 255, b / 255);
+  const sat = Math.min(1, s * 1.3 + 0.12);
+  const light = Math.min(0.66, Math.max(0.56, l));
+  return `hsl(${Math.round(h * 360)}, ${Math.round(sat * 100)}%, ${Math.round(light * 100)}%)`;
+};
+
+const toHsl = (r, g, b) => {
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  if (max === min) return [0, 0, l];
+  const d = max - min;
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  const h = max === r ? ((g - b) / d + (g < b ? 6 : 0)) / 6 : max === g ? ((b - r) / d + 2) / 6 : ((r - g) / d + 4) / 6;
+  return [h, s, l];
 };
 
 export const teamLineColor = (team) => lineColorFrom(getTeamRingColors(team)[0]);
 
 const SLIDE_MS = 700;
+const LINE_VARS = ['--bg-line-a', '--bg-line-b', '--bg-line-a-strength', '--bg-line-b-strength'];
 const GAP = 8; // space between the top of the box and the open game
 
 const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
   const isOpen = Boolean(openKey);
 
   // ---- the background lines ----
+  // the teams' colours at full strength while a game is open (the gold lines
+  // are kept softer, see SiteBackground.css)
   useEffect(() => {
     const root = document.documentElement.style;
     if (isOpen && lineA && lineB) {
       root.setProperty('--bg-line-a', lineA);
       root.setProperty('--bg-line-b', lineB);
+      root.setProperty('--bg-line-a-strength', '1');
+      root.setProperty('--bg-line-b-strength', '0.9');
     } else {
-      root.removeProperty('--bg-line-a');
-      root.removeProperty('--bg-line-b');
+      LINE_VARS.forEach((v) => root.removeProperty(v));
     }
   }, [isOpen, lineA, lineB]);
   // leaving the page puts them back to gold
-  useEffect(
-    () => () => {
-      document.documentElement.style.removeProperty('--bg-line-a');
-      document.documentElement.style.removeProperty('--bg-line-b');
-    },
-    [],
-  );
+  useEffect(() => () => LINE_VARS.forEach((v) => document.documentElement.style.removeProperty(v)), []);
 
   // ---- the top fade ----
   // Once the list has been scrolled, what reaches the top of the scrolling box
