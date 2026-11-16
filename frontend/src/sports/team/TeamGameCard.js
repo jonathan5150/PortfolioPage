@@ -4,6 +4,7 @@ import Marquee from '../../components/NFLDataComponents/shared/Marquee';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
 import { getTeamColor, getTeamRingColors, washOut } from '../../components/NFLDataComponents/shared/teamColors';
 import { getLeagueOdds } from './leagueApi';
+import { peekOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
 import { BoxScorePanel, LinesPanel, PlayersPanel, useGameLines } from './TeamPanels';
 
 const accent = (team) => washOut(getTeamColor(team) || 'rgba(120,120,120,0.6)', 0.15).replace(/[\d.]+\)$/, '1)');
@@ -168,7 +169,10 @@ const ScoreBug = ({ lg, game, open, onToggle }) => {
   const { state } = game.status;
   const s = game.situation;
   const pre = state === 'pre';
-  const odds = useAsyncData(() => getLeagueOdds(lg, game.id), [lg, game.id], { enabled: pre });
+  const odds = useAsyncData(() => getLeagueOdds(lg, game.id), [lg, game.id], {
+    enabled: pre,
+    initial: peekOdds(`${lg}:${game.id}`),
+  });
 
   const cells = ['away', 'home'].map((side) => {
     const other = side === 'away' ? 'home' : 'away';

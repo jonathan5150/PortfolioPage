@@ -20,7 +20,7 @@ const useInView = ({ rootMargin = '400px' } = {}) => {
           observer.disconnect();
         }
       },
-      { rootMargin }
+      { rootMargin },
     );
     observer.observe(el);
     return () => observer.disconnect();

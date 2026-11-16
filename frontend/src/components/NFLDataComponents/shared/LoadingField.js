@@ -1,13 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import './LoadingField.scss';
 
 // Loading animation for every sport: one gold-and-black icon that turns from a
 // football into a baseball, then a basketball, then a fight octagon, and round
-// again. Each shape spins and shrinks away as the next one spins and grows in,
-// with a caption to match. Inline SVG + CSS only.
+// again, a new shape every half second with a quick spin between them.
+//
+// It runs entirely on CSS animation (transform and opacity), so it keeps going
+// while the phone is busy loading the page; a JavaScript timer would freeze
+// then. Every copy is also in step with the clock, so when one loading screen
+// hands over to the next the animation carries on instead of starting over.
 const GOLD = '#f5d16b';
 const BLACK = '#0d0c0a';
-const STEP_MS = 1100;
+const STEP_S = 0.5;
 
 const Football = () => (
   <svg viewBox="0 0 40 40" className="sl-icon">
@@ -73,31 +77,27 @@ const Octagon = () => (
   </svg>
 );
 
-const STEPS = [
-  { key: 'nfl', Icon: Football, caption: 'Huddling up…' },
-  { key: 'mlb', Icon: Baseball, caption: 'Warming up the bullpen…' },
-  { key: 'nba', Icon: Basketball, caption: 'Checking the rotation…' },
-  { key: 'ufc', Icon: Octagon, caption: 'Entering the octagon…' },
+const SHAPES = [
+  { key: 'nfl', Icon: Football },
+  { key: 'mlb', Icon: Baseball },
+  { key: 'nba', Icon: Basketball },
+  { key: 'ufc', Icon: Octagon },
 ];
+const CYCLE_S = STEP_S * SHAPES.length;
 
 const LoadingField = ({ className = '' }) => {
-  const [step, setStep] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => setStep((s) => (s + 1) % STEPS.length), STEP_MS);
-    return () => clearInterval(id);
-  }, []);
-
+  // where in the cycle the clock is right now, so every copy is in step
+  const [phase] = useState(() => (performance.now() / 1000) % CYCLE_S);
   return (
     <div className={`loading sports-loading ${className}`} role="status" aria-label="Loading">
-      <div className="sl-morph" aria-hidden="true">
-        {STEPS.map(({ key, Icon }, i) => (
-          <div key={key} className={`sl-shape ${i === step ? 'active' : ''}`}>
+      <div className="sl-morph" aria-hidden="true" style={{ '--sl-phase': `${-phase}s` }}>
+        {SHAPES.map(({ key, Icon }, i) => (
+          <div key={key} className="sl-shape" style={{ animationDelay: `${i * STEP_S - phase}s` }}>
             <Icon />
           </div>
         ))}
       </div>
-      <p className="sl-caption">{STEPS[step].caption}</p>
+      <p className="sl-caption">Loading</p>
     </div>
   );
 };

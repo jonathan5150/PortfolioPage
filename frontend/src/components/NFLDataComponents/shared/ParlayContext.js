@@ -20,7 +20,7 @@ export const ParlayProvider = ({ children }) => {
         // A new pick on the same market (e.g. the other side) replaces the old one.
         return [...prev.filter((l) => !(leg.market && l.market === leg.market)), leg];
       }),
-    [setLegs]
+    [setLegs],
   );
   const remove = useCallback((id) => setLegs((prev) => prev.filter((l) => l.id !== id)), [setLegs]);
   const clear = useCallback(() => setLegs([]), [setLegs]);
@@ -58,7 +58,12 @@ export const Holdable = ({ leg, as: Tag = 'div', className = '', children, ...re
     if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(15);
   }, HOLD_MS);
 
-  if (!leg) return <Tag className={className} {...rest}>{children}</Tag>;
+  if (!leg)
+    return (
+      <Tag className={className} {...rest}>
+        {children}
+      </Tag>
+    );
 
   const stop = () => {
     clearTimeout(delayRef.current);

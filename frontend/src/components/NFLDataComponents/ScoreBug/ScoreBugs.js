@@ -5,6 +5,7 @@ import Linescore from './Linescore';
 import Marquee from '../shared/Marquee';
 import { headshotUrl } from '../../../pages/NFLData/NFLDataApi/endpoints';
 import { getEventOdds } from '../../../pages/NFLData/NFLDataApi/bettingService';
+import { peekOdds } from '../shared/preloadOdds';
 import { getGameConditions } from '../../../pages/NFLData/NFLDataApi/gameConditions';
 import useAsyncData from '../shared/useAsyncData';
 import { getTeamBorderColor } from '../shared/teamColors';
@@ -159,7 +160,7 @@ export const PreGameScoreBug = ({ game, onToggle, showLinescore }) => {
     : 'TBD';
 
   // the moneylines fill the score spot before kickoff
-  const odds = useAsyncData(() => getEventOdds(game.id), [game.id]);
+  const odds = useAsyncData(() => getEventOdds(game.id), [game.id], { initial: peekOdds(`nfl:${game.id}`) });
 
   const rows = (side) => {
     const competitor = game[side];

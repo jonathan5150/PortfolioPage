@@ -87,7 +87,7 @@ const StatTable = ({
                     borderBottom: 'none',
                   }}
                 >
-                  {i === 0 ? totalsLabel : totals[column.key] ?? ''}
+                  {i === 0 ? totalsLabel : (totals[column.key] ?? '')}
                 </td>
               ))}
             </tr>

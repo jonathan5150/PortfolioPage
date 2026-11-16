@@ -2,8 +2,16 @@ import { useEffect, useState } from 'react';
 
 // Runs an async loader whenever deps change; ignores stale responses.
 // Pass enabled=false to defer loading (e.g. until a card is expanded).
-const useAsyncData = (loader, deps, { enabled = true, keepPrevious = false } = {}) => {
-  const [state, setState] = useState({ data: null, error: null, loading: enabled });
+// initial: data already on hand (e.g. odds fetched during the loading screen),
+// shown from the first render and kept while the loader refreshes it.
+const useAsyncData = (loader, deps, { enabled = true, keepPrevious = false, initial } = {}) => {
+  const hasInitial = initial !== undefined && initial !== null;
+  if (hasInitial) keepPrevious = true; // eslint-disable-line no-param-reassign
+  const [state, setState] = useState({
+    data: hasInitial ? initial : null,
+    error: null,
+    loading: enabled && !hasInitial,
+  });
 
   useEffect(() => {
     if (!enabled) return undefined;

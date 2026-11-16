@@ -16,7 +16,16 @@ import { ModelResults } from '../../components/NFLDataComponents/GameList/Predic
 import ConfidentBets, { asBetItems, leagueTicketLoader } from '../../components/NFLDataComponents/GameList/DayBets';
 import ModelPanel from '../../components/NFLDataComponents/GameList/ModelPanel';
 import { graderFor, seasonLoaderFor } from '../../pages/NFLData/NFLDataApi/modelGrading';
-import { LEAGUES, dayFromKey, findGameDay, getLeagueEventDays, getLeagueScoreboard, getLeagueTeams } from './leagueApi';
+import {
+  LEAGUES,
+  dayFromKey,
+  findGameDay,
+  getLeagueEventDays,
+  getLeagueOdds,
+  getLeagueScoreboard,
+  getLeagueTeams,
+} from './leagueApi';
+import { preloadOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
 import TeamGameCard from './TeamGameCard';
 import '../../pages/NFLData/NFLData.scss';
 import './TeamSport.scss';
@@ -60,6 +69,17 @@ const TeamSportPage = ({ lg }) => {
     seededDay.current = null;
     let active = true;
     getLeagueScoreboard(lg, day, { live: refresh > 0 })
+      // the loading screen stays up until the day's pregame moneylines are in
+      .then((data) =>
+        (refresh > 0
+          ? Promise.resolve()
+          : preloadOdds(
+              (data.events || [])
+                .filter((g) => g.status?.state === 'pre')
+                .map((g) => ({ key: `${lg}:${g.id}`, load: () => getLeagueOdds(lg, g.id) })),
+            )
+        ).then(() => data),
+      )
       .then((data) => {
         if (!active) return;
         setBoard(data);

@@ -5,6 +5,16 @@ import GameList from '../../components/NFLDataComponents/GameList/GameList';
 import usePersistentState from '../../components/NFLDataComponents/shared/usePersistentState';
 import { getTeams, getScoreboard, getTeamRankings } from './NFLDataApi/nflDataService';
 import { isLiveStatus } from './NFLDataApi/espnParsers';
+import { getEventOdds } from './NFLDataApi/bettingService';
+import { preloadOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
+
+// the moneylines the team cells show before kickoff, fetched during the loading screen
+const preloadWeekOdds = (events) =>
+  preloadOdds(
+    (events || [])
+      .filter((e) => e.status?.state === 'pre')
+      .map((e) => ({ key: `nfl:${e.id}`, load: () => getEventOdds(e.id) })),
+  );
 
 const LIVE_POLL_MS = 15000;
 const PREGAME_POLL_MS = 30000;
@@ -28,7 +38,7 @@ export const teamsFromEvents = (events) => {
   events.forEach((e) =>
     [e.away?.team, e.home?.team].forEach((t) => {
       if (t?.id && !byId.has(t.id)) byId.set(t.id, t);
-    })
+    }),
   );
   return [...byId.values()].sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
 };
@@ -52,7 +62,7 @@ function NFLData() {
   const [savedSelectedTeams, setSavedSelectedTeams] = usePersistentState('selectedTeams', null);
   const selectedTeams = useMemo(
     () => (Array.isArray(savedSelectedTeams) ? savedSelectedTeams : teams.map((t) => t.id)),
-    [savedSelectedTeams, teams]
+    [savedSelectedTeams, teams],
   );
 
   const selectionRef = useRef(selection);
@@ -80,6 +90,8 @@ function NFLData() {
           getScoreboard(),
         ]);
         if (!active) return;
+        await preloadWeekOdds(board.events);
+        if (!active) return;
         setTeams(teamsResult?.length ? teamsResult : teamsFromEvents(board.events));
         setScoreboard(board);
         setCurrentSeason(board.season);
@@ -101,6 +113,8 @@ function NFLData() {
   // Load the scoreboard whenever the user picks a different week/season.
   const loadScoreboard = useCallback(async (sel, { live = false } = {}) => {
     const board = await getScoreboard(sel, { live });
+    // a newly picked week keeps the loading screen up until its odds are in
+    if (!live) await preloadWeekOdds(board.events);
     // ignore responses for a week the user already navigated away from
     const current = selectionRef.current;
     if (
@@ -129,13 +143,10 @@ function NFLData() {
       .finally(() => setLoading(false));
   }, [selection, loadScoreboard]);
 
-
   const visibleGames = useMemo(
     () =>
-      scoreboard.events.filter(
-        (g) => selectedTeams.includes(g.away?.teamId) || selectedTeams.includes(g.home?.teamId)
-      ),
-    [scoreboard.events, selectedTeams]
+      scoreboard.events.filter((g) => selectedTeams.includes(g.away?.teamId) || selectedTeams.includes(g.home?.teamId)),
+    [scoreboard.events, selectedTeams],
   );
 
   // Live updates: poll only while games you're viewing are on; pause when the tab is hidden.
@@ -176,7 +187,6 @@ function NFLData() {
 
   const teamsById = useMemo(() => Object.fromEntries(teams.map((t) => [t.id, t])), [teams]);
 
-
   const seasons = useMemo(() => {
     if (!currentSeason) return [];
     return Array.from({ length: SEASONS_BACK + 1 }, (_, i) => currentSeason - i);
@@ -189,8 +199,7 @@ function NFLData() {
     });
   };
 
-  const handleSelectWeek = (seasonType, week) =>
-    setSelection((prev) => ({ ...prev, seasonType, week }));
+  const handleSelectWeek = (seasonType, week) => setSelection((prev) => ({ ...prev, seasonType, week }));
 
   const handleSelectSeason = (season) => setSelection({ season, seasonType: 2, week: 1 });
 

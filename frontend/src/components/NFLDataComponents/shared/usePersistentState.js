@@ -24,7 +24,7 @@ export const writePreference = (key, value) => {
 // Like useState, but the value survives reloads.
 const usePersistentState = (key, initialValue) => {
   const [value, setValue] = useState(() =>
-    readPreference(key, typeof initialValue === 'function' ? initialValue() : initialValue)
+    readPreference(key, typeof initialValue === 'function' ? initialValue() : initialValue),
   );
   const keyRef = useRef(key);
 
@@ -37,16 +37,13 @@ const usePersistentState = (key, initialValue) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  const update = useCallback(
-    (next) => {
-      setValue((prev) => {
-        const resolved = typeof next === 'function' ? next(prev) : next;
-        writePreference(keyRef.current, resolved);
-        return resolved;
-      });
-    },
-    []
-  );
+  const update = useCallback((next) => {
+    setValue((prev) => {
+      const resolved = typeof next === 'function' ? next(prev) : next;
+      writePreference(keyRef.current, resolved);
+      return resolved;
+    });
+  }, []);
 
   return [value, update];
 };
@@ -73,7 +70,7 @@ export const usePersistentMapEntry = (mapKey, entryKey, fallback) => {
         return resolved;
       });
     },
-    [mapKey, entryKey]
+    [mapKey, entryKey],
   );
 
   return [value, update];

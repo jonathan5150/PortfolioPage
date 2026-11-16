@@ -17,6 +17,7 @@ import { loadUfcModel, ufcPicks, gradeUfcPicks, decimalPrice, METHOD_LABEL } fro
 import ConfidentBets from '../../components/NFLDataComponents/GameList/DayBets';
 import ModelPanel from '../../components/NFLDataComponents/GameList/ModelPanel';
 import ModelSection from '../../components/NFLDataComponents/GameList/ModelSection';
+import { peekOdds, preloadOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
 import { runWithConcurrency } from '../../pages/NFLData/NFLDataApi/http';
 import {
   etDay,
@@ -272,6 +273,7 @@ const FightCard = ({ eventId, fight, details, sectionsReady, isOpen, onToggle, h
   // result is in
   const odds = useAsyncData(() => getUfcOdds(eventId, fight.id).catch(() => null), [eventId, fight.id], {
     enabled: state !== 'post' && sectionsReady,
+    initial: state !== 'post' ? peekOdds(`ufc:${eventId}:${fight.id}`) : undefined,
   }).data;
   const [hasOpened, setHasOpened] = useState(false);
   useEffect(() => {
@@ -467,6 +469,9 @@ const EventModelResults = ({ event, details, stake }) => {
 const UfcPage = () => {
   const [day, setDay] = useState(null); // the event's US Eastern date, YYYYMMDD
   const [board, setBoard] = useState(null);
+  // the card's fight details (which section each fight is in, results),
+  // fetched with the board during the loading screen: { eventId, data }
+  const [firstDetails, setFirstDetails] = useState(null);
   const [error, setError] = useState(null);
   const [refresh, setRefresh] = useState(0);
   const [calendar, setCalendar] = useState([]);
@@ -482,8 +487,30 @@ const UfcPage = () => {
     seededDay.current = null;
     let active = true;
     getUfcScoreboard(day, { live: refresh > 0 })
+      // the loading screen stays up until the card's moneylines are in and each
+      // fight is known to be on the MAIN CARD, PRELIMS or EARLY PRELIMS (at most
+      // a few seconds; anything slower fills in after, as before)
       .then((data) => {
+        if (refresh > 0 || !data.event) return { data, details: null };
+        const { id, fights } = data.event;
+        const live = fights.some((f) => f.status.state === 'in');
+        const details = Promise.race([
+          getUfcFightDetails(id, fights, { live }).catch(() => null),
+          new Promise((resolve) => setTimeout(() => resolve(null), 6000)),
+        ]);
+        const odds = preloadOdds(
+          fights
+            .filter((f) => f.status.state !== 'post')
+            .map((f) => ({
+              key: `ufc:${id}:${f.id}`,
+              load: () => getUfcOdds(id, f.id).catch(() => null),
+            })),
+        );
+        return Promise.all([details, odds]).then(([d]) => ({ data, details: d }));
+      })
+      .then(({ data, details: firstData }) => {
         if (!active) return;
+        if (firstData && data.event) setFirstDetails({ eventId: data.event.id, data: firstData });
         setBoard(data);
         setError(null);
         if (data.calendar.length) setCalendar(data.calendar);
@@ -513,6 +540,9 @@ const UfcPage = () => {
     [event?.id, live, live ? refresh : 0],
     { enabled: Boolean(event) },
   );
+  // until that answers, the details fetched during the loading screen, so the
+  // fights are in their right sections from the first frame
+  const cardDetails = details.data || (firstDetails && firstDetails.eventId === event?.id ? firstDetails.data : null);
 
   // ---- FIGHTS: hide fights you don't care about (saved) ----
   const [hideMode, setHideMode] = useState(false);
@@ -534,9 +564,9 @@ const UfcPage = () => {
     const by = { main: [], prelims: [], early: [] };
     [...shownFights]
       .sort((a, b) => b.order - a.order) // main event first
-      .forEach((f) => by[segmentKey(details.data?.[f.id])].push(f));
+      .forEach((f) => by[segmentKey(cardDetails?.[f.id])].push(f));
     return SEGMENTS.map((s) => ({ ...s, fights: by[s.key] })).filter((s) => s.fights.length);
-  }, [event, shownFights, details.data]);
+  }, [event, shownFights, cardDetails]);
 
   const cookieName = event ? `ufcCollapsed_${event.id}` : null;
   const [savedCollapsed, setSavedCollapsed] = useState(null);
@@ -602,7 +632,7 @@ const UfcPage = () => {
   // CONFIDENT BETS (in the MODEL dropdown): the winner picks strong enough to bet (only the
   // winner pick ever is), graded once the result is in
   const eventId = event?.id;
-  const results = details.data;
+  const results = cardDetails;
   const loadFightTickets = useCallback(
     async ({ fight }) => {
       const picks = await fightPicks(eventId, fight);
@@ -748,8 +778,8 @@ const UfcPage = () => {
                           <FightCard
                             eventId={event.id}
                             fight={fight}
-                            details={details.data?.[fight.id]}
-                            sectionsReady={Boolean(details.data || details.error)}
+                            details={cardDetails?.[fight.id]}
+                            sectionsReady={Boolean(cardDetails || details.error)}
                             isOpen={openId === fight.id}
                             onToggle={() => onToggle(fight.id)}
                             hideMode={hideMode}
@@ -770,7 +800,7 @@ const UfcPage = () => {
               {({ unit }) => (
                 <>
                   <ConfidentBets items={fightItems(event)} loadTickets={loadFightTickets} stake={unit} period="CARD" />
-                  <EventModelResults event={event} details={details.data} stake={unit} />
+                  <EventModelResults event={event} details={cardDetails} stake={unit} />
                 </>
               )}
             </ModelPanel>
