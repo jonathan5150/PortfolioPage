@@ -56,13 +56,13 @@ export const teamLineColor = (team) => lineColorFrom(getTeamRingColors(team)[0])
 const SLIDE_MS = 700;
 const FADE_MS = 480; // everything else fades out in 0.45s (NFLData.scss)
 const MASK_MS = 260; // the top fade slides away in 0.25s
-const FOLD_MS = 380; // an open game's details fold away in about 0.35s
+const FOLD_MS = 320; // an open game's details fold away in about 0.3s
 const GAP = 8; // space between the top of the box and the open game
 
 // The slide back to where the list was when a game closes: a little slower
 // than the browser's own smooth scroll, so it can be watched gliding home.
 // Longer for longer distances, within limits.
-const slideBackMs = (distance) => Math.min(1100, 650 + Math.abs(distance) * 0.4);
+const slideBackMs = (distance) => Math.min(900, 520 + Math.abs(distance) * 0.32);
 const easeInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2);
 
 const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
@@ -252,7 +252,7 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     // nothing to fade from); the game keeps its spot on screen meanwhile. Then
     // the box glides back to where it was, and the top fade slides back in.
     if (returnTo.current === null) return undefined;
-    holdBackgroundWork(FOLD_MS + 1100 + 900);
+    holdBackgroundWork(FOLD_MS + 900 + 900);
     const back = returnTo.current;
     lock();
     const wasFocused = Boolean(target.current) && box.classList.contains('focus-details');

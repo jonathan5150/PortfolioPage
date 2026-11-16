@@ -1443,8 +1443,10 @@
   color: #ffffff;
 }
 
-/* Finished games: "Final" and the original start time take turns, each
-   showing for about two seconds with a soft fade between them. */
+/* Two things that take turns in one spot of the bar, each showing for about
+   two seconds: a finished game's "Final" and its start time, and the stadium
+   and the TV network. One fades right out before the other fades in, so the
+   two are never seen on top of each other. */
 .nfl-data-container .kickoff-swap {
   display: grid;
 }
@@ -1466,11 +1468,11 @@
 
 @keyframes nflSwapA {
   0%,
-  40% {
+  42% {
     opacity: 1;
   }
-  50%,
-  90% {
+  48%,
+  94% {
     opacity: 0;
   }
   100% {
@@ -1480,13 +1482,14 @@
 
 @keyframes nflSwapB {
   0%,
-  40% {
+  48% {
     opacity: 0;
   }
-  50%,
-  90% {
+  54%,
+  88% {
     opacity: 1;
   }
+  94%,
   100% {
     opacity: 0;
   }
@@ -1500,12 +1503,34 @@
 }
 
 /* low graphics quality: they still take turns, switching at once instead of fading */
+@keyframes nflSwapLowA {
+  0%,
+  49.9% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes nflSwapLowB {
+  0%,
+  49.9% {
+    opacity: 0;
+  }
+  50%,
+  100% {
+    opacity: 1;
+  }
+}
+
 html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-a {
-  animation: nflSwapA 5s steps(1, end) infinite !important;
+  animation: nflSwapLowA 5s linear infinite !important;
 }
 
 html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
-  animation: nflSwapB 5s steps(1, end) infinite !important;
+  animation: nflSwapLowB 5s linear infinite !important;
 }
 
 .nfl-data-container .kickoff-where {
@@ -4629,10 +4654,34 @@ html[data-theme] .nfl-data-container .kickoff-bar {
   margin-right: 5px;
 }
 
-/* the kickoff / info bar sits closer to the team cells above and the panel below */
+/* An open game's kickoff / info bar sits exactly as far from the box above it
+   and the panel below it as the team cells sit from the box right under them:
+   3px under the player boxes of a game that hasn't started (they're 3px under
+   the cells), 1px under a score table (it's 1px under the cells). The player
+   boxes keep 2px below them, so 1px more here makes 3; a score table keeps
+   none. Below: nothing else in between once the game is open (the drawer's
+   own padding and the card's bottom padding go, see .focus-details). */
 .nfl-data-container .kickoff-bar {
-  margin-top: 3px;
-  margin-bottom: 2px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+}
+
+.nfl-data-container .info-drawer:has(> .info-drawer-row) .kickoff-bar {
+  margin-bottom: 3px;
+}
+
+.nfl-data-container .game-slot .info-drawer {
+  padding-bottom: 0 !important;
+}
+
+.nfl-data-container .nfl-scroll-panel.focus-details .game-slot[data-focus-target] .score-grid {
+  padding-bottom: 0;
+}
+
+/* UFC: the fight row under the fighters is its bar: 3px under the cells
+   already, and 3px above the open fight's panel */
+.nfl-data-container .nfl-scroll-panel.focus-details .game-slot[data-focus-target] .ufc-fight-row {
+  margin-bottom: 3px;
 }
 
 /* ---------- just the open game (useGameFocus): once a game has slid to the top,
@@ -4859,4 +4908,25 @@ html[data-quality='low'] .nfl-data-container .title-shine {
   letter-spacing: 0.04em;
   text-align: center;
   white-space: nowrap;
+}
+
+/* ---------- the same distance from the screen's edges (--edge, each side)
+   for the title, the row of header buttons and the FINISHED / LIVE /
+   UPCOMING (and UFC card) boxes. The scrolling area itself runs the full
+   width, so the boxes in it can line up with the header. ---------- */
+.nfl-data-container {
+  --edge: 6px;
+}
+
+.nfl-data-container .pinned-header .nfl-title,
+.nfl-data-container .pinned-header .controls {
+  width: calc(100% - 2 * var(--edge));
+}
+
+.nfl-data-container .nfl-scroll-panel {
+  width: 100%;
+}
+
+.nfl-data-container .nfl-scroll-panel .game-section {
+  width: calc(100% - 2 * var(--edge));
 }
