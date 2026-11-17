@@ -210,7 +210,8 @@ html[data-theme-logos] .nfl-data-container .team-text .team-odds-value {
 html[data-theme='poster'] .nfl-data-container .game-slot .team-logo-watermark,
 html[data-theme='poster'] .nfl-data-container .game-container .team-logo-watermark {
   transform: translate(-50%, -50%) scale(calc(1.5 * var(--wm-poster-closed, 1)));
-  opacity: 0.4;
+  /* a few logos ask to be more solid (TeamCell's WATERMARK_STYLE) */
+  opacity: var(--wm-closed-opacity, 0.4);
   filter: grayscale(0.25) contrast(1.05);
   /* closing a game: the logo zooms back in a little slower than it shrank */
   transition: transform 1.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.8s ease, filter 0.8s ease;
@@ -219,7 +220,7 @@ html[data-theme='poster'] .nfl-data-container .game-container .team-logo-waterma
 html[data-theme='poster'] .nfl-data-container .game-slot .team-cell.expanded .team-logo-watermark,
 html[data-theme='poster'] .nfl-data-container .game-container .team-cell.expanded .team-logo-watermark {
   transform: translate(-50%, -50%) scale(calc(0.54 * var(--wm-size, 1)));
-  opacity: 0.8;
+  opacity: var(--wm-open-opacity, 0.8);
   filter: none;
   /* opening a game: the logo shrinks to fit in 1s */
   transition: transform 1s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.8s ease, filter 0.8s ease;

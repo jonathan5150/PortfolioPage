@@ -59,8 +59,10 @@ const WATERMARK_STYLE = {
 
   LAR: { filter: 'grayscale(1) brightness(2.6) sepia(1) saturate(4.5) hue-rotate(12deg)' },
 
-  // whitish grey (about #d9d9d9 from its solid green), open or closed
-  NYJ: { filter: 'grayscale(1) brightness(3.3)' },
+  // whitish grey (about #eee from its solid green), open or closed; it's more
+  // solid than the rest (--wm-closed-opacity / --wm-open-opacity), so the
+  // green cell behind it doesn't tint it green again
+  NYJ: { filter: 'grayscale(1) brightness(3.6)', '--wm-closed-opacity': 0.62, '--wm-open-opacity': 0.97 },
 };
 
 // Some logos read bigger or smaller than the rest at the same size; this
