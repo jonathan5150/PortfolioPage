@@ -229,6 +229,21 @@ export const situationText = (s, status) => {
   return `${ordinal(s.down)} & ${s.distance === 0 ? 'Goal' : s.distance}`;
 };
 
+// Between a score and the next snap there's no down to show, so the top left
+// says what's coming instead. ESPN folds the extra point (or two-point try)
+// into the touchdown play: until its text mentions the try, the try is still
+// to come; once it does (or after a made field goal), a kickoff is next.
+const TRY_DONE = /extra point|two-point|two point|2-pt|conversion/i;
+export const betweenPlaysText = (s, possessorAbbr) => {
+  if (!s || (s.down >= 1 && s.down <= 4)) return '';
+  if (/touchdown/i.test(s.lastPlayType || '')) {
+    if (TRY_DONE.test(s.lastPlay || '')) return 'Kickoff';
+    return `PAT Attempt${possessorAbbr ? ` · ${possessorAbbr}` : ''}`;
+  }
+  if (/field goal good/i.test(s.lastPlayType || '')) return 'Kickoff';
+  return '';
+};
+
 // Stoppages (TV / team timeouts, end of a quarter, two-minute warning) say
 // nothing about the game, so the score bug shows the latest scoring play then.
 const STOPPAGE = /timeout|end of (the )?(quarter|half|game)|end quarter|two[- ]minute warning/i;
@@ -296,7 +311,7 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
               )
             ) : (
               <>
-                {downText}
+                {downText || (!status.isHalftime && betweenPlaysText(s, possessorAbbr))}
                 {hasDown && ballText ? ` · ${ballText}` : ''}
                 {hasDown && s?.isRedZone && <span className="red-zone-tag">RZ</span>}
               </>
