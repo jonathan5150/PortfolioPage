@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import TeamResultsRows from '../shared/TeamResultsRows';
 import LinesModeToggle from '../shared/LinesModeToggle';
 import useAsyncData from '../shared/useAsyncData';
 import useInView from '../shared/useInView';
@@ -12,7 +11,6 @@ import {
   getTeamPlayers,
   getGameSkillPlayers,
   getRecentGames,
-  getTeamResultHistory,
 } from '../../../pages/NFLData/NFLDataApi/bettingService';
 import { BOOK, getBookOdds, normalizeName } from '../../../pages/NFLData/NFLDataApi/sportsbookOdds';
 import { fmtLine, fmtOdds } from '../../../pages/NFLData/NFLDataApi/betting';
@@ -107,22 +105,6 @@ const tdLeg = (game, player, td) => ({
   odds: td.price,
   link: td.link,
 });
-
-// Each team's results this season, oldest to newest, in the same style as a
-// player's touchdown history: date and opponent over a block that's gold for a
-// win and plain grey for a loss. Both teams share one box and one scroller.
-const TeamResultsHistory = ({ game }) => {
-  const away = useAsyncData(() => getTeamResultHistory(game.away?.teamId, game), [game.id, game.away?.teamId]);
-  const home = useAsyncData(() => getTeamResultHistory(game.home?.teamId, game), [game.id, game.home?.teamId]);
-  return (
-    <TeamResultsRows
-      rows={[
-        { team: game.away?.team, games: away.data || [] },
-        { team: game.home?.team, games: home.data || [] },
-      ]}
-    />
-  );
-};
 
 // ---------- LINES tab ----------
 
@@ -305,7 +287,6 @@ const LinesTab = ({ game, lines, linePicks, grades }) => {
       )}
       <WinProbability game={game} predictor={chance} />
       {lockedNote}
-      <TeamResultsHistory game={game} />
       <div className="pick-lines">
         {linePicks ? (
           ['winner', 'spread', 'total'].map((key) => (

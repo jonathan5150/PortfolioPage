@@ -2,6 +2,8 @@ import React, { useMemo } from 'react';
 import { fetchJson } from '../../../pages/NFLData/NFLDataApi/http';
 import useAsyncData from './useAsyncData';
 import { getTeamColor, getTeamTextColor } from './teamColors';
+import TeamResultsRows from './TeamResultsRows';
+import { getTeamHistories, historyRows } from './teamHistory';
 
 // STATS (an upcoming game's panel, in place of BOX SCORE): the two teams'
 // season stats side by side, each with its rank in the league, and the
@@ -274,8 +276,18 @@ const washStyle = (winner, awayTeam, homeTeam) => {
 const TeamStatsCompare = ({ lg, game }) => {
   const awayTeam = game.away?.team;
   const homeTeam = game.home?.team;
-  // every team's stats, and (NFL) the standings; STATS still shows without them
-  const state = useAsyncData(() => Promise.all([getTeamStatsTable(lg), getStandings(lg).catch(() => null)]), [lg]);
+  // every team's stats, (NFL) the standings, and both teams' win / loss rows,
+  // all loaded together so the tab draws in one go (STATS still shows
+  // without the standings or the rows)
+  const state = useAsyncData(
+    () =>
+      Promise.all([
+        getTeamStatsTable(lg),
+        getStandings(lg).catch(() => null),
+        getTeamHistories(lg, game).catch(() => null),
+      ]),
+    [lg, game.id],
+  );
   const records = { away: game.away?.record, home: game.home?.record };
   const rows = useMemo(
     () =>
@@ -295,38 +307,50 @@ const TeamStatsCompare = ({ lg, game }) => {
 
   if (state.loading && !state.data) return <div className="bet-message">Loading team stats…</div>;
   const hasStats = rows.some((r) => !r.record && (r.away.rank || r.home.rank));
-  if (!hasStats) return <div className="bet-message">Team stats aren't available yet this season.</div>;
+  // each team's results this season, at the top
+  const history = <TeamResultsRows rows={historyRows(game, state.data?.[2])} />;
+  if (!hasStats) {
+    return (
+      <>
+        {history}
+        <div className="bet-message">Team stats aren't available yet this season.</div>
+      </>
+    );
+  }
 
   return (
-    <div className="team-stats-compare">
-      <div className="tsc-row tsc-head">
-        <span className="tsc-team away" style={{ color: getTeamTextColor(awayTeam) }}>
-          {awayTeam?.abbreviation}
-        </span>
-        <span className="tsc-rank">RANK</span>
-        <span className="tsc-label" />
-        <span className="tsc-rank">RANK</span>
-        <span className="tsc-team home" style={{ color: getTeamTextColor(homeTeam) }}>
-          {homeTeam?.abbreviation}
-        </span>
+    <>
+      {history}
+      <div className="team-stats-compare">
+        <div className="tsc-row tsc-head">
+          <span className="tsc-team away" style={{ color: getTeamTextColor(awayTeam) }}>
+            {awayTeam?.abbreviation}
+          </span>
+          <span className="tsc-rank">RANK</span>
+          <span className="tsc-label" />
+          <span className="tsc-rank">RANK</span>
+          <span className="tsc-team home" style={{ color: getTeamTextColor(homeTeam) }}>
+            {homeTeam?.abbreviation}
+          </span>
+        </div>
+        {rows.map((row, i) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <React.Fragment key={i}>
+            {row.section && <div className="tsc-section">{row.section}</div>}
+            <div
+              className={`tsc-row${i === rows.length - 1 ? ' last' : ''}`}
+              style={washStyle(row.winner, awayTeam, homeTeam)}
+            >
+              <span className={`tsc-value away${row.winner === 'away' ? ' better' : ''}`}>{row.away.text}</span>
+              <span className={`tsc-rank ${row.away.tone}`}>{row.away.rank ? ordinalRank(row.away.rank) : ''}</span>
+              <span className="tsc-label">{row.label}</span>
+              <span className={`tsc-rank ${row.home.tone}`}>{row.home.rank ? ordinalRank(row.home.rank) : ''}</span>
+              <span className={`tsc-value home${row.winner === 'home' ? ' better' : ''}`}>{row.home.text}</span>
+            </div>
+          </React.Fragment>
+        ))}
       </div>
-      {rows.map((row, i) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <React.Fragment key={i}>
-          {row.section && <div className="tsc-section">{row.section}</div>}
-          <div
-            className={`tsc-row${i === rows.length - 1 ? ' last' : ''}`}
-            style={washStyle(row.winner, awayTeam, homeTeam)}
-          >
-            <span className={`tsc-value away${row.winner === 'away' ? ' better' : ''}`}>{row.away.text}</span>
-            <span className={`tsc-rank ${row.away.tone}`}>{row.away.rank ? ordinalRank(row.away.rank) : ''}</span>
-            <span className="tsc-label">{row.label}</span>
-            <span className={`tsc-rank ${row.home.tone}`}>{row.home.rank ? ordinalRank(row.home.rank) : ''}</span>
-            <span className={`tsc-value home${row.winner === 'home' ? ' better' : ''}`}>{row.home.text}</span>
-          </div>
-        </React.Fragment>
-      ))}
-    </div>
+    </>
   );
 };
 

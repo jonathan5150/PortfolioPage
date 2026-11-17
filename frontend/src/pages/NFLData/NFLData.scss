@@ -2758,6 +2758,19 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
   text-align: left;
 }
 
+/* the win / loss blocks sit in a thin outlined box; when they don't all fit,
+   the older ones are cut off cleanly at its inner edge (no fade). The outline
+   and its padding are on a frame around the scroller, so nothing scrolls
+   into the padding. */
+.nfl-data-container .team-results-frame {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  padding: 4px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 5px;
+}
+
 .nfl-data-container .team-results-scroll {
   flex: 1;
   min-width: 0;
@@ -2777,14 +2790,21 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
   justify-content: flex-end;
 }
 
-.nfl-data-container .team-results-scroll .td-history-col {
-  flex: 0 0 31px;
+/* exactly ten games fill the box's width on any screen (the box measures
+   itself: container units); more than ten scroll */
+.nfl-data-container .team-results-scroll {
+  container-type: inline-size;
 }
 
-/* when they don't all fit, the older games fade out on the left */
-.nfl-data-container .team-results-scroll.overflows {
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22px);
-  mask-image: linear-gradient(90deg, transparent 0, #000 22px);
+.nfl-data-container .team-results-scroll .td-history-col {
+  flex: 0 0 calc((100cqw - 9 * 3px) / 10);
+}
+
+/* the date and opponent shrink with narrow blocks so they still fit */
+.nfl-data-container .team-results-scroll .td-history-date,
+.nfl-data-container .team-results-scroll .td-history-opp {
+  /* plain CSS min(), passed through as is (Sass has its own min()) */
+  font-size: #{'min(7.5px, calc((100cqw - 27px) / 10 * 0.29))'};
 }
 
 .nfl-data-container .team-results-logo {
@@ -4888,4 +4908,38 @@ html[data-quality='low'] .nfl-data-container .title-shine {
 
 .nfl-data-container .nfl-scroll-panel .game-section {
   width: calc(100% - 2 * var(--edge));
+}
+
+/* ---------- switching to another week / day / card (useSwapPhase): the
+   list that's there fades out to the loading screen, which fades in, and the
+   new list fades in once it's loaded. Only opacity animates. ---------- */
+.nfl-data-container .nfl-scroll-panel[data-swap='out'] > * {
+  animation: nflListOut 0.26s ease forwards;
+  pointer-events: none;
+}
+
+.nfl-data-container .nfl-scroll-panel[data-swap='loader'] > .inline-loading {
+  animation: nflListIn 0.25s ease both;
+}
+
+.nfl-data-container .nfl-scroll-panel[data-swap='in'] > * {
+  animation: nflListIn 0.4s ease both;
+}
+
+@keyframes nflListOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes nflListIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

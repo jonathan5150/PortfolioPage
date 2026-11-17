@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import './NFLData.scss';
 import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
+import useSwapPhase, { useHeld } from '../../components/NFLDataComponents/shared/useSwapPhase';
 import GameList from '../../components/NFLDataComponents/GameList/GameList';
 import usePersistentState from '../../components/NFLDataComponents/shared/usePersistentState';
 import { getTeams, getScoreboard, getTeamRankings } from './NFLDataApi/nflDataService';
@@ -143,10 +144,14 @@ function NFLData() {
       .finally(() => setLoading(false));
   }, [selection, loadScoreboard]);
 
+  // another week: the old week's games fade out to the loading screen (and
+  // stay while they do, even if the new week is already in), then the new
+  // week's fade in
+  const swap = useSwapPhase(loading);
+  const weekEvents = useHeld(scoreboard.events, swap === 'out');
   const visibleGames = useMemo(
-    () =>
-      scoreboard.events.filter((g) => selectedTeams.includes(g.away?.teamId) || selectedTeams.includes(g.home?.teamId)),
-    [scoreboard.events, selectedTeams],
+    () => weekEvents.filter((g) => selectedTeams.includes(g.away?.teamId) || selectedTeams.includes(g.home?.teamId)),
+    [weekEvents, selectedTeams],
   );
 
   // Live updates: poll only while games you're viewing are on; pause when the tab is hidden.
@@ -220,10 +225,11 @@ function NFLData() {
         <LoadingFootball />
       ) : (
         <GameList
-          loading={loading}
+          loading={swap === 'loader'}
+          swap={swap}
           games={visibleGames}
-          totalGames={scoreboard.events.length}
-          weekGames={scoreboard.events}
+          totalGames={weekEvents.length}
+          weekGames={weekEvents}
           teams={teams}
           teamsById={teamsById}
           selectedTeams={selectedTeams}

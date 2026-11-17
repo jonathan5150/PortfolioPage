@@ -6,6 +6,7 @@ import SlideOpen from '../../components/NFLDataComponents/shared/SlideOpen';
 import { PANEL_TRANSITION } from '../../components/NFLDataComponents/shared/detailsTiming';
 import LastUpdated from '../../components/NFLDataComponents/shared/LastUpdated';
 import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
+import useSwapPhase, { useHeld } from '../../components/NFLDataComponents/shared/useSwapPhase';
 import TitleText from '../../components/NFLDataComponents/shared/TitleText';
 import { Holdable, ParlayProvider } from '../../components/NFLDataComponents/shared/ParlayContext';
 import ParlayBar from '../../components/NFLDataComponents/ParlayBar/ParlayBar';
@@ -35,6 +36,7 @@ import {
 } from './ufcApi';
 import '../../pages/NFLData/NFLData.scss';
 import '../team/TeamSport.scss';
+import { startLabel } from '../dayGroups';
 import './Ufc.scss';
 import '../SportTitles.scss';
 
@@ -483,6 +485,9 @@ const UfcPage = () => {
   // another card was picked and isn't in yet: the loading screen shows under
   // the header, with everything else hidden
   const [switching, setSwitching] = useState(false);
+  // the old card fades out to the loading screen, the new one fades in
+  const swap = useSwapPhase(switching);
+  const showLoader = swap === 'loader';
   const [error, setError] = useState(null);
   const [refresh, setRefresh] = useState(0);
   const [calendar, setCalendar] = useState([]);
@@ -541,7 +546,8 @@ const UfcPage = () => {
     };
   }, [day, refresh]);
 
-  const event = board?.event;
+  // the old card stays while it fades out, even if the new one is in
+  const event = useHeld(board, swap === 'out')?.event;
   const live = Boolean(event?.fights.some((f) => f.status.state === 'in'));
   useEffect(() => {
     const id = setInterval(
@@ -793,9 +799,9 @@ const UfcPage = () => {
             </div>
           </div>
 
-          <div className="nfl-scroll-panel" ref={panelRef}>
-            {switching && <LoadingField className="inline-loading" />}
-            {event && !switching && (
+          <div className="nfl-scroll-panel" ref={panelRef} data-swap={swap}>
+            {showLoader && <LoadingField className="inline-loading" />}
+            {event && !showLoader && (
               <div className="ufc-event-head">
                 <div className="ufc-event-name">{event.name}</div>
                 <div className="ufc-event-meta">
@@ -806,7 +812,7 @@ const UfcPage = () => {
               </div>
             )}
 
-            {!switching && (
+            {!showLoader && (
               <div className={`matchup-container ${openId ? 'has-open' : ''}`}>
                 {!event ? (
                   <p className="noGames">No UFC event found.</p>
@@ -837,6 +843,8 @@ const UfcPage = () => {
                               {section.key === 'main' && i === 0 && (
                                 <div className="ufc-main-event-tag">MAIN EVENT</div>
                               )}
+                              {/* every fight has its own gold start time at its top left */}
+                              {startLabel(fight) && <div className="game-group-subtime">{startLabel(fight)}</div>}
                               <FightCard
                                 eventId={event.id}
                                 fight={fight}
@@ -858,7 +866,7 @@ const UfcPage = () => {
               </div>
             )}
 
-            {event && !switching && (
+            {event && !showLoader && (
               <ModelPanel pickFilters={false}>
                 {({ unit }) => (
                   <>
@@ -873,8 +881,8 @@ const UfcPage = () => {
                 )}
               </ModelPanel>
             )}
-            {!switching && <SettingsPanel />}
-            {!switching && <LastUpdated />}
+            {!showLoader && <SettingsPanel />}
+            {!showLoader && <LastUpdated />}
           </div>
           <ParlayBar />
           {hideMode && (

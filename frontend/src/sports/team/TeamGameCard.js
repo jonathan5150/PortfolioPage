@@ -126,16 +126,12 @@ const InfoBar = ({ game }) => (
   </div>
 );
 
-// MLB probable starters (pregame), NBA top scorer (pregame)
+// MLB probable starters (pregame); NBA shows nothing here before a game
 const Starters = ({ lg, game }) => {
+  if (lg !== 'mlb') return null;
   const rows = ['away', 'home'].map((side) => {
-    const c = game[side];
-    if (lg === 'mlb') {
-      const p = c?.probable;
-      return { side, label: 'SP', name: p?.name, line: p?.line, headshot: p?.headshot };
-    }
-    const leader = (c?.leaders || []).find((l) => /point/i.test(l.category)) || c?.leaders?.[0];
-    return { side, label: leader?.label || '', name: leader?.athleteFullName, line: leader?.value };
+    const p = game[side]?.probable;
+    return { side, label: 'SP', name: p?.name, line: p?.line, headshot: p?.headshot };
   });
   if (!rows.some((r) => r.name)) return null;
   return (

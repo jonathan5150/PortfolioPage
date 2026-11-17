@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
 import TeamToggle from '../../components/NFLDataComponents/shared/TeamToggle';
-import TeamResultsRows from '../../components/NFLDataComponents/shared/TeamResultsRows';
 import LinesModeToggle from '../../components/NFLDataComponents/shared/LinesModeToggle';
 import { Holdable } from '../../components/NFLDataComponents/shared/ParlayContext';
 import { canBet, pickLeg, teamGameLegs } from '../parlayLegs';
@@ -12,7 +11,7 @@ import {
   washOut,
 } from '../../components/NFLDataComponents/shared/teamColors';
 import { fmtLine, fmtOdds } from '../../pages/NFLData/NFLDataApi/betting';
-import { gradeLinePicks, teamResultHistory } from '../../pages/NFLData/NFLDataApi/picks';
+import { gradeLinePicks } from '../../pages/NFLData/NFLDataApi/picks';
 import {
   LEAGUES,
   getLeagueGameLog,
@@ -148,25 +147,6 @@ const PickCard = ({ pick, game, grade, leg }) => {
   );
 };
 
-// Each team's recent results (last 20), newest on the right, both in one box
-// with one scroller.
-const TeamResultsHistory = ({ lg, game }) => {
-  const load = (side) => async () =>
-    teamResultHistory(await getLeagueTeamSchedule(lg, game[side]?.teamId, game.season), game[side]?.teamId, game).slice(
-      -20,
-    );
-  const away = useAsyncData(load('away'), [lg, game.id, game.away?.teamId]);
-  const home = useAsyncData(load('home'), [lg, game.id, game.home?.teamId]);
-  return (
-    <TeamResultsRows
-      rows={[
-        { team: game.away?.team, games: away.data || [] },
-        { team: game.home?.team, games: home.data || [] },
-      ]}
-    />
-  );
-};
-
 export const LinesPanel = ({ lg, game, lines }) => {
   const odds = lines.data?.odds;
   const predictor = lines.data?.predictor;
@@ -210,7 +190,6 @@ export const LinesPanel = ({ lg, game, lines }) => {
         {toggle}
         <div className="bet-message">No betting lines are posted for this game yet.</div>
         {showLive && <WinBar game={game} chance={chance} />}
-        <TeamResultsHistory lg={lg} game={game} />
       </>
     );
   }
@@ -225,7 +204,6 @@ export const LinesPanel = ({ lg, game, lines }) => {
         </div>
       )}
       <WinBar game={game} chance={chance} />
-      <TeamResultsHistory lg={lg} game={game} />
       <div className="pick-lines">
         {['winner', 'spread', 'total'].map((key) => (
           <PickCard

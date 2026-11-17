@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { groupByDay } from '../../../sports/dayGroups';
+import { groupByDay, startLabel } from '../../../sports/dayGroups';
 import NFLDataNavbar from '../NFLDataNavbar/NFLDataNavbar';
 import GameCard from '../GameCard/GameCard';
 import LoadingField from '../shared/LoadingField';
@@ -63,6 +63,7 @@ const collapsedCookie = (season, seasonType, week) => `${season}-${seasonType}-$
 
 const GameList = ({
   loading,
+  swap,
   games,
   totalGames,
   weekGames,
@@ -268,7 +269,7 @@ const GameList = ({
         {/* everything under the pinned header scrolls inside this faint box, so
             what scrolls up is cut off cleanly at its top edge; while a game is
             open it stops scrolling (see game focus below) */}
-        <div className="nfl-scroll-panel" ref={panelRef}>
+        <div className="nfl-scroll-panel" ref={panelRef} data-swap={swap}>
           <div className={`matchup-container ${hasOpenGame ? 'has-open' : ''}`}>
             {loading ? (
               <LoadingField className="inline-loading" />
@@ -315,24 +316,27 @@ const GameList = ({
                         </div>
                         {day.slots.map((slot) => (
                           <React.Fragment key={slot.label || 'all'}>
-                            {slot.label && <div className="game-group-subtime">{slot.label}</div>}
                             {slot.games.map((game) => (
-                              <GameCard
-                                key={game.id}
-                                game={game}
-                                teamsById={teamsById}
-                                season={season}
-                                currentSeason={currentSeason}
-                                rankings={rankings}
-                                syncCommand={syncCommand}
-                                onBroadcast={broadcast}
-                                suppressNextToggleRef={suppressNextToggleRef}
-                                isOpen={openGameId === game.id}
-                                onUserToggle={handleUserToggle}
-                                hideMode={hideMode}
-                                hidden={hiddenSet.has(game.id)}
-                                onToggleHidden={toggleHidden}
-                              />
+                              <React.Fragment key={game.id}>
+                                {/* every game has its own gold start time at its top left */}
+                                <div className="game-group-subtime">{startLabel(game, slot.label)}</div>
+                                <GameCard
+                                  key={game.id}
+                                  game={game}
+                                  teamsById={teamsById}
+                                  season={season}
+                                  currentSeason={currentSeason}
+                                  rankings={rankings}
+                                  syncCommand={syncCommand}
+                                  onBroadcast={broadcast}
+                                  suppressNextToggleRef={suppressNextToggleRef}
+                                  isOpen={openGameId === game.id}
+                                  onUserToggle={handleUserToggle}
+                                  hideMode={hideMode}
+                                  hidden={hiddenSet.has(game.id)}
+                                  onToggleHidden={toggleHidden}
+                                />
+                              </React.Fragment>
                             ))}
                           </React.Fragment>
                         ))}

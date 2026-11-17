@@ -5,6 +5,11 @@
 import { relativeDay } from './relativeDay';
 
 export const clockLabel = (d) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }).replace(/\s+/g, '');
+// One game's own start time (7:15PM), shown in gold at its top left; a
+// postponed or undated game gets `fallback` (its group's label) instead.
+export const startLabel = (game, fallback = '') =>
+  game?.date && !game.status?.isPostponed ? clockLabel(new Date(game.date)) : fallback;
+
 export const dayHeading = (d) =>
   `${d.toLocaleDateString([], { weekday: 'short' }).toUpperCase()} ${d.getMonth() + 1}/${d.getDate()}`;
 

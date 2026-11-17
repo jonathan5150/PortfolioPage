@@ -3,13 +3,14 @@ import FitText from '../../components/NFLDataComponents/shared/FitText';
 import SportSwitcher from '../SportSwitcher';
 import DayCalendar from '../DayCalendar';
 import { relativeDay } from '../relativeDay';
-import { groupByDay } from '../dayGroups';
+import { groupByDay, startLabel } from '../dayGroups';
 import SlideOpen from '../../components/NFLDataComponents/shared/SlideOpen';
 import LastUpdated from '../../components/NFLDataComponents/shared/LastUpdated';
 import usePersistentState from '../../components/NFLDataComponents/shared/usePersistentState';
 import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
 import TeamsMenu from '../../components/NFLDataComponents/NFLDataNavbar/NFLDataNavbarComponents/TeamsMenu';
 import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
+import useSwapPhase, { useHeld } from '../../components/NFLDataComponents/shared/useSwapPhase';
 import TitleText from '../../components/NFLDataComponents/shared/TitleText';
 import { ParlayProvider } from '../../components/NFLDataComponents/shared/ParlayContext';
 import ParlayBar from '../../components/NFLDataComponents/ParlayBar/ParlayBar';
@@ -104,6 +105,9 @@ const TeamSportPage = ({ lg }) => {
   // another day was picked and its games aren't in yet: the loading screen
   // shows under the header, with everything else hidden
   const [switching, setSwitching] = useState(false);
+  // the old day fades out to the loading screen, the new one fades in
+  const swap = useSwapPhase(switching);
+  const showLoader = swap === 'loader';
 
   // the current day (ESPN's pick) on first load, then whichever day is chosen;
   // learning the day from that first board mustn't download it a second time
@@ -147,7 +151,9 @@ const TeamSportPage = ({ lg }) => {
     };
   }, [lg, day, refresh]);
 
-  const games = useMemo(() => board?.events || [], [board]);
+  // the old day's games stay while they fade out, even if the new ones are in
+  const shownBoard = useHeld(board, swap === 'out');
+  const games = useMemo(() => shownBoard?.events || [], [shownBoard]);
   const anyLive = games.some((g) => g.status.state === 'in');
   useEffect(() => {
     const id = setInterval(
@@ -271,15 +277,18 @@ const TeamSportPage = ({ lg }) => {
   const step = (dir) => {
     if (!day || stepping) return;
     setStepping(true);
+    // the list starts fading out at the tap, while the next day is looked up
+    setSwitching(true);
     findGameDay(lg, day, dir)
       .then((next) => {
-        if (next) {
-          if (next !== day) setSwitching(true);
+        if (next && next !== day) {
           setDay(next);
           setOpenGameId(null);
+        } else {
+          setSwitching(false); // nowhere to go: the list fades back in
         }
       })
-      .catch(() => {})
+      .catch(() => setSwitching(false))
       .finally(() => setStepping(false));
   };
   const [pickingDay, setPickingDay] = useState(false);
@@ -410,9 +419,9 @@ const TeamSportPage = ({ lg }) => {
               </div>
             </div>
 
-            <div className="nfl-scroll-panel" ref={panelRef}>
-              {switching && <LoadingField className="inline-loading" />}
-              {!switching && (
+            <div className="nfl-scroll-panel" ref={panelRef} data-swap={swap}>
+              {showLoader && <LoadingField className="inline-loading" />}
+              {!showLoader && (
                 <div className={`matchup-container ${hasOpenGame ? 'has-open' : ''}`}>
                   {!shownGames.length ? (
                     <p className="noGames">
@@ -454,18 +463,21 @@ const TeamSportPage = ({ lg }) => {
                                 </div>
                                 {d.slots.map((slot) => (
                                   <React.Fragment key={slot.label || 'all'}>
-                                    {slot.label && <div className="game-group-subtime">{slot.label}</div>}
                                     {slot.games.map((game) => (
-                                      <TeamGameCard
-                                        key={game.id}
-                                        lg={lg}
-                                        game={game}
-                                        isOpen={openGameId === game.id}
-                                        onUserToggle={onUserToggle}
-                                        hideMode={hideMode}
-                                        hidden={hiddenSet.has(game.id)}
-                                        onToggleHidden={toggleHidden}
-                                      />
+                                      <React.Fragment key={game.id}>
+                                        {/* every game has its own gold start time at its top left */}
+                                        <div className="game-group-subtime">{startLabel(game, slot.label)}</div>
+                                        <TeamGameCard
+                                          key={game.id}
+                                          lg={lg}
+                                          game={game}
+                                          isOpen={openGameId === game.id}
+                                          onUserToggle={onUserToggle}
+                                          hideMode={hideMode}
+                                          hidden={hiddenSet.has(game.id)}
+                                          onToggleHidden={toggleHidden}
+                                        />
+                                      </React.Fragment>
                                     ))}
                                   </React.Fragment>
                                 ))}
@@ -479,7 +491,7 @@ const TeamSportPage = ({ lg }) => {
                 </div>
               )}
 
-              {day && !switching && (
+              {day && !showLoader && (
                 <ModelPanel spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}>
                   {({ unit, scope, filter, minOdds }) => (
                     <>
@@ -509,8 +521,8 @@ const TeamSportPage = ({ lg }) => {
                   )}
                 </ModelPanel>
               )}
-              {!switching && <SettingsPanel />}
-              {!switching && <LastUpdated />}
+              {!showLoader && <SettingsPanel />}
+              {!showLoader && <LastUpdated />}
             </div>
             <ParlayBar />
             {hideMode && (
