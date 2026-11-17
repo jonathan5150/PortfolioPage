@@ -2706,7 +2706,8 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  padding: 0 8px;
+  /* no side inset: the box is exactly as wide as the stats table below it */
+  padding: 0;
   margin: 4px 0 5px;
 }
 
@@ -2764,9 +2765,17 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
 }
 
 /* exactly ten games fill the box's width on any screen (the box measures
-   itself: container units); more than ten scroll */
+   itself: container units); more than ten scroll. The scroller runs right to
+   left, so it opens on the newest games flush against its right edge with no
+   rounding (setting a scroll position snaps to whole pixels, which left the
+   oldest visible game a half-pixel short); the rows inside read left to right. */
 .nfl-data-container .team-results-scroll {
   container-type: inline-size;
+  direction: rtl;
+}
+
+.nfl-data-container .team-results-scroll .team-results-rows {
+  direction: ltr;
 }
 
 .nfl-data-container .team-results-scroll .td-history-col {

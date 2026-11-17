@@ -1,19 +1,15 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React from 'react';
 import { getTeamTextColor } from '../utils/teamColors';
 
 // Both teams' recent results in one box (top of STATS, upcoming games only;
 // every sport): the logos stay put on the left and a single
 // scroller, outlined with a thin line, holds both rows, so sliding it moves the
 // two rows as one piece. Each row is lined up against the right edge (newest
-// game last); older games that don't fit are cut off cleanly at the outline.
+// game last; the scroller opens on it, see .team-results-scroll); older games
+// that don't fit are cut off cleanly at the outline.
 // rows: [{ team, games: [{ id, date, opp, result, label, bye }] }, ...]
 const TeamResultsRows = ({ rows }) => {
-  const scrollRef = useRef(null);
   const total = rows.reduce((n, r) => n + r.games.length, 0);
-  useLayoutEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollLeft = el.scrollWidth; // open on the newest games
-  }, [total]);
   if (!total) return null;
   return (
     <div className="team-results-history">
@@ -33,7 +29,7 @@ const TeamResultsRows = ({ rows }) => {
           ))}
         </div>
         <div className="team-results-frame">
-          <div ref={scrollRef} className="team-results-scroll">
+          <div className="team-results-scroll">
             <div className="team-results-rows">
               {rows.map(({ team, games }, i) => (
                 <div
