@@ -215,7 +215,7 @@ const GameCard = memo(function GameCard({
               height: isExpanded ? `${height}px` : '0px',
               opacity: isExpanded ? 1 : 0,
               padding: isExpanded ? '5px' : '0 5px',
-              marginBottom: isExpanded ? '7px' : '0',
+              marginBottom: isExpanded ? '2.5px' : '0', // the same gap inside the ring as at the top and sides
               borderWidth: isExpanded ? '2px' : '0px',
               pointerEvents: isExpanded ? 'auto' : 'none',
               transition: PANEL_TRANSITION,

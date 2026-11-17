@@ -361,7 +361,7 @@ const TeamGameCard = memo(({ lg, game, isOpen, onUserToggle, hideMode, hidden, o
               height: isOpen ? `${height}px` : '0px',
               opacity: isOpen ? 1 : 0,
               padding: isOpen ? '5px' : '0 5px',
-              marginBottom: isOpen ? '7px' : '0',
+              marginBottom: isOpen ? '2.5px' : '0', // the same gap inside the ring as at the top and sides
               borderWidth: isOpen ? '2px' : '0px',
               pointerEvents: isOpen ? 'auto' : 'none',
               transition: PANEL_TRANSITION,
