@@ -4104,7 +4104,8 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
    dropdowns side by side, each titled above with its choice shown in the box */
 .nfl-data-container .model-filters {
   display: grid;
-  grid-template-columns: 0.8fr 1.15fr 1.15fr 0.9fr;
+  /* UNIT, MARKET, ML LIMIT: three equal columns */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 5px;
   margin: 2px 0 6px;
 }
