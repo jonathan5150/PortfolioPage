@@ -15,11 +15,14 @@ import useGameFocus, { teamLineColor } from '../shared/useGameFocus';
 import useBackgroundPrefetch, { byPriority } from '../shared/useBackgroundPrefetch';
 import { getGameSummary } from '../../../pages/NFLData/NFLDataApi/nflDataService';
 import {
+  getEventLiveLines,
   getEventOdds,
   getEventPredictor,
   getTeamBettingTrends,
+  getTeamPlayers,
   getTeamResultHistory,
 } from '../../../pages/NFLData/NFLDataApi/bettingService';
+import { getBookOdds } from '../../../pages/NFLData/NFLDataApi/sportsbookOdds';
 import { loadTeamModel } from '../../../pages/NFLData/NFLDataApi/teamModels';
 import { getTeamStatsTable } from '../shared/TeamStatsCompare';
 
@@ -45,6 +48,22 @@ const nflTeamTasks = (game) =>
     { key: `nfl:trends:${game.id}:${side}`, run: () => getTeamBettingTrends(game[side]?.teamId, game) },
     { key: `nfl:results:${game.id}:${side}`, run: () => getTeamResultHistory(game[side]?.teamId, game) },
   ]);
+
+// With just one game live, everything it shows when opened goes first: its
+// box score, its lines (with ESPN's live odds and the season results its picks
+// use) and its TD ODDS players and prices. (Live odds here are ESPN's only:
+// the SportsGameOdds backup waits for LINES to be opened.)
+const nflLoneLiveTasks = (game) => [
+  { key: `nfl:liveSummary:${game.id}`, run: () => getGameSummary(game.id, { live: true, final: false }) },
+  ...nflLinesTasks(game),
+  { key: `nfl:liveLines:${game.id}`, run: () => getEventLiveLines(game.id) },
+  ...nflTeamTasks(game),
+  { key: `nfl:tdOdds:${game.id}`, run: () => getBookOdds(game) },
+  ...['away', 'home'].map((side) => ({
+    key: `nfl:players:${game.id}:${side}`,
+    run: () => getTeamPlayers(game[side]?.teamId, game),
+  })),
+];
 
 const MERGE_WINDOW_MS = 30 * 60 * 1000;
 
@@ -136,9 +155,11 @@ const GameList = ({
   // BOX SCORE and LINES for every game shown, loaded quietly in the background
   // (see useBackgroundPrefetch). With live games on, it waits while one is open;
   // with none, it keeps going even then.
-  const hasLive = shownGames.some((g) => g.status?.state === 'in');
+  const liveGames = shownGames.filter((g) => g.status?.state === 'in');
+  const hasLive = liveGames.length > 0;
   useBackgroundPrefetch(
     [
+      ...(liveGames.length === 1 ? nflLoneLiveTasks(liveGames[0]) : []),
       ...byPriority(shownGames.filter((g) => g.status?.state !== 'post')).flatMap(nflLinesTasks),
       // every team's season stats (one download), for upcoming games' STATS
       ...(shownGames.some((g) => g.status?.state === 'pre')

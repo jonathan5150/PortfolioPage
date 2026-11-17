@@ -20,8 +20,9 @@ import { networkBusy } from '../../../pages/NFLData/NFLDataApi/http';
 //    ready (anything still fresh in the cache costs nothing)
 //
 // tasks: [{ key, run }] in the order to load them (see each page: box scores
-// of finished games come before the rest of the finished games' data). Never include the touchdown scorer odds: they're
-// costly, so they still wait for the user to open them.
+// of finished games come before the rest of the finished games' data). The
+// touchdown scorer odds are left out, as they're costly, except for the NFL
+// page's one live game when only one is on (see GameList).
 
 const START_AFTER_MS = 2500;
 const BETWEEN_MS = 120;

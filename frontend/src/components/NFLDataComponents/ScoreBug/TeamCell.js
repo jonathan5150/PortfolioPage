@@ -58,6 +58,9 @@ const WATERMARK_STYLE = {
   LV: { filter: 'brightness(1.7) contrast(1.1)' },
 
   LAR: { filter: 'grayscale(1) brightness(2.6) sepia(1) saturate(4.5) hue-rotate(12deg)' },
+
+  // whitish grey (about #d9d9d9 from its solid green), open or closed
+  NYJ: { filter: 'grayscale(1) brightness(3.3)' },
 };
 
 // Some logos read bigger or smaller than the rest at the same size; this

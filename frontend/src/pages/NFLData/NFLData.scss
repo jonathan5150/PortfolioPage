@@ -4935,3 +4935,25 @@ html[data-quality='low'] .nfl-data-container .title-shine {
 .nfl-data-container .bet-search .td-list {
   padding: 0;
 }
+
+/* TD ODDS "Loading players…" / "Loading rosters…": the words breathe in and
+   out while they wait */
+@keyframes nflTextBreathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.nfl-data-container .bet-message.breathing {
+  animation: nflTextBreathe 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nfl-data-container .bet-message.breathing {
+    animation: none;
+  }
+}

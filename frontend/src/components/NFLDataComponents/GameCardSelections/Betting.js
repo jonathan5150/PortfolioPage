@@ -582,7 +582,7 @@ const SearchPanel = ({ game, deep, odds, rankings, teamSide, openKey, setOpenKey
         aria-label="Search players"
       />
       {roster.loading ? (
-        <div className="bet-message">Loading rosters…</div>
+        <div className="bet-message breathing">Loading rosters…</div>
       ) : (
         <TdPlayerList
           entries={entries}
@@ -684,7 +684,7 @@ const PlayersTab = ({ game, deep, playerPicks, isFinal, odds, rankings, oddsProb
           setOpenKey={setOpenKey}
         />
       ) : !playerPicks ? (
-        <div className="bet-message">Loading players…</div>
+        <div className="bet-message breathing">Loading players…</div>
       ) : (
         <TdPlayerList
           entries={entries}
