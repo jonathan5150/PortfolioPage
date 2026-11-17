@@ -172,10 +172,6 @@
   color: #f5d16b;
 }
 
-.nfl-data-container .game-slot + .game-slot {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-}
-
 .nfl-data-container .game-slot .score-grid {
   padding: 1.5px 8px;
 }
@@ -4005,8 +4001,7 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
 }
 
 .nfl-data-container .game-slot + .game-group-subtime {
-  margin-top: 3px;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  margin-top: 3px; /* games in a section aren't divided by lines, just space */
 }
 
 /* the team's full name, small and in caps, between the abbreviation and the
