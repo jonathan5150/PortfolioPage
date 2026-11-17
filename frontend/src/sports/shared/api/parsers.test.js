@@ -191,3 +191,31 @@ describe('touchdownScorers', () => {
     expect(touchdownScorers(null)).toEqual({});
   });
 });
+
+describe('latest real play (shown during stoppages)', () => {
+  // eslint-disable-next-line global-require
+  const { latestRealPlay } = require('./espnParsers');
+  const play = (type, text) => ({ type: { text: type }, text });
+
+  test('skips timeouts back to the last real play of the drive', () => {
+    const drives = {
+      current: {
+        plays: [
+          play('Timeout', 'Timeout #2 by BLT at 01:52.'),
+          play('Rush', ' (Shotgun) O.Hampton right guard to BLT 40 for 2 yards.'),
+          play('Timeout', 'Timeout #3 by BLT at 01:47.'),
+        ],
+      },
+    };
+    expect(latestRealPlay(drives)).toBe('(Shotgun) O.Hampton right guard to BLT 40 for 2 yards.');
+  });
+
+  test('a new drive with only a stoppage falls back to the drive before', () => {
+    const drives = {
+      current: { plays: [play('End Period', 'END QUARTER 3')] },
+      previous: [{ plays: [play('Pass Reception', 'J.Herbert pass short right to T.Harris for 8 yards.')] }],
+    };
+    expect(latestRealPlay(drives)).toBe('J.Herbert pass short right to T.Harris for 8 yards.');
+    expect(latestRealPlay(null)).toBe('');
+  });
+});

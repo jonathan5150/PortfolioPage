@@ -4,6 +4,7 @@ import useGameSummary from '../hooks/useGameSummary';
 import Linescore from './Linescore';
 import Marquee from '../../shared/components/Marquee';
 import { headshotUrl } from '../../shared/api/endpoints';
+import { STOPPAGE_PLAY } from '../../shared/api/espnParsers';
 import { getEventOdds } from '../../shared/api/bettingService';
 import { peekOdds } from '../../shared/utils/preloadOdds';
 import { getGameConditions } from '../api/gameConditions';
@@ -245,9 +246,9 @@ export const betweenPlaysText = (s, possessorAbbr) => {
 };
 
 // Stoppages (TV / team timeouts, end of a quarter, two-minute warning) say
-// nothing about the game, so the score bug shows the latest scoring play then.
-const STOPPAGE = /timeout|end of (the )?(quarter|half|game)|end quarter|two[- ]minute warning/i;
-export const isStoppage = (s) => Boolean(s) && STOPPAGE.test(`${s.lastPlayType || ''} ${s.lastPlay || ''}`);
+// nothing about the game, so the score bug shows the last real play before
+// it instead (from the play-by-play), or failing that the latest score.
+export const isStoppage = (s) => Boolean(s) && STOPPAGE_PLAY.test(`${s.lastPlayType || ''} ${s.lastPlay || ''}`);
 
 export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
   const s = game.situation;
@@ -255,7 +256,7 @@ export const LiveScoreBug = ({ game, onToggle, showLinescore }) => {
   const stoppage = isStoppage(s);
   const summary = useGameSummary(game, stoppage);
   const lastScore = summary.data?.scoringPlays?.[summary.data.scoringPlays.length - 1]?.text;
-  const playText = stoppage && lastScore ? lastScore : s?.lastPlay;
+  const playText = stoppage ? summary.data?.latestPlay || lastScore || s?.lastPlay : s?.lastPlay;
 
   // Top left: the down and distance (only when there's a real down), top
   // right: quarter and clock. The play underneath gets the full width.

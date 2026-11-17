@@ -343,8 +343,27 @@ export const parseSummary = (json) => {
     players,
     hasPlayerStats: Object.values(players).some((p) => Object.keys(p.categories).length > 0),
     scoringPlays: parseScoringPlays(json?.scoringPlays),
+    latestPlay: latestRealPlay(json?.drives),
     situation: status.state === 'in' ? parseSituation(json?.situation, competitors) : null,
   };
+};
+
+// Stoppages (TV / team timeouts, end of a quarter or half, two-minute
+// warning) aren't plays: they say nothing about the game.
+export const STOPPAGE_PLAY = /timeout|end of (the )?(quarter|half|game)|end quarter|two[- ]minute warning/i;
+
+// The latest real play in a summary's play-by-play (the current drive, or the
+// last finished one), skipping stoppages; '' when there's none.
+export const latestRealPlay = (drives) => {
+  const lists = [drives?.current?.plays, ...[...(drives?.previous || [])].reverse().map((d) => d?.plays)];
+  for (const plays of lists) {
+    for (let i = (plays || []).length - 1; i >= 0; i -= 1) {
+      const p = plays[i];
+      const text = p?.text || '';
+      if (text && !STOPPAGE_PLAY.test(`${p?.type?.text || ''} ${text}`)) return text.trim();
+    }
+  }
+  return '';
 };
 
 // Players who scored a touchdown themselves in a parsed summary, as
