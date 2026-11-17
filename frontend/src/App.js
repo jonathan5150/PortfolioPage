@@ -3,21 +3,21 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import './App.css';
 import Home from './pages/Home';
 import Header from './components/PortfolioComponents/Header';
-import SportsHub from './sports/SportsHub';
-import RememberSport from './sports/RememberSport';
+import SportsHub from './sports/shared/components/SportsHub';
+import RememberSport from './sports/shared/components/RememberSport';
 // The sports pages' shared stylesheets, loaded once here in one fixed order
 // (the order they had before the pages were split into their own downloads).
 // Left to the split pages, each imports them in a different order, which the
 // production build refuses ("Conflicting order"). They're all scoped to the
 // sports pages, so loading them up front changes nothing else.
-import './pages/NFLData/NFLData.scss';
-import './components/NFLDataComponents/shared/LoadingField.scss';
-import './sports/SportSwitcher.scss';
-import './sports/DayCalendar.scss';
-import './sports/team/TeamSport.scss';
-import './sports/SportTitles.scss';
-import './sports/ufc/Ufc.scss';
-import LoadingField from './components/NFLDataComponents/shared/LoadingField';
+import './sports/shared/styles/sports.scss';
+import './sports/shared/styles/LoadingField.scss';
+import './sports/shared/styles/SportSwitcher.scss';
+import './sports/shared/styles/DayCalendar.scss';
+import './sports/shared/league/TeamSport.scss';
+import './sports/shared/styles/SportTitles.scss';
+import './sports/ufc/styles/Ufc.scss';
+import LoadingField from './sports/shared/components/LoadingField';
 // the site's font and style (Bricolage Grotesque + Poster), over the moving
 // gold contour-line background
 import './components/PortfolioComponents/SiteStyle/SiteStyle.css';
@@ -33,8 +33,9 @@ const SportsDataProject = lazy(() => import('./pages/SportsDataProject'));
 const Contact = lazy(() => import('./pages/Contact'));
 const HerbicideCalculatorParentPage = lazy(() => import('./pages/HerbicideCalculatorParentPage'));
 const HerbicideCalculator = lazy(() => import('./pages/HerbicideCalculator/HerbicideCalculator'));
-const NFLData = lazy(() => import('./pages/NFLData/NFLData'));
-const TeamSportPage = lazy(() => import('./sports/team/TeamSportPage'));
+const NflPage = lazy(() => import('./sports/nfl/NflPage'));
+const MlbPage = lazy(() => import('./sports/mlb/MlbPage'));
+const NbaPage = lazy(() => import('./sports/nba/NbaPage'));
 const UfcPage = lazy(() => import('./sports/ufc/UfcPage'));
 
 // while a sports page's code arrives: the same loading screen its own data
@@ -116,7 +117,7 @@ function Main() {
             path="/sports/nfl"
             element={
               <RememberSport sport="nfl">
-                <NFLData />
+                <NflPage />
               </RememberSport>
             }
           />
@@ -124,7 +125,7 @@ function Main() {
             path="/sports/mlb"
             element={
               <RememberSport sport="mlb">
-                <TeamSportPage key="mlb" lg="mlb" />
+                <MlbPage />
               </RememberSport>
             }
           />
@@ -132,7 +133,7 @@ function Main() {
             path="/sports/nba"
             element={
               <RememberSport sport="nba">
-                <TeamSportPage key="nba" lg="nba" />
+                <NbaPage />
               </RememberSport>
             }
           />

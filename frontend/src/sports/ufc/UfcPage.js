@@ -1,29 +1,29 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import FitText from '../../components/NFLDataComponents/shared/FitText';
-import SportSwitcher from '../SportSwitcher';
-import DayCalendar from '../DayCalendar';
-import SlideOpen from '../../components/NFLDataComponents/shared/SlideOpen';
-import { PANEL_TRANSITION } from '../../components/NFLDataComponents/shared/detailsTiming';
-import LastUpdated from '../../components/NFLDataComponents/shared/LastUpdated';
-import LoadingField from '../../components/NFLDataComponents/shared/LoadingField';
-import useSwapPhase, { useHeld } from '../../components/NFLDataComponents/shared/useSwapPhase';
-import TitleText from '../../components/NFLDataComponents/shared/TitleText';
-import { Holdable, ParlayProvider } from '../../components/NFLDataComponents/shared/ParlayContext';
-import ParlayBar from '../../components/NFLDataComponents/ParlayBar/ParlayBar';
-import { fightLeg } from '../parlayLegs';
-import TeamCell from '../../components/NFLDataComponents/ScoreBug/TeamCell';
-import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData';
-import usePersistentState from '../../components/NFLDataComponents/shared/usePersistentState';
-import { betReturn } from '../../pages/NFLData/NFLDataApi/picks';
-import { fmtOdds } from '../../pages/NFLData/NFLDataApi/betting';
-import { loadUfcModel, ufcPicks, gradeUfcPicks, decimalPrice, METHOD_LABEL } from './ufcModel';
-import ModelPanel from '../../components/NFLDataComponents/GameList/ModelPanel';
-import SettingsPanel from '../../components/NFLDataComponents/GameList/SettingsPanel';
-import ModelSection from '../../components/NFLDataComponents/GameList/ModelSection';
-import { peekOdds, preloadOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
-import useGameFocus, { lineColorFrom } from '../../components/NFLDataComponents/shared/useGameFocus';
-import useBackgroundPrefetch, { byPriority } from '../../components/NFLDataComponents/shared/useBackgroundPrefetch';
-import { runWithConcurrency } from '../../pages/NFLData/NFLDataApi/http';
+import FitText from '../shared/components/FitText';
+import SportSwitcher from '../shared/components/SportSwitcher';
+import DayCalendar from '../shared/components/DayCalendar';
+import SlideOpen from '../shared/components/SlideOpen';
+import { PANEL_TRANSITION } from '../shared/utils/detailsTiming';
+import LastUpdated from '../shared/components/LastUpdated';
+import LoadingField from '../shared/components/LoadingField';
+import useSwapPhase, { useHeld } from '../shared/hooks/useSwapPhase';
+import TitleText from '../shared/components/TitleText';
+import { Holdable, ParlayProvider } from '../shared/components/ParlayContext';
+import ParlayBar from '../shared/components/ParlayBar';
+import { fightLeg } from '../shared/utils/parlayLegs';
+import TeamCell from '../shared/components/TeamCell';
+import useAsyncData from '../shared/hooks/useAsyncData';
+import usePersistentState from '../shared/hooks/usePersistentState';
+import { betReturn } from '../shared/api/picks';
+import { fmtOdds } from '../shared/api/betting';
+import { loadUfcModel, ufcPicks, gradeUfcPicks, decimalPrice, METHOD_LABEL } from './api/ufcModel';
+import ModelPanel from '../shared/components/ModelPanel';
+import SettingsPanel from '../shared/components/SettingsPanel';
+import ModelSection from '../shared/components/ModelSection';
+import { peekOdds, preloadOdds } from '../shared/utils/preloadOdds';
+import useGameFocus, { lineColorFrom } from '../shared/hooks/useGameFocus';
+import useBackgroundPrefetch, { byPriority } from '../shared/hooks/useBackgroundPrefetch';
+import { runWithConcurrency } from '../shared/api/http';
 import {
   etDay,
   getUfcFightDetails,
@@ -32,12 +32,12 @@ import {
   getUfcEventDays,
   getUfcScoreboard,
   headshotUrl,
-} from './ufcApi';
-import '../../pages/NFLData/NFLData.scss';
-import '../team/TeamSport.scss';
-import { startLabel } from '../dayGroups';
-import './Ufc.scss';
-import '../SportTitles.scss';
+} from './api/ufcApi';
+import '../shared/styles/sports.scss';
+import '../shared/league/TeamSport.scss';
+import { startLabel } from '../shared/utils/dayGroups';
+import './styles/Ufc.scss';
+import '../shared/styles/SportTitles.scss';
 
 // red and blue corners stand in for team colours
 const RED = '#b3262b';

@@ -1,8 +1,8 @@
 // Bundled and run by precompute.js: grades every finished game of each
 // league's season with the app's own code.
 import './shim';
-import { GRADES_KEYS, gradeGame, seasonLoaderFor } from '../../src/pages/NFLData/NFLDataApi/modelGrading';
-import { runWithConcurrency } from '../../src/pages/NFLData/NFLDataApi/http';
+import { GRADES_KEYS, gradeGame, seasonLoaderFor } from '../../src/sports/shared/api/modelGrading';
+import { runWithConcurrency } from '../../src/sports/shared/api/http';
 
 const summarize = (grades) => {
   const rec = {};

@@ -1,5 +1,5 @@
 import React from 'react';
-import '../../NFLDataComponents/shared/graphicsQuality';
+import '../../../sports/shared/utils/graphicsQuality';
 import './SiteBackground.css';
 
 // The site's background on every page: "tight braid", two sets of thin
