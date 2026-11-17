@@ -670,10 +670,8 @@ export const touchdownChance = ({ games, position, season, oppId, oppAbbr, ranki
   if (defRank) bits.push(`${oppAbbr} ranks ${ordinalRank(defRank)} in points allowed`);
   const verdict = probability >= 45 ? 'Should score' : probability >= 25 ? 'Could score' : 'Unlikely to score';
   let reason = `${verdict}: ${bits.join('; ')}.`;
-  let priceNote = null;
   if (implied !== null) {
     const compare = edge >= 6 ? 'better than' : edge <= -6 ? 'worse than' : 'close to';
-    priceNote = `${fmt1(probability)}% vs ${fmt1(implied)}% implied: ${compare === 'close to' ? 'about fair' : compare === 'better than' ? 'value' : 'too short'}`;
     reason += ` Our ${fmt1(probability)}% is ${compare} the ${fmt1(implied)}% ${BOOK.name}${BOOK.name.endsWith('s') ? "'" : "'s"} ${fmtOdds(bookTd.price)} implies.`;
   }
 
@@ -684,18 +682,11 @@ export const touchdownChance = ({ games, position, season, oppId, oppAbbr, ranki
     factors.push({
       label: 'This season',
       value: `${tdWord(tdThis)} in ${thisSeason.length} games`,
-      tone: tdThis / thisSeason.length >= prior ? 'good' : 'bad',
+      tone: null, // plain white, like last season's
     });
   }
   if (lastSeason.length)
     factors.push({ label: 'Last season', value: `${tdWord(tdLast)} in ${lastSeason.length} games`, tone: null });
-  if (priceNote) {
-    factors.push({
-      label: `${BOOK.name} ${fmtOdds(bookTd.price)}`,
-      value: priceNote,
-      tone: edge >= 6 ? 'good' : edge <= -6 ? 'bad' : null,
-    });
-  }
 
   return {
     probability,

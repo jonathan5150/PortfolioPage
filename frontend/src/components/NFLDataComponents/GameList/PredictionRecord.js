@@ -222,9 +222,6 @@ const PeriodProfit = ({ days, period, stake, minOdds, skipped }) => {
                     <div key={b.key} className="bet-row">
                       <span className="bet-label">
                         {b.label}
-                        {!b.bet && (
-                          <span className={`bet-lean-tag${b.upset ? ' upset' : ''}`}>{b.upset ? 'UPSET' : 'LEAN'}</span>
-                        )}
                       </span>
                       <span>{money(stake)}</span>
                       <span>{fmtOdds(b.price)}</span>
@@ -255,7 +252,7 @@ const PeriodProfit = ({ days, period, stake, minOdds, skipped }) => {
 export const ModelResults = ({
   games,
   stake,
-  scope = 'bets',
+  scope = 'all',
   filter = 'all',
   minOdds = null,
   gradeGame = nflGrade,
@@ -301,9 +298,7 @@ export const ModelResults = ({
   return (
     <>
       <ModelSection title={`THIS ${period}'S RESULTS`}>
-        <div className="prediction-record-title">
-          PREDICTION RECORD · {scope === 'all' ? 'EVERY PICK' : 'CONFIDENT BETS ONLY'}
-        </div>
+        <div className="prediction-record-title">PREDICTION RECORD</div>
         {!finished.length ? (
           <div className="prediction-record-loading">No finished games this {word} yet.</div>
         ) : !graded.data ? (

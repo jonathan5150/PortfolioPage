@@ -17,7 +17,6 @@ import usePersistentState from '../../components/NFLDataComponents/shared/usePer
 import { betReturn } from '../../pages/NFLData/NFLDataApi/picks';
 import { fmtOdds } from '../../pages/NFLData/NFLDataApi/betting';
 import { loadUfcModel, ufcPicks, gradeUfcPicks, decimalPrice, METHOD_LABEL } from './ufcModel';
-import ConfidentBets from '../../components/NFLDataComponents/GameList/DayBets';
 import ModelPanel from '../../components/NFLDataComponents/GameList/ModelPanel';
 import SettingsPanel from '../../components/NFLDataComponents/GameList/SettingsPanel';
 import ModelSection from '../../components/NFLDataComponents/GameList/ModelSection';
@@ -87,15 +86,6 @@ const fightPicks = async (eventId, fight) => {
   ]);
   return odds ? ufcPicks(model, fight, odds, { red, blue }) : null;
 };
-
-const fightItems = (event) =>
-  (event?.fights || []).map((fight) => ({
-    id: fight.id,
-    date: fight.date,
-    state: fight.status.state,
-    matchup: `${(fight.red?.lastName || fight.red?.name || 'RED').toUpperCase()} vs ${(fight.blue?.lastName || fight.blue?.name || 'BLUE').toUpperCase()}`,
-    fight,
-  }));
 
 const pct = (p) => `${Math.round(p * 100)}%`;
 const ResultCorner = ({ grade }) =>
@@ -432,7 +422,7 @@ const EventModelResults = ({ event, details, stake }) => {
         finished.map((fight) => async () => {
           const picks = model ? await fightPicks(event.id, fight) : null;
           const g = picks ? gradeUfcPicks(picks, fight, details?.[fight.id]?.result) : null;
-          return g ? { ...g, price: picks.winner.price, bet: picks.winner.bet } : null;
+          return g ? { ...g, price: picks.winner.price } : null;
         }),
         4,
       );
@@ -443,8 +433,6 @@ const EventModelResults = ({ event, details, stake }) => {
   );
   const rows = graded.data || [];
   const winners = tally(rows, 'winner');
-  const bets = rows.filter((g) => g.bet);
-  const betRec = tally(bets, 'winner');
   const profitOf = (list) =>
     list.reduce((a, g) => a + (g.winner === 'P' ? 0 : betReturn(stake, g.price, g.winner) - stake), 0);
   return (
@@ -456,8 +444,7 @@ const EventModelResults = ({ event, details, stake }) => {
           <div className="prediction-record-loading">Grading the card…</div>
         ) : (
           <>
-            <RecordRow label="Winner bets" rec={betRec} profit={profitOf(bets)} />
-            <RecordRow label="Every winner pick" rec={winners} profit={profitOf(rows)} />
+            <RecordRow label="Winner picks" rec={winners} profit={profitOf(rows)} />
             <RecordRow label="Rounds O/U" rec={tally(rows, 'rounds')} />
             <RecordRow label="Method" rec={tally(rows, 'method')} />
           </>
@@ -690,23 +677,6 @@ const UfcPage = () => {
     setPickingDay(false);
     setOpenId(null);
   };
-  // CONFIDENT BETS (in the MODEL dropdown): the winner picks strong enough to bet (only the
-  // winner pick ever is), graded once the result is in
-  const eventId = event?.id;
-  const results = cardDetails;
-  const loadFightTickets = useCallback(
-    async ({ fight }) => {
-      const picks = await fightPicks(eventId, fight);
-      const w = picks?.winner;
-      if (!w?.price) return [];
-      const grade = fight.status.state === 'post' ? gradeUfcPicks(picks, fight, results?.[fight.id]?.result) : null;
-      const name = (w.fighter?.lastName || w.fighter?.name || '').toUpperCase();
-      return [
-        { key: 'winner', label: `${name} ML`, price: w.price, result: grade?.winner || null, bet: Boolean(w.bet) },
-      ];
-    },
-    [eventId, results],
-  );
   const onToggle = useCallback((id) => setOpenId((prev) => (prev === id ? null : id)), []);
 
   if (error && !board) {
@@ -868,17 +838,7 @@ const UfcPage = () => {
 
             {event && !showLoader && (
               <ModelPanel pickFilters={false}>
-                {({ unit }) => (
-                  <>
-                    <ConfidentBets
-                      items={fightItems(event)}
-                      loadTickets={loadFightTickets}
-                      stake={unit}
-                      period="CARD"
-                    />
-                    <EventModelResults event={event} details={cardDetails} stake={unit} />
-                  </>
-                )}
+                {({ unit }) => <EventModelResults event={event} details={cardDetails} stake={unit} />}
               </ModelPanel>
             )}
             {!showLoader && <SettingsPanel />}

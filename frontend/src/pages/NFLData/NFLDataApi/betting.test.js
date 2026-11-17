@@ -495,7 +495,7 @@ describe('touchdown breakdown rows', () => {
       bookTd: { price: 150, link: null },
     });
     const rows = Object.fromEntries(td.factors.map((f) => [f.label, f]));
-    expect(rows['This season']).toMatchObject({ value: '4 TDs in 5 games', tone: 'good' });
+    expect(rows['This season']).toMatchObject({ value: '4 TDs in 5 games', tone: null });
     expect(rows['Last 5']).toBeUndefined(); // recent form shows in the history bar instead
     expect(rows['Last season'].value).toBe('1 TD in 2 games');
     // team total and opponent defense still shape the chance but aren't listed
@@ -503,7 +503,7 @@ describe('touchdown breakdown rows', () => {
     expect(rows['OPP defense']).toBeUndefined();
     expect(td.chance).toBe('LIKELY');
     expect(td.strong).toBe(true);
-    expect(rows['DraftKings +150'].value).toMatch(/% vs 40% implied: (value|about fair|too short)$/);
+    expect(rows['DraftKings +150']).toBeUndefined(); // no implied-vs-fair row on the card
   });
 });
 

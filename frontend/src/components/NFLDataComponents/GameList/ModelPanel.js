@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import SlideOpen from '../shared/SlideOpen';
-import usePersistentState from '../shared/usePersistentState';
 import { Filters, UNITS } from './modelFilters';
 
 // The MODEL dropdown under each sport's games: one gold box with the filters
-// always across its top (a row of small dropdowns: unit size, which picks,
-// which market, moneyline limit) and, under them, collapsible sections that
+// always across its top (a row of small dropdowns: unit size, market,
+// moneyline limit) and, under them, collapsible sections that
 // are all shut when it opens.
 //
 // children(settings) renders the sections; settings is
@@ -17,7 +16,6 @@ export { UNITS };
 const ModelPanel = ({ children, spreadLabel = 'Spread', pickFilters = true }) => {
   const [open, setOpen] = useState(false);
   const [unit, setUnit] = useState(UNITS[0]);
-  const [scope, setScope] = usePersistentState('modelResultsScope', 'bets');
   const [filter, setFilter] = useState('all');
   const [minOdds, setMinOdds] = useState(null);
   return (
@@ -39,8 +37,6 @@ const ModelPanel = ({ children, spreadLabel = 'Spread', pickFilters = true }) =>
             <Filters
               unit={unit}
               setUnit={setUnit}
-              scope={scope}
-              setScope={setScope}
               filter={filter}
               setFilter={setFilter}
               minOdds={minOdds}
@@ -48,7 +44,7 @@ const ModelPanel = ({ children, spreadLabel = 'Spread', pickFilters = true }) =>
               spreadLabel={spreadLabel}
               pickFilters={pickFilters}
             />
-            {children({ unit, scope, filter, minOdds })}
+            {children({ unit, scope: 'all', filter, minOdds })}
           </div>
         </SlideOpen>
       </div>

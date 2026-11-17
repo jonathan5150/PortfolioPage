@@ -7,7 +7,6 @@ import usePersistentState from '../shared/usePersistentState';
 import { ParlayProvider } from '../shared/ParlayContext';
 import ParlayBar from '../ParlayBar/ParlayBar';
 import ModelResults from './PredictionRecord';
-import ConfidentBets, { asBetItems, leagueTicketLoader } from './DayBets';
 import ModelPanel from './ModelPanel';
 import SettingsPanel from './SettingsPanel';
 import SlideOpen from '../shared/SlideOpen';
@@ -350,23 +349,8 @@ const GameList = ({
 
           {!loading && (
             <ModelPanel>
-              {({ unit, scope, filter, minOdds }) => (
-                <>
-                  <ConfidentBets
-                    items={asBetItems(weekGames || games)}
-                    loadTickets={leagueTicketLoader('nfl')}
-                    stake={unit}
-                    filter={filter}
-                    period="WEEK"
-                  />
-                  <ModelResults
-                    games={weekGames || games}
-                    stake={unit}
-                    scope={scope}
-                    filter={filter}
-                    minOdds={minOdds}
-                  />
-                </>
+              {({ unit, filter, minOdds }) => (
+                <ModelResults games={weekGames || games} stake={unit} filter={filter} minOdds={minOdds} />
               )}
             </ModelPanel>
           )}

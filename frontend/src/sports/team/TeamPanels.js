@@ -56,8 +56,40 @@ export const useGameLines = (lg, game, enabled) => {
       return { odds, predictor };
     },
     [lg, game.id, final],
-    { enabled },
+    { enabled, keepPrevious: true },
   );
+};
+
+// Everything LINES shows, loaded (and live odds refreshed) the whole time the
+// game is open, whichever tab is showing: switching to LINES draws it straight
+// away instead of the table and picks popping in after it.
+export const useLinesData = (lg, game, enabled) => {
+  const lines = useGameLines(lg, game, enabled);
+  // live games: PREGAME / LIVE odds (LIVE first), refreshed while it's open
+  const isLive = game.status.state === 'in';
+  const [mode, setMode] = useState('live');
+  const tick = useTicker(isLive && enabled);
+  const liveLines = useAsyncData(() => getLeagueLiveLines(lg, game.id), [lg, game.id, tick], {
+    enabled: enabled && isLive,
+    keepPrevious: true,
+  });
+  // NBA: days of rest for each team, from the schedules the W/L rows load anyway
+  const rest = useAsyncData(
+    async () => {
+      const [a, h] = await Promise.all([
+        getLeagueTeamSchedule(lg, game.away?.teamId, game.season),
+        getLeagueTeamSchedule(lg, game.home?.teamId, game.season),
+      ]);
+      return restDays(game, scheduleGames([...a, ...h]));
+    },
+    [lg, game.id],
+    { enabled: enabled && lg === 'nba', keepPrevious: true },
+  );
+  const teamModel = useAsyncData(() => loadTeamModel(lg), [lg], {
+    enabled: enabled && lg === 'nba',
+    keepPrevious: true,
+  });
+  return { lines, liveLines, rest, teamModel, mode, setMode };
 };
 
 // Hold a line to add it to the parlay (games that haven't finished).
@@ -147,33 +179,15 @@ const PickCard = ({ pick, game, grade, leg }) => {
   );
 };
 
-export const LinesPanel = ({ lg, game, lines }) => {
+// data: useLinesData, kept by the game card so it's on hand before LINES opens
+export const LinesPanel = ({ lg, game, data }) => {
+  const { lines, liveLines, rest, teamModel, mode, setMode } = data;
   const odds = lines.data?.odds;
   const predictor = lines.data?.predictor;
-  // live games: PREGAME / LIVE odds (LIVE first), refreshed while it's on
   const isLive = game.status.state === 'in';
-  const [mode, setMode] = useState('live');
-  const tick = useTicker(isLive);
-  const liveLines = useAsyncData(() => getLeagueLiveLines(lg, game.id), [lg, game.id, tick], {
-    enabled: isLive,
-    keepPrevious: true,
-  });
   const showLive = isLive && mode === 'live';
   const tableOdds = !isLive ? odds : showLive ? liveLines.data?.live : liveLines.data?.pregame || odds;
   const chance = showLive ? game.situation?.winProbability || null : predictor;
-  // NBA: days of rest for each team, from the schedules the W/L rows load anyway
-  const rest = useAsyncData(
-    async () => {
-      const [a, h] = await Promise.all([
-        getLeagueTeamSchedule(lg, game.away?.teamId, game.season),
-        getLeagueTeamSchedule(lg, game.home?.teamId, game.season),
-      ]);
-      return restDays(game, scheduleGames([...a, ...h]));
-    },
-    [lg, game.id],
-    { enabled: lg === 'nba' },
-  );
-  const teamModel = useAsyncData(() => loadTeamModel(lg), [lg], { enabled: lg === 'nba' });
   const picks = useMemo(
     () => (odds ? buildLeaguePicks({ lg, game, odds, predictor, rest: rest.data, teamModel: teamModel.data }) : null),
     [lg, game, odds, predictor, rest.data, teamModel.data],

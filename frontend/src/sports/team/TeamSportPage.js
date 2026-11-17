@@ -15,7 +15,6 @@ import TitleText from '../../components/NFLDataComponents/shared/TitleText';
 import { ParlayProvider } from '../../components/NFLDataComponents/shared/ParlayContext';
 import ParlayBar from '../../components/NFLDataComponents/ParlayBar/ParlayBar';
 import { ModelResults } from '../../components/NFLDataComponents/GameList/PredictionRecord';
-import ConfidentBets, { asBetItems, leagueTicketLoader } from '../../components/NFLDataComponents/GameList/DayBets';
 import ModelPanel from '../../components/NFLDataComponents/GameList/ModelPanel';
 import SettingsPanel from '../../components/NFLDataComponents/GameList/SettingsPanel';
 import { graderFor, seasonLoaderFor } from '../../pages/NFLData/NFLDataApi/modelGrading';
@@ -493,21 +492,11 @@ const TeamSportPage = ({ lg }) => {
 
               {day && !showLoader && (
                 <ModelPanel spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}>
-                  {({ unit, scope, filter, minOdds }) => (
+                  {({ unit, filter, minOdds }) => (
                     <>
-                      <ConfidentBets
-                        items={asBetItems(games)}
-                        loadTickets={leagueTicketLoader(lg)}
-                        stake={unit}
-                        scope={scope}
-                        filter={filter}
-                        minOdds={minOdds}
-                        period="DAY"
-                      />
                       <ModelResults
                         games={games}
                         stake={unit}
-                        scope={scope}
                         filter={filter}
                         minOdds={minOdds}
                         gradeGame={graderFor(lg)}

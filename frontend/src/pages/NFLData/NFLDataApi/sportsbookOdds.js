@@ -219,3 +219,95 @@ export const getBookOdds = async (game) => {
 };
 
 export const playerMarketsFor = (bookOdds, playerName) => bookOdds?.players?.[normalizeName(playerName)] || null;
+
+// ---------- live game lines (backup for ESPN) ----------
+
+// ESPN sometimes posts no in-game line for an NFL game (its DraftKings line
+// just sits at the pregame close). LIVE then asks SportsGameOdds for
+// DraftKings' live moneyline, spread and total, for that one game only: the
+// free plan counts every game returned, so it's never a whole-slate request.
+export const LIVE_ODD_IDS = [
+  'points-away-game-ml-away',
+  'points-home-game-ml-home',
+  'points-away-game-sp-away',
+  'points-home-game-sp-home',
+  'points-all-game-ou-over',
+  'points-all-game-ou-under',
+];
+
+// One SportsGameOdds event -> the same shape as ESPN's lines (parseEventOdds),
+// or null when DraftKings has nothing open for it.
+export const parseSgoMainLines = (event) => {
+  const line = (oddID) => bookOf(event?.odds?.[oddID]);
+  const awayMl = line('points-away-game-ml-away');
+  const homeMl = line('points-home-game-ml-home');
+  const awaySp = line('points-away-game-sp-away');
+  const homeSp = line('points-home-game-sp-home');
+  const over = line('points-all-game-ou-over');
+  const under = line('points-all-game-ou-under');
+  if (!awayMl && !homeMl && !homeSp && !over) return null;
+  const side = (ml, sp) => ({
+    favorite: (toNumber(ml?.odds) ?? 0) < 0,
+    moneyLine: toNumber(ml?.odds),
+    openMoneyLine: null,
+    spreadLine: toNumber(sp?.spread),
+    openSpreadLine: null,
+    spreadOdds: toNumber(sp?.odds),
+  });
+  const links = {};
+  [
+    ['awayMl', awayMl],
+    ['homeMl', homeMl],
+    ['awaySpread', awaySp],
+    ['homeSpread', homeSp],
+    ['over', over],
+    ['under', under],
+  ].forEach(([key, b]) => {
+    const parsed = parseBetslipLink(b?.deeplink);
+    if (parsed) links[key] = parsed;
+  });
+  const homeSpread = toNumber(homeSp?.spread);
+  return {
+    provider: `${BOOK.name} (live)`,
+    details: '',
+    homeSpread,
+    away: side(awayMl, awaySp),
+    home: side(homeMl, homeSp),
+    total: {
+      line: toNumber(over?.overUnder ?? under?.overUnder),
+      openLine: null,
+      overOdds: toNumber(over?.odds),
+      underOdds: toNumber(under?.odds),
+    },
+    links,
+  };
+};
+
+// SportsGameOdds' id for each game, once found ({ gameId: eventID }).
+const sgoEventIds = {};
+
+// DraftKings' live lines for one NFL game from SportsGameOdds, or null.
+// The game's id comes from the TD-odds slate this page loads anyway; failing
+// that, one request for the NFL games live right now. The proxy shares each
+// answer for a minute, so a refresh every 20 seconds still costs at most one
+// game a minute while LIVE is open.
+export const getSgoLiveLines = async (game) => {
+  let eventID = sgoEventIds[game.id];
+  if (!eventID) {
+    const fromSlate = findSgoEvent(await getSgoSlate().catch(() => []), game);
+    if (fromSlate?.eventID) eventID = fromSlate.eventID;
+  }
+  const oddID = LIVE_ODD_IDS.join(',');
+  let event;
+  if (eventID) {
+    const query = new URLSearchParams({ eventIDs: eventID, bookmakerID: BOOK.id, oddID });
+    event = (await fetchJson(`/sgo/events?${query}`, { ttlMs: MINUTE, timeoutMs: 15000 }))?.data?.[0];
+  } else {
+    const query = new URLSearchParams({ leagueID: 'NFL', live: 'true', bookmakerID: BOOK.id, oddID, limit: '20' });
+    const live = (await fetchJson(`/sgo/events?${query}`, { ttlMs: MINUTE, timeoutMs: 15000 }))?.data || [];
+    event = findSgoEvent(live, game);
+  }
+  if (!event) return null;
+  sgoEventIds[game.id] = event.eventID;
+  return parseSgoMainLines(event);
+};

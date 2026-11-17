@@ -48,7 +48,12 @@
   position: sticky;
   left: 0;
   z-index: 1;
-  max-width: 130px;
+  /* one set width whichever team is showing, so switching teams doesn't
+     shift the columns; a longer name ends in … */
+  box-sizing: border-box;
+  width: 124px;
+  min-width: 124px;
+  max-width: 124px;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: left;

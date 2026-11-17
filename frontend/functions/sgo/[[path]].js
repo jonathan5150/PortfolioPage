@@ -5,7 +5,19 @@
 // variables (Settings -> Environment variables, as a secret).
 
 const BASE = 'https://api.sportsgameodds.com/v2';
-const PARAMS = ['leagueID', 'oddsAvailable', 'bookmakerID', 'startsAfter', 'startsBefore', 'limit', 'cursor', 'includeOpposingOdds', 'oddID'];
+const PARAMS = [
+  'leagueID',
+  'oddsAvailable',
+  'bookmakerID',
+  'startsAfter',
+  'startsBefore',
+  'limit',
+  'cursor',
+  'includeOpposingOdds',
+  'oddID',
+  'eventIDs',
+  'live',
+];
 
 export async function onRequestGet({ request, params, env }) {
   const parts = Array.isArray(params.path) ? params.path : [params.path];
@@ -26,7 +38,8 @@ export async function onRequestGet({ request, params, env }) {
 
   // The free plan allows 2,500 event objects a month. The page asks for one
   // slate per 6-hour window (same URL for everyone), so cache it that long.
-  const ttl = 6 * 3600;
+  // Live lines (one game, or the games live now) are shared for a minute.
+  const ttl = search.has('eventIDs') || search.has('live') ? 60 : 6 * 3600;
   try {
     const upstream = await fetch(`${BASE}/events?${search}`, {
       headers: { accept: 'application/json', 'x-api-key': env.SGO_API_KEY },

@@ -5,7 +5,7 @@ import useAsyncData from '../../components/NFLDataComponents/shared/useAsyncData
 import { getTeamColor, getTeamRingColors, washOut } from '../../components/NFLDataComponents/shared/teamColors';
 import { getLeagueOdds } from './leagueApi';
 import { peekOdds } from '../../components/NFLDataComponents/shared/preloadOdds';
-import { BoxScorePanel, LinesPanel, PlayersPanel, useGameLines } from './TeamPanels';
+import { BoxScorePanel, LinesPanel, PlayersPanel, useLinesData } from './TeamPanels';
 import TeamStatsCompare from '../../components/NFLDataComponents/shared/TeamStatsCompare';
 import { DRAWER_TRANSITION, PANEL_TRANSITION } from '../../components/NFLDataComponents/shared/detailsTiming';
 
@@ -300,7 +300,7 @@ const TeamGameCard = memo(({ lg, game, isOpen, onUserToggle, hideMode, hidden, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const lines = useGameLines(lg, game, isOpen && tab === 'lines');
+  const linesData = useLinesData(lg, game, isOpen);
 
   const innerRef = useRef(null);
   const [height, setHeight] = useState(0);
@@ -388,7 +388,7 @@ const TeamGameCard = memo(({ lg, game, isOpen, onUserToggle, hideMode, hidden, o
                     </div>
                     {tab === 'boxscore' && <BoxScorePanel lg={lg} game={game} />}
                     {tab === 'stats' && <TeamStatsCompare lg={lg} game={game} />}
-                    {tab === 'lines' && <LinesPanel lg={lg} game={game} lines={lines} />}
+                    {tab === 'lines' && <LinesPanel lg={lg} game={game} data={linesData} />}
                     {tab === 'players' && <PlayersPanel lg={lg} game={game} />}
                   </div>
                 )}

@@ -1,8 +1,8 @@
 import React from 'react';
 
 // The MODEL dropdown's filters (see ModelPanel): one row of small dropdowns at
-// the top: the unit size, which picks count, which market, and the moneyline
-// limit. They change the confident bets, the results and the season totals.
+// the top: the unit size, which market, and the moneyline limit. They change
+// the results and the season totals.
 
 export const UNITS = [10, 25, 50, 100];
 
@@ -19,12 +19,8 @@ export const betFilters = (spreadLabel) => [
 export const MIN_ODDS = [null, -200, -300, -500];
 export const allowed = (bet, minOdds) => !(minOdds && bet.key === 'winner' && bet.price < minOdds);
 
-// CONFIDENT: just the picks strong enough to bet; EVERY PICK: leans too
-export const SCOPES = [
-  { key: 'bets', label: 'CONFIDENT' },
-  { key: 'all', label: 'EVERY PICK' },
-];
-export const inScope = (bets, scope) => (bets || []).filter((b) => scope === 'all' || b.bet);
+// every pick the model makes counts (there's no separate set of "confident" bets)
+export const inScope = (bets) => bets || [];
 
 // One filter: its title above a gold box showing the current choice; tapping
 // the box opens the phone's own list to pick from. Values are kept as strings
@@ -52,8 +48,6 @@ const FilterSelect = ({ title, options, value, onChange }) => (
 export const Filters = ({
   unit,
   setUnit,
-  scope,
-  setScope,
   filter,
   setFilter,
   minOdds,
@@ -70,7 +64,6 @@ export const Filters = ({
     />
     {pickFilters && (
       <>
-        <FilterSelect title="PICKS" options={SCOPES} value={scope} onChange={setScope} />
         <FilterSelect title="MARKET" options={betFilters(spreadLabel)} value={filter} onChange={setFilter} />
         <FilterSelect
           title="ML LIMIT"

@@ -2,17 +2,18 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import LinesModeToggle from '../shared/LinesModeToggle';
 import useAsyncData from '../shared/useAsyncData';
 import useInView from '../shared/useInView';
-import { getTeamColor, getTeamBorderColor, washOut } from '../shared/teamColors';
+import { getTeamColor, getTeamBorderColor, getTeamTextColor, washOut } from '../shared/teamColors';
 import {
   getEventLiveLines,
   getEventOdds,
   getEventPredictor,
   getTeamBettingTrends,
   getTeamPlayers,
+  TD_SHOWN,
   getGameSkillPlayers,
   getRecentGames,
 } from '../../../pages/NFLData/NFLDataApi/bettingService';
-import { BOOK, getBookOdds, normalizeName } from '../../../pages/NFLData/NFLDataApi/sportsbookOdds';
+import { BOOK, getBookOdds, playerMarketsFor } from '../../../pages/NFLData/NFLDataApi/sportsbookOdds';
 import { fmtLine, fmtOdds } from '../../../pages/NFLData/NFLDataApi/betting';
 import { loadTeamModel } from '../../../pages/NFLData/NFLDataApi/teamModels';
 import {
@@ -240,31 +241,35 @@ const PickLine = ({ pick, leg, game, grade }) => {
 
 const LIVE_LINES_MS = 20000;
 
-const LinesTab = ({ game, lines, linePicks, grades }) => {
-  const odds = lines.data?.odds;
-  const predictor = lines.data?.predictor;
-  // live games: PREGAME / LIVE odds (LIVE first), refreshed while it's on
+// live games: PREGAME / LIVE odds (LIVE first). The live odds load and refresh
+// the whole time the game is open, whichever tab is showing, so LINES draws
+// straight away instead of its table popping in after the switch.
+const useLiveLines = (game, enabled) => {
   const isLive = game.status.state === 'in';
   const [mode, setMode] = useState('live');
   const [tick, setTick] = useState(0);
   useEffect(() => {
-    if (!isLive) return undefined;
+    if (!isLive || !enabled) return undefined;
     const id = setInterval(() => document.visibilityState !== 'hidden' && setTick((t) => t + 1), LIVE_LINES_MS);
     return () => clearInterval(id);
-  }, [isLive]);
-  const liveLines = useAsyncData(() => getEventLiveLines(game.id), [game.id, tick], {
-    enabled: isLive,
+  }, [isLive, enabled]);
+  const liveLines = useAsyncData(() => getEventLiveLines(game.id, game), [game.id, tick], {
+    enabled: isLive && enabled,
     keepPrevious: true,
   });
+  return { liveLines, mode, setMode };
+};
+
+const LinesTab = ({ game, lines, live, linePicks, grades }) => {
+  const odds = lines.data?.odds;
+  const predictor = lines.data?.predictor;
+  const isLive = game.status.state === 'in';
+  const { liveLines, mode, setMode } = live;
   const showLive = isLive && mode === 'live';
   const tableOdds = !isLive ? odds : showLive ? liveLines.data?.live : odds || liveLines.data?.pregame;
   const chance = showLive ? game.situation?.winProbability || null : predictor;
-  const lockedNote =
-    lines.data?.frozen && !showLive ? (
-      <div className="hold-hint">Lines locked at about 30 minutes before kickoff.</div>
-    ) : null;
   const toggle = isLive ? <LinesModeToggle mode={mode} onChange={setMode} /> : null;
-  if (lines.loading) return <div className="bet-message">Loading lines…</div>;
+  if (lines.loading && !lines.data) return <div className="bet-message">Loading lines…</div>;
   if (!odds && !(showLive && tableOdds)) {
     return (
       <>
@@ -286,7 +291,6 @@ const LinesTab = ({ game, lines, linePicks, grades }) => {
         </div>
       )}
       <WinProbability game={game} predictor={chance} />
-      {lockedNote}
       <div className="pick-lines">
         {linePicks ? (
           ['winner', 'spread', 'total'].map((key) => (
@@ -349,22 +353,33 @@ const TdHistory = ({ history }) => {
 // Players who've scored a touchdown in this game, { athleteId: touchdowns }.
 const TdScorersContext = React.createContext({});
 
-const TouchdownCard = ({ pick, game, large = false }) => {
+// a team's abbreviation in its colour, made readable on the dark cards
+const teamTextStyle = (team) => {
+  const color = team ? getTeamTextColor(team) : null;
+  return color ? { color } : undefined;
+};
+
+// onCollapse: tapping its top row folds it back into the player's row
+const TouchdownCard = ({ pick, game, large = false, onCollapse }) => {
   const { player, td, stats, tdHistory } = pick;
   const scored = React.useContext(TdScorersContext)[player.id];
   const side = player.teamSide;
-  const other = side === 'away' ? 'home' : 'away';
   return (
-    <Holdable
-      className={`td-card ${CHANCE_CLASS[td.chance] || 'avoid'} ${td.strong ? 'strong' : ''}`}
-      leg={tdLeg(game, player, td)}
-    >
-      <div className="td-card-top">
+    <Holdable className={`td-card ${CHANCE_CLASS[td.chance] || 'avoid'}`} leg={tdLeg(game, player, td)}>
+      <div
+        className={`td-card-top ${onCollapse ? 'collapsible' : ''}`}
+        onClick={onCollapse}
+        role={onCollapse ? 'button' : undefined}
+        aria-expanded={onCollapse ? true : undefined}
+      >
         <Headshot player={player} team={game[side]?.team} size={large ? 'large' : ''} />
         <div className="td-card-name">
           <span className="player-name">{player.name}</span>
           <span className="player-pos">
-            {player.position} · vs {game[other]?.team?.abbreviation}
+            {player.position} ·{' '}
+            <span className="td-team-abbr" style={teamTextStyle(game[side]?.team)}>
+              {game[side]?.team?.abbreviation}
+            </span>
           </span>
         </div>
         <span className="pick-market-verdict td-chance">{td.chance}</span>
@@ -438,7 +453,7 @@ const OddsStatus = ({ bookOdds, problem, isFinal, onRetry }) => {
 
 // SEARCH: every QB / RB / WR / TE on both rosters.
 
-const SearchResult = ({ player, game, deep, odds, rankings }) => {
+const SearchResult = ({ player, game, deep, odds, rankings, onCollapse, loadingRow }) => {
   const other = player.teamSide === 'away' ? 'home' : 'away';
   const games = useAsyncData(() => getRecentGames(player.id, game), [player.id, game.id]);
 
@@ -459,53 +474,102 @@ const SearchResult = ({ player, game, deep, odds, rankings }) => {
     [games.data, player, game, other, deep.data, rankings, odds],
   );
 
-  if (!pick) return <div className="bet-message small">Loading {player.name}'s games…</div>;
-  return <TouchdownCard pick={pick} game={game} large />;
+  if (!pick) return loadingRow;
+  return <TouchdownCard pick={pick} game={game} large onCollapse={onCollapse} />;
 };
 
-// SEARCH lists players by role, then last name.
-const ROLE_ORDER = { QB: 0, RB: 1, FB: 1, WR: 2, TE: 3 };
-const NAME_SUFFIX = /^(jr|sr|ii|iii|iv|v)\.?$/i;
-const lastName = (name = '') => {
-  const parts = name
-    .trim()
-    .split(/\s+/)
-    .filter((part) => !NAME_SUFFIX.test(part));
-  return parts[parts.length - 1] || name;
+// ---------- TD ODDS lists ----------
+
+// Best odds first: -150, +130, +800 ... and players with no price yet last.
+const byPrice = (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity) || a.player.name.localeCompare(b.player.name);
+
+// One player folded up: headshot, team, name and anytime TD odds. Tap to open
+// the full card; hold to add the bet to the parlay slip.
+const TdRow = ({ player, game, price, leg, onOpen, loading = false }) => {
+  const scored = React.useContext(TdScorersContext)[player.id];
+  const team = game[player.teamSide]?.team;
+  return (
+    <Holdable className={`td-row ${loading ? 'loading' : ''}`} leg={leg} onClick={onOpen} role="button" aria-expanded={false}>
+      <Headshot player={player} team={team} size="small" />
+      <span className="td-row-team" style={teamTextStyle(team)}>
+        {team?.logo && <img src={team.logo} alt="" draggable={false} />}
+        {team?.abbreviation}
+      </span>
+      <span className="td-row-name">
+        {player.name}
+        <span className="player-pos"> {player.position}</span>
+      </span>
+      <span className="td-row-odds">
+        {loading ? '…' : price !== null && price !== undefined ? fmtOdds(price) : '—'}
+      </span>
+      {scored > 0 && (
+        <span className="pick-result right" title={`Scored ${scored > 1 ? `${scored} touchdowns` : 'a touchdown'}`} />
+      )}
+    </Holdable>
+  );
 };
 
-const SearchPanel = ({ game, deep, odds, rankings, teamSide, setTeamSide }) => {
+// entries: [{ key, player, price, leg, pick? }], already sorted. card(entry,
+// close, loadingRow) draws an opened player; one is open at a time.
+const TdPlayerList = ({ entries, game, openKey, setOpenKey, card, empty }) => {
+  if (!entries.length) return <div className="bet-message small">{empty}</div>;
+  return (
+    <div className="td-list">
+      {entries.map((entry) => {
+        const row = (loading) => (
+          <TdRow
+            key={entry.key}
+            player={entry.player}
+            game={game}
+            price={entry.price}
+            leg={entry.leg}
+            loading={loading}
+            onOpen={() => setOpenKey(entry.key)}
+          />
+        );
+        return openKey === entry.key ? (
+          <React.Fragment key={entry.key}>{card(entry, () => setOpenKey(null), row(true))}</React.Fragment>
+        ) : (
+          row(false)
+        );
+      })}
+    </div>
+  );
+};
+
+// SEARCH: every QB / RB / WR / TE on the chosen team(s) with a DraftKings TD
+// price, narrowed by name, team or position as you type.
+const SearchPanel = ({ game, deep, odds, rankings, teamSide, openKey, setOpenKey }) => {
   const [query, setQuery] = useState('');
-  const [selectedId, setSelectedId] = useState(null);
   const roster = useAsyncData(() => getGameSkillPlayers(game), [game.id, game.away?.teamId, game.home?.teamId]);
-  const priced = deep.data?.bookOdds?.players || {};
-  const hasOdds = (p) => Boolean(priced[normalizeName(p.name)]?.anytimeTd);
-
-  // Only players DraftKings has a TD price for. The toggle picks which team's
-  // list to show; typing a search covers both teams.
+  const bookOdds = deep.data?.bookOdds;
   const q = query.trim().toLowerCase();
-  const players = useMemo(
+  const entries = useMemo(
     () =>
       (roster.data || [])
-        .filter(hasOdds)
-        .filter((p) =>
-          q
-            ? p.name.toLowerCase().includes(q) ||
-              p.position.toLowerCase() === q ||
-              (p.teamAbbr || '').toLowerCase() === q
-            : p.teamSide === teamSide,
+        .map((p) => {
+          const yes = playerMarketsFor(bookOdds, p.name)?.anytimeTd?.yes;
+          return yes
+            ? {
+                key: `${p.teamSide}-${p.id}`,
+                player: p,
+                price: yes.price ?? null,
+                leg: tdLeg(game, p, { price: yes.price ?? null, link: yes.link || null }),
+              }
+            : null;
+        })
+        .filter(Boolean)
+        .filter(({ player: p }) => teamSide === 'all' || p.teamSide === teamSide)
+        .filter(
+          ({ player: p }) =>
+            !q ||
+            p.name.toLowerCase().includes(q) ||
+            p.position.toLowerCase() === q ||
+            (p.teamAbbr || '').toLowerCase() === q,
         )
-        .sort(
-          (a, b) =>
-            (ROLE_ORDER[a.position] ?? 9) - (ROLE_ORDER[b.position] ?? 9) ||
-            lastName(a.name).localeCompare(lastName(b.name)) ||
-            a.name.localeCompare(b.name),
-        ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [roster.data, q, teamSide, priced],
+        .sort(byPrice),
+    [roster.data, bookOdds, teamSide, q, game],
   );
-
-  const selected = (roster.data || []).find((p) => p.id === selectedId) || null;
 
   return (
     <div className="bet-search">
@@ -517,69 +581,78 @@ const SearchPanel = ({ game, deep, odds, rankings, teamSide, setTeamSide }) => {
         onChange={(e) => setQuery(e.target.value)}
         aria-label="Search players"
       />
-      <TeamToggle game={game} teamSide={teamSide} onChange={setTeamSide} dimmed={Boolean(q)} filled />
-      {selected && (
-        <SearchResult key={selected.id} player={selected} game={game} deep={deep} odds={odds} rankings={rankings} />
-      )}
       {roster.loading ? (
         <div className="bet-message">Loading rosters…</div>
       ) : (
-        <div className="search-list" role="listbox" aria-label="Players">
-          {players.map((p) => {
-            const team = game[p.teamSide]?.team;
-            return (
-              <button
-                key={`${p.teamSide}-${p.id}`}
-                type="button"
-                role="option"
-                aria-selected={p.id === selectedId}
-                className={`search-item ${p.id === selectedId ? 'active' : ''}`}
-                onClick={() => setSelectedId(p.id)}
-              >
-                <span
-                  className="player-headshot small"
-                  style={team ? { borderColor: getTeamBorderColor(team) } : undefined}
-                >
-                  <img
-                    src={p.headshot || headshotUrl(p.id)}
-                    alt=""
-                    loading="lazy"
-                    draggable={false}
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </span>
-                <span className="search-item-name">{p.name}</span>
-                <span className="player-pos">
-                  {q ? `${p.teamAbbr} · ` : ''}
-                  {p.position}
-                </span>
-              </button>
-            );
-          })}
-          {!players.length && (
-            <div className="bet-message small">
-              {q ? `No players with TD odds match “${query}”.` : 'No TD odds for this team yet.'}
-            </div>
+        <TdPlayerList
+          entries={entries}
+          game={game}
+          openKey={openKey}
+          setOpenKey={setOpenKey}
+          empty={q ? `No players with TD odds match “${query}”.` : 'No TD odds for this team yet.'}
+          card={(entry, close, loadingRow) => (
+            <SearchResult
+              player={entry.player}
+              game={game}
+              deep={deep}
+              odds={odds}
+              rankings={rankings}
+              onCollapse={close}
+              loadingRow={loadingRow}
+            />
           )}
-        </div>
+        />
       )}
     </div>
   );
 };
 
+// ALL: every player we have a card for; the others narrow it by position.
 const GROUPS = [
-  { key: 'qb', label: 'QBs' },
-  { key: 'rb', label: 'RBs' },
-  { key: 'wr', label: 'WRs/TEs' },
+  { key: 'all', label: 'ALL', from: ['qb', 'rb', 'wr'] },
+  { key: 'qbrb', label: 'QBs/RBs', from: ['qb', 'rb'] },
+  { key: 'wr', label: 'WRs/TEs', from: ['wr'] },
   { key: 'search', label: 'SEARCH' },
 ];
+const BOTH_TEAMS = { key: 'all', label: 'ALL' };
 
 const PlayersTab = ({ game, deep, playerPicks, isFinal, odds, rankings, oddsProblem, onRetryOdds }) => {
-  const [group, setGroup] = useState('qb');
-  const [teamSide, setTeamSide] = useState('away');
-  const list = (playerPicks?.[group] || []).filter((p) => p.player.teamSide === teamSide);
+  const [group, setGroup] = useState('all');
+  // 'away', 'home' or 'all' (both teams)
+  const [teamSide, setTeamSide] = useState('all');
+  const [openKey, setOpenKey] = useState(null);
+  const from = GROUPS.find((g) => g.key === group)?.from;
+  // Once DraftKings has TD odds for the game, a player without a price isn't
+  // listed; each team shows its top QB, 2 RBs and 5 WR/TEs that have one.
+  // (With no TD odds at all, everyone stays, with our chances only.)
+  const priced = Object.keys(deep.data?.bookOdds?.players || {}).length > 0;
+  const entries = useMemo(() => {
+    if (!from || !playerPicks) return [];
+    const seen = new Set();
+    return from
+      .flatMap((key) =>
+        ['away', 'home'].flatMap((side) =>
+          (playerPicks[key] || [])
+            .filter((p) => p.player.teamSide === side)
+            .filter((p) => !priced || (p.td.price !== null && p.td.price !== undefined))
+            .slice(0, TD_SHOWN[key] ?? Infinity),
+        ),
+      )
+      .filter((p) => teamSide === 'all' || p.player.teamSide === teamSide)
+      .map((p) => ({
+        key: `${p.player.teamSide}-${p.player.id}`,
+        player: p.player,
+        price: p.td.price,
+        leg: tdLeg(game, p.player, p.td),
+        pick: p,
+      }))
+      .filter((e) => {
+        if (seen.has(e.key)) return false;
+        seen.add(e.key);
+        return true;
+      })
+      .sort(byPrice);
+  }, [from, playerPicks, teamSide, game, priced]);
 
   return (
     <>
@@ -597,6 +670,9 @@ const PlayersTab = ({ game, deep, playerPicks, isFinal, odds, rankings, oddsProb
           </button>
         ))}
       </div>
+      <div className="td-team-toggle">
+        <TeamToggle game={game} teamSide={teamSide} onChange={setTeamSide} middle={BOTH_TEAMS} filled />
+      </div>
       {group === 'search' ? (
         <SearchPanel
           game={game}
@@ -604,25 +680,20 @@ const PlayersTab = ({ game, deep, playerPicks, isFinal, odds, rankings, oddsProb
           odds={odds}
           rankings={rankings}
           teamSide={teamSide}
-          setTeamSide={setTeamSide}
+          openKey={openKey}
+          setOpenKey={setOpenKey}
         />
       ) : !playerPicks ? (
         <div className="bet-message">Loading players…</div>
       ) : (
-        <>
-          <div className="td-team-toggle">
-            <TeamToggle game={game} teamSide={teamSide} onChange={setTeamSide} filled />
-          </div>
-          {list.length ? (
-            <div className="td-list">
-              {list.map((p) => (
-                <TouchdownCard key={`${p.player.teamSide}-${p.player.id}`} pick={p} game={game} />
-              ))}
-            </div>
-          ) : (
-            <div className="bet-message">No players found.</div>
-          )}
-        </>
+        <TdPlayerList
+          entries={entries}
+          game={game}
+          openKey={openKey}
+          setOpenKey={setOpenKey}
+          empty="No players found."
+          card={(entry, close) => <TouchdownCard pick={entry.pick} game={game} onCollapse={close} />}
+        />
       )}
       {!deep.loading && (
         <OddsStatus bookOdds={deep.data?.bookOdds} problem={oddsProblem} isFinal={isFinal} onRetry={onRetryOdds} />
@@ -711,6 +782,7 @@ const Betting = ({ game, rankings, isOpen = true }) => {
   );
   const odds = lines.data?.odds;
   const bookOdds = lines.data?.bookOdds || null;
+  const live = useLiveLines(game, isOpen);
 
   // Season results for the line picks wait until the panel is on screen.
   const research = useAsyncData(
@@ -797,7 +869,7 @@ const Betting = ({ game, rankings, isOpen = true }) => {
 
       {tab === 'boxscore' && <BoxScore key={openCount} game={game} summaryState={summaryState} withToggle />}
       {tab === 'stats' && <TeamStatsCompare lg="nfl" game={game} />}
-      {tab === 'lines' && <LinesTab game={game} lines={lines} linePicks={linePicks} grades={grades} />}
+      {tab === 'lines' && <LinesTab game={game} lines={lines} live={live} linePicks={linePicks} grades={grades} />}
       {tab === 'players' && (
         <TdScorersContext.Provider value={tdScorers}>
           <PlayersTab

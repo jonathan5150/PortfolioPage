@@ -49,6 +49,15 @@ describe('PREGAME / LIVE odds', () => {
     expect(o.total.line).toBe(230.5);
   });
 
+  test('a current line that never moved off the close is not live', () => {
+    const frozen = book({
+      awayTeamOdds: { moneyLine: 150, close: snap('+150', '+3.5', '-108'), current: snap('+150', '+3.5', '-108') },
+      homeTeamOdds: { moneyLine: -180, close: snap('-180', '-3.5', '-112'), current: snap('-180', '-3.5', '-112') },
+      current: { total: { american: '227.5' }, over: { american: '-105' }, under: { american: '-115' } },
+    });
+    expect(parseLiveOdds({ items: [frozen] })).toBeNull();
+  });
+
   test('a posted Live Odds book wins for live', () => {
     const live = book({
       provider: { id: '59', name: 'ESPN BET - Live Odds', priority: 2 },
@@ -68,5 +77,35 @@ describe('PREGAME / LIVE odds', () => {
   test('no odds at all: null', () => {
     expect(parseLiveOdds({ items: [] })).toBeNull();
     expect(parsePregameOdds({ items: [] })).toBeNull();
+  });
+});
+
+describe('LIVE backup: SportsGameOdds main lines', () => {
+  // eslint-disable-next-line global-require
+  const { parseSgoMainLines } = require('./sportsbookOdds');
+  const dk = (fields) => ({ byBookmaker: { draftkings: { available: true, ...fields } } });
+  const event = {
+    eventID: 'abc',
+    odds: {
+      'points-away-game-ml-away': dk({ odds: '-251', deeplink: 'https://sportsbook.draftkings.com/event/1?outcomes=0ML1_3' }),
+      'points-home-game-ml-home': dk({ odds: '+184' }),
+      'points-away-game-sp-away': dk({ odds: '-113', spread: '-4.5' }),
+      'points-home-game-sp-home': dk({ odds: '-117', spread: '+4.5' }),
+      'points-all-game-ou-over': dk({ odds: '-118', overUnder: '46.5' }),
+      'points-all-game-ou-under': dk({ odds: '-112', overUnder: '46.5' }),
+    },
+  };
+
+  test('reads DraftKings live moneyline, spread and total', () => {
+    const o = parseSgoMainLines(event);
+    expect(o.away).toMatchObject({ moneyLine: -251, spreadLine: -4.5, spreadOdds: -113, favorite: true });
+    expect(o.home).toMatchObject({ moneyLine: 184, spreadLine: 4.5, spreadOdds: -117, favorite: false });
+    expect(o.homeSpread).toBe(4.5);
+    expect(o.total).toMatchObject({ line: 46.5, overOdds: -118, underOdds: -112 });
+    expect(o.links.awayMl.outcome).toBe('0ML1_3');
+  });
+
+  test('nothing open: null', () => {
+    expect(parseSgoMainLines({ odds: {} })).toBeNull();
   });
 });

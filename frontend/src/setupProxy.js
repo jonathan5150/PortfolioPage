@@ -30,7 +30,19 @@ const forward = (url, res, redirectsLeft = 3) => {
 
 // SportsGameOdds (DraftKings anytime TD odds). Key from SGO_API_KEY in frontend/.env.local.
 const SGO_API = 'https://api.sportsgameodds.com/v2';
-const SGO_PARAMS = ['leagueID', 'oddsAvailable', 'bookmakerID', 'startsAfter', 'startsBefore', 'limit', 'cursor', 'includeOpposingOdds', 'oddID'];
+const SGO_PARAMS = [
+  'leagueID',
+  'oddsAvailable',
+  'bookmakerID',
+  'startsAfter',
+  'startsBefore',
+  'limit',
+  'cursor',
+  'includeOpposingOdds',
+  'oddID',
+  'eventIDs',
+  'live',
+];
 
 const sgoApi = (req, res) => {
   const url = new URL(req.url, 'http://localhost');

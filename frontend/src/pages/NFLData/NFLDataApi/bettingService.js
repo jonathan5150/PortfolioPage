@@ -20,6 +20,7 @@ import {
 } from './betting';
 import { buildLinePicks, gradeLinePicks, linePickBets, teamResultHistory } from './picks';
 import { frozenOdds, PICKS_SNAPSHOT } from './oddsSnapshots';
+import { getSgoLiveLines } from './sportsbookOdds';
 import { loadTeamModel } from './teamModels';
 
 const MINUTE = 60 * 1000;
@@ -31,9 +32,18 @@ export const getEventOdds = async (eventId, { final = false } = {}) =>
 
 // While a game is on: the pregame line and the live one, from one download
 // that's only cached for a few seconds.
-export const getEventLiveLines = async (eventId) => {
+// LIVE odds: ESPN's whenever it has a live line; otherwise DraftKings' live
+// line from SportsGameOdds (getSgoLiveLines), when `game` is passed.
+export const getEventLiveLines = async (eventId, game = null) => {
   const json = await fetchJson(espnUrls.eventOdds(eventId), { ttlMs: 10 * 1000 });
-  return { pregame: parsePregameOdds(json), live: parseLiveOdds(json) };
+  const pregame = parsePregameOdds(json);
+  const espnLive = parseLiveOdds(json);
+  if (espnLive || !game) return { pregame, live: espnLive };
+  const backup = await getSgoLiveLines(game).catch((error) => {
+    console.warn('SportsGameOdds live lines unavailable:', error.message);
+    return null;
+  });
+  return { pregame, live: backup };
 };
 
 export const getEventPredictor = async (eventId, { final = false } = {}) =>
@@ -140,10 +150,13 @@ export const getRecentGames = async (athleteId, game) => {
     .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 };
 
-// Starting QB (depth chart), the top two healthy RBs and top three healthy
-// WR/TEs by yards, each with this and last season's game logs.
-export const RB_COUNT = 2;
-export const WR_COUNT = 3;
+// Starting QB (depth chart), the top healthy RBs and WR/TEs by yards, each
+// with this and last season's game logs. TD ODDS shows the top 2 RBs and top
+// 5 WR/TEs that DraftKings has a price for (TD_SHOWN), so a couple more are
+// loaded to stand in for any without one.
+export const RB_COUNT = 3;
+export const WR_COUNT = 7;
+export const TD_SHOWN = { qb: 1, rb: 2, wr: 5 };
 
 export const getTeamPlayers = async (teamId, game) => {
   const season = game.season;
@@ -167,8 +180,9 @@ export const getTeamPlayers = async (teamId, game) => {
   };
   const [qb, rbs, wrs] = await Promise.all([
     startingQb(),
-    healthyLeaders(leaders.rushing, ['RB', 'FB'], season, RB_COUNT),
-    healthyLeaders(leaders.receiving, ['WR', 'TE'], season, WR_COUNT),
+    healthyLeaders(leaders.rushing, ['RB', 'FB'], season, RB_COUNT, 10),
+    // RBs share the receiving leaders, so look a little further down it for five
+    healthyLeaders(leaders.receiving, ['WR', 'TE'], season, WR_COUNT, 14),
   ]);
 
   const withGames = (list) =>

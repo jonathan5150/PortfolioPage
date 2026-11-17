@@ -158,6 +158,20 @@ export const parsePregameOdds = (json) => {
 
 // In-game odds: ESPN's "Live Odds" book when one is posted, otherwise the main
 // book's current (moving) line. Null when neither is there.
+// ESPN often stops updating the main book at kickoff, leaving its "current"
+// line the same as the pregame close: that isn't live, so it's skipped (LIVE
+// then says no live odds are posted instead of showing pregame numbers).
+const sameLine = (a, b) =>
+  Boolean(a && b) &&
+  ['away', 'home'].every(
+    (side) =>
+      a[side].moneyLine === b[side].moneyLine &&
+      a[side].spreadLine === b[side].spreadLine &&
+      a[side].spreadOdds === b[side].spreadOdds,
+  ) &&
+  a.total.line === b.total.line &&
+  a.total.overOdds === b.total.overOdds;
+
 export const parseLiveOdds = (json) => {
   const items = json?.items || [];
   const liveItem = items.find((i) => /live odds/i.test(i.provider?.name || ''));
@@ -166,7 +180,9 @@ export const parseLiveOdds = (json) => {
     if (parsed) return { ...parsed, provider: liveItem.provider?.name || 'Live Odds' };
   }
   const main = items.find((i) => !/live odds/i.test(i.provider?.name || '') && i.current);
-  return main ? fromSnapshot(main, 'current') : null;
+  if (!main) return null;
+  const current = fromSnapshot(main, 'current');
+  return sameLine(current, fromSnapshot(main, 'close')) ? null : current;
 };
 
 // core API: events/{id}/competitions/{id}/predictor (ESPN FPI).
