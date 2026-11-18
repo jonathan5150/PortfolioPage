@@ -5,6 +5,7 @@ import useSwapPhase, { useHeld } from '../shared/hooks/useSwapPhase';
 import GameList from './components/GameList';
 import usePersistentState from '../shared/hooks/usePersistentState';
 import { getTeams, getScoreboard, getTeamRankings } from './api/nflDataService';
+import { weekAfterFinished } from './api/currentWeek';
 import { isLiveStatus } from '../shared/api/espnParsers';
 import { getEventOdds } from '../shared/api/bettingService';
 import { preloadOdds } from '../shared/utils/preloadOdds';
@@ -83,7 +84,7 @@ function NFLData() {
 
     (async () => {
       try {
-        const [teamsResult, board] = await Promise.all([
+        let [teamsResult, board] = await Promise.all([
           getTeams().catch((err) => {
             console.warn('Team list unavailable, using teams from the scoreboard:', err);
             return null;
@@ -91,6 +92,16 @@ function NFLData() {
           getScoreboard(),
         ]);
         if (!active) return;
+        // ESPN's current week until midweek; once it's played out, the next
+        // week's games instead (see currentWeek.js)
+        const nextWeek = weekAfterFinished(board);
+        if (nextWeek) {
+          const upcoming = await getScoreboard(nextWeek).catch(() => null);
+          if (!active) return;
+          if (upcoming?.events?.length) {
+            board = { ...upcoming, calendar: upcoming.calendar.length ? upcoming.calendar : board.calendar };
+          }
+        }
         await preloadWeekOdds(board.events);
         if (!active) return;
         setTeams(teamsResult?.length ? teamsResult : teamsFromEvents(board.events));
