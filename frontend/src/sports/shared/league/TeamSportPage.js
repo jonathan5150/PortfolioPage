@@ -89,7 +89,7 @@ const dayLabel = (key) =>
 // ---------- model results: the NFL panel, graded with this league's engine ----------
 
 const MODEL_NOTES = {
-  nba: "Every NBA game gets three bets, made and graded at the opening line and price, because against the closing line nothing beat the market over 12 seasons. Spread and moneyline: the better-rested team (2+ more days off), else the opening favourite. Total: the under when our scoring ratings project 2+ points below the opening total, else the over. Over the six seasons with saved openers these lost the least of every rule tried (-1.8% a bet, against about -4.5% for betting blindly), the rest-edge spreads and the 2+ unders made money, and they're +0.2% this season so far. Lines move toward the rest bets two times in three, so bet early.",
+  nba: "Every NBA game gets three bets, made and graded at the opening line and price, because against the closing line nothing beat the market over 12 seasons. Spread and moneyline: the better-rested team (2+ more days off), else the opening favourite. Total: the under when our scoring ratings project 2+ points below the opening total, else the over. Over the six seasons with saved openers these lost the least of every rule tried (-1.8% a bet, against about -4.5% for betting blindly), and the rest-edge spreads and the 2+ unders made money. Lines move toward the rest bets two times in three, so bet early.",
   mlb: "The MLB picks are leans from ESPN's model and the betting market. They haven't been backtested like the NFL and NBA models yet.",
 };
 
