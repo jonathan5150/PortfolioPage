@@ -18,8 +18,8 @@ import { loadTeamModel } from './teamModels';
 // (this device's localStorage and the precomputed files) under an old version
 // are ignored.
 export const GRADES_KEYS = {
-  nfl: 'gradedPicks:v8',
-  nba: 'nbaGradedPicks:v3',
+  nfl: 'gradedPicks:v9',
+  nba: 'nbaGradedPicks:v4',
   mlb: 'mlbGradedPicks:v2',
 };
 

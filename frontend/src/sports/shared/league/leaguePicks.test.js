@@ -14,30 +14,15 @@ const odds = {
   total: { line: 221.5, overOdds: -110, underOdds: -110 },
 };
 
-// a made-up model where the Bucks own the matchup
-const teamModel = {
-  lg: 'nba',
-  model: { winner: { features: ['mkt', 'h2h_win'], coef: [1, 3], intercept: 0, min_edge: 0, max_price: 4.5 } },
-  history: {
-    h2h: {
-      'MIL|NYK': [
-        [2025, 'MIL', 'MIL', 9, 'MIL', 1, '2025-11-02'],
-        [2025, 'NYK', 'MIL', 4, 'MIL', 0, '2025-12-12'],
-        [2025, 'MIL', 'MIL', 11, 'MIL', 1, '2026-02-01'],
-        [2025, 'NYK', 'MIL', 2, 'MIL', 0, '2026-03-15'],
-      ],
-    },
-  },
-};
-
 describe('league picks (NBA / MLB)', () => {
-  it("picks the model's value side, an underdog here, as an upset lean", () => {
-    const g = { ...game(), date: '2026-11-14T00:30Z' };
-    const picks = buildLeaguePicks({ lg: 'nba', game: g, odds, predictor: null, rest: { home: 2, away: 2 }, teamModel });
-    expect(picks.winner).toMatchObject({ side: 'away', bet: false, upset: true, headline: 'BUCKS TO WIN', odds: 'ML +205' });
-    expect(picks.winner.summary).toMatch(/Bucks have won 4 of the last 4 meetings with the Knicks/);
-    // without the model it's the favourite again
-    expect(buildLeaguePicks({ lg: 'nba', game: g, odds, predictor: null, rest: { home: 2, away: 2 } }).winner.side).toBe('home');
+  it('NBA: the moneyline and the spread go on the same team: the favourite, or the better-rested side', () => {
+    const even = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 2, away: 2 } });
+    expect(even.winner).toMatchObject({ side: 'home', headline: 'KNICKS TO WIN', odds: 'ML -250' });
+    expect(even.spread.side).toBe('home');
+    // the Bucks have had 3 more days off: both picks move to them, an upset lean
+    const rested = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 1, away: 4 } });
+    expect(rested.winner).toMatchObject({ side: 'away', upset: true, headline: 'BUCKS TO WIN', odds: 'ML +205' });
+    expect(rested.spread).toMatchObject({ side: 'away', bet: true });
   });
 
   it('blends ESPN and the market 25/75, or uses the market alone', () => {
@@ -66,9 +51,15 @@ describe('league picks (NBA / MLB)', () => {
     expect(even.spread).toMatchObject({ side: 'home', bet: false });
   });
 
-  it('NBA: the total lean follows a 3+ point drop to the under', () => {
-    const moved = { ...odds, total: { ...odds.total, openLine: 225.5 } };
-    expect(buildLeaguePicks({ lg: 'nba', game: game(), odds: moved, predictor: null }).total.side).toBe('under');
+  it('NBA totals: follow a 3+ point move either way, else the under at 235+, else the over', () => {
+    const total = (t) =>
+      buildLeaguePicks({ lg: 'nba', game: game(), odds: { ...odds, total: { ...odds.total, ...t } }, predictor: null })
+        .total.side;
+    expect(total({ openLine: 225.5 })).toBe('under'); // dropped 4
+    expect(total({ openLine: 217.5 })).toBe('over'); // climbed 4
+    expect(total({ line: 238.5, openLine: 237.5 })).toBe('under'); // high, barely moved
+    expect(total({ line: 238.5, openLine: 234.5 })).toBe('over'); // high, but climbed 4
+    expect(total({ openLine: 221 })).toBe('over');
   });
 
   it('rest days come from the earlier games', () => {

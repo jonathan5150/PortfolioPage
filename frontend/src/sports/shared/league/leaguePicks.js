@@ -3,33 +3,21 @@
 // LEAN (`bet: false`). Win chance: a 25/75 blend of ESPN's model and the
 // betting market, or the market alone when ESPN has no model.
 //
-// NBA (scripts/backtest/nba): every regular-season game of 2022-23 through
-// 2025-26 at DraftKings / ESPN BET closing prices, 2026-27 held out. Betting
-// every favourite, underdog, home or road side, over or under lost money in
-// all of them. Two rules are bets:
-//   spread - the home team when it's had 2+ more days of rest than the
-//            visitor (58.1% over 260 games, +10.6% at the closing prices;
-//            it only broke even before 2022, see scripts/backtest/nba)
-//   spread - the road team when it's had 2+ more days of rest (52.5-53.5% in
-//            2007-14, 2015-21 and 2022-26 alike: small, but steady).
-// No moneyline or total rule held up season after season, so those are leans:
-//   winner - the backtested model's value side (teamModels.js: the market plus
-//            head-to-head, rest, back-to-backs and revenge spots) when one
-//            side's chance beats its price; it's an underdog about half the
-//            time. Otherwise the blended favourite (right 68.4% of the time).
-//   spread - the home side (50.4%) when the rest rule doesn't fire
-//   total  - follow a 3+ point move in the total since it opened (down:
-//            under), otherwise the over (51.5% together).
+// NBA (scripts/backtest/nba, re-run November 2026): every regular-season game
+// of 2022-23 through 2025-26 at closing prices, 2026-27 to date as the check.
+// Every market is close to efficient: no rule makes money on every game, so
+// the picks are the combination that lost least, with the moneyline and the
+// spread always on the same team:
+//   winner - the team with 2+ more days of rest than its opponent (won 58.0%,
+//            +3.5% at the price), otherwise the favourite (68.3%).
+//   spread - the same team: the better-rested side (2+ days), otherwise the
+//            favourite. (The old default, the home team, did as well before
+//            but lost 15.8% a pick in 2026-27.)
+//   total  - follow a 3+ point move in the total since it opened, either way
+//            (51.6%); otherwise the under at 235+ (52.0%), else the over (52.4%).
 // MLB hasn't been backtested yet: all leans.
 import { fmtLine, fmtOdds } from '../api/betting';
 import { marketHomeProbability } from '../api/picks';
-import {
-  teamModelChance,
-  finishChance,
-  valueSide,
-  h2hSentence,
-  situationBits,
-} from '../api/teamModels';
 import { LEAGUES } from './leagueApi';
 
 const real = (n) => n !== null && n !== undefined && Math.abs(n) >= 100;
@@ -49,6 +37,7 @@ export const winChance = ({ odds, predictor }) => {
 // NBA rule thresholds (see above)
 export const NBA_REST_EDGE = 2;
 export const NBA_TOTAL_MOVE = 3;
+export const NBA_HIGH_TOTAL = 235;
 
 // Days since each team's last game before `game` (7 when there wasn't one
 // this season), from a list of earlier games: [{ date, homeId, awayId }].
@@ -67,39 +56,26 @@ export const restDays = (game, earlier) => {
 
 // A team schedule (parseTeamSchedule) as the earlier-games list restDays reads.
 export const scheduleGames = (schedule) =>
-  (schedule || []).map((g) => ({ date: g.date, homeId: g.home?.teamId, awayId: g.away?.teamId }));
+  (schedule || []).map((g) => ({
+    date: g.date,
+    homeId: g.home?.teamId,
+    awayId: g.away?.teamId,
+  }));
 
-// The NBA model's value lean, or null (see teamModels.js).
-const nbaValueLean = (teamModel, game, odds, rest) => {
-  const mc = teamModelChance(teamModel, { game, odds, rest });
-  if (!mc) return null;
-  const v = valueSide(teamModel, finishChance(teamModel, mc), odds);
-  if (!v) return null;
-  const other = v.side === 'home' ? 'away' : 'home';
-  const team = game[v.side]?.team;
-  const dog = odds[v.side].moneyLine > odds[other].moneyLine;
-  const needs = Math.round(100 / (v.price > 0 ? 1 + v.price / 100 : 1 + 100 / -v.price));
-  const bits = situationBits(mc, v.side);
-  const h2h = h2hSentence(mc.h2h, game, v.side);
-  const summary = [
-    `${dog ? 'Upset lean' : 'Value lean'} ${name(team)}: the model has them at ${Math.round(v.p * 100)}% to win, and at ${fmtOdds(v.price)} the price only needs ${needs}%.`,
-    ...(bits.length ? [`Working for them: ${bits.join('; ')}.`] : []),
-    ...(h2h ? [h2h] : []),
-    `The model's value picks lost about as much as always taking the favourite from 2012 to 2022, so it's a lean, not a bet.`,
-  ].join(' ');
-  return {
-    key: 'winner',
-    title: 'WINNER',
-    side: v.side,
-    bet: false,
-    upset: dog,
-    headline: `${nick(team)} TO WIN`,
-    summary,
-    odds: `ML ${fmtOdds(v.price)}`,
-    pick: team?.displayName || team?.abbreviation,
-    pickAbbr: team?.abbreviation,
-  };
+// NBA: the side with 2+ more days of rest, or null.
+const restedSide = (rest) => {
+  if (!rest) return null;
+  const edge = rest.home - rest.away;
+  return edge >= NBA_REST_EDGE ? 'home' : edge <= -NBA_REST_EDGE ? 'away' : null;
 };
+
+// NBA: the moneyline favourite (by price), or null without prices.
+const favouriteSide = (odds) =>
+  real(odds?.home?.moneyLine) && real(odds?.away?.moneyLine)
+    ? odds.home.moneyLine <= odds.away.moneyLine
+      ? 'home'
+      : 'away'
+    : null;
 
 export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, teamModel = null }) => {
   const league = LEAGUES[lg];
@@ -108,8 +84,30 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, teamM
   const out = { winner: null, spread: null, total: null };
   if (!odds) return out;
 
-  // NBA winner: the model's value side when there is one
-  if (nba && teamModel && rest) out.winner = nbaValueLean(teamModel, game, odds, rest);
+  // NBA winner: the better-rested team, else the favourite (and the spread
+  // pick below goes on the same team)
+  const nbaSide = nba ? restedSide(rest) || favouriteSide(odds) : null;
+  if (nbaSide) {
+    const side = nbaSide;
+    const other = side === 'home' ? 'away' : 'home';
+    const team = game[side]?.team;
+    const rested = restedSide(rest) === side;
+    const dog = odds[side].moneyLine > odds[other].moneyLine;
+    out.winner = {
+      key: 'winner',
+      title: 'WINNER',
+      side,
+      bet: false,
+      upset: dog,
+      headline: `${nick(team)} TO WIN`,
+      summary: rested
+        ? `${dog ? 'Upset lean' : 'Lean'} ${name(team)}: they've had ${rest[side]} days off to their opponent's ${rest[other]}. A team with 2+ more days of rest won 58% of the time from 2022 to 2026, more than its prices said.`
+        : `Lean ${name(team)}: the favourite (${fmtOdds(odds[side].moneyLine)}) won 68% of NBA games from 2022 to 2026. Taking the underdog lost more.`,
+      odds: `ML ${fmtOdds(odds[side].moneyLine)}`,
+      pick: team?.displayName || team?.abbreviation,
+      pickAbbr: team?.abbreviation,
+    };
+  }
 
   // winner: the likelier side
   if (!out.winner && chance && real(odds.home?.moneyLine) && real(odds.away?.moneyLine)) {
@@ -136,12 +134,15 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, teamM
     };
   }
 
-  // NBA spread: the rest rules (the better-rested side), else the home side
+  // NBA spread: the rest rules (the better-rested side), else the favourite:
+  // always the same team as the moneyline pick
   if (nba && odds.homeSpread !== null && odds.homeSpread !== undefined) {
     const edge = rest ? rest.home - rest.away : null;
     const homeRested = edge !== null && edge >= NBA_REST_EDGE;
     const awayRested = edge !== null && edge <= -NBA_REST_EDGE;
-    const side = awayRested ? 'away' : 'home';
+    // the moneyline favourite, so the spread is always on the moneyline pick's team
+    const fav = favouriteSide(odds) || (odds.homeSpread <= 0 ? 'home' : 'away');
+    const side = awayRested ? 'away' : homeRested ? 'home' : fav;
     const other = side === 'home' ? 'away' : 'home';
     const team = game[side]?.team;
     const line = odds[side]?.spreadLine ?? (side === 'home' ? odds.homeSpread : -odds.homeSpread);
@@ -156,7 +157,7 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, teamM
         ? `Bet ${name(team)} ${fmtLine(line)}: they've had ${rest.home} days off to their visitor's ${rest.away}. A home team with 2+ more days of rest covered 57.5% of the time from 2022 to 2026.`
         : awayRested
           ? `Bet ${name(team)} ${fmtLine(line)}: they've had ${rest[side]} days off to their hosts' ${rest[other]}. A road team with 2+ more days of rest covered 52.5-53.5% of the time in every stretch we tested, 2007 to 2026.`
-          : `Lean ${name(team)} ${fmtLine(line)}: home teams cover a little more often (50.4% since 2022). No rest edge here, so it's a lean, not a bet.`,
+          : `Lean ${name(team)} ${fmtLine(line)}: the same team as the moneyline pick. No rest edge here, and favourites and underdogs cover about equally often, so it's a lean, not a bet.`,
       odds: real(odds[side]?.spreadOdds) ? fmtOdds(odds[side].spreadOdds) : null,
       pick: `${team?.abbreviation} ${fmtLine(line)}`,
       pickAbbr: team?.abbreviation,
@@ -193,7 +194,8 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, teamM
   if (nba && odds.total?.line !== null && odds.total?.line !== undefined) {
     const open = odds.total.openLine;
     const move = open !== null && open !== undefined ? odds.total.line - open : null;
-    const side = move !== null && move <= -NBA_TOTAL_MOVE ? 'under' : 'over';
+    const bigMove = move !== null && Math.abs(move) >= NBA_TOTAL_MOVE;
+    const side = bigMove ? (move > 0 ? 'over' : 'under') : odds.total.line >= NBA_HIGH_TOTAL ? 'under' : 'over';
     const word = side === 'under' ? 'UNDER' : 'OVER';
     out.total = {
       key: 'total',
@@ -202,11 +204,13 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, teamM
       bet: false,
       headline: `${word} ${odds.total.line}`,
       summary:
-        side === 'under'
-          ? `Lean under ${odds.total.line}: the total has dropped ${Math.abs(move)} points since it opened at ${open}, and big drops kept going under. A lean, not a bet.`
-          : move !== null && move >= NBA_TOTAL_MOVE
-            ? `Lean over ${odds.total.line}: the total has climbed ${move} points since it opened at ${open}, and big climbs kept going over. A lean, not a bet.`
-            : `Lean over ${odds.total.line}: NBA games went over slightly more often (50.7% since 2022). A lean, not a bet.`,
+        side === 'under' && !bigMove
+          ? `Lean under ${odds.total.line}: totals of ${NBA_HIGH_TOTAL}+ that haven't moved much went under 52.0% of the time from 2022 to 2026. A lean, not a bet.`
+          : side === 'under'
+            ? `Lean under ${odds.total.line}: the total has dropped ${Math.abs(move)} points since it opened at ${open}, and big drops kept going under. A lean, not a bet.`
+            : move !== null && move >= NBA_TOTAL_MOVE
+              ? `Lean over ${odds.total.line}: the total has climbed ${move} points since it opened at ${open}, and big climbs kept going over. A lean, not a bet.`
+              : `Lean over ${odds.total.line}: totals under ${NBA_HIGH_TOTAL} that haven't moved much went over 52.4% of the time from 2022 to 2026. A lean, not a bet.`,
       odds: real(side === 'under' ? odds.total.underOdds : odds.total.overOdds)
         ? fmtOdds(side === 'under' ? odds.total.underOdds : odds.total.overOdds)
         : null,

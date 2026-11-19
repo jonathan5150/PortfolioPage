@@ -62,3 +62,40 @@ spreads and totals; holdout 2024-25 and 2025-26)
   majority side. Method of victory: 49.3% vs 42.4% for always "decision".
 
 None of this is betting advice: the edges are small and the samples noisy.
+
+## Strategy search (November 2026)
+
+Two Node scripts score whole strategies the way the app's season record does
+(a pick in every market of every game, flat stakes, closing prices):
+
+- `nba/strategies.js` - NBA side-choosing rules over 2022-23..2025-26, with
+  2026-27 to date as the check (`node collect.js 2027` refreshes it).
+- `nfl/replay.js` - replays the app's own NFL picks (`buildLinePicks`, bundled
+  on the fly) over every 2019-2026 regular-season game in `data/`, then tries
+  tweaks on top.
+
+**NBA.** No strategy makes money on every game; every market is within a few
+percent of break-even. The app's spread default (the home team) lost 10.7% a
+pick in 2026-27 (96-109) and the moneyline value side lost more than the
+favourite over 2022-26. Now the moneyline and the spread always go on the
+same team (the side with 2+ more days of rest, else the favourite: -3.1% and
+-3.6% a pick over 2022-26, -2.3% / -3.6% in 2026-27) and totals follow a 3+
+point move either way, else the under at 235+, else the over (-0.5% over
+2022-26, +0.7% in 2026-27, against -1.6% / -1.9%). Taking the favourite on
+the spread whenever the line is 3.5 or less, a team's head-to-head record,
+back-to-backs and fading line moves didn't help.
+
+**NFL.** Three tweaks, each better in 6 of the 8 seasons, together took the
+model from +46.4 to +101.6 units over 2019-25 and from +32.9 to +41.2 in 2026
+to date (1-unit flat stakes, all three markets):
+- line of 3 or less: the moneyline goes on the spread pick's team (-1.0% a
+  pick vs -3.9% for the model's own winner, 673 games);
+- division games: the spread lean is the underdog (53.1% covers);
+- primetime with the underdog at +150 or shorter: the moneyline on the
+  underdog (-2.8% vs -4.2% for the favourite, 145 games).
+Backing a team that won 3 of the last 4 meetings (or fading it), putting the
+spread on the moneyline team, primetime unders and division unders did worse
+or didn't hold up in 2026. Quarterback-vs-defence history isn't in the saved
+data, so it wasn't tested. The team model was trained on 2015-2024, so its
+own moneyline picks look better than they really were in those seasons; the
+tweaks are measured against that, so their gains are if anything understated.

@@ -22,11 +22,11 @@ const marketsFor = (spreadLabel) => MARKETS.map((m) => (m.key === 'spread' ? { .
 // precomputed at build time, see modelGrading.js) and later visits don't
 // refetch anything. Old versions' saved grades are cleared out.
 try {
-  ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7'].forEach((v) =>
+  ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8'].forEach((v) =>
     window.localStorage.removeItem(`nflStatsWizard:gradedPicks:${v}`),
   );
   ['nba', 'mlb'].forEach((lg) => window.localStorage.removeItem(`nflStatsWizard:${lg}GradedPicks:v1`));
-  window.localStorage.removeItem('nflStatsWizard:nbaGradedPicks:v2');
+  ['v2', 'v3'].forEach((v) => window.localStorage.removeItem(`nflStatsWizard:nbaGradedPicks:${v}`));
 } catch {
   // storage blocked
 }

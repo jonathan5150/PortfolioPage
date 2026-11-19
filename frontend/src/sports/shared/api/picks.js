@@ -173,6 +173,86 @@ export const totalBet = ({ game, odds, awayTrends, homeTrends }) => {
 // prediction record but none of them beat the bookmaker's margin, so they
 // aren't bets.
 
+// ---------- matching the moneyline to the spread ----------
+// Replaying every game from 2019 to 2026 (scripts/backtest) found two spots
+// where the moneyline pick should follow something else:
+//   - a line of 3 or less: the game is close to a coin flip, so whoever covers
+//     usually wins too. The moneyline goes with the spread pick (-1.0% a pick
+//     from 2019-25 against -3.9% for the model's own winner, 673 games).
+//   - primetime with the underdog at +150 or shorter: upsets come more often
+//     than the price says (-2.8% a pick against -4.2% for the favourite).
+// Division games put the spread lean on the underdog (53.1% covers). Together
+// these about doubled the model's profit over 2019-25 and added to 2026's.
+export const CLOSE_LINE = 3;
+export const PRIME_DOG_MAX = 150;
+
+const NFL_DIVISIONS = [
+  ['BUF', 'MIA', 'NE', 'NYJ'],
+  ['BAL', 'CIN', 'CLE', 'PIT'],
+  ['HOU', 'IND', 'JAX', 'TEN'],
+  ['DEN', 'KC', 'LV', 'OAK', 'LAC'],
+  ['DAL', 'NYG', 'PHI', 'WSH'],
+  ['CHI', 'DET', 'GB', 'MIN'],
+  ['ATL', 'CAR', 'NO', 'TB'],
+  ['ARI', 'LAR', 'SF', 'SEA'],
+];
+export const isDivisionGame = (game) => {
+  const a = game?.away?.team?.abbreviation;
+  const h = game?.home?.team?.abbreviation;
+  return Boolean(a && h) && NFL_DIVISIONS.some((d) => d.includes(a) && d.includes(h));
+};
+
+// The winner pick put on `side`, with why.
+const winnerOn = (ctx, side, why) => {
+  const [away, home] = sides(ctx);
+  const pick = side === 'home' ? home : away;
+  const other = side === 'home' ? away : home;
+  const dog = pick.ml > other.ml;
+  return {
+    headline: `${pick.nickname} TO WIN`,
+    side,
+    bet: false,
+    upset: dog,
+    summary: why(pick, dog),
+    strong: false,
+    key: 'winner',
+    title: 'WINNER',
+    pick: pick.team?.displayName || pick.abbr,
+    pickAbbr: pick.abbr,
+    odds: `ML ${fmtOdds(pick.ml)}`,
+    confidence: Math.round(100 - impliedProbability(other.ml)),
+    reasons: [],
+  };
+};
+
+// The winner pick after the two rules above, given the spread pick.
+export const matchWinner = (ctx, winner, spread) => {
+  if (!winner) return winner;
+  const [away, home] = sides(ctx);
+  let out = winner;
+  const line = ctx.odds?.homeSpread;
+  if (spread?.side && line !== null && line !== undefined && Math.abs(line) <= CLOSE_LINE && out.side !== spread.side) {
+    out = winnerOn(
+      ctx,
+      spread.side,
+      (pick, dog) =>
+        `${dog ? 'Upset lean' : 'Lean'} ${pick.name}: with the line at ${fmtLine(Math.abs(line))} this is close to a coin flip, so the team we like to cover is the one to win too (${fmtOdds(pick.ml)}). From 2019 to 2025 that beat the model's own winner in close games.`,
+    );
+  }
+  if (isPrimetime(ctx.game) && away.ml !== null && home.ml !== null) {
+    const dog = home.ml > away.ml ? home : away;
+    if (dog.ml <= PRIME_DOG_MAX && out.side !== dog.side) {
+      out = winnerOn(
+        ctx,
+        dog.side,
+        (pick) =>
+          `Upset lean ${pick.name} (${fmtOdds(pick.ml)}): primetime underdogs at +150 or shorter win more often than their price says, from 2019 to 2025. A lean, not a bet.`,
+      );
+    }
+  }
+  return out;
+};
+
 // ---------- winner ----------
 
 export const pickWinner = (ctx) => {
@@ -290,6 +370,25 @@ export const pickSpread = (ctx) => {
   if (homeSpread === null || homeSpread === undefined) return null;
   const [away, home] = sides(ctx);
   const bet = spreadBet(ctx);
+
+  if (!bet && isDivisionGame(ctx.game) && homeSpread !== 0) {
+    // lean: the division underdog (they know each other; the dog covered 53.1%)
+    const dog = homeSpread > 0 ? home : away;
+    return {
+      headline: `${dog.nickname} TO COVER ${fmtLine(dog.line)}`,
+      side: dog.side,
+      bet: false,
+      summary: `Lean ${dog.name} ${fmtLine(dog.line)}: division rivals know each other, and the underdog covered 53.1% of division games from 2019 to 2025. Not strong enough to bet.`,
+      strong: false,
+      key: 'spread',
+      title: 'SPREAD',
+      pick: `${dog.abbr} ${fmtLine(dog.line)}`,
+      pickAbbr: dog.abbr,
+      odds: realPrice(dog.spreadOdds) ? fmtOdds(dog.spreadOdds) : null,
+      confidence: 53,
+      reasons: [],
+    };
+  }
 
   if (!bet) {
     // lean: the road team
@@ -708,7 +807,8 @@ export const touchdownChance = ({ games, position, season, oppId, oppAbbr, ranki
 // Winner, spread and total for the LINES tab.
 export const buildLinePicks = ({ game, odds, predictor, awayTrends, homeTrends, teamModel = null }) => {
   const ctx = { game, odds, predictor, awayTrends, homeTrends, teamModel };
-  return { winner: pickWinner(ctx), spread: pickSpread(ctx), total: pickTotal(ctx) };
+  const spread = pickSpread(ctx);
+  return { winner: matchWinner(ctx, pickWinner(ctx), spread), spread, total: pickTotal(ctx) };
 };
 
 // How a line pick did once the game is final: 'W', 'L', 'P' (push) or null
