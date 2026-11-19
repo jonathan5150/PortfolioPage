@@ -19,8 +19,9 @@ export const betFilters = (spreadLabel) => [
 export const MIN_ODDS = [null, -200, -300, -500];
 export const allowed = (bet, minOdds) => !(minOdds && bet.key === 'winner' && bet.price < minOdds);
 
-// every pick the model makes counts (there's no separate set of "confident" bets)
-export const inScope = (bets) => bets || [];
+// Which picks a record counts: 'all' (every pick: NFL, MLB) or 'bets' (only the
+// picks marked as bets: the NBA's opening-line bets)
+export const inScope = (bets, scope = 'all') => (bets || []).filter((b) => scope === 'all' || b.bet);
 
 // One filter: its title above a gold box showing the current choice; tapping
 // the box opens the phone's own list to pick from. Values are kept as strings

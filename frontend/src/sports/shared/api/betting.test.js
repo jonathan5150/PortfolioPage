@@ -80,7 +80,7 @@ describe('betting parsers', () => {
     expect(odds.homeSpread).toBe(-9.5);
     expect(odds.away).toMatchObject({ spreadLine: 9.5, moneyLine: 400, openMoneyLine: 360, favorite: false });
     expect(odds.home).toMatchObject({ spreadLine: -9.5, moneyLine: -535, spreadOdds: -118, favorite: true });
-    expect(odds.total).toEqual({ line: 48.5, openLine: 41.5, overOdds: -102, underOdds: -118 });
+    expect(odds.total).toMatchObject({ line: 48.5, openLine: 41.5, overOdds: -102, underOdds: -118 });
     expect(parseEventOdds({ items: [] })).toBeNull();
   });
 

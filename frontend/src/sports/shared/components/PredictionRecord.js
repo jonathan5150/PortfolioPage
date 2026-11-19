@@ -26,7 +26,7 @@ try {
     window.localStorage.removeItem(`nflStatsWizard:gradedPicks:${v}`),
   );
   ['nba', 'mlb'].forEach((lg) => window.localStorage.removeItem(`nflStatsWizard:${lg}GradedPicks:v1`));
-  ['v2', 'v3'].forEach((v) => window.localStorage.removeItem(`nflStatsWizard:nbaGradedPicks:${v}`));
+  ['v2', 'v3', 'v4'].forEach((v) => window.localStorage.removeItem(`nflStatsWizard:nbaGradedPicks:${v}`));
 } catch {
   // storage blocked
 }
@@ -298,7 +298,7 @@ export const ModelResults = ({
   return (
     <>
       <ModelSection title={`THIS ${period}'S RESULTS`}>
-        <div className="prediction-record-title">PREDICTION RECORD</div>
+        <div className="prediction-record-title">PREDICTION RECORD{scope === 'bets' ? ' · BETS ONLY' : ''}</div>
         {!finished.length ? (
           <div className="prediction-record-loading">No finished games this {word} yet.</div>
         ) : !graded.data ? (

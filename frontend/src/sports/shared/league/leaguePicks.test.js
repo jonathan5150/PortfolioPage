@@ -62,6 +62,37 @@ describe('league picks (NBA / MLB)', () => {
     expect(total({ openLine: 221 })).toBe('over');
   });
 
+  it('NBA: the rest bet is made and graded at the opening line and price', () => {
+    const opened = {
+      ...odds,
+      home: { ...odds.home, openSpreadLine: -4.5, openSpreadOdds: -105 },
+      away: { ...odds.away, openSpreadLine: 4.5, openSpreadOdds: -115 },
+    };
+    const picks = buildLeaguePicks({ lg: 'nba', game: game(), odds: opened, predictor: null, rest: { home: 3, away: 1 } });
+    expect(picks.spread).toMatchObject({ side: 'home', bet: true, atOpen: true, headline: 'KNICKS -4.5', odds: '-105' });
+    // Knicks by 5: a cover at the opener (-4.5), a loss at the close (-6.5)
+    const final = game('post', 100, 105);
+    const ticket = linePickBets(picks, final, opened).find((t) => t.key === 'spread');
+    expect(ticket).toMatchObject({ label: 'NY -4.5', price: -105, result: 'W', bet: true });
+  });
+
+  it('NBA totals bet: our scoring ratings 6+ points off the opening total, at the opener', () => {
+    const opened = { ...odds, total: { ...odds.total, openLine: 219.5, openOverOdds: -112, openUnderOdds: -108 } };
+    const pick = (scoring) => buildLeaguePicks({ lg: 'nba', game: game(), odds: opened, predictor: null, scoring }).total;
+    expect(pick({ total: 227, homeGames: 12, awayGames: 11 })).toMatchObject({ side: 'over', bet: true, atOpen: true, headline: 'OVER 219.5', odds: '-112' });
+    expect(pick({ total: 212, homeGames: 12, awayGames: 11 })).toMatchObject({ side: 'under', bet: true });
+    // only 5 points off, or too early in the season: a lean
+    expect(pick({ total: 224.5, homeGames: 12, awayGames: 11 }).bet).toBe(false);
+    expect(pick({ total: 230, homeGames: 12, awayGames: 9 }).bet).toBe(false);
+    // graded at the opening total: 222 points is over 219.5 (but under the 221.5 close)
+    const ticket = linePickBets(
+      buildLeaguePicks({ lg: 'nba', game: game(), odds: opened, predictor: null, scoring: { total: 227, homeGames: 12, awayGames: 11 } }),
+      game('post', 110, 112),
+      opened,
+    ).find((t) => t.key === 'total');
+    expect(ticket).toMatchObject({ label: 'OVER 219.5', price: -112, result: 'W', bet: true });
+  });
+
   it('rest days come from the earlier games', () => {
     const g = { date: '2026-11-10T00:00Z', home: { teamId: '1' }, away: { teamId: '2' } };
     const earlier = [

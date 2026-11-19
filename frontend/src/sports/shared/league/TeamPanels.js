@@ -25,7 +25,7 @@ import {
   peekLeagueSummary,
 } from './leagueApi';
 import { buildLeaguePicks, restDays, scheduleGames } from './leaguePicks';
-import { loadTeamModel } from '../api/teamModels';
+import { loadNbaScoring, scoringFor } from './nbaScoring';
 
 const accent = (team) => washOut(getTeamColor(team) || 'rgba(120,120,120,0.6)', 0.15).replace(/[\d.]+\)$/, '1)');
 const LIVE_REFRESH_MS = 20000;
@@ -85,11 +85,12 @@ export const useLinesData = (lg, game, enabled) => {
     [lg, game.id],
     { enabled: enabled && lg === 'nba', keepPrevious: true },
   );
-  const teamModel = useAsyncData(() => loadTeamModel(lg), [lg], {
+  // NBA: this season's results league-wide, for the scoring ratings behind the totals bet
+  const scoring = useAsyncData(() => loadNbaScoring(), [lg], {
     enabled: enabled && lg === 'nba',
     keepPrevious: true,
   });
-  return { lines, liveLines, rest, teamModel, mode, setMode };
+  return { lines, liveLines, rest, scoring, mode, setMode };
 };
 
 // Hold a line to add it to the parlay (games that haven't finished).
@@ -181,7 +182,7 @@ const PickCard = ({ pick, game, grade, leg }) => {
 
 // data: useLinesData, kept by the game card so it's on hand before LINES opens
 export const LinesPanel = ({ lg, game, data }) => {
-  const { lines, liveLines, rest, teamModel, mode, setMode } = data;
+  const { lines, liveLines, rest, scoring, mode, setMode } = data;
   const odds = lines.data?.odds;
   const predictor = lines.data?.predictor;
   const isLive = game.status.state === 'in';
@@ -189,8 +190,11 @@ export const LinesPanel = ({ lg, game, data }) => {
   const tableOdds = !isLive ? odds : showLive ? liveLines.data?.live : liveLines.data?.pregame || odds;
   const chance = showLive ? game.situation?.winProbability || null : predictor;
   const picks = useMemo(
-    () => (odds ? buildLeaguePicks({ lg, game, odds, predictor, rest: rest.data, teamModel: teamModel.data }) : null),
-    [lg, game, odds, predictor, rest.data, teamModel.data],
+    () =>
+      odds
+        ? buildLeaguePicks({ lg, game, odds, predictor, rest: rest.data, scoring: scoringFor(scoring.data, game) })
+        : null,
+    [lg, game, odds, predictor, rest.data, scoring.data],
   );
   const grades = useMemo(
     () => (picks && game.status.state === 'post' ? gradeLinePicks(picks, game, odds) : null),

@@ -45,6 +45,7 @@ const parseOddsSide = (t, fallbackSpread) => ({
   spreadLine: num(t?.current?.pointSpread?.american) ?? fallbackSpread,
   openSpreadLine: num(t?.open?.pointSpread?.american),
   spreadOdds: num(t?.spreadOdds ?? t?.current?.spread?.american),
+  openSpreadOdds: num(t?.open?.spread?.american),
 });
 
 // DraftKings bet-slip links in ESPN's odds item, keyed by their rel.
@@ -96,6 +97,8 @@ export const parseEventOdds = (json) => {
       openLine: num(item.open?.total?.american),
       overOdds: num(item.overOdds ?? item.current?.over?.american),
       underOdds: num(item.underOdds ?? item.current?.under?.american),
+      openOverOdds: num(item.open?.over?.american),
+      openUnderOdds: num(item.open?.under?.american),
     },
     links: parseOddsLinks(item.links),
   };

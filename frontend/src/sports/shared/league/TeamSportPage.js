@@ -89,7 +89,7 @@ const dayLabel = (key) =>
 // ---------- model results: the NFL panel, graded with this league's engine ----------
 
 const MODEL_NOTES = {
-  nba: "BETS: the better-rested team on the spread when it's had 2+ more days off (home teams covered 57.5% from 2022-26; road teams 52.5-53.5% in every stretch from 2007). Everything else is a lean: no moneyline or total rule beat the closing prices, so EVERY PICK includes picks we wouldn't bet.",
+  nba: 'The NBA record counts only BETS, made and graded at the opening line, because against the closing line nothing beat the market over 12 seasons. Totals: our scoring ratings 6+ points off the opening total (524-401, +6.7% over the six seasons with saved openers, positive in every one). Spread: the side with 2+ more days of rest (319-266, +4.3%). The lines moved toward these picks about two times in three, so bet early. Every other pick is a lean and not counted.',
   mlb: "The MLB picks are leans from ESPN's model and the betting market. They haven't been backtested like the NFL and NBA models yet.",
 };
 
@@ -497,6 +497,8 @@ const TeamSportPage = ({ lg }) => {
                       <ModelResults
                         games={games}
                         stake={unit}
+                        // the NBA record counts only its opening-line bets
+                        scope={lg === 'nba' ? 'bets' : 'all'}
                         filter={filter}
                         minOdds={minOdds}
                         gradeGame={graderFor(lg)}

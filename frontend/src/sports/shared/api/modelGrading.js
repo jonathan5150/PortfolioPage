@@ -12,14 +12,14 @@ import { gradeLinePicks, linePickBets, linePickTickets } from './picks';
 import { getNflLinePicks } from './bettingService';
 import { getEarlierGames, getLeagueOdds, getLeaguePredictor, getSeasonFinished } from '../league/leagueApi';
 import { buildLeaguePicks, restDays } from '../league/leaguePicks';
-import { loadTeamModel } from './teamModels';
+import { loadNbaScoring, scoringFor } from '../league/nbaScoring';
 
 // Bump a league's version when its pick rules or grading change: saved grades
 // (this device's localStorage and the precomputed files) under an old version
 // are ignored.
 export const GRADES_KEYS = {
   nfl: 'gradedPicks:v9',
-  nba: 'nbaGradedPicks:v4',
+  nba: 'nbaGradedPicks:v5',
   mlb: 'mlbGradedPicks:v2',
 };
 
@@ -28,15 +28,16 @@ export const GRADES_KEYS = {
 // { picks, lines } for an NBA / MLB game, from what was known before it started
 const leagueLinePicks = async (lg, game) => {
   const started = game.status?.state !== 'pre';
-  const [odds, predictor, earlier, teamModel] = await Promise.all([
+  const [odds, predictor, earlier, scoringData] = await Promise.all([
     getLeagueOdds(lg, game.id, { final: started }).catch(() => null),
     getLeaguePredictor(lg, game.id).catch(() => null),
     lg === 'nba' ? getEarlierGames(lg, game).catch(() => []) : [],
-    loadTeamModel(lg).catch(() => null),
+    lg === 'nba' ? loadNbaScoring().catch(() => null) : null,
   ]);
   if (!odds) return null;
   const rest = lg === 'nba' ? restDays(game, earlier) : null;
-  const picks = buildLeaguePicks({ lg, game, odds, predictor, rest, teamModel });
+  const scoring = lg === 'nba' ? scoringFor(scoringData, game) : null;
+  const picks = buildLeaguePicks({ lg, game, odds, predictor, rest, scoring });
   return picks ? { picks, lines: odds } : null;
 };
 

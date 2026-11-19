@@ -811,6 +811,21 @@ export const buildLinePicks = ({ game, odds, predictor, awayTrends, homeTrends, 
   return { winner: matchWinner(ctx, pickWinner(ctx), spread), spread, total: pickTotal(ctx) };
 };
 
+// The line a pick is graded against: the opening line for picks made at the
+// open (atOpen: the NBA bets), otherwise the closing line.
+export const pickLine = (pick, odds) => {
+  if (!pick) return null;
+  if (pick.key === 'spread') {
+    const open = odds?.[pick.side]?.openSpreadLine;
+    return pick.atOpen && open !== null && open !== undefined ? open : (odds?.[pick.side]?.spreadLine ?? null);
+  }
+  if (pick.key === 'total') {
+    const open = odds?.total?.openLine;
+    return pick.atOpen && open !== null && open !== undefined ? open : (odds?.total?.line ?? null);
+  }
+  return null;
+};
+
 // How a line pick did once the game is final: 'W', 'L', 'P' (push) or null
 // when there's no score or line to grade it against.
 export const gradeLinePick = (pick, game, odds) => {
@@ -824,13 +839,13 @@ export const gradeLinePick = (pick, game, odds) => {
     return result(score[pick.side] - score[other]);
   }
   if (pick.key === 'spread') {
-    const line = odds?.[pick.side]?.spreadLine;
+    const line = pickLine(pick, odds);
     if (line === null || line === undefined) return null;
     const other = pick.side === 'away' ? 'home' : 'away';
     return result(score[pick.side] - score[other] + Number(line));
   }
   if (pick.key === 'total') {
-    const line = odds?.total?.line;
+    const line = pickLine(pick, odds);
     if (line === null || line === undefined) return null;
     const diff = score.away + score.home - Number(line);
     return result(pick.side === 'over' ? diff : -diff);
@@ -882,6 +897,8 @@ export const linePickTickets = (linePicks, game, odds) => {
   const total = live(linePicks.total);
   const real = (n) => n !== null && n !== undefined && Math.abs(n) >= 100;
   const priceOr = (n) => (real(n) ? n : STANDARD_PRICE);
+  // picks made at the open are priced at the opening price when ESPN kept it
+  const openOr = (pick, open, current) => priceOr(pick.atOpen && real(open) ? open : current);
   return [
     winner &&
       real(odds?.[winner.side]?.moneyLine) &&
@@ -889,14 +906,18 @@ export const linePickTickets = (linePicks, game, odds) => {
     spread &&
       bet(
         'spread',
-        `${abbr(spread.side)} ${fmtLine(odds?.[spread.side]?.spreadLine)}`,
-        priceOr(odds?.[spread.side]?.spreadOdds),
+        `${abbr(spread.side)} ${fmtLine(pickLine(spread, odds))}`,
+        openOr(spread, odds?.[spread.side]?.openSpreadOdds, odds?.[spread.side]?.spreadOdds),
       ),
     total &&
       bet(
         'total',
-        `${total.side === 'over' ? 'OVER' : 'UNDER'} ${odds?.total?.line ?? ''}`.trim(),
-        priceOr(total.side === 'over' ? odds?.total?.overOdds : odds?.total?.underOdds),
+        `${total.side === 'over' ? 'OVER' : 'UNDER'} ${pickLine(total, odds) ?? ''}`.trim(),
+        openOr(
+          total,
+          total.side === 'over' ? odds?.total?.openOverOdds : odds?.total?.openUnderOdds,
+          total.side === 'over' ? odds?.total?.overOdds : odds?.total?.underOdds,
+        ),
       ),
   ].filter(Boolean);
 };
