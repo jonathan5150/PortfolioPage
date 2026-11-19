@@ -6,18 +6,10 @@
 //   away points = mu + offence(away) - defence(home) - homeEdge/2
 // shrunk toward half of last season's final ratings (public/models/
 // nba-od-prior.json), so a team's first weeks lean on last season. The game's
-// projected total is the two projected scores added up.
-//
-// At the OPENING line, a total our projection beat by 6+ points (both teams 10+
-// games in) went our way 524-401 (+6.7% at the opening prices) over the six
-// seasons with saved openers, positive in every one, and the line moved toward
-// our side 69% of the time before tip-off. Against the closing line the same
-// gap is worth nothing: the market has caught up by then.
+// projected total is the two projected scores added up; the NBA total bet
+// (leaguePicks.js) takes the under when it's 2+ points below the opening total.
 import { fetchJson } from '../api/http';
 import { getSeasonFinished } from './leagueApi';
-
-export const NBA_TOTAL_EDGE = 6; // points between our projection and the opening total
-export const NBA_MIN_GAMES = 10; // games each team has played before we trust the ratings
 
 const LAMBDA = 10;
 const PRIOR_SHARE = 0.5;

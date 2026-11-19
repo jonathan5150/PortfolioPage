@@ -19,7 +19,7 @@ describe('league picks (NBA / MLB)', () => {
     const even = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 2, away: 2 } });
     expect(even.winner).toMatchObject({ side: 'home', headline: 'KNICKS TO WIN', odds: 'ML -250' });
     expect(even.spread.side).toBe('home');
-    // the Bucks have had 3 more days off: both picks move to them, an upset lean
+    // the Bucks have had 3 more days off: both picks move to them, an upset
     const rested = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 1, away: 4 } });
     expect(rested.winner).toMatchObject({ side: 'away', upset: true, headline: 'BUCKS TO WIN', odds: 'ML +205' });
     expect(rested.spread).toMatchObject({ side: 'away', bet: true });
@@ -31,35 +31,58 @@ describe('league picks (NBA / MLB)', () => {
     expect(winChance({ odds, predictor: null }).home).toBeCloseTo(both.market, 5);
   });
 
-  it('makes a lean (never a bet) in all three markets', () => {
+  it('NBA bets all three markets; MLB leans', () => {
     const picks = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: { home: 70, away: 30 } });
-    expect(picks.winner).toMatchObject({ side: 'home', bet: false, headline: 'KNICKS TO WIN', odds: 'ML -250' });
-    expect(picks.spread.bet).toBe(false);
-    expect(picks.spread.title).toBe('SPREAD');
-    expect(picks.total).toMatchObject({ side: 'over', bet: false });
+    expect(picks.winner).toMatchObject({ side: 'home', bet: true, headline: 'KNICKS TO WIN', odds: 'ML -250' });
+    expect(picks.spread).toMatchObject({ side: 'home', bet: true, title: 'SPREAD' });
+    expect(picks.total).toMatchObject({ side: 'over', bet: true });
     const mlb = buildLeaguePicks({ lg: 'mlb', game: game(), odds, predictor: null });
-    expect(mlb.spread.title).toBe('RUN LINE');
+    expect(mlb.winner.bet).toBe(false);
+    expect(mlb.spread).toMatchObject({ title: 'RUN LINE', bet: false });
     expect(mlb.total).toMatchObject({ side: 'under', bet: false });
   });
 
-  it('NBA: bets the home team with 2+ more days of rest, else leans home', () => {
+  it('NBA: the better-rested side (2+ more days), else the opening favourite', () => {
     const rested = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 3, away: 1 } });
     expect(rested.spread).toMatchObject({ side: 'home', bet: true });
     const awayRested = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 1, away: 4 } });
     expect(awayRested.spread).toMatchObject({ side: 'away', bet: true });
     const even = buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, rest: { home: 2, away: 1 } });
-    expect(even.spread).toMatchObject({ side: 'home', bet: false });
+    expect(even.spread).toMatchObject({ side: 'home', bet: true });
+    // the Knicks are favoured now, but the Bucks opened as the favourite
+    const flipped = {
+      ...odds,
+      home: { ...odds.home, openSpreadLine: 1.5, openMoneyLine: 110 },
+      away: { ...odds.away, openSpreadLine: -1.5, openMoneyLine: -130 },
+    };
+    const opener = buildLeaguePicks({ lg: 'nba', game: game(), odds: flipped, predictor: null, rest: { home: 2, away: 2 } });
+    expect(opener.winner).toMatchObject({ side: 'away', bet: true, atOpen: true, odds: 'ML -130' });
+    expect(opener.spread).toMatchObject({ side: 'away', headline: 'BUCKS -1.5', atOpen: true });
   });
 
-  it('NBA totals: follow a 3+ point move either way, else the under at 235+, else the over', () => {
-    const total = (t) =>
-      buildLeaguePicks({ lg: 'nba', game: game(), odds: { ...odds, total: { ...odds.total, ...t } }, predictor: null })
-        .total.side;
-    expect(total({ openLine: 225.5 })).toBe('under'); // dropped 4
-    expect(total({ openLine: 217.5 })).toBe('over'); // climbed 4
-    expect(total({ line: 238.5, openLine: 237.5 })).toBe('under'); // high, barely moved
-    expect(total({ line: 238.5, openLine: 234.5 })).toBe('over'); // high, but climbed 4
-    expect(total({ openLine: 221 })).toBe('over');
+  it('NBA totals: the under when our ratings are 2+ under the opener, else the over', () => {
+    const opened = { ...odds, total: { ...odds.total, openLine: 219.5, openOverOdds: -112, openUnderOdds: -108 } };
+    const pick = (scoring) => buildLeaguePicks({ lg: 'nba', game: game(), odds: opened, predictor: null, scoring }).total;
+    expect(pick({ total: 217.5, homeGames: 3, awayGames: 4 })).toMatchObject({ side: 'under', bet: true, atOpen: true, headline: 'UNDER 219.5', odds: '-108' });
+    expect(pick({ total: 218, homeGames: 12, awayGames: 11 })).toMatchObject({ side: 'over', bet: true, headline: 'OVER 219.5', odds: '-112' });
+    expect(pick({ total: 230, homeGames: 12, awayGames: 11 }).side).toBe('over');
+    expect(pick(null).side).toBe('over');
+    // no opener saved: the current total
+    expect(buildLeaguePicks({ lg: 'nba', game: game(), odds, predictor: null, scoring: { total: 215 } }).total).toMatchObject({ side: 'under', atOpen: false, headline: 'UNDER 221.5' });
+    // graded at the opening total: 220 points is over 219.5 (but under the 221.5 close)
+    const ticket = linePickBets(
+      buildLeaguePicks({ lg: 'nba', game: game(), odds: opened, predictor: null, scoring: { total: 225 } }),
+      game('post', 108, 112),
+      opened,
+    ).find((t) => t.key === 'total');
+    expect(ticket).toMatchObject({ label: 'OVER 219.5', price: -112, result: 'W', bet: true });
+  });
+
+  it('NBA: the moneyline is priced at the opener', () => {
+    const opened = { ...odds, home: { ...odds.home, openMoneyLine: -220, openSpreadLine: -5.5 }, away: { ...odds.away, openMoneyLine: 180, openSpreadLine: 5.5 } };
+    const picks = buildLeaguePicks({ lg: 'nba', game: game(), odds: opened, predictor: null });
+    const ticket = linePickBets(picks, game('post', 100, 110), opened).find((t) => t.key === 'winner');
+    expect(ticket).toMatchObject({ label: 'NY ML', price: -220, result: 'W', bet: true });
   });
 
   it('NBA: the rest bet is made and graded at the opening line and price', () => {
@@ -74,23 +97,6 @@ describe('league picks (NBA / MLB)', () => {
     const final = game('post', 100, 105);
     const ticket = linePickBets(picks, final, opened).find((t) => t.key === 'spread');
     expect(ticket).toMatchObject({ label: 'NY -4.5', price: -105, result: 'W', bet: true });
-  });
-
-  it('NBA totals bet: our scoring ratings 6+ points off the opening total, at the opener', () => {
-    const opened = { ...odds, total: { ...odds.total, openLine: 219.5, openOverOdds: -112, openUnderOdds: -108 } };
-    const pick = (scoring) => buildLeaguePicks({ lg: 'nba', game: game(), odds: opened, predictor: null, scoring }).total;
-    expect(pick({ total: 227, homeGames: 12, awayGames: 11 })).toMatchObject({ side: 'over', bet: true, atOpen: true, headline: 'OVER 219.5', odds: '-112' });
-    expect(pick({ total: 212, homeGames: 12, awayGames: 11 })).toMatchObject({ side: 'under', bet: true });
-    // only 5 points off, or too early in the season: a lean
-    expect(pick({ total: 224.5, homeGames: 12, awayGames: 11 }).bet).toBe(false);
-    expect(pick({ total: 230, homeGames: 12, awayGames: 9 }).bet).toBe(false);
-    // graded at the opening total: 222 points is over 219.5 (but under the 221.5 close)
-    const ticket = linePickBets(
-      buildLeaguePicks({ lg: 'nba', game: game(), odds: opened, predictor: null, scoring: { total: 227, homeGames: 12, awayGames: 11 } }),
-      game('post', 110, 112),
-      opened,
-    ).find((t) => t.key === 'total');
-    expect(ticket).toMatchObject({ label: 'OVER 219.5', price: -112, result: 'W', bet: true });
   });
 
   it('rest days come from the earlier games', () => {

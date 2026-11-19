@@ -812,7 +812,7 @@ export const buildLinePicks = ({ game, odds, predictor, awayTrends, homeTrends, 
 };
 
 // The line a pick is graded against: the opening line for picks made at the
-// open (atOpen: the NBA bets), otherwise the closing line.
+// open (atOpen: the NBA picks), otherwise the closing line.
 export const pickLine = (pick, odds) => {
   if (!pick) return null;
   if (pick.key === 'spread') {
@@ -901,8 +901,14 @@ export const linePickTickets = (linePicks, game, odds) => {
   const openOr = (pick, open, current) => priceOr(pick.atOpen && real(open) ? open : current);
   return [
     winner &&
-      real(odds?.[winner.side]?.moneyLine) &&
-      bet('winner', `${abbr(winner.side)} ML`, odds[winner.side].moneyLine),
+      (real(odds?.[winner.side]?.moneyLine) || (winner.atOpen && real(odds?.[winner.side]?.openMoneyLine))) &&
+      bet(
+        'winner',
+        `${abbr(winner.side)} ML`,
+        winner.atOpen && real(odds?.[winner.side]?.openMoneyLine)
+          ? odds[winner.side].openMoneyLine
+          : odds[winner.side].moneyLine,
+      ),
     spread &&
       bet(
         'spread',

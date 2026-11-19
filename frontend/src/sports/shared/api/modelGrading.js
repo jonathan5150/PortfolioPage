@@ -19,7 +19,7 @@ import { loadNbaScoring, scoringFor } from '../league/nbaScoring';
 // are ignored.
 export const GRADES_KEYS = {
   nfl: 'gradedPicks:v9',
-  nba: 'nbaGradedPicks:v5',
+  nba: 'nbaGradedPicks:v6',
   mlb: 'mlbGradedPicks:v2',
 };
 

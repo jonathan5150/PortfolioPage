@@ -201,7 +201,10 @@ export const LinesPanel = ({ lg, game, data }) => {
     [picks, game, odds],
   );
   const toggle = isLive ? <LinesModeToggle mode={mode} onChange={setMode} /> : null;
-  if (lines.loading && !lines.data) return <div className="bet-message">Loading lines…</div>;
+  // NBA picks depend on rest and the scoring ratings: wait for them so a pick
+  // never shows and then switches sides
+  const nbaWaiting = lg === 'nba' && ((rest.loading && !rest.data) || (scoring.loading && !scoring.data));
+  if ((lines.loading && !lines.data) || nbaWaiting) return <div className="bet-message">Loading lines…</div>;
   if (!odds && !(showLive && tableOdds)) {
     return (
       <>

@@ -3,25 +3,24 @@
 // LEAN (`bet: false`). Win chance: a 25/75 blend of ESPN's model and the
 // betting market, or the market alone when ESPN has no model.
 //
-// NBA (scripts/backtest/nba, re-run November 2026, 12 seasons): against the
-// closing line nothing makes money, on every game or on any rule that held up
-// out of sample: the market has caught up by tip-off. Against the OPENING line
-// two spots did, and they are the NBA's BETs, made and graded at the opener
-// (atOpen; the season record counts only these):
-//   total  - our scoring ratings (nbaScoring.js) 6+ points off the opening total:
-//            524-401, +6.7% at the opening prices over the six seasons with
-//            saved openers, positive in every one; the line then moved our
-//            way 69% of the time.
-//   spread - the side with 2+ more days of rest: 319-266, +4.3%, the line
-//            moving toward them 67% of the time.
-// Everything else is a LEAN that doesn't count, with the moneyline and the
-// spread always on the same team (the better-rested side, else the favourite)
-// and totals following a 3+ point move, else the under at 235+, else the over.
+// NBA (scripts/backtest/nba/opening, re-run November 2026): all three markets
+// are BETs on every game, made and graded at the opening line and price
+// (atOpen). Against the closing line nothing beat the market over 12 seasons;
+// at the opener these rules lost the least over the six seasons with saved
+// openers (2016-17, 2024-2027; moneylines 2024 on):
+//   spread    - the side with 2+ more days of rest (319-266, +4.3%), else the
+//               opening favourite (2850-2742, -2.2%).
+//   moneyline - the same team as the spread pick (rest 185-150, +1.7%;
+//               favourite 2385-1101, -2.7%).
+//   total     - the under when our scoring ratings (nbaScoring.js) project 2+
+//               points below the opening total (1148-1018, +0.5%), else the
+//               over (2070-1970, -2.6%).
+// All together: -1.8% a bet over 16,000, against about -4.5% for betting
+// sides blindly, and +0.2% this season so far.
 // MLB hasn't been backtested yet: all leans.
 import { fmtLine, fmtOdds } from '../api/betting';
 import { marketHomeProbability } from '../api/picks';
 import { LEAGUES } from './leagueApi';
-import { NBA_MIN_GAMES, NBA_TOTAL_EDGE } from './nbaScoring';
 
 const real = (n) => n !== null && n !== undefined && Math.abs(n) >= 100;
 const clamp = (p) => Math.min(Math.max(p, 1), 99);
@@ -39,8 +38,7 @@ export const winChance = ({ odds, predictor }) => {
 
 // NBA rule thresholds (see above)
 export const NBA_REST_EDGE = 2;
-export const NBA_TOTAL_MOVE = 3;
-export const NBA_HIGH_TOTAL = 235;
+export const NBA_UNDER_EDGE = 2; // points our projection must be below the opening total for the under
 
 // Days since each team's last game before `game` (7 when there wasn't one
 // this season), from a list of earlier games: [{ date, homeId, awayId }].
@@ -80,6 +78,16 @@ const favouriteSide = (odds) =>
       : 'away'
     : null;
 
+// NBA: the favourite at the opening line (by the home team's opening spread,
+// a pick'em counting as the away side, as the backtest did), else by the
+// current prices or line.
+const openFavourite = (odds) => {
+  const open = odds?.home?.openSpreadLine;
+  if (open !== null && open !== undefined) return open < 0 ? 'home' : 'away';
+  if (favouriteSide(odds)) return favouriteSide(odds);
+  return odds?.homeSpread !== null && odds?.homeSpread !== undefined ? (odds.homeSpread <= 0 ? 'home' : 'away') : null;
+};
+
 // scoring: the NBA projected total and games played (nbaScoring.js scoringFor), or null
 export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, scoring = null }) => {
   const league = LEAGUES[lg];
@@ -88,26 +96,30 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, scori
   const out = { winner: null, spread: null, total: null };
   if (!odds) return out;
 
-  // NBA winner: the better-rested team, else the favourite (and the spread
-  // pick below goes on the same team)
-  const nbaSide = nba ? restedSide(rest) || favouriteSide(odds) : null;
+  // NBA winner BET: the better-rested team, else the opening favourite, at the
+  // opening price (and the spread bet below goes on the same team)
+  const nbaSide = nba ? restedSide(rest) || openFavourite(odds) : null;
   if (nbaSide) {
     const side = nbaSide;
     const other = side === 'home' ? 'away' : 'home';
     const team = game[side]?.team;
     const rested = restedSide(rest) === side;
-    const dog = odds[side].moneyLine > odds[other].moneyLine;
+    const atOpen = real(odds[side]?.openMoneyLine);
+    const price = (s) => (atOpen && real(odds[s]?.openMoneyLine) ? odds[s].openMoneyLine : odds[s]?.moneyLine);
+    const dog = real(price(side)) && real(price(other)) && price(side) > price(other);
+    const at = real(price(side)) ? ` at ${atOpen ? 'the opening price, ' : ''}${fmtOdds(price(side))}` : '';
     out.winner = {
       key: 'winner',
       title: 'WINNER',
       side,
-      bet: false,
+      bet: true,
+      atOpen,
       upset: dog,
       headline: `${nick(team)} TO WIN`,
       summary: rested
-        ? `${dog ? 'Upset lean' : 'Lean'} ${name(team)}: they've had ${rest[side]} days off to their opponent's ${rest[other]}. A team with 2+ more days of rest won 58% of the time from 2022 to 2026, more than its prices said.`
-        : `Lean ${name(team)}: the favourite (${fmtOdds(odds[side].moneyLine)}) won 68% of NBA games from 2022 to 2026. Taking the underdog lost more.`,
-      odds: `ML ${fmtOdds(odds[side].moneyLine)}`,
+        ? `Bet ${name(team)}${at}: they've had ${rest[side]} days off to their opponent's ${rest[other]}. The better-rested side won 185-150 (+1.7%) at the opening prices from 2024 to 2027, so the earlier the better.`
+        : `Bet ${name(team)}${at}: the opening favourite, the same team as the spread pick. Favourites won 68% of NBA games at the opening prices from 2024 to 2027 (2385-1101), just short of what those prices cost (-2.7%).`,
+      odds: real(price(side)) ? `ML ${fmtOdds(price(side))}` : null,
       pick: team?.displayName || team?.abbreviation,
       pickAbbr: team?.abbreviation,
     };
@@ -138,22 +150,17 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, scori
     };
   }
 
-  // NBA spread: the rest rules (the better-rested side), else the favourite:
-  // always the same team as the moneyline pick
+  // NBA spread BET at the opening line: the better-rested side, else the
+  // opening favourite (always the moneyline pick's team)
   if (nba && odds.homeSpread !== null && odds.homeSpread !== undefined) {
-    const edge = rest ? rest.home - rest.away : null;
-    const homeRested = edge !== null && edge >= NBA_REST_EDGE;
-    const awayRested = edge !== null && edge <= -NBA_REST_EDGE;
-    // the moneyline favourite, so the spread is always on the moneyline pick's team
-    const fav = favouriteSide(odds) || (odds.homeSpread <= 0 ? 'home' : 'away');
-    const side = awayRested ? 'away' : homeRested ? 'home' : fav;
+    const side = nbaSide || (odds.homeSpread <= 0 ? 'home' : 'away');
     const other = side === 'home' ? 'away' : 'home';
     const team = game[side]?.team;
+    const rested = restedSide(rest) === side;
     const current = odds[side]?.spreadLine ?? (side === 'home' ? odds.homeSpread : -odds.homeSpread);
-    const isBet = homeRested || awayRested;
     // the bet is at the opening line (and price) when ESPN kept it
     const opener = odds[side]?.openSpreadLine;
-    const atOpen = isBet && opener !== null && opener !== undefined;
+    const atOpen = opener !== null && opener !== undefined;
     const line = atOpen ? opener : current;
     const price = atOpen && real(odds[side]?.openSpreadOdds) ? odds[side].openSpreadOdds : odds[side]?.spreadOdds;
     const nowText = atOpen && opener !== current ? ` (opened ${fmtLine(opener)}, now ${fmtLine(current)})` : '';
@@ -161,12 +168,12 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, scori
       key: 'spread',
       title: league.lineLabel,
       side,
-      bet: isBet,
+      bet: true,
       atOpen,
       headline: `${nick(team)} ${fmtLine(line)}`,
-      summary: isBet
+      summary: rested
         ? `Bet ${name(team)} ${fmtLine(line)}${atOpen ? ' at the opening line' : ''}${nowText}: they've had ${rest[side]} days off to their opponent's ${rest[other]}. At the opening line the better-rested side covered 319-266 (+4.3%) over the six seasons with saved openers, and the line moved toward them 67% of the time, so the earlier the better.`
-        : `Lean ${name(team)} ${fmtLine(line)}: the same team as the moneyline pick. No rest edge here, and favourites and underdogs cover about equally often, so it's a lean, not a bet.`,
+        : `Bet ${name(team)} ${fmtLine(line)}${atOpen ? ' at the opening line' : ''}${nowText}: the opening favourite, the same team as the moneyline pick. Opening favourites covered 2850-2742 (51%) over the six seasons with saved openers, just short of beating the prices (-2.2%), and better than the underdogs (-6.7%).`,
       odds: real(price) ? fmtOdds(price) : null,
       pick: `${team?.abbreviation} ${fmtLine(line)}`,
       pickAbbr: team?.abbreviation,
@@ -199,52 +206,33 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, scori
     };
   }
 
-  // NBA total BET: our scoring ratings 6+ points off the opening total
-  const openTotal = odds.total?.openLine;
-  const enough = scoring && scoring.homeGames >= NBA_MIN_GAMES && scoring.awayGames >= NBA_MIN_GAMES;
-  if (nba && enough && openTotal !== null && openTotal !== undefined && Math.abs(scoring.total - openTotal) >= NBA_TOTAL_EDGE) {
-    const side = scoring.total > openTotal ? 'over' : 'under';
+  // NBA total BET at the opening total: the under when our scoring ratings
+  // project 2+ points below it, else the over
+  const tl = odds.total;
+  const atOpenTotal = tl?.openLine !== null && tl?.openLine !== undefined;
+  const totalLine = atOpenTotal ? tl.openLine : tl?.line;
+  if (nba && totalLine !== null && totalLine !== undefined) {
+    const projected = scoring && Number.isFinite(scoring.total) ? scoring.total : null;
+    const side = projected !== null && projected - totalLine <= -NBA_UNDER_EDGE ? 'under' : 'over';
     const word = side === 'under' ? 'UNDER' : 'OVER';
-    const price = side === 'under' ? odds.total.openUnderOdds ?? odds.total.underOdds : odds.total.openOverOdds ?? odds.total.overOdds;
-    const now = odds.total.line;
+    const openPrice = side === 'under' ? tl.openUnderOdds : tl.openOverOdds;
+    const price = atOpenTotal && real(openPrice) ? openPrice : side === 'under' ? tl.underOdds : tl.overOdds;
+    const now = tl.line;
+    const at = `${atOpenTotal ? 'at the opening total of ' : ''}${totalLine}${atOpenTotal && now !== null && now !== undefined && now !== totalLine ? ` (now ${now})` : ''}`;
+    const proj = projected !== null ? `our scoring ratings project about ${Math.round(projected)} points` : null;
     out.total = {
       key: 'total',
       title: 'OVER/UNDER',
       side,
       bet: true,
-      atOpen: true,
-      headline: `${word} ${openTotal}`,
-      summary: `Bet the ${side} at the opening total of ${openTotal}${now !== null && now !== undefined && now !== openTotal ? ` (now ${now})` : ''}: our scoring ratings project about ${Math.round(scoring.total)} points. When they were 6+ points off the opener, the total went our way 524-401 (+6.7% at the opening prices) over the six seasons with saved openers, and the line moved toward our side 69% of the time, so the earlier the better.`,
-      odds: real(price) ? fmtOdds(price) : null,
-      pick: `${word} ${openTotal}`,
-    };
-  }
-
-  // NBA total lean: follow a big move in the total, otherwise the over
-  if (nba && !out.total && odds.total?.line !== null && odds.total?.line !== undefined) {
-    const open = odds.total.openLine;
-    const move = open !== null && open !== undefined ? odds.total.line - open : null;
-    const bigMove = move !== null && Math.abs(move) >= NBA_TOTAL_MOVE;
-    const side = bigMove ? (move > 0 ? 'over' : 'under') : odds.total.line >= NBA_HIGH_TOTAL ? 'under' : 'over';
-    const word = side === 'under' ? 'UNDER' : 'OVER';
-    out.total = {
-      key: 'total',
-      title: 'OVER/UNDER',
-      side,
-      bet: false,
-      headline: `${word} ${odds.total.line}`,
+      atOpen: atOpenTotal,
+      headline: `${word} ${totalLine}`,
       summary:
-        side === 'under' && !bigMove
-          ? `Lean under ${odds.total.line}: totals of ${NBA_HIGH_TOTAL}+ that haven't moved much went under 52.0% of the time from 2022 to 2026. A lean, not a bet.`
-          : side === 'under'
-            ? `Lean under ${odds.total.line}: the total has dropped ${Math.abs(move)} points since it opened at ${open}, and big drops kept going under. A lean, not a bet.`
-            : move !== null && move >= NBA_TOTAL_MOVE
-              ? `Lean over ${odds.total.line}: the total has climbed ${move} points since it opened at ${open}, and big climbs kept going over. A lean, not a bet.`
-              : `Lean over ${odds.total.line}: totals under ${NBA_HIGH_TOTAL} that haven't moved much went over 52.4% of the time from 2022 to 2026. A lean, not a bet.`,
-      odds: real(side === 'under' ? odds.total.underOdds : odds.total.overOdds)
-        ? fmtOdds(side === 'under' ? odds.total.underOdds : odds.total.overOdds)
-        : null,
-      pick: `${word} ${odds.total.line}`,
+        side === 'under'
+          ? `Bet the under ${at}: ${proj}, ${Math.round(totalLine - projected)} under it. Games our ratings put 2+ points under the opener went under 1148-1018 (+0.5% at the opening prices) over the six seasons with saved openers.`
+          : `Bet the over ${at}: ${proj ? `${proj}, not 2+ under it` : "there are no scoring ratings for this game"}. In those games the over went 2070-1970 (51%) at the opening prices over the six seasons with saved openers, the better side but short of beating the prices (-2.6%).`,
+      odds: real(price) ? fmtOdds(price) : null,
+      pick: `${word} ${totalLine}`,
     };
   }
 

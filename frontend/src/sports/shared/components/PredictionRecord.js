@@ -26,7 +26,7 @@ try {
     window.localStorage.removeItem(`nflStatsWizard:gradedPicks:${v}`),
   );
   ['nba', 'mlb'].forEach((lg) => window.localStorage.removeItem(`nflStatsWizard:${lg}GradedPicks:v1`));
-  ['v2', 'v3', 'v4'].forEach((v) => window.localStorage.removeItem(`nflStatsWizard:nbaGradedPicks:${v}`));
+  ['v2', 'v3', 'v4', 'v5'].forEach((v) => window.localStorage.removeItem(`nflStatsWizard:nbaGradedPicks:${v}`));
 } catch {
   // storage blocked
 }

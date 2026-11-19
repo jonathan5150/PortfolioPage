@@ -89,7 +89,7 @@ const dayLabel = (key) =>
 // ---------- model results: the NFL panel, graded with this league's engine ----------
 
 const MODEL_NOTES = {
-  nba: 'The NBA record counts only BETS, made and graded at the opening line, because against the closing line nothing beat the market over 12 seasons. Totals: our scoring ratings 6+ points off the opening total (524-401, +6.7% over the six seasons with saved openers, positive in every one). Spread: the side with 2+ more days of rest (319-266, +4.3%). The lines moved toward these picks about two times in three, so bet early. Every other pick is a lean and not counted.',
+  nba: "Every NBA game gets three bets, made and graded at the opening line and price, because against the closing line nothing beat the market over 12 seasons. Spread and moneyline: the better-rested team (2+ more days off), else the opening favourite. Total: the under when our scoring ratings project 2+ points below the opening total, else the over. Over the six seasons with saved openers these lost the least of every rule tried (-1.8% a bet, against about -4.5% for betting blindly), the rest-edge spreads and the 2+ unders made money, and they're +0.2% this season so far. Lines move toward the rest bets two times in three, so bet early.",
   mlb: "The MLB picks are leans from ESPN's model and the betting market. They haven't been backtested like the NFL and NBA models yet.",
 };
 
@@ -497,8 +497,7 @@ const TeamSportPage = ({ lg }) => {
                       <ModelResults
                         games={games}
                         stake={unit}
-                        // the NBA record counts only its opening-line bets
-                        scope={lg === 'nba' ? 'bets' : 'all'}
+                        scope="all"
                         filter={filter}
                         minOdds={minOdds}
                         gradeGame={graderFor(lg)}

@@ -23,4 +23,17 @@ toward them about two times in three:
 The 6-point cut was chosen after seeing these seasons (3+: +0.6%, 4+: +2.5%,
 5+: +3.5%, 6+: +6.7%), so expect the real edge to be smaller. 2016-17 opening
 prices weren't kept and are taken at -110. The app makes and grades these bets
-at the opener (`atOpen`), and the NBA record counts only them.
+at the opener (`atOpen`).
+
+## Every game, all three markets (`node every-game.js`)
+
+The app now bets every game's moneyline, spread and total at the opener. No
+every-game rule beat the market over these seasons (betting one side blindly
+loses about 4.5%); these lost the least of the ~40 tried:
+
+- spread: the 2+ rest-edge side, else the opening favourite: -1.6%
+- moneyline: the same team: -2.3% (2024 on)
+- total: the under when our ratings are 2+ under the opener, else the over: -1.5%
+
+All together -1.8% a bet over 16,204 (2016-17, 2024-2026 all negative, 2024
+-0.6% the best), and +0.2% this season (2026-27) through mid-November.
