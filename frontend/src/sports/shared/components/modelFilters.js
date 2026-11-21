@@ -7,8 +7,10 @@ import React from 'react';
 export const UNITS = [10, 25, 50, 100];
 
 // Every pick is a flat bet (the unit size) at its pregame price.
-export const betFilters = (spreadLabel) => [
+// betsOption adds BETS ONLY (the NBA: only the picks marked as bets, all markets).
+export const betFilters = (spreadLabel, betsOption = false) => [
   { key: 'all', label: 'ALL' },
+  ...(betsOption ? [{ key: 'bets', label: 'BETS ONLY' }] : []),
   { key: 'winner', label: 'MONEYLINE' },
   { key: 'spread', label: spreadLabel.toUpperCase() },
   { key: 'total', label: 'O/U' },
@@ -19,8 +21,8 @@ export const betFilters = (spreadLabel) => [
 export const MIN_ODDS = [null, -200, -300, -500];
 export const allowed = (bet, minOdds) => !(minOdds && bet.key === 'winner' && bet.price < minOdds);
 
-// Which picks a record counts: 'all' (every pick: NFL, MLB) or 'bets' (only the
-// picks marked as bets: the NBA's opening-line bets)
+// Which picks a record counts: 'all' (every pick) or 'bets' (only the picks
+// marked as bets: the NBA's edge bets, chosen with the BETS ONLY market)
 export const inScope = (bets, scope = 'all') => (bets || []).filter((b) => scope === 'all' || b.bet);
 
 // One filter: its title above a gold box showing the current choice; tapping
@@ -55,6 +57,7 @@ export const Filters = ({
   setMinOdds,
   spreadLabel,
   pickFilters = true,
+  betsOption = false,
 }) => (
   <div className={`model-filters ${pickFilters ? '' : 'unit-only'}`}>
     <FilterSelect
@@ -65,7 +68,7 @@ export const Filters = ({
     />
     {pickFilters && (
       <>
-        <FilterSelect title="MARKET" options={betFilters(spreadLabel)} value={filter} onChange={setFilter} />
+        <FilterSelect title="MARKET" options={betFilters(spreadLabel, betsOption)} value={filter} onChange={setFilter} />
         <FilterSelect
           title="ML LIMIT"
           options={MIN_ODDS.map((odds) => ({ key: odds, label: odds === null ? 'OFF' : String(odds) }))}

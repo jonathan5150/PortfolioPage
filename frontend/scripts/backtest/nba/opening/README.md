@@ -37,3 +37,32 @@ loses about 4.5%); these lost the least of the ~40 tried:
 
 All together -1.8% a bet over 16,204 (2016-17, 2024-2026 all negative, 2024
 -0.6% the best), and +0.2% this season (2026-27) through mid-November.
+
+## Forward-chained models, and the 10-game rule (November 21)
+
+Tried to beat the rules above with fitted models, each test season bet with a
+ridge fit on earlier seasons only (2016-17, then 2024 onward):
+
+- Spread (cover margin from rest, back-to-backs, travel, ratings, form, ATS):
+  lost on every cut (-3% to -15% a bet at any threshold).
+- Total (ratings gap, market-implied total, recent over/under form, rest): about
+  +5.6% at a 2-point threshold (429 bets), the same as the 6-point ratings rule
+  (594 bets, +5.6%), so no gain for the extra complexity. Every game: -2.0%.
+
+The one finding that held up: the rest-edge spread is profitable only once
+both teams have 10+ games in.
+
+| games already played by the less-played team | 0-2 | 3-9 | 10+ |
+|---|---|---|---|
+| rest-edge spread at the opener | +3.5% (26) | -14.0% (83) | +7.4% (485) |
+
+(The rest days are unreliable early in a season, and the biggest "edges", 4+
+days, lost.) So the rest bets now need 10+ games, like the totals bet; the
+spread and moneyline in earlier games go on the opening favourite. The
+moneyline on the rested side is +10.0% over 267 bets but swings by season
+(-9.6%, +20.4%, +19.0%).
+
+App result (the app's own pick engine, 2024 to now, at opening prices): edge
+bets 644-491, +77.5u over 1,135 bets (+6.8%; spread +6.8%, total +5.4%,
+moneyline +10.0%); every pick together about -1.3% a bet. The thresholds were
+chosen on these same seasons, so expect less.

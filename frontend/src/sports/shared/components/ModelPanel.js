@@ -11,9 +11,10 @@ import { Filters, UNITS } from './modelFilters';
 // { unit, scope, filter, minOdds }. They're mounted only while the dropdown is
 // open, so nothing is loaded or graded until it's opened.
 // pickFilters: false shows just the unit size (UFC has no markets to filter).
+// betsOption: adds BETS ONLY to the market list (scope becomes 'bets' then).
 export { UNITS };
 
-const ModelPanel = ({ children, spreadLabel = 'Spread', pickFilters = true }) => {
+const ModelPanel = ({ children, spreadLabel = 'Spread', pickFilters = true, betsOption = false }) => {
   const [open, setOpen] = useState(false);
   const [unit, setUnit] = useState(UNITS[0]);
   const [filter, setFilter] = useState('all');
@@ -43,8 +44,14 @@ const ModelPanel = ({ children, spreadLabel = 'Spread', pickFilters = true }) =>
               setMinOdds={setMinOdds}
               spreadLabel={spreadLabel}
               pickFilters={pickFilters}
+              betsOption={betsOption}
             />
-            {children({ unit, scope: 'all', filter, minOdds })}
+            {children({
+              unit,
+              scope: betsOption && filter === 'bets' ? 'bets' : 'all',
+              filter: betsOption && filter === 'bets' ? 'all' : filter,
+              minOdds,
+            })}
           </div>
         </SlideOpen>
       </div>
