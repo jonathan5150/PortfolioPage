@@ -66,7 +66,7 @@ const WATERMARK_STYLE = {
     filter: 'grayscale(1) brightness(3.6)',
     '--wm-closed-opacity': 0.62,
     '--wm-open-opacity': 0.97,
-    '--wm-y': '-13px',
+    '--wm-y': '-14px',
   },
 
   // --wm-y: logos that sit off-centre in their image, nudged up (-) or down (+)
@@ -81,8 +81,10 @@ const WATERMARK_STYLE = {
   CHI: { '--wm-y': '5px' },
   TEN: { '--wm-y': '-5px' },
   ARI: { '--wm-y': '-10px' },
-  HOU: { '--wm-y': '-7px' },
+  HOU: { '--wm-y': '-4px' },
   TB: { '--wm-y': '5px' },
+  LAC: { '--wm-y': '6px' },
+  NE: { '--wm-y': '3px' },
 };
 
 // Some logos read bigger or smaller than the rest at the same size; this
