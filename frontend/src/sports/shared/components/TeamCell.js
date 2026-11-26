@@ -62,10 +62,26 @@ const WATERMARK_STYLE = {
   // whitish grey (about #eee from its solid green), open or closed; it's more
   // solid than the rest (--wm-closed-opacity / --wm-open-opacity), so the
   // green cell behind it doesn't tint it green again
-  NYJ: { filter: 'grayscale(1) brightness(3.6)', '--wm-closed-opacity': 0.62, '--wm-open-opacity': 0.97 },
+  NYJ: {
+    filter: 'grayscale(1) brightness(3.6)',
+    '--wm-closed-opacity': 0.62,
+    '--wm-open-opacity': 0.97,
+    '--wm-y': '-10px',
+  },
 
-  // the panther sits high in its image: down a little
-  CAR: { '--wm-y': '5px' },
+  // --wm-y: logos that sit off-centre in their image, nudged up (-) or down (+)
+  CAR: { '--wm-y': '15px' },
+  PHI: { '--wm-y': '-10px' },
+  DAL: { '--wm-y': '-10px' },
+  MIA: { '--wm-y': '10px' },
+  ATL: { '--wm-y': '15px' },
+  JAX: { '--wm-y': '10px' },
+  DET: { '--wm-y': '10px' },
+  CHI: { '--wm-y': '5px' },
+  TEN: { '--wm-y': '-5px' },
+  ARI: { '--wm-y': '-10px' },
+  HOU: { '--wm-y': '-10px' },
+  TB: { '--wm-y': '5px' },
 };
 
 // Some logos read bigger or smaller than the rest at the same size; this
