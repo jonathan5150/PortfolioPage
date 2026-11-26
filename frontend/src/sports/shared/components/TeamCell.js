@@ -55,7 +55,7 @@ export const useLongPress = (onLongPress, delay = 600) => {
 // Per-team colour tweaks for the background logo.
 
 const WATERMARK_STYLE = {
-  LV: { filter: 'brightness(1.7) contrast(1.1)' },
+  LV: { filter: 'brightness(1.7) contrast(1.1)', '--wm-y': '-3px' },
 
   LAR: { filter: 'grayscale(1) brightness(2.6) sepia(1) saturate(4.5) hue-rotate(12deg)' },
 
@@ -66,13 +66,14 @@ const WATERMARK_STYLE = {
     filter: 'grayscale(1) brightness(3.6)',
     '--wm-closed-opacity': 0.62,
     '--wm-open-opacity': 0.97,
-    '--wm-y': '-10px',
+    '--wm-y': '-13px',
   },
 
   // --wm-y: logos that sit off-centre in their image, nudged up (-) or down (+)
-  CAR: { '--wm-y': '15px' },
+  // while the game is closed; an open game's logo is dead centre
+  CAR: { '--wm-y': '10px' },
   PHI: { '--wm-y': '-10px' },
-  DAL: { '--wm-y': '-10px' },
+  DAL: { '--wm-y': '-7px' },
   MIA: { '--wm-y': '10px' },
   ATL: { '--wm-y': '15px' },
   JAX: { '--wm-y': '10px' },
@@ -80,7 +81,7 @@ const WATERMARK_STYLE = {
   CHI: { '--wm-y': '5px' },
   TEN: { '--wm-y': '-5px' },
   ARI: { '--wm-y': '-10px' },
-  HOU: { '--wm-y': '-10px' },
+  HOU: { '--wm-y': '-7px' },
   TB: { '--wm-y': '5px' },
 };
 
