@@ -63,6 +63,9 @@ const WATERMARK_STYLE = {
   // solid than the rest (--wm-closed-opacity / --wm-open-opacity), so the
   // green cell behind it doesn't tint it green again
   NYJ: { filter: 'grayscale(1) brightness(3.6)', '--wm-closed-opacity': 0.62, '--wm-open-opacity': 0.97 },
+
+  // the panther sits high in its image: down a little
+  CAR: { '--wm-y': '5px' },
 };
 
 // Some logos read bigger or smaller than the rest at the same size; this

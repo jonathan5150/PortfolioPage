@@ -1622,7 +1622,8 @@ html[data-quality='low'] .nfl-data-container .kickoff-bar .kickoff-swap-b {
 .nfl-data-container .team-logo-watermark {
   --wm-opacity: 0.65; /* resting opacity; an open game adds 0.1 */
   position: absolute;
-  top: 50%;
+  /* --wm-y nudges a logo that sits off-centre in its image (set per team) */
+  top: calc(50% + var(--wm-y, 0px));
   left: 50%;
   width: 130px;
   height: 130px;
