@@ -143,6 +143,41 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     return () => document.removeEventListener('click', closeOnTapBelow, true);
   }, [isOpen]);
 
+  // ---- scrollbars only while scrolling (wide screens) ----
+  // A desktop browser draws a scrollbar whenever the list can scroll, so one
+  // popped up as a game opened or the list changed height. Desktop.scss keeps
+  // the scrollbars' space but draws them see-through; this marks the box (or
+  // the MODEL / SETTINGS rail) while the user scrolls it - wheel, touch or
+  // keys - so its scrollbar shows then, and goes again a moment after.
+  // Scrolling done by the page itself (a game sliding to the top) shows none.
+  useEffect(() => {
+    const box = panelRef.current;
+    if (!box) return undefined;
+    const timers = new Map();
+    const show = (el) => {
+      el.classList.add('user-scrolling');
+      clearTimeout(timers.get(el));
+      timers.set(el, setTimeout(() => el.classList.remove('user-scrolling'), 900));
+    };
+    const fromEvent = (e) => {
+      const rail = e.target.closest?.('.side-rail');
+      show(rail && rail.scrollHeight > rail.clientHeight ? rail : box);
+    };
+    const SCROLL_KEYS = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
+    const onKey = (e) => {
+      if (SCROLL_KEYS.includes(e.key) && !e.target.closest?.('input, select, textarea')) show(box);
+    };
+    box.addEventListener('wheel', fromEvent, { passive: true });
+    box.addEventListener('touchmove', fromEvent, { passive: true });
+    window.addEventListener('keydown', onKey);
+    return () => {
+      box.removeEventListener('wheel', fromEvent);
+      box.removeEventListener('touchmove', fromEvent);
+      window.removeEventListener('keydown', onKey);
+      timers.forEach((t) => clearTimeout(t));
+    };
+  }, [panelRef]);
+
   // ---- slide up, just the game, slide back ----
   const returnTo = useRef(null);
   const target = useRef(null); // the open game's slot (marked data-focus-target: an attribute, as React rewrites its class list when it closes)

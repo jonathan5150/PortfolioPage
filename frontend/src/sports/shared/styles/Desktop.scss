@@ -37,8 +37,20 @@
     margin: 0 auto;
   }
 
+  /* Scrollbars (the list's and the rail's): their space is always kept, so one
+     appearing never squeezes anything sideways, and they're see-through except
+     while the user is scrolling (.user-scrolling, from useGameFocus). Opening a
+     game or the list changing height shows no scrollbar at all. */
   .nfl-data-container .nfl-scroll-panel {
     width: 100%;
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  .nfl-data-container .nfl-scroll-panel.user-scrolling,
+  .nfl-data-container .nfl-scroll-panel > .side-rail.user-scrolling {
+    scrollbar-color: rgba(245, 209, 107, 0.4) transparent;
   }
 
   /* each day: its heading across the top, its games in a grid under it */
@@ -181,8 +193,9 @@
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
+    scrollbar-gutter: stable; /* opening MODEL doesn't squeeze the rail either */
     scrollbar-width: thin;
-    scrollbar-color: rgba(245, 209, 107, 0.35) transparent;
+    scrollbar-color: transparent transparent;
   }
 
   .nfl-data-container .side-rail > .gold-box,
