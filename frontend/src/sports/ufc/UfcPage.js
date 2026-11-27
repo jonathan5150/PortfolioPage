@@ -809,7 +809,8 @@ const UfcPage = () => {
                             {timeLabel(section.fights[section.fights.length - 1]?.date)}
                           </div>
                           {section.fights.map((fight, i) => (
-                            <React.Fragment key={fight.id}>
+                            // game-cell: a fight and its start time (one cell of the grid on a wide screen)
+                            <div key={fight.id} className={`game-cell ${section.key === 'main' && i === 0 ? 'main-event' : ''}`}>
                               {section.key === 'main' && i === 0 && (
                                 <div className="ufc-main-event-tag">MAIN EVENT</div>
                               )}
@@ -826,7 +827,7 @@ const UfcPage = () => {
                                 hidden={hiddenSet.has(fight.id)}
                                 onToggleHidden={toggleHidden}
                               />
-                            </React.Fragment>
+                            </div>
                           ))}
                         </div>
                       </SlideOpen>
@@ -836,13 +837,16 @@ const UfcPage = () => {
               </div>
             )}
 
-            {event && !showLoader && (
-              <ModelPanel pickFilters={false}>
-                {({ unit }) => <EventModelResults event={event} details={cardDetails} stake={unit} />}
-              </ModelPanel>
-            )}
-            {!showLoader && <SettingsPanel />}
-            {!showLoader && <LastUpdated />}
+            {/* side-rail: beside the fights on a wide screen, under them on a phone */}
+            <div className="side-rail">
+              {event && !showLoader && (
+                <ModelPanel pickFilters={false}>
+                  {({ unit }) => <EventModelResults event={event} details={cardDetails} stake={unit} />}
+                </ModelPanel>
+              )}
+              {!showLoader && <SettingsPanel />}
+              {!showLoader && <LastUpdated />}
+            </div>
           </div>
           <ParlayBar />
           {hideMode && (

@@ -1,0 +1,220 @@
+/* ---------- wide screens (every sport) ----------
+   The pages are built for a phone. On a wider screen they spread out:
+   - from 900px the games sit side by side in a grid inside each day's box
+     (two or three across, as many as fit at a phone-like card width)
+   - from 1180px the title and controls share one row, and MODEL / SETTINGS
+     move into a rail beside the games that stays put as the games scroll
+   An open game takes the whole width of the games column once everything
+   else has gone (.focus-only, see useGameFocus); the rail stays beside it.
+   Loaded after the other sports stylesheets (App.js). */
+
+/* every width: a game and its start time share a .game-cell, and the MODEL /
+   SETTINGS panels share a .side-rail. On a phone neither box takes part in the
+   layout, so the list is laid out exactly as before. */
+.nfl-data-container .game-cell,
+.nfl-data-container .side-rail {
+  display: contents;
+}
+
+/* the spacing that used to come from games following each other directly */
+.nfl-data-container .game-cell + .game-cell > .game-group-subtime {
+  margin-top: 3px;
+}
+
+.nfl-data-container .game-group > .game-cell:not(:last-child) > .game-slot .score-grid {
+  padding-bottom: 1.5px;
+}
+
+@media only screen and (min-width: 900px) {
+  .nfl-data-container .matchup-card {
+    width: 96%;
+    max-width: 1600px;
+  }
+
+  /* the header keeps its phone size until the 1180px layout below */
+  .nfl-data-container .nflDataNavbar {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .nfl-data-container .nfl-scroll-panel {
+    width: 100%;
+  }
+
+  /* each day: its heading across the top, its games in a grid under it */
+  .nfl-data-container .game-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    column-gap: 10px;
+    align-items: start;
+    padding-bottom: 4px;
+  }
+
+  .nfl-data-container .game-group > .game-group-time,
+  .nfl-data-container .game-group > .ufc-main-event-tag {
+    grid-column: 1 / -1;
+  }
+
+  .nfl-data-container .game-cell {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* the first row of games has no game above it, so the cells in it line up */
+  .nfl-data-container .game-cell + .game-cell > .game-group-subtime {
+    margin-top: 0;
+  }
+
+  .nfl-data-container .game-group > .game-cell > .game-slot .score-grid {
+    padding-bottom: 5px;
+  }
+
+  /* UFC's main event leads the card across the whole row */
+  .nfl-data-container .game-cell.main-event {
+    grid-column: 1 / -1;
+  }
+
+  /* the open game: alone in the list, across the whole width */
+  .nfl-data-container .nfl-scroll-panel.focus-only .game-cell:not(:has([data-focus-target])) {
+    display: none !important;
+  }
+
+  .nfl-data-container .nfl-scroll-panel.focus-only .game-cell:has([data-focus-target]) {
+    grid-column: 1 / -1;
+  }
+
+  /* the panels under the games: a comfortable reading width, centred */
+  .nfl-data-container .side-rail > .gold-box,
+  .nfl-data-container .side-rail > .settings-panel {
+    width: 100%;
+    max-width: 720px;
+  }
+}
+
+@media only screen and (min-width: 1180px) {
+  /* ---- header: the title on the left, the controls filling the rest ---- */
+  .nfl-data-container .nflDataNavbar {
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+    max-width: none;
+    width: 100%;
+    padding: 14px 4px 2px;
+  }
+
+  .nfl-data-container .nfl-title,
+  .nfl-data-container .pinned-header .nfl-title {
+    flex: none;
+    width: auto;
+    margin: 0;
+    padding: 10px 22px;
+    gap: 16px;
+  }
+
+  .nfl-data-container .nfl-title-badge {
+    font-size: 46px;
+    padding: 1px 14px;
+  }
+
+  .nfl-data-container .nfl-title-text {
+    font-size: 40px;
+    letter-spacing: 0.12em;
+  }
+
+  .nfl-data-container .controls {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    max-width: 820px;
+    margin-left: auto;
+  }
+
+  /* ---- the games and the rail beside them ----
+     Everything but the rail stacks down the first column (the loading screen,
+     UFC's event name, the games). The rail runs down the second beside all of
+     it; the last row (1fr) takes up any height the rail has beyond theirs, so a
+     tall rail never opens gaps between them. */
+  .nfl-data-container .nfl-scroll-panel {
+    --rail-width: 380px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--rail-width);
+    grid-template-rows: repeat(3, auto) 1fr;
+    column-gap: 16px;
+    align-items: start;
+    align-content: start;
+    padding: 3px 4px 0;
+  }
+
+  .nfl-data-container .nfl-scroll-panel > * {
+    grid-column: 1;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* nothing in the rail yet (still loading): the first column takes the lot */
+  .nfl-data-container .nfl-scroll-panel > .side-rail:empty {
+    display: none;
+  }
+
+  .nfl-data-container .nfl-scroll-panel:has(> .side-rail:empty) > * {
+    grid-column: 1 / -1;
+  }
+
+  .nfl-data-container .nfl-scroll-panel .game-section {
+    width: 100%;
+  }
+
+  /* the rail: stays at the top of the box as the games scroll, and scrolls on
+     its own if MODEL is opened taller than the screen */
+  .nfl-data-container .nfl-scroll-panel > .side-rail {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    position: sticky;
+    top: 0;
+    max-height: calc(var(--vh, 1vh) * 100 - 112px);
+    max-height: calc(100dvh - 112px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(245, 209, 107, 0.35) transparent;
+  }
+
+  .nfl-data-container .side-rail > .gold-box,
+  .nfl-data-container .side-rail > .settings-panel {
+    flex: none;
+    max-width: none;
+    margin: 0 0 8px;
+  }
+
+  .nfl-data-container .side-rail > .last-updated-timer {
+    margin: 2px 0 12px;
+  }
+
+  /* the rail stays while a game is open: only the games column clears */
+  .nfl-data-container .matchup-card.game-focus .side-rail .model-panel,
+  .nfl-data-container .matchup-card.game-focus .side-rail .settings-panel,
+  .nfl-data-container .matchup-card.game-focus .side-rail .last-updated-timer,
+  .nfl-data-container .nfl-scroll-panel.focus-fading .side-rail .model-panel,
+  .nfl-data-container .nfl-scroll-panel.focus-fading .side-rail .settings-panel,
+  .nfl-data-container .nfl-scroll-panel.focus-fading .side-rail .last-updated-timer {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .nfl-data-container .nfl-scroll-panel.focus-only .side-rail .model-panel,
+  .nfl-data-container .nfl-scroll-panel.focus-only .side-rail .settings-panel,
+  .nfl-data-container .nfl-scroll-panel.focus-only .side-rail .last-updated-timer {
+    display: block !important;
+  }
+
+  /* the room left at the end of the box for an open game to slide up into */
+  .nfl-data-container .matchup-card.focus-space .nfl-scroll-panel::after {
+    grid-column: 1;
+  }
+}

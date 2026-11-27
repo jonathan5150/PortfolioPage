@@ -17,6 +17,7 @@ import './sports/shared/styles/DayCalendar.scss';
 import './sports/shared/league/TeamSport.scss';
 import './sports/shared/styles/SportTitles.scss';
 import './sports/ufc/styles/Ufc.scss';
+import './sports/shared/styles/Desktop.scss';
 import LoadingField from './sports/shared/components/LoadingField';
 // the site's font and style (Bricolage Grotesque + Poster), over the moving
 // gold contour-line background

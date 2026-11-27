@@ -463,7 +463,8 @@ const TeamSportPage = ({ lg }) => {
                                 {d.slots.map((slot) => (
                                   <React.Fragment key={slot.label || 'all'}>
                                     {slot.games.map((game) => (
-                                      <React.Fragment key={game.id}>
+                                      // game-cell: a game and its start time (one cell of the grid on a wide screen)
+                                      <div key={game.id} className="game-cell">
                                         {/* every game has its own gold start time at its top left */}
                                         <div className="game-group-subtime">{startLabel(game, slot.label)}</div>
                                         <TeamGameCard
@@ -476,7 +477,7 @@ const TeamSportPage = ({ lg }) => {
                                           hidden={hiddenSet.has(game.id)}
                                           onToggleHidden={toggleHidden}
                                         />
-                                      </React.Fragment>
+                                      </div>
                                     ))}
                                   </React.Fragment>
                                 ))}
@@ -490,29 +491,32 @@ const TeamSportPage = ({ lg }) => {
                 </div>
               )}
 
-              {day && !showLoader && (
-                <ModelPanel spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'} betsOption={lg === 'nba'}>
-                  {({ unit, scope, filter, minOdds }) => (
-                    <>
-                      <ModelResults
-                        games={games}
-                        stake={unit}
-                        scope={scope}
-                        filter={filter}
-                        minOdds={minOdds}
-                        gradeGame={graderFor(lg)}
-                        lg={lg}
-                        loadSeason={seasonLoaderFor(lg)}
-                        period="DAY"
-                        spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}
-                        note={MODEL_NOTES[lg]}
-                      />
-                    </>
-                  )}
-                </ModelPanel>
-              )}
-              {!showLoader && <SettingsPanel />}
-              {!showLoader && <LastUpdated />}
+              {/* side-rail: beside the games on a wide screen, under them on a phone */}
+              <div className="side-rail">
+                {day && !showLoader && (
+                  <ModelPanel spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'} betsOption={lg === 'nba'}>
+                    {({ unit, scope, filter, minOdds }) => (
+                      <>
+                        <ModelResults
+                          games={games}
+                          stake={unit}
+                          scope={scope}
+                          filter={filter}
+                          minOdds={minOdds}
+                          gradeGame={graderFor(lg)}
+                          lg={lg}
+                          loadSeason={seasonLoaderFor(lg)}
+                          period="DAY"
+                          spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}
+                          note={MODEL_NOTES[lg]}
+                        />
+                      </>
+                    )}
+                  </ModelPanel>
+                )}
+                {!showLoader && <SettingsPanel />}
+                {!showLoader && <LastUpdated />}
+              </div>
             </div>
             <ParlayBar />
             {hideMode && (

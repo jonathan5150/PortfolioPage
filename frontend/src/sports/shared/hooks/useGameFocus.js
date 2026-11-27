@@ -68,6 +68,37 @@ const slideUpMs = (distance) => Math.min(SLIDE_MS, 480 + Math.abs(distance) * 0.
 const slideBackMs = (distance) => Math.min(1080, 620 + Math.abs(distance) * 0.38);
 const easeInOut = (p) => (p < 0.5 ? 4 * p * p * p : 1 - (-2 * p + 2) ** 3 / 2);
 
+// ---- the open game's width (wide screens) ----
+// On a wide screen games sit side by side in a grid (Desktop.scss), and an open
+// game takes the whole width once it's alone in the list. These slide its cell
+// between the two sizes instead of letting it jump. On a phone the cell takes
+// no part in the layout (no size of its own), so nothing changes and nothing
+// slides.
+const WIDTH_MS = 450;
+const WIDTH_EASE = 'cubic-bezier(0.45, 0, 0.2, 1)';
+const sizeOf = (cell) => {
+  const r = cell.getBoundingClientRect();
+  return { left: r.left, width: r.width };
+};
+const sameSize = (a, b) => Math.abs(a.width - b.width) < 2 && Math.abs(a.left - b.left) < 2;
+// holds the cell at `from` (its left edge and width, on screen), then slides
+// it to `to`; `to` is given relative to where the cell's grid space starts
+const slideCell = (cell, from, to, origin) => {
+  const s = cell.style;
+  s.transition = 'none';
+  s.width = `${from.width}px`;
+  s.marginLeft = `${from.left - origin}px`;
+  void cell.offsetWidth; // the starting size takes effect before the slide begins
+  s.transition = `width ${WIDTH_MS}ms ${WIDTH_EASE}, margin-left ${WIDTH_MS}ms ${WIDTH_EASE}`;
+  s.width = `${to.width}px`;
+  s.marginLeft = `${to.left - origin}px`;
+};
+const releaseCell = (cell) => {
+  cell.style.transition = '';
+  cell.style.width = '';
+  cell.style.marginLeft = '';
+};
+
 const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
   const isOpen = Boolean(openKey);
 
@@ -103,7 +134,7 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
   useEffect(() => {
     if (!isOpen) return undefined;
     const closeOnTapBelow = (e) => {
-      if (e.target.closest?.('.game-slot.open, .parlay-bar, .hide-done-bar')) return;
+      if (e.target.closest?.('.game-slot.open, .parlay-bar, .hide-done-bar, .side-rail')) return;
       const slot = document.querySelector('.game-slot.open');
       if (!slot || e.clientY <= slot.getBoundingClientRect().bottom) return;
       closeRef.current();
@@ -189,7 +220,17 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
         if (!slot) return;
         slot.setAttribute('data-focus-target', '');
         target.current = slot;
+        const cell = slot.closest('.game-cell');
+        const narrow = cell && sizeOf(cell);
         keepingPlace(slot, () => box.classList.add('focus-only'));
+        // a wide screen: the game grows from its spot in the grid to the
+        // whole width, and its details unfold once it's there
+        const wide = cell && sizeOf(cell);
+        const widening = Boolean(cell) && !low && !sameSize(narrow, wide);
+        if (widening) {
+          slideCell(cell, narrow, wide, wide.left);
+          later(() => releaseCell(cell), WIDTH_MS + 20);
+        }
         // Data that came in during the slide is drawn now, while nothing
         // moves, and the details unfold two frames later, once that's done:
         // drawing it (and restyling the page for .focus-details) in the
@@ -197,13 +238,17 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
         // Anything newer waits until the details have unfolded.
         unlock();
         setMoving(true);
-        frame = requestAnimationFrame(() => {
+        const unfold = () => {
           frame = requestAnimationFrame(() => {
-            frame = 0;
-            box.classList.add('focus-details');
-            later(() => setMoving(false), DETAILS_MS + 50);
+            frame = requestAnimationFrame(() => {
+              frame = 0;
+              box.classList.add('focus-details');
+              later(() => setMoving(false), DETAILS_MS + 50);
+            });
           });
-        });
+        };
+        if (widening) later(unfold, WIDTH_MS);
+        else unfold();
       };
       later(() => {
         const slot = box.querySelector('.game-slot.open');
@@ -233,7 +278,7 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     // nothing to fade from); the game keeps its spot on screen meanwhile. Then
     // the box glides back to where it was.
     if (returnTo.current === null) return undefined;
-    holdBackgroundWork(FOLD_MS + 1080 + 900);
+    holdBackgroundWork(FOLD_MS + WIDTH_MS + 1080 + 900);
     const back = returnTo.current;
     lock();
     const wasFocused = Boolean(target.current) && box.classList.contains('focus-details');
@@ -265,8 +310,35 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
       }
       slideTo(back, slideBackMs, done);
     };
-    if (wasFocused && !low) later(restore, FOLD_MS);
-    else restore();
+    // a wide screen: once the details have folded, the game shrinks back to
+    // its spot in the grid while it's still alone, then everything comes back
+    const narrowThenRestore = () => {
+      const slot = target.current;
+      const cell = slot?.closest('.game-cell');
+      if (!cell || low || !box.classList.contains('focus-only')) {
+        restore();
+        return;
+      }
+      const wide = sizeOf(cell);
+      const origin = cell.getBoundingClientRect().left - (parseFloat(cell.style.marginLeft) || 0);
+      // where it'll sit: measured with everything back for a moment (and any
+      // slide still under way let go), before anything is drawn
+      releaseCell(cell);
+      box.classList.remove('focus-only');
+      const narrow = sizeOf(cell);
+      box.classList.add('focus-only');
+      if (sameSize(wide, narrow)) {
+        restore();
+        return;
+      }
+      slideCell(cell, wide, narrow, origin);
+      later(() => {
+        releaseCell(cell);
+        restore();
+      }, WIDTH_MS);
+    };
+    if (wasFocused && !low) later(narrowThenRestore, FOLD_MS);
+    else narrowThenRestore();
     return cleanup;
   }, [isOpen, openKey, panelRef]);
 

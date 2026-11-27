@@ -337,7 +337,8 @@ const GameList = ({
                         {day.slots.map((slot) => (
                           <React.Fragment key={slot.label || 'all'}>
                             {slot.games.map((game) => (
-                              <React.Fragment key={game.id}>
+                              // game-cell: a game and its start time (one cell of the grid on a wide screen)
+                              <div key={game.id} className="game-cell">
                                 {/* every game has its own gold start time at its top left */}
                                 <div className="game-group-subtime">{startLabel(game, slot.label)}</div>
                                 <GameCard
@@ -356,7 +357,7 @@ const GameList = ({
                                   hidden={hiddenSet.has(game.id)}
                                   onToggleHidden={toggleHidden}
                                 />
-                              </React.Fragment>
+                              </div>
                             ))}
                           </React.Fragment>
                         ))}
@@ -368,15 +369,18 @@ const GameList = ({
             )}
           </div>
 
-          {!loading && (
-            <ModelPanel>
-              {({ unit, filter, minOdds }) => (
-                <ModelResults games={weekGames || games} stake={unit} filter={filter} minOdds={minOdds} />
-              )}
-            </ModelPanel>
-          )}
-          {!loading && <SettingsPanel />}
-          {!loading && <LastUpdated />}
+          {/* side-rail: beside the games on a wide screen, under them on a phone */}
+          <div className="side-rail">
+            {!loading && (
+              <ModelPanel>
+                {({ unit, filter, minOdds }) => (
+                  <ModelResults games={weekGames || games} stake={unit} filter={filter} minOdds={minOdds} />
+                )}
+              </ModelPanel>
+            )}
+            {!loading && <SettingsPanel />}
+            {!loading && <LastUpdated />}
+          </div>
         </div>
         {hideMode ? (
           <button type="button" className="hide-done-bar" onClick={() => setHideMode(false)}>
