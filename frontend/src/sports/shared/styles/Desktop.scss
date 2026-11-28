@@ -73,6 +73,14 @@
     min-width: 0;
   }
 
+  /* every game on a GPU layer of its own, all the time (a phone only gives
+     the open one a layer: sports.scss). The open game then never changes
+     layers, so its text never changes look, and the boxes around it can grow
+     or shrink as the list comes back without the game being redrawn. */
+  .nfl-data-container .game-slot {
+    will-change: transform;
+  }
+
   /* the first row of games has no game above it, so the cells in it line up */
   .nfl-data-container .game-cell + .game-cell > .game-group-subtime {
     margin-top: 0;

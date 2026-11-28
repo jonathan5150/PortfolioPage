@@ -246,6 +246,8 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     };
 
     if (isOpen) {
+      // a game closed a moment ago and still settling lets go of its layer
+      box.querySelectorAll('[data-focus-settling]').forEach((el) => el.removeAttribute('data-focus-settling'));
       holdBackgroundWork(SLIDE_MS + 1000);
       if (returnTo.current === null) returnTo.current = box.scrollTop;
       setFocusSpace(true);
@@ -330,6 +332,9 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     box.classList.remove('focus-details');
     const restore = () => {
       const slot = target.current;
+      // the game keeps its own layer (sports.scss) through everything coming
+      // back, until the list is at rest again
+      if (slot) slot.setAttribute('data-focus-settling', '');
       if (slot && box.classList.contains('focus-only')) {
         box.classList.add('focus-fading');
         // measuring (in keepingPlace) settles the faded look before it's let go
@@ -342,7 +347,10 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
       const done = () => {
         box.scrollTop = back;
         unlock();
-        later(() => setFocusSpace(false), 100);
+        later(() => {
+          setFocusSpace(false);
+          if (slot) slot.removeAttribute('data-focus-settling');
+        }, 100);
       };
       if (Math.abs(back - box.scrollTop) < 2) {
         later(done, low ? 0 : FADE_MS);

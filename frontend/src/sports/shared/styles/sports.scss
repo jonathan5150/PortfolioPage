@@ -4643,6 +4643,20 @@ html[data-theme] .nfl-data-container .kickoff-bar {
   will-change: opacity;
 }
 
+/* The open game sits on a GPU layer of its own from the moment it opens until
+   the list is at rest again after it closes (data-focus-target while it's
+   alone in the list, data-focus-settling while everything comes back and the
+   list glides back: useGameFocus). It was drawn as part of the boxes around
+   it, and when the rest of the list came back those boxes grew from just the
+   game to every game in one frame, so the browser drew them, game included,
+   from scratch: the game flickered at that moment. On its own layer it
+   stays drawn while the boxes around it change. */
+.nfl-data-container .game-slot.open,
+.nfl-data-container .game-slot[data-focus-target],
+.nfl-data-container .game-slot[data-focus-settling] {
+  will-change: transform;
+}
+
 /* the open game's glowing ring breathes on its own GPU layer (only the open
    game's: a layer for every game's ring held a lot of the phone's memory) */
 .nfl-data-container .game-slot.open .game-ring {
