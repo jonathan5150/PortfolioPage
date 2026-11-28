@@ -1,6 +1,6 @@
 # Sports data project
 
-The sports pages at `/sports/nfl`, `/sports/nba`, `/sports/mlb` and `/sports/ufc` (`/sports` opens the saved or in-season sport). Styles are scoped under `.nfl-data-container`; preferences are kept in localStorage under keys prefixed `nflStatsWizard:`.
+The sports pages at `/sports/nfl`, `/sports/nba`, `/sports/mlb`, `/sports/nhl` and `/sports/ufc` (`/sports` opens the saved or in-season sport). Styles are scoped under `.nfl-data-container`; preferences are kept in localStorage under keys prefixed `nflStatsWizard:`.
 
 ## Structure
 
@@ -19,7 +19,7 @@ sports/
     utils/              colours, dates and day groups, cookies, timing...
     styles/             sports.scss (the base styles for every sport), calendar,
                         sport switcher, titles, loader
-    league/             the page NBA and MLB share: page, game card, panels,
+    league/             the page NBA, MLB and NHL share: page, game card, panels,
                         league api and picks, TeamSport.scss
   nfl/
     NflPage.js          week/season selection, team filter, live polling
@@ -33,6 +33,8 @@ sports/
     NbaPage.js          the shared league page for the NBA
   mlb/
     MlbPage.js          the shared league page for MLB
+  nhl/
+    NhlPage.js          the shared league page for the NHL
   ufc/
     UfcPage.js
     api/                UFC data and the UFC pick model

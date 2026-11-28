@@ -5,6 +5,7 @@ export const SPORTS = [
   { key: 'nfl', label: 'NFL', name: 'Football' },
   { key: 'nba', label: 'NBA', name: 'Basketball' },
   { key: 'mlb', label: 'MLB', name: 'Baseball' },
+  { key: 'nhl', label: 'NHL', name: 'Hockey' },
   { key: 'ufc', label: 'UFC', name: 'MMA' },
 ];
 export const sportPath = (key) => `/sports/${key}`;

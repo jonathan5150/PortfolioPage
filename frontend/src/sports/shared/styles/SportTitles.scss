@@ -29,3 +29,14 @@
     radial-gradient(ellipse at 50% 50%, rgba(150, 30, 36, 0.35), transparent 70%),
     linear-gradient(135deg, rgba(40, 40, 44, 0.95), rgba(72, 28, 32, 0.85) 55%, rgba(50, 50, 50, 0.92) 85%);
 }
+
+/* NHL: part of a rink - the red centre line and the two blue lines, the centre
+   circle, the end-zone faceoff circles and dots, the goal lines and creases -
+   on cold, icy blue */
+.nfl-data-container .nfl-title.sport-title-nhl {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 100' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='none' stroke-width='1.4'%3E%3Cpath d='M300 -5 V105' stroke='rgb(225,80,80)' stroke-opacity='0.32' stroke-width='3'/%3E%3Cpath d='M222 -5 V105 M378 -5 V105' stroke='rgb(110,170,240)' stroke-opacity='0.3' stroke-width='3'/%3E%3Cpath d='M40 -5 V105 M560 -5 V105' stroke='rgb(225,80,80)' stroke-opacity='0.2'/%3E%3Ccircle cx='300' cy='50' r='30' stroke='white' stroke-opacity='0.16'/%3E%3Ccircle cx='110' cy='24' r='17' stroke='white' stroke-opacity='0.12'/%3E%3Ccircle cx='110' cy='76' r='17' stroke='white' stroke-opacity='0.12'/%3E%3Ccircle cx='490' cy='24' r='17' stroke='white' stroke-opacity='0.12'/%3E%3Ccircle cx='490' cy='76' r='17' stroke='white' stroke-opacity='0.12'/%3E%3Cpath d='M40 38 A12 12 0 0 1 40 62 M560 38 A12 12 0 0 0 560 62' stroke='white' stroke-opacity='0.14'/%3E%3C/g%3E%3Cg fill='white' fill-opacity='0.2'%3E%3Ccircle cx='300' cy='50' r='2.6'/%3E%3Ccircle cx='110' cy='24' r='2.4'/%3E%3Ccircle cx='110' cy='76' r='2.4'/%3E%3Ccircle cx='490' cy='24' r='2.4'/%3E%3Ccircle cx='490' cy='76' r='2.4'/%3E%3Ccircle cx='255' cy='24' r='2'/%3E%3Ccircle cx='255' cy='76' r='2'/%3E%3Ccircle cx='345' cy='24' r='2'/%3E%3Ccircle cx='345' cy='76' r='2'/%3E%3C/g%3E%3C/svg%3E")
+      center / cover no-repeat,
+    repeating-linear-gradient(100deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 22px),
+    linear-gradient(135deg, rgba(48, 92, 128, 0.9), rgba(52, 66, 80, 0.88) 55%, rgba(58, 58, 58, 0.92) 85%);
+}

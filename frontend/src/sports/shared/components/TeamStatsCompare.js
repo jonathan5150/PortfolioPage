@@ -16,7 +16,7 @@ import { getTeamHistories, historyRows } from '../utils/teamHistory';
 // every team's number, so "lower is better" stats (points allowed, ERA,
 // turnovers...) rank the right way round.
 
-const PATHS = { nfl: 'football/nfl', nba: 'basketball/nba', mlb: 'baseball/mlb' };
+const PATHS = { nfl: 'football/nfl', nba: 'basketball/nba', mlb: 'baseball/mlb', nhl: 'hockey/nhl' };
 const HOUR = 60 * 60 * 1000;
 
 // Each team's numbers, by category and stat name: { own, opp }. A category
@@ -113,6 +113,18 @@ const signed = (d) => (v) => `${v > 0 ? '+' : ''}${v.toFixed(d)}`;
 
 const own = (cat, stat) => (t) => t.own[cat]?.[stat];
 const opp = (cat, stat) => (t) => t.opp[cat]?.[stat];
+// a season total per game played (NHL shots)
+const perGame = (cat, stat) => (t) => {
+  const v = t.own[cat]?.[stat];
+  const g = t.own.general?.games;
+  return Number.isFinite(v) && g > 0 ? v / g : undefined;
+};
+// NHL goal difference: goals for minus goals against
+const goalDiff = (t) => {
+  const f = t.own.offensive?.goals;
+  const a = t.own.defensive?.goalsAgainst;
+  return Number.isFinite(f) && Number.isFinite(a) ? f - a : undefined;
+};
 
 // section starts a new heading; lower: smaller is better
 export const STAT_ROWS = {
@@ -194,6 +206,21 @@ export const STAT_ROWS = {
     { section: 'FIELDING', label: 'ERRORS', get: own('fielding', 'errors'), fmt: whole, lower: true },
     { label: 'FLD%', get: own('fielding', 'fieldingPct'), fmt: rate3 },
     { section: 'OVERALL', label: 'RECORD', record: true },
+  ],
+  nhl: [
+    { section: 'OFFENSE', label: 'GOALS / G', get: own('offensive', 'avgGoals'), fmt: fixed(2) },
+    { label: 'SHOTS / G', get: perGame('offensive', 'shotsTotal'), fmt: fixed(1) },
+    { label: 'SHOOTING %', get: own('offensive', 'shootingPct'), fmt: pct },
+    { label: 'POWER PLAY %', get: own('offensive', 'powerPlayPct'), fmt: pct },
+    { label: 'PP GOALS', get: own('offensive', 'powerPlayGoals'), fmt: whole },
+    { section: 'DEFENSE', label: 'GOALS AGAINST / G', get: own('defensive', 'avgGoalsAgainst'), fmt: fixed(2), lower: true },
+    { label: 'SHOTS AGAINST / G', get: perGame('defensive', 'shotsAgainst'), fmt: fixed(1), lower: true },
+    { label: 'SAVE %', get: own('defensive', 'savePct'), fmt: rate3 },
+    { label: 'PENALTY KILL %', get: own('defensive', 'penaltyKillPct'), fmt: pct },
+    { label: 'SHUTOUTS', get: own('defensive', 'shutouts'), fmt: whole },
+    { section: 'OVERALL', label: 'RECORD', record: true },
+    { label: 'GOAL DIFF', get: goalDiff, fmt: signed(0) },
+    { label: 'PENALTY MIN', get: own('penalties', 'penaltyMinutes'), fmt: whole, lower: true },
   ],
 };
 

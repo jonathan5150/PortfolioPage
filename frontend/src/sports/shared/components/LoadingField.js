@@ -4,8 +4,8 @@ import { isSport, startingSport } from '../utils/sports';
 import '../styles/LoadingField.scss';
 
 // Loading animation for the sports pages: the ball of the sport being loaded
-// (a football for NFL, a baseball for MLB, a basketball for NBA, the octagon
-// for UFC), gold and black, turning in place with a soft gold glow pulsing
+// (a football for NFL, a baseball for MLB, a basketball for NBA, a puck for
+// NHL, the octagon for UFC), gold and black, turning in place with a soft gold glow pulsing
 // behind it. The sport comes from the address (/sports/nfl ...), which already
 // points at the sport being opened while it loads; on /sports itself it's the
 // sport that's about to open (the remembered one, or the one in season).
@@ -81,7 +81,39 @@ const Octagon = () => (
   </svg>
 );
 
-const ICONS = { nfl: Football, mlb: Baseball, nba: Basketball, ufc: Octagon };
+// grip lines down the puck's side: x, top, bottom (shorter towards the edges,
+// where the side curves away)
+const PUCK_GRIP = [
+  [9, 21.5, 26.5],
+  [13.5, 22.3, 28],
+  [18, 22.6, 28.6],
+  [22, 22.6, 28.6],
+  [26.5, 22.3, 28],
+  [31, 21.5, 26.5],
+];
+
+// a puck, tipped towards you: its top face with a centre ring, and its side
+// with the grip lines round the edge
+const Puck = () => (
+  <svg viewBox="0 0 40 40" className="sl-icon">
+    <path
+      d="M5 16.5 v7 A15 6 0 0 0 35 23.5 v-7"
+      fill={BLACK}
+      stroke={GOLD}
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+    <g stroke={GOLD} strokeWidth="1" opacity="0.75" strokeLinecap="round">
+      {PUCK_GRIP.map(([x, y1, y2]) => (
+        <line key={x} x1={x} y1={y1} x2={x} y2={y2} />
+      ))}
+    </g>
+    <ellipse cx="20" cy="16.5" rx="15" ry="6" fill={BLACK} stroke={GOLD} strokeWidth="1.8" />
+    <ellipse cx="20" cy="16.5" rx="8" ry="3.2" fill="none" stroke={GOLD} strokeWidth="1.1" opacity="0.8" />
+  </svg>
+);
+
+const ICONS = { nfl: Football, mlb: Baseball, nba: Basketball, nhl: Puck, ufc: Octagon };
 const TURN_S = 1.6;
 
 const sportIn = (path) => {

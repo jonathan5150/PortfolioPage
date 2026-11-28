@@ -191,7 +191,7 @@ export const buildLeaguePicks = ({ lg, game, odds, predictor, rest = null, scori
     };
   }
 
-  // spread / run line: the win chance turned into an expected margin, against the line
+  // spread / run line / puck line: the win chance turned into an expected margin, against the line
   if (!nba && chance && odds.homeSpread !== null && odds.homeSpread !== undefined) {
     const p = clamp(chance.home) / 100;
     const homeMargin = league.marginScale * Math.log(p / (1 - p));

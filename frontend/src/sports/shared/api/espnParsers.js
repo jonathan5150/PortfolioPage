@@ -87,7 +87,8 @@ const parseCompetitor = (c) => ({
   team: parseTeam(c?.team),
   score: toNumber(c?.score?.value ?? c?.score?.displayValue ?? c?.score),
   linescores: (c?.linescores || []).map((l) => toNumber(l?.value ?? l?.displayValue) ?? 0),
-  record: pickRecord(c?.records || c?.record || [], 'total') || null,
+  // the NHL calls its season record 'ytd' (W-L-OTL)
+  record: pickRecord(c?.records || c?.record || [], 'total', 'ytd') || null,
   homeRecord: pickRecord(c?.records || [], 'home'),
   awayRecord: pickRecord(c?.records || [], 'road', 'away'),
   winner: Boolean(c?.winner),

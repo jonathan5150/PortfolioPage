@@ -3,7 +3,7 @@ import TeamCell from '../components/TeamCell';
 import Marquee from '../components/Marquee';
 import useAsyncData from '../hooks/useAsyncData';
 import { getTeamColor, getTeamRingColors, washOut } from '../utils/teamColors';
-import { getLeagueOdds } from './leagueApi';
+import { getLeagueOdds, LEAGUES } from './leagueApi';
 import { peekOdds } from '../utils/preloadOdds';
 import { BoxScorePanel, LinesPanel, PlayersPanel, useLinesData } from './TeamPanels';
 import TeamStatsCompare from '../components/TeamStatsCompare';
@@ -59,16 +59,35 @@ export const periodLabel = (lg, game) => {
   }
   if (status.isHalftime) return 'Halftime';
   const p = status.period || 1;
+  // NHL: three periods, then overtime; a regular-season game still level after
+  // one overtime goes to a shootout, a playoff game to more overtimes
+  if (lg === 'nhl') {
+    const playoffs = game.seasonType === 3;
+    const name = p <= 3 ? ordinal(p) : p === 4 ? 'OT' : playoffs ? `${p - 3}OT` : 'SO';
+    if (status.name === 'STATUS_END_PERIOD') return `End of ${name}`;
+    if (p <= 3) return `P${p} ${status.displayClock || ''}`.trim();
+    return name === 'SO' ? 'Shootout' : `${name} ${status.displayClock || ''}`.trim();
+  }
   const name = p <= 4 ? `Q${p}` : p === 5 ? 'OT' : `${p - 4}OT`;
   return `${name} ${status.displayClock || ''}`.trim();
 };
 
-// ---------- linescore (quarters / innings) ----------
+// ---------- linescore (quarters / innings / periods) ----------
+
+const linescoreLabel = (lg, game, i) => {
+  if (lg === 'mlb') return String(i + 1);
+  if (lg === 'nhl') {
+    if (i < 3) return String(i + 1);
+    if (i === 3) return 'OT';
+    return game.seasonType === 3 ? `OT${i - 2}` : 'SO';
+  }
+  return i < 4 ? String(i + 1) : i === 4 ? 'OT' : `OT${i - 3}`;
+};
 
 const Linescore = ({ lg, game }) => {
-  const regulation = lg === 'mlb' ? 9 : 4;
+  const regulation = LEAGUES[lg]?.regulationPeriods || 4;
   const periods = Math.max(regulation, game.away?.linescores?.length || 0, game.home?.linescores?.length || 0);
-  const label = (i) => (lg === 'mlb' ? String(i + 1) : i < 4 ? String(i + 1) : i === 4 ? 'OT' : `OT${i - 3}`);
+  const label = (i) => linescoreLabel(lg, game, i);
   const state = game.status.state;
   const started = state !== 'pre';
   const current = state === 'in' ? (game.status.period || 1) - 1 : -1;
@@ -126,12 +145,13 @@ const InfoBar = ({ game }) => (
   </div>
 );
 
-// MLB probable starters (pregame); NBA shows nothing here before a game
+// MLB probable starters and NHL probable goalies (pregame); NBA shows nothing
+// here before a game
 const Starters = ({ lg, game }) => {
-  if (lg !== 'mlb') return null;
+  if (lg !== 'mlb' && lg !== 'nhl') return null;
   const rows = ['away', 'home'].map((side) => {
     const p = game[side]?.probable;
-    return { side, label: 'SP', name: p?.name, line: p?.line, headshot: p?.headshot };
+    return { side, label: lg === 'nhl' ? 'G' : 'SP', name: p?.name, line: p?.line, headshot: p?.headshot };
   });
   if (!rows.some((r) => r.name)) return null;
   return (
@@ -192,7 +212,8 @@ const ScoreBug = ({ lg, game, open, onToggle }) => {
 
   let liveRow = null;
   if (state === 'in') {
-    const halftime = game.status.isHalftime;
+    // NHL intermissions show the win chances, like an NBA halftime
+    const halftime = game.status.isHalftime || (lg === 'nhl' && game.status.name === 'STATUS_END_PERIOD');
     const clock = periodLabel(lg, game);
     const chance = s?.winProbability;
     let left = null;
@@ -220,8 +241,8 @@ const ScoreBug = ({ lg, game, open, onToggle }) => {
         </span>
       );
     }
-    // NBA in play: a single row, the last play on the left and the clock on the right
-    const oneRow = lg === 'nba' && !halftime;
+    // NBA / NHL in play: a single row, the last play on the left and the clock on the right
+    const oneRow = (lg === 'nba' || lg === 'nhl') && !halftime;
     const play =
       lg === 'mlb' && s?.batter
         ? `${s.batter}${s.pitcher ? ` vs ${s.pitcher}` : ''}${s.lastPlay ? ` — ${s.lastPlay}` : ''}`

@@ -1,4 +1,4 @@
-// ESPN data for the daily-schedule leagues (NBA, MLB). Same proxy, cache and
+// ESPN data for the daily-schedule leagues (NBA, MLB, NHL). Same proxy, cache and
 // parsers as the NFL page wherever ESPN's shapes match; league-specific bits
 // (box scores, MLB's count and bases) are parsed here.
 import { fetchJson, runWithConcurrency } from '../api/http';
@@ -28,6 +28,15 @@ export const LEAGUES = {
     lineLabel: 'RUN LINE',
     regulationPeriods: 9,
     marginScale: 2.6,
+  },
+  nhl: {
+    key: 'nhl',
+    label: 'NHL',
+    path: 'hockey/nhl',
+    lineLabel: 'PUCK LINE',
+    regulationPeriods: 3,
+    // a 60% favourite is worth about half a goal
+    marginScale: 1.25,
   },
 };
 
@@ -77,7 +86,8 @@ const parseLeagueSituation = (s) =>
       }
     : null;
 
-// MLB probable starters with their season line (ERA, W-L) when ESPN lists them
+// MLB probable starters with their season line (ERA, W-L) when ESPN lists them;
+// NHL probable starting goalies (ESPN lists their names, seldom their numbers)
 const parseProbables = (competitor) =>
   (competitor?.probables || []).map((p) => ({
     id: p.athlete?.id ? String(p.athlete.id) : null,
@@ -90,7 +100,14 @@ const parseProbables = (competitor) =>
       const w = stat('W');
       const l = stat('L');
       const era = stat('ERA');
-      return [w !== undefined && l !== undefined ? `${w}-${l}` : null, era ? `${era} ERA` : null]
+      const gaa = stat('GAA');
+      const svPct = stat('SV%');
+      return [
+        w !== undefined && l !== undefined ? `${w}-${l}` : null,
+        era ? `${era} ERA` : null,
+        gaa ? `${gaa} GAA` : null,
+        svPct ? `${svPct} SV%` : null,
+      ]
         .filter(Boolean)
         .join(' · ');
     })(),
@@ -303,26 +320,53 @@ export const getLeagueTeams = async (lg) => {
 
 // ---------- one game ----------
 
+// NHL box scores: ESPN lists blocks, hits and takeaways first; skaters lead
+// with goals, assists, shots, +/- and ice time instead, goalies with their
+// save numbers, then whatever else ESPN lists
+const NHL_LEAD = {
+  goalies: ['SV%', 'SA', 'SV', 'GA', 'TOI'],
+  skaters: ['G', 'A', 'SOG', '+/-', 'TOI'],
+};
+const NHL_TITLES = { forwards: 'Forwards', defenses: 'Defense', skaters: 'Skaters', goalies: 'Goalies' };
+const leadFirst = (labels, lead) => {
+  const all = labels.map((_, i) => i);
+  const first = lead.map((l) => labels.indexOf(l)).filter((i) => i >= 0);
+  return [...first, ...all.filter((i) => !first.includes(i))];
+};
+const pick = (list, order) => (list?.length ? order.map((i) => list[i]) : list || []);
+
 const parseBoxScore = (json, lg) =>
   (json?.boxscore?.players || []).map((p) => ({
     teamId: String(p?.team?.id ?? ''),
     team: p?.team ? { ...parseTeam(p.team), league: lg } : null,
-    groups: (p?.statistics || []).map((cat) => ({
-      name: cat.type || cat.name || '',
-      title:
-        cat.text || cat.displayName || (cat.type === 'pitching' ? 'Pitching' : cat.type === 'batting' ? 'Batting' : ''),
-      labels: cat.labels || cat.names || [],
-      totals: cat.totals || [],
-      players: (cat.athletes || [])
-        .filter((a) => (a.stats || []).length)
-        .map((a) => ({
-          id: a.athlete?.id ? String(a.athlete.id) : null,
-          name: a.athlete?.shortName || a.athlete?.displayName || '',
-          position: a.athlete?.position?.abbreviation || a.position?.abbreviation || '',
-          starter: Boolean(a.starter),
-          stats: a.stats || [],
-        })),
-    })),
+    groups: (p?.statistics || [])
+      .map((cat) => {
+        const kind = cat.type || cat.name || '';
+        const labels = cat.labels || cat.names || [];
+        const order =
+          lg === 'nhl' ? leadFirst(labels, NHL_LEAD[kind === 'goalies' ? 'goalies' : 'skaters']) : labels.map((_, i) => i);
+        return {
+          name: kind,
+          title:
+            cat.text ||
+            cat.displayName ||
+            (lg === 'nhl' ? NHL_TITLES[kind] : '') ||
+            (cat.type === 'pitching' ? 'Pitching' : cat.type === 'batting' ? 'Batting' : ''),
+          labels: pick(labels, order),
+          totals: pick(cat.totals, order),
+          players: (cat.athletes || [])
+            .filter((a) => (a.stats || []).length)
+            .map((a) => ({
+              id: a.athlete?.id ? String(a.athlete.id) : null,
+              name: a.athlete?.shortName || a.athlete?.displayName || '',
+              position: a.athlete?.position?.abbreviation || a.position?.abbreviation || '',
+              starter: Boolean(a.starter),
+              stats: pick(a.stats, order),
+            })),
+        };
+      })
+      // the NHL's "skaters" group comes empty (its players are under forwards and defense)
+      .filter((g) => lg !== 'nhl' || g.players.length),
   }));
 
 // A finished game's box score never changes, so it's kept for hours (and its
@@ -355,7 +399,10 @@ export const getLeagueLiveLines = async (lg, eventId) => {
   return { pregame: parsePregameOdds(json), live: parseLiveOdds(json) };
 };
 
+// ESPN's win-probability model. It has none for the NHL (every request is
+// refused), so NHL picks go on the betting market alone.
 export const getLeaguePredictor = async (lg, eventId) => {
+  if (lg === 'nhl') return null;
   const json = await fetchJson(`${CORE(lg)}/events/${eventId}/competitions/${eventId}/predictor`, {
     ttlMs: 60 * MIN,
   }).catch(() => null);
@@ -372,7 +419,7 @@ export const getLeagueTeamSchedule = async (lg, teamId, season) =>
 export const getLeagueRoster = async (lg, teamId) => {
   const json = await fetchJson(`${SITE(lg)}/teams/${teamId}/roster`, { ttlMs: 6 * 60 * MIN });
   const groups = json?.athletes || [];
-  // NBA: a flat list; MLB: grouped by position
+  // NBA: a flat list; MLB and NHL: grouped by position
   const flat = groups.flatMap((g) => (g?.items ? g.items : [g]));
   return flat
     .filter((a) => a?.id)
@@ -388,14 +435,15 @@ export const getLeagueRoster = async (lg, teamId) => {
 };
 
 // The team's headline player this season: the NBA's points-per-game leader,
-// MLB's home run leader. Falls back to last season early on (spring training,
+// MLB's home run leader, the NHL's points leader. Falls back to last season early on (spring training,
 // opening week) when this season has no leaders yet. Athlete ids, best first,
 // so the caller can skip anyone who has since left the team.
 export const getLeagueTeamLeaders = async (lg, teamId, date) => {
   if (!teamId) return [];
   const d = date ? new Date(date) : new Date();
-  const season = lg === 'nba' && d.getMonth() >= 7 ? d.getFullYear() + 1 : d.getFullYear();
-  const category = lg === 'nba' ? 'pointsPerGame' : 'homeRuns';
+  // NBA and NHL seasons are named for the year they end in
+  const season = (lg === 'nba' || lg === 'nhl') && d.getMonth() >= 7 ? d.getFullYear() + 1 : d.getFullYear();
+  const category = { nba: 'pointsPerGame', mlb: 'homeRuns', nhl: 'points' }[lg] || 'points';
   const leadersIn = async (yr) => {
     const json = await fetchJson(`${CORE(lg)}/seasons/${yr}/types/2/teams/${teamId}/leaders`, {
       ttlMs: 60 * MIN,

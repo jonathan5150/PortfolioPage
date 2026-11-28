@@ -21,11 +21,12 @@ export const GRADES_KEYS = {
   nfl: 'gradedPicks:v9',
   nba: 'nbaGradedPicks:v7',
   mlb: 'mlbGradedPicks:v2',
+  nhl: 'nhlGradedPicks:v1',
 };
 
 // ---------- the picks behind each league's grades ----------
 
-// { picks, lines } for an NBA / MLB game, from what was known before it started
+// { picks, lines } for an NBA / MLB / NHL game, from what was known before it started
 const leagueLinePicks = async (lg, game) => {
   const started = game.status?.state !== 'pre';
   const [odds, predictor, earlier, scoringData] = await Promise.all([

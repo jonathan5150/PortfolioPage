@@ -171,6 +171,14 @@ const LEAGUE_LOGOS = {
 
     teams: {},
   },
+
+  nhl: {
+    open: 0.7,
+
+    closed: 0.74,
+
+    teams: {},
+  },
 };
 
 // Before a game: just the moneyline, on one row, centred in the cell.

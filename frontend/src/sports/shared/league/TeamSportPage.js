@@ -88,9 +88,13 @@ const dayLabel = (key) =>
 
 // ---------- model results: the NFL panel, graded with this league's engine ----------
 
+// what each league calls its spread
+const SPREAD_LABEL = { mlb: 'Run line', nhl: 'Puck line' };
+
 const MODEL_NOTES = {
   nba: "Every NBA game gets all three picks, made and graded at the opening line and price, and the record counts them all. No every-game rule beat the market over 12 seasons (the best lose about 1.8% a bet at the opener), so only a few spots are marked BET; pick BETS ONLY in MARKET to see just those. Spread and moneyline: the better-rested team (2+ more days off) once both teams are 10+ games in (+7.4% and +10.0% at the opening prices). Total: our scoring ratings 6+ points off the opening total (+6.7%). Every other pick is a lean on the opening favourite (and the under or over by our ratings). Lines move toward the bets two times in three, so bet early.",
   mlb: "The MLB picks are leans from ESPN's model and the betting market. They haven't been backtested like the NFL and NBA models yet.",
+  nhl: "The NHL picks are leans from ESPN's model and the betting market. They haven't been backtested like the NFL and NBA models yet.",
 };
 
 // ---------- the page ----------
@@ -494,7 +498,7 @@ const TeamSportPage = ({ lg }) => {
               {/* side-rail: beside the games on a wide screen, under them on a phone */}
               <div className="side-rail">
                 {day && !showLoader && (
-                  <ModelPanel spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'} betsOption={lg === 'nba'}>
+                  <ModelPanel spreadLabel={SPREAD_LABEL[lg] || 'Spread'} betsOption={lg === 'nba'}>
                     {({ unit, scope, filter, minOdds }) => (
                       <>
                         <ModelResults
@@ -507,7 +511,7 @@ const TeamSportPage = ({ lg }) => {
                           lg={lg}
                           loadSeason={seasonLoaderFor(lg)}
                           period="DAY"
-                          spreadLabel={lg === 'mlb' ? 'Run line' : 'Spread'}
+                          spreadLabel={SPREAD_LABEL[lg] || 'Spread'}
                           note={MODEL_NOTES[lg]}
                         />
                       </>

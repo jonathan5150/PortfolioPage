@@ -37,6 +37,7 @@ const HerbicideCalculator = lazy(() => import('./pages/HerbicideCalculator/Herbi
 const NflPage = lazy(() => import('./sports/nfl/NflPage'));
 const MlbPage = lazy(() => import('./sports/mlb/MlbPage'));
 const NbaPage = lazy(() => import('./sports/nba/NbaPage'));
+const NhlPage = lazy(() => import('./sports/nhl/NhlPage'));
 const UfcPage = lazy(() => import('./sports/ufc/UfcPage'));
 
 // while a sports page's code arrives: the same loading screen its own data
@@ -135,6 +136,14 @@ function Main() {
             element={
               <RememberSport sport="nba">
                 <NbaPage />
+              </RememberSport>
+            }
+          />
+          <Route
+            path="/sports/nhl"
+            element={
+              <RememberSport sport="nhl">
+                <NhlPage />
               </RememberSport>
             }
           />

@@ -1,15 +1,17 @@
-// Parlay legs for the NBA, MLB and UFC pages, in the same shape the NFL page
+// Parlay legs for the NBA, MLB, NHL and UFC pages, in the same shape the NFL page
 // uses, so one DraftKings slip can hold picks from every sport (the slip is
 // saved in the browser and shared by all four pages).
 // A leg: { id, market, gameId, matchup, label, detail, odds, link }.
 import { fmtLine } from '../api/betting';
 
-const LEAGUE_LABEL = { nba: 'NBA', mlb: 'MLB', ufc: 'UFC' };
+const LEAGUE_LABEL = { nba: 'NBA', mlb: 'MLB', nhl: 'NHL', ufc: 'UFC' };
+const SPREAD_DETAIL = { mlb: 'Run line', nhl: 'Puck line' };
+const TOTAL_DETAIL = { mlb: 'Total runs', nhl: 'Total goals' };
 
 // legs only for games that haven't finished
 export const canBet = (game) => game?.status?.state !== 'post';
 
-// Moneyline / spread (run line) / total legs for a team game.
+// Moneyline / spread (run line, puck line) / total legs for a team game.
 export const teamGameLegs = (lg, game, odds) => {
   const links = odds?.links || {};
   const abbr = (side) => game[side]?.team?.abbreviation;
@@ -33,7 +35,7 @@ export const teamGameLegs = (lg, game, odds) => {
       id: id(`spread:${side}`),
       market: id('spread'),
       label: `${abbr(side)} ${fmtLine(odds?.[side]?.spreadLine)}`,
-      detail: lg === 'mlb' ? 'Run line' : 'Spread',
+      detail: SPREAD_DETAIL[lg] || 'Spread',
       odds: odds?.[side]?.spreadOdds ?? null,
       link: links[`${side}Spread`] || null,
     }),
@@ -42,7 +44,7 @@ export const teamGameLegs = (lg, game, odds) => {
       id: id(`total:${ou}`),
       market: id('total'),
       label: `${ou === 'over' ? 'Over' : 'Under'} ${odds?.total?.line}`,
-      detail: lg === 'mlb' ? 'Total runs' : 'Total points',
+      detail: TOTAL_DETAIL[lg] || 'Total points',
       odds: (ou === 'over' ? odds?.total?.overOdds : odds?.total?.underOdds) ?? null,
       link: links[ou] || null,
     }),
