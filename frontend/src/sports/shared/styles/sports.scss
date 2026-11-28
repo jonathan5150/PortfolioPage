@@ -246,6 +246,16 @@
   animation: nflRingBreathe 3.6s ease-in-out infinite;
 }
 
+/* closing: the ring fades out from however bright it was mid-breath, down to
+   its dimmest, instead of dropping the breathing's dimming at once (which
+   flashed it to full brightness just as it began to fade) */
+.nfl-data-container .game-slot:not(.open) .game-ring {
+  filter: opacity(0.45);
+  transition:
+    opacity 0.35s ease,
+    filter 0.35s ease;
+}
+
 .nfl-data-container .game-slot::after {
   content: '';
   position: absolute;
@@ -4963,5 +4973,45 @@ html[data-quality='low'] .nfl-data-container .title-shine {
 @media (prefers-reduced-motion: reduce) {
   .nfl-data-container .bet-message.breathing {
     animation: none;
+  }
+}
+
+/* ---------- TEAMS / GAMES: smaller words, so they sit comfortably inside
+   their half of the right side at every width (they were up against the
+   button's edges, and past them on some desktop widths). UFC's FIGHTS button
+   fills the whole right half and keeps its size. ---------- */
+.nfl-data-container .controls-right > .teams-dropdown-wrapper > .nfl-control-button,
+.nfl-data-container .controls-right > .hide-games-button:not(.ufc-fights-button) {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.nfl-data-container .controls-right > .teams-dropdown-wrapper .control-label,
+.nfl-data-container .controls-right > .hide-games-button:not(.ufc-fights-button) .control-label {
+  font-size: 12px;
+  letter-spacing: 0.1em;
+}
+
+.nfl-data-container .controls-right > .teams-dropdown-wrapper .control-count,
+.nfl-data-container .controls-right > .hide-games-button:not(.ufc-fights-button) .control-count {
+  font-size: 9px;
+}
+
+@media only screen and (max-width: 420px) {
+  .nfl-data-container .controls-right > .teams-dropdown-wrapper > .nfl-control-button,
+  .nfl-data-container .controls-right > .hide-games-button:not(.ufc-fights-button) {
+    padding-left: 3px;
+    padding-right: 3px;
+  }
+
+  .nfl-data-container .controls-right > .teams-dropdown-wrapper .control-label,
+  .nfl-data-container .controls-right > .hide-games-button:not(.ufc-fights-button) .control-label {
+    font-size: 9px;
+    letter-spacing: 0.04em;
+  }
+
+  .nfl-data-container .controls-right > .teams-dropdown-wrapper .control-count,
+  .nfl-data-container .controls-right > .hide-games-button:not(.ufc-fights-button) .control-count {
+    font-size: 8.5px;
   }
 }

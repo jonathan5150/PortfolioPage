@@ -81,6 +81,12 @@ const sizeOf = (cell) => {
   return { left: r.left, width: r.width };
 };
 const sameSize = (a, b) => Math.abs(a.width - b.width) < 2 && Math.abs(a.left - b.left) < 2;
+// the open game's cell, if it has a box of its own (a wide screen); on a phone
+// none, so nothing is measured (each measurement lays out the whole list)
+const sizedCell = (slot) => {
+  const cell = slot?.closest('.game-cell');
+  return cell && getComputedStyle(cell).display !== 'contents' ? cell : null;
+};
 // holds the cell at `from` (its left edge and width, on screen), then slides
 // it to `to`; `to` is given relative to where the cell's grid space starts
 const slideCell = (cell, from, to, origin) => {
@@ -153,8 +159,12 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
   useEffect(() => {
     const box = panelRef.current;
     if (!box) return undefined;
+    // phones draw their own scrollbars only while scrolling, so nothing to do
+    // there (and marking the box restyles the whole list)
+    const wide = window.matchMedia('(min-width: 900px)');
     const timers = new Map();
     const show = (el) => {
+      if (!wide.matches) return;
       el.classList.add('user-scrolling');
       clearTimeout(timers.get(el));
       timers.set(el, setTimeout(() => el.classList.remove('user-scrolling'), 900));
@@ -255,13 +265,13 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
         if (!slot) return;
         slot.setAttribute('data-focus-target', '');
         target.current = slot;
-        const cell = slot.closest('.game-cell');
+        const cell = low ? null : sizedCell(slot);
         const narrow = cell && sizeOf(cell);
         keepingPlace(slot, () => box.classList.add('focus-only'));
         // a wide screen: the game grows from its spot in the grid to the
         // whole width, and its details unfold once it's there
         const wide = cell && sizeOf(cell);
-        const widening = Boolean(cell) && !low && !sameSize(narrow, wide);
+        const widening = Boolean(cell) && !sameSize(narrow, wide);
         if (widening) {
           slideCell(cell, narrow, wide, wide.left);
           later(() => releaseCell(cell), WIDTH_MS + 20);
@@ -348,9 +358,8 @@ const useGameFocus = ({ openKey, lineA, lineB, onClose, panelRef }) => {
     // a wide screen: once the details have folded, the game shrinks back to
     // its spot in the grid while it's still alone, then everything comes back
     const narrowThenRestore = () => {
-      const slot = target.current;
-      const cell = slot?.closest('.game-cell');
-      if (!cell || low || !box.classList.contains('focus-only')) {
+      const cell = low ? null : sizedCell(target.current);
+      if (!cell || !box.classList.contains('focus-only')) {
         restore();
         return;
       }
